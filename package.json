@@ -9,6 +9,7 @@
 	"dependencies": {
 		"dexie": "^4.0.11",
 		"dexie-react-hooks": "^1.1.7",
+		"js-yaml": "^4.1.0",
 		"preact": "^10.25.3",
 		"wouter-preact": "^3.7.1"
 	},
