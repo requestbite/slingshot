@@ -20,12 +20,14 @@ export function BodyTab({
   bodyContent,
   contentType,
   method,
+  formData = [],
+  urlEncodedData = [],
   onBodyTypeChange,
   onBodyContentChange,
-  onContentTypeChange
+  onContentTypeChange,
+  onFormDataChange,
+  onUrlEncodedDataChange
 }) {
-  const [formData, setFormData] = useState([]);
-  const [urlEncodedData, setUrlEncodedData] = useState([]);
 
   const isBodyDisabled = ['GET', 'HEAD', 'OPTIONS'].includes(method);
 
@@ -37,18 +39,18 @@ export function BodyTab({
       type: 'text', // text or file
       enabled: true
     };
-    setFormData([...formData, newField]);
+    onFormDataChange([...formData, newField]);
   };
 
   const removeFormDataField = (id) => {
-    setFormData(formData.filter(field => field.id !== id));
+    onFormDataChange(formData.filter(field => field.id !== id));
   };
 
   const updateFormDataField = (id, field, value) => {
     const updatedFields = formData.map(item =>
       item.id === id ? { ...item, [field]: value } : item
     );
-    setFormData(updatedFields);
+    onFormDataChange(updatedFields);
   };
 
   const addUrlEncodedField = () => {
@@ -58,18 +60,18 @@ export function BodyTab({
       value: '',
       enabled: true
     };
-    setUrlEncodedData([...urlEncodedData, newField]);
+    onUrlEncodedDataChange([...urlEncodedData, newField]);
   };
 
   const removeUrlEncodedField = (id) => {
-    setUrlEncodedData(urlEncodedData.filter(field => field.id !== id));
+    onUrlEncodedDataChange(urlEncodedData.filter(field => field.id !== id));
   };
 
   const updateUrlEncodedField = (id, field, value) => {
     const updatedFields = urlEncodedData.map(item =>
       item.id === id ? { ...item, [field]: value } : item
     );
-    setUrlEncodedData(updatedFields);
+    onUrlEncodedDataChange(updatedFields);
   };
 
   const prettifyJson = () => {

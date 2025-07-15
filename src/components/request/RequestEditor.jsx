@@ -3,6 +3,8 @@ import { ParamsTab } from './tabs/ParamsTab';
 import { HeadersTab } from './tabs/HeadersTab';
 import { BodyTab } from './tabs/BodyTab';
 import { SettingsTab } from './tabs/SettingsTab';
+import { ResponseDisplay } from './ResponseDisplay';
+import { requestSubmitter } from '../../utils/requestSubmitter';
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 
@@ -26,8 +28,14 @@ export function RequestEditor({ request, onRequestChange }) {
     contentType: 'application/json',
     followRedirects: true,
     timeout: 30,
+    formData: [],
+    urlEncodedData: [],
     ...request
   });
+
+  // Response state
+  const [response, setResponse] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Update parent when request data changes
   useEffect(() => {
@@ -113,6 +121,36 @@ export function RequestEditor({ request, onRequestChange }) {
 
   const isBodyDisabled = ['GET', 'HEAD', 'OPTIONS'].includes(requestData.method);
 
+  // Handle request submission
+  const handleSendRequest = async () => {
+    if (!requestData.url || isSubmitting) return;
+    
+    setIsSubmitting(true);
+    setResponse(null);
+    
+    try {
+      const result = await requestSubmitter.submitRequest(requestData);
+      setResponse(result);
+    } catch (error) {
+      console.error('Request submission failed:', error);
+      setResponse({
+        success: false,
+        errorType: 'unknown_error',
+        errorTitle: 'Request Failed',
+        errorMessage: error.message,
+        cancelled: false
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle request cancellation
+  const handleCancelRequest = () => {
+    requestSubmitter.cancelRequest();
+    setIsSubmitting(false);
+  };
+
   return (
     <div class="flex flex-col h-full">
       {/* Request Name Bar */}
@@ -170,12 +208,24 @@ export function RequestEditor({ request, onRequestChange }) {
           {/* Send and Code Buttons */}
           <div class="flex space-x-2">
             <button 
-              class="px-4 py-2 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-md transition-colors"
-              disabled={!requestData.url}
+              onClick={handleSendRequest}
+              disabled={!requestData.url || isSubmitting}
+              class={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${
+                !requestData.url || isSubmitting
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-sky-600 hover:bg-sky-700 text-white'
+              }`}
             >
-              Send
+              {isSubmitting ? 'Sending...' : 'Send'}
             </button>
-            <button class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-md transition-colors">
+            <button 
+              disabled={isSubmitting}
+              class={`px-4 py-2 text-sm font-semibold border rounded-md transition-colors ${
+                isSubmitting
+                  ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300'
+              }`}
+            >
               Code
             </button>
           </div>
@@ -238,9 +288,13 @@ export function RequestEditor({ request, onRequestChange }) {
             bodyContent={requestData.bodyContent}
             contentType={requestData.contentType}
             method={requestData.method}
+            formData={requestData.formData}
+            urlEncodedData={requestData.urlEncodedData}
             onBodyTypeChange={(bodyType) => updateRequestData({ bodyType })}
             onBodyContentChange={(bodyContent) => updateRequestData({ bodyContent })}
             onContentTypeChange={(contentType) => updateRequestData({ contentType })}
+            onFormDataChange={(formData) => updateRequestData({ formData })}
+            onUrlEncodedDataChange={(urlEncodedData) => updateRequestData({ urlEncodedData })}
           />
         )}
         {activeTab === 'settings' && (
@@ -252,6 +306,13 @@ export function RequestEditor({ request, onRequestChange }) {
           />
         )}
       </div>
+
+      {/* Response Display */}
+      <ResponseDisplay
+        response={response}
+        isLoading={isSubmitting}
+        onCancel={handleCancelRequest}
+      />
     </div>
   );
 }
