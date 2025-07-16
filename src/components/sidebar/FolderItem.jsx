@@ -3,6 +3,7 @@ import { ContextMenu } from '../common/ContextMenu';
 import { RequestItem } from './RequestItem';
 import { RenameFolderModal } from '../modals/RenameFolderModal';
 import { DeleteFolderModal } from '../modals/DeleteFolderModal';
+import { AddFolderModal } from '../modals/AddFolderModal';
 import { useAppContext } from '../../hooks/useAppContext';
 
 export function FolderItem({ folder, requests = [], subfolders = [], selectedRequestId, level = 0, onFolderUpdate }) {
@@ -10,6 +11,7 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showAddSubfolderModal, setShowAddSubfolderModal] = useState(false);
   const { loadCollections } = useAppContext();
   const menuTriggerRef = useRef();
 
@@ -45,8 +47,8 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
     {
       label: 'Add subfolder',
       onClick: () => {
-        console.log('Add subfolder to:', folder.name);
-        // TODO: Implement add subfolder functionality
+        setShowContextMenu(false);
+        setShowAddSubfolderModal(true);
       },
       icon: (
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -189,6 +191,14 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
         onClose={() => setShowDeleteModal(false)}
         folder={folder}
         onDelete={handleFolderDelete}
+      />
+
+      {/* Add Subfolder Modal */}
+      <AddFolderModal
+        isOpen={showAddSubfolderModal}
+        onClose={() => setShowAddSubfolderModal(false)}
+        parentFolder={folder}
+        onSuccess={handleFolderUpdate}
       />
     </li>
   );
