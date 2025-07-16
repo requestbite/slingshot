@@ -112,6 +112,11 @@ export function FolderTree({ searchTerm = '' }) {
     };
   };
 
+  const handleTreeUpdate = async () => {
+    // Reload the tree data when an item is updated
+    await loadTreeData();
+  };
+
   const filterTreeData = () => {
     if (!searchTerm.trim()) {
       setFilteredData(treeData);
@@ -216,6 +221,7 @@ export function FolderTree({ searchTerm = '' }) {
             subfolders={folder.subfolders}
             selectedRequestId={selectedRequest?.id}
             level={0}
+            onFolderUpdate={handleTreeUpdate}
           />
         ))}
         
@@ -226,6 +232,7 @@ export function FolderTree({ searchTerm = '' }) {
             request={request}
             isSelected={request.id === selectedRequest?.id}
             level={0}
+            onRequestUpdate={handleTreeUpdate}
           />
         ))}
       </ul>

@@ -1,10 +1,14 @@
 import { useState, useRef } from 'preact/hooks';
 import { ContextMenu } from '../common/ContextMenu';
 import { RequestItem } from './RequestItem';
+import { RenameFolderModal } from '../modals/RenameFolderModal';
+import { useAppContext } from '../../hooks/useAppContext';
 
-export function FolderItem({ folder, requests = [], subfolders = [], selectedRequestId, level = 0 }) {
+export function FolderItem({ folder, requests = [], subfolders = [], selectedRequestId, level = 0, onFolderUpdate }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [showContextMenu, setShowContextMenu] = useState(false);
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const { loadCollections } = useAppContext();
   const menuTriggerRef = useRef();
 
   const handleContextMenuClick = (e) => {
@@ -15,6 +19,15 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
+  };
+
+  const handleFolderUpdate = async (updatedFolder) => {
+    // Refresh the collections to update the sidebar
+    await loadCollections();
+    // Call parent callback if provided
+    if (onFolderUpdate) {
+      onFolderUpdate(updatedFolder);
+    }
   };
 
   const contextMenuItems = [
@@ -33,8 +46,8 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
     {
       label: 'Rename/Move',
       onClick: () => {
-        console.log('Rename/Move folder:', folder.name);
-        // TODO: Implement rename/move functionality
+        setShowContextMenu(false);
+        setShowRenameModal(true);
       },
       icon: (
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,6 +139,7 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
               subfolders={subfolder.subfolders || []}
               selectedRequestId={selectedRequestId}
               level={level + 1}
+              onFolderUpdate={onFolderUpdate}
             />
           ))}
           
@@ -136,6 +150,7 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
               request={request}
               isSelected={request.id === selectedRequestId}
               level={level + 1}
+              onRequestUpdate={onFolderUpdate}
             />
           ))}
         </ul>
@@ -147,6 +162,14 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
         onClose={() => setShowContextMenu(false)}
         trigger={menuTriggerRef.current}
         items={contextMenuItems}
+      />
+
+      {/* Rename/Move Modal */}
+      <RenameFolderModal
+        isOpen={showRenameModal}
+        onClose={() => setShowRenameModal(false)}
+        folder={folder}
+        onUpdate={handleFolderUpdate}
       />
     </li>
   );

@@ -1,13 +1,15 @@
 import { useState, useRef } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { ContextMenu } from '../common/ContextMenu';
+import { RenameRequestModal } from '../modals/RenameRequestModal';
 import { getMethodColor } from '../../utils/httpMethods';
 import { useAppContext } from '../../hooks/useAppContext';
 
-export function RequestItem({ request, isSelected, level = 0 }) {
+export function RequestItem({ request, isSelected, level = 0, onRequestUpdate }) {
   const [showContextMenu, setShowContextMenu] = useState(false);
+  const [showRenameModal, setShowRenameModal] = useState(false);
   const [, setLocation] = useLocation();
-  const { selectedCollection, selectRequest } = useAppContext();
+  const { selectedCollection, selectRequest, loadCollections } = useAppContext();
   const menuTriggerRef = useRef();
 
   const handleRequestClick = () => {
@@ -23,12 +25,21 @@ export function RequestItem({ request, isSelected, level = 0 }) {
     setShowContextMenu(true);
   };
 
+  const handleRequestUpdate = async (updatedRequest) => {
+    // Refresh the collections to update the sidebar
+    await loadCollections();
+    // Call parent callback if provided
+    if (onRequestUpdate) {
+      onRequestUpdate(updatedRequest);
+    }
+  };
+
   const contextMenuItems = [
     {
       label: 'Rename/Move',
       onClick: () => {
-        console.log('Rename/Move request:', request.name);
-        // TODO: Implement rename/move functionality
+        setShowContextMenu(false);
+        setShowRenameModal(true);
       },
       icon: (
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,6 +121,14 @@ export function RequestItem({ request, isSelected, level = 0 }) {
         onClose={() => setShowContextMenu(false)}
         trigger={menuTriggerRef.current}
         items={contextMenuItems}
+      />
+
+      {/* Rename/Move Modal */}
+      <RenameRequestModal
+        isOpen={showRenameModal}
+        onClose={() => setShowRenameModal(false)}
+        request={request}
+        onUpdate={handleRequestUpdate}
       />
     </li>
   );
