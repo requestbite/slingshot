@@ -1,19 +1,49 @@
+import { useLocation } from 'wouter-preact';
+
 export function TopBar() {
+  const [location, setLocation] = useLocation();
+
+  const isActive = (path) => {
+    if (path === '/' && location === '/') return true;
+    if (path !== '/' && location.startsWith(path)) return true;
+    return false;
+  };
+
   return (
     <header class="bg-white/95 backdrop-blur-lg border-b border-gray-200 fixed top-0 left-0 w-full z-50 h-16">
       <div class="flex items-center justify-between h-full px-4">
         {/* Left side - Logo and Navigation */}
         <div class="flex items-center space-x-6">
-          <div class="flex items-center space-x-2">
+          <button 
+            onClick={() => setLocation('/')}
+            class="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+          >
             <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <span class="text-white font-bold text-sm">RB</span>
             </div>
             <span class="font-semibold text-gray-900">RequestBite</span>
-          </div>
+          </button>
           
           <nav class="hidden md:flex items-center space-x-4">
-            <a href="#" class="text-blue-600 font-medium px-3 py-2 rounded-md bg-blue-50">
+            <a 
+              href="/"
+              class={`px-3 py-2 rounded-md font-medium transition-colors ${
+                isActive('/') && !isActive('/collections')
+                  ? 'text-blue-600 bg-blue-50' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
               Slingshot
+            </a>
+            <a 
+              href="/collections"
+              class={`px-3 py-2 rounded-md font-medium transition-colors ${
+                isActive('/collections')
+                  ? 'text-blue-600 bg-blue-50' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              Collections
             </a>
             <a href="#" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100">
               Inspector
