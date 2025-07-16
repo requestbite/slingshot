@@ -5,6 +5,7 @@ import { BodyTab } from './tabs/BodyTab';
 import { SettingsTab } from './tabs/SettingsTab';
 import { ResponseDisplay } from './ResponseDisplay';
 import { CurlExportModal } from '../modals/CurlExportModal';
+import { CurlImportModal } from '../modals/CurlImportModal';
 import { requestSubmitter } from '../../utils/requestSubmitter';
 import { apiClient } from '../../api';
 
@@ -41,6 +42,7 @@ export function RequestEditor({ request, onRequestChange }) {
   
   // Modal state
   const [showCurlModal, setShowCurlModal] = useState(false);
+  const [showCurlImportModal, setShowCurlImportModal] = useState(false);
 
   // Update parent when request data changes
   useEffect(() => {
@@ -245,6 +247,18 @@ export function RequestEditor({ request, onRequestChange }) {
     setIsSubmitting(false);
   };
 
+  // Handle curl import
+  const handleCurlImport = (importedData) => {
+    // Merge imported data with current request data
+    setRequestData(prev => ({
+      ...prev,
+      ...importedData
+    }));
+    
+    // Clear any existing response since we're importing a new request
+    setResponse(null);
+  };
+
   return (
     <div class="flex flex-col h-full">
       {/* Request Name Bar */}
@@ -355,7 +369,10 @@ export function RequestEditor({ request, onRequestChange }) {
               )}
             </button>
           ))}
-          <button class="px-4 py-2 text-xs rounded-t-md font-medium text-sky-500 hover:text-sky-700 hover:bg-sky-50 transition-colors">
+          <button 
+            onClick={() => setShowCurlImportModal(true)}
+            class="px-4 py-2 text-xs rounded-t-md font-medium text-sky-500 hover:text-sky-700 hover:bg-sky-50 transition-colors"
+          >
             Import cURL
           </button>
         </div>
@@ -414,6 +431,13 @@ export function RequestEditor({ request, onRequestChange }) {
         isOpen={showCurlModal}
         onClose={() => setShowCurlModal(false)}
         requestData={requestData}
+      />
+
+      {/* Curl Import Modal */}
+      <CurlImportModal
+        isOpen={showCurlImportModal}
+        onClose={() => setShowCurlImportModal(false)}
+        onImport={handleCurlImport}
       />
     </div>
   );
