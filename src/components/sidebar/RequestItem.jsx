@@ -2,6 +2,7 @@ import { useState, useRef } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { ContextMenu } from '../common/ContextMenu';
 import { RenameRequestModal } from '../modals/RenameRequestModal';
+import { DeleteRequestModal } from '../modals/DeleteRequestModal';
 import { getMethodColor } from '../../utils/httpMethods';
 import { useAppContext } from '../../hooks/useAppContext';
 import { apiClient } from '../../api';
@@ -9,6 +10,7 @@ import { apiClient } from '../../api';
 export function RequestItem({ request, isSelected, level = 0, onRequestUpdate }) {
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [showRenameModal, setShowRenameModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [, setLocation] = useLocation();
   const { selectedCollection, selectRequest, loadCollections } = useAppContext();
   const menuTriggerRef = useRef();
@@ -55,6 +57,15 @@ export function RequestItem({ request, isSelected, level = 0, onRequestUpdate })
     }
   };
 
+  const handleRequestDelete = async (deletedRequest) => {
+    // Refresh the collections to update the sidebar
+    await loadCollections();
+    // Call parent callback if provided
+    if (onRequestUpdate) {
+      onRequestUpdate(deletedRequest);
+    }
+  };
+
   const contextMenuItems = [
     {
       label: 'Rename/Move',
@@ -80,8 +91,8 @@ export function RequestItem({ request, isSelected, level = 0, onRequestUpdate })
     {
       label: 'Delete',
       onClick: () => {
-        console.log('Delete request:', request.name);
-        // TODO: Implement delete functionality
+        setShowContextMenu(false);
+        setShowDeleteModal(true);
       },
       destructive: true,
       icon: (
@@ -147,6 +158,14 @@ export function RequestItem({ request, isSelected, level = 0, onRequestUpdate })
         onClose={() => setShowRenameModal(false)}
         request={request}
         onUpdate={handleRequestUpdate}
+      />
+
+      {/* Delete Modal */}
+      <DeleteRequestModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        request={request}
+        onDelete={handleRequestDelete}
       />
     </li>
   );

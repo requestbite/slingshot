@@ -2,12 +2,14 @@ import { useState, useRef } from 'preact/hooks';
 import { ContextMenu } from '../common/ContextMenu';
 import { RequestItem } from './RequestItem';
 import { RenameFolderModal } from '../modals/RenameFolderModal';
+import { DeleteFolderModal } from '../modals/DeleteFolderModal';
 import { useAppContext } from '../../hooks/useAppContext';
 
 export function FolderItem({ folder, requests = [], subfolders = [], selectedRequestId, level = 0, onFolderUpdate }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [showRenameModal, setShowRenameModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { loadCollections } = useAppContext();
   const menuTriggerRef = useRef();
 
@@ -27,6 +29,15 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
     // Call parent callback if provided
     if (onFolderUpdate) {
       onFolderUpdate(updatedFolder);
+    }
+  };
+
+  const handleFolderDelete = async (deletedFolder) => {
+    // Refresh the collections to update the sidebar
+    await loadCollections();
+    // Call parent callback if provided
+    if (onFolderUpdate) {
+      onFolderUpdate(deletedFolder);
     }
   };
 
@@ -58,8 +69,8 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
     {
       label: 'Delete',
       onClick: () => {
-        console.log('Delete folder:', folder.name);
-        // TODO: Implement delete functionality
+        setShowContextMenu(false);
+        setShowDeleteModal(true);
       },
       destructive: true,
       icon: (
@@ -170,6 +181,14 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
         onClose={() => setShowRenameModal(false)}
         folder={folder}
         onUpdate={handleFolderUpdate}
+      />
+
+      {/* Delete Modal */}
+      <DeleteFolderModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        folder={folder}
+        onDelete={handleFolderDelete}
       />
     </li>
   );
