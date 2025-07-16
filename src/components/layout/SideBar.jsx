@@ -2,6 +2,7 @@ import { useState } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { OpenAPIImportModal } from '../import/OpenAPIImportModal';
 import { AddFolderModal } from '../modals/AddFolderModal';
+import { AddCollectionModal } from '../modals/AddCollectionModal';
 import { FolderTree } from '../sidebar/FolderTree';
 import { useAppContext } from '../../hooks/useAppContext';
 
@@ -9,6 +10,7 @@ export function SideBar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showAddFolderModal, setShowAddFolderModal] = useState(false);
+  const [showAddCollectionModal, setShowAddCollectionModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [, setLocation] = useLocation();
   const { collections, selectedCollection, selectCollection, isLoading } = useAppContext();
@@ -79,9 +81,9 @@ export function SideBar() {
                 ))}
               </select>
               <button 
-                class="px-3 py-2 bg-gray-100 text-gray-400 rounded-md cursor-not-allowed"
-                disabled
-                title="Create new collection (coming soon)"
+                onClick={() => setShowAddCollectionModal(true)}
+                class="px-3 py-2 bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-md transition-colors"
+                title="Create new collection"
               >
                 +
               </button>
@@ -184,6 +186,15 @@ export function SideBar() {
         onClose={() => setShowAddFolderModal(false)}
         onSuccess={(folder) => {
           console.log('Folder created successfully:', folder.name);
+        }}
+      />
+
+      {/* Add Collection Modal */}
+      <AddCollectionModal
+        isOpen={showAddCollectionModal}
+        onClose={() => setShowAddCollectionModal(false)}
+        onSuccess={(collection) => {
+          console.log('Collection created successfully:', collection.name);
         }}
       />
     </>
