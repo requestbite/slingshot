@@ -451,6 +451,39 @@ export class SlingshotApiClient {
   }
 
   /**
+   * Duplicates an existing request
+   * @param {string} id - Request ID to duplicate
+   * @returns {Promise<import('../types/index.js').Request>} The duplicated request
+   * @throws {Error} If request not found
+   */
+  async duplicateRequest(id) {
+    const original = await db.requests.get(id);
+    if (!original) {
+      throw new Error('Request not found');
+    }
+
+    // Create duplicate with same configuration but no response data
+    const duplicateData = {
+      collection_id: original.collection_id,
+      folder_id: original.folder_id,
+      name: original.name + " (copy)",
+      method: original.method,
+      url: original.url,
+      headers: original.headers || [],
+      params: original.params || [],
+      path_params: original.path_params || [],
+      request_type: original.request_type || 'none',
+      content_type: original.content_type || 'json',
+      body: original.body || '',
+      form_data: original.form_data || [],
+      url_encoded_data: original.url_encoded_data || []
+      // Note: Response fields are intentionally not copied
+    };
+
+    return await this.createRequest(duplicateData);
+  }
+
+  /**
    * Deletes a request
    * @param {string} id - Request ID
    * @returns {Promise<void>}
