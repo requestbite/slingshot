@@ -5,6 +5,7 @@ import { BodyTab } from './tabs/BodyTab';
 import { SettingsTab } from './tabs/SettingsTab';
 import { ResponseDisplay } from './ResponseDisplay';
 import { requestSubmitter } from '../../utils/requestSubmitter';
+import { apiClient } from '../../api';
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 
@@ -43,6 +44,16 @@ export function RequestEditor({ request, onRequestChange }) {
       onRequestChange(requestData);
     }
   }, [requestData, onRequestChange]);
+
+  // Load saved response data when request changes
+  useEffect(() => {
+    if (request && hasSavedResponse(request)) {
+      const savedResponse = convertSavedResponseToDisplayFormat(request);
+      setResponse(savedResponse);
+    } else {
+      setResponse(null);
+    }
+  }, [request]);
 
   // Parse URL to extract query and path parameters
   useEffect(() => {
@@ -93,6 +104,62 @@ export function RequestEditor({ request, onRequestChange }) {
     setRequestData(prev => ({ ...prev, ...updates }));
   };
 
+  // Helper function to check if request has saved response data
+  const hasSavedResponse = (request) => {
+    return request && (
+      request.response_data !== null || 
+      request.response_status !== null || 
+      request.response_error_type !== null
+    );
+  };
+
+  // Helper function to convert saved response to display format
+  const convertSavedResponseToDisplayFormat = (request) => {
+    if (!request) return null;
+
+    // Handle error responses
+    if (!request.response_success) {
+      return {
+        success: false,
+        errorType: request.response_error_type,
+        errorTitle: request.response_error_title,
+        errorMessage: request.response_error_message,
+        cancelled: request.response_cancelled || false,
+        responseTime: request.response_time,
+        rawResponseTime: request.response_raw_time,
+        receivedAt: request.response_received_at?.toISOString() || null,
+        saved: true // Flag to indicate this is saved data
+      };
+    }
+
+    // Handle successful responses
+    const processedHeaders = Object.entries(request.response_headers || {}).map(([key, value]) => ({
+      name: key.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join('-'),
+      value: value,
+      isClickable: ['content-type', 'cache-control', 'authorization'].includes(key.toLowerCase())
+    }));
+
+    return {
+      success: true,
+      status: request.response_status,
+      statusText: request.response_status_text,
+      headers: processedHeaders,
+      responseTime: request.response_time,
+      responseSize: request.response_size,
+      responseData: request.response_is_binary ? 
+        `[Binary content - ${request.response_size || '0 B'}]` : 
+        request.response_data,
+      rawHeaders: request.response_headers || {},
+      rawResponseTime: request.response_raw_time,
+      rawResponseSize: request.response_raw_size,
+      cancelled: false,
+      receivedAt: request.response_received_at?.toISOString() || null,
+      isBinary: request.response_is_binary || false,
+      binaryData: request.response_binary_data,
+      saved: true // Flag to indicate this is saved data
+    };
+  };
+
   const handleMethodChange = (method) => {
     updateRequestData({ method });
     
@@ -131,15 +198,38 @@ export function RequestEditor({ request, onRequestChange }) {
     try {
       const result = await requestSubmitter.submitRequest(requestData);
       setResponse(result);
+      
+      // Save response to IndexedDB if we have a request ID
+      if (request?.id) {
+        try {
+          await apiClient.saveRequestResponse(request.id, result);
+          console.log('Response saved to database');
+        } catch (saveError) {
+          console.error('Failed to save response to database:', saveError);
+          // Don't fail the request if saving fails
+        }
+      }
+      
     } catch (error) {
       console.error('Request submission failed:', error);
-      setResponse({
+      const errorResponse = {
         success: false,
         errorType: 'unknown_error',
         errorTitle: 'Request Failed',
         errorMessage: error.message,
-        cancelled: false
-      });
+        cancelled: false,
+        receivedAt: new Date().toISOString()
+      };
+      setResponse(errorResponse);
+      
+      // Save error response to IndexedDB if we have a request ID
+      if (request?.id) {
+        try {
+          await apiClient.saveRequestResponse(request.id, errorResponse);
+        } catch (saveError) {
+          console.error('Failed to save error response to database:', saveError);
+        }
+      }
     } finally {
       setIsSubmitting(false);
     }

@@ -415,6 +415,42 @@ export class SlingshotApiClient {
   }
 
   /**
+   * Saves response data for a request
+   * @param {string} id - Request ID
+   * @param {Object} responseData - Response data from requestSubmitter
+   * @returns {Promise<import('../types/index.js').Request>} Updated request
+   */
+  async saveRequestResponse(id, responseData) {
+    const request = await db.requests.get(id);
+    if (!request) {
+      throw new Error('Request not found');
+    }
+
+    const updatedData = {
+      // Response data fields
+      response_data: responseData.responseData || null,
+      response_headers: responseData.rawHeaders || {},
+      response_status: responseData.status || null,
+      response_status_text: responseData.statusText || null,
+      response_time: responseData.responseTime || null,
+      response_size: responseData.responseSize || null,
+      response_raw_time: responseData.rawResponseTime || null,
+      response_raw_size: responseData.rawResponseSize || null,
+      response_is_binary: responseData.isBinary || false,
+      response_binary_data: responseData.binaryData || null,
+      response_cancelled: responseData.cancelled || false,
+      response_success: responseData.success || false,
+      response_error_type: responseData.errorType || null,
+      response_error_title: responseData.errorTitle || null,
+      response_error_message: responseData.errorMessage || null,
+      response_received_at: new Date(responseData.receivedAt || new Date())
+    };
+
+    await db.requests.update(id, updatedData);
+    return await db.requests.get(id);
+  }
+
+  /**
    * Deletes a request
    * @param {string} id - Request ID
    * @returns {Promise<void>}

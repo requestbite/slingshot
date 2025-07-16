@@ -79,12 +79,24 @@ db.requests.defineClass({
   content_type: String,
   body: String,
   form_data: Array,
+  url_encoded_data: Array,
+  // Response fields from proxy
   response_data: String,
   response_type: String,
   response_headers: Object,
   response_status: Number,
-  response_time: Number,
-  response_size: Number,
+  response_status_text: String,
+  response_time: String, // Formatted string like "123.45 ms"
+  response_size: String, // Formatted string like "1.2 KB"
+  response_raw_time: Number, // Raw milliseconds
+  response_raw_size: Number, // Raw bytes
+  response_is_binary: Boolean,
+  response_binary_data: String, // Base64 encoded binary data
+  response_cancelled: Boolean,
+  response_success: Boolean,
+  response_error_type: String,
+  response_error_title: String,
+  response_error_message: String,
   response_received_at: Date,
 });
 
