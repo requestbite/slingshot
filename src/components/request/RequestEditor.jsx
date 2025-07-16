@@ -4,6 +4,7 @@ import { HeadersTab } from './tabs/HeadersTab';
 import { BodyTab } from './tabs/BodyTab';
 import { SettingsTab } from './tabs/SettingsTab';
 import { ResponseDisplay } from './ResponseDisplay';
+import { CurlExportModal } from '../modals/CurlExportModal';
 import { requestSubmitter } from '../../utils/requestSubmitter';
 import { apiClient } from '../../api';
 
@@ -37,6 +38,9 @@ export function RequestEditor({ request, onRequestChange }) {
   // Response state
   const [response, setResponse] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Modal state
+  const [showCurlModal, setShowCurlModal] = useState(false);
 
   // Update parent when request data changes
   useEffect(() => {
@@ -309,6 +313,7 @@ export function RequestEditor({ request, onRequestChange }) {
               {isSubmitting ? 'Sending...' : 'Send'}
             </button>
             <button 
+              onClick={() => setShowCurlModal(true)}
               disabled={isSubmitting}
               class={`px-4 py-2 text-sm font-semibold border rounded-md transition-colors ${
                 isSubmitting
@@ -402,6 +407,13 @@ export function RequestEditor({ request, onRequestChange }) {
         response={response}
         isLoading={isSubmitting}
         onCancel={handleCancelRequest}
+      />
+
+      {/* Curl Export Modal */}
+      <CurlExportModal
+        isOpen={showCurlModal}
+        onClose={() => setShowCurlModal(false)}
+        requestData={requestData}
       />
     </div>
   );
