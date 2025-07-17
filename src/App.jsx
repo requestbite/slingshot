@@ -6,12 +6,18 @@ import { HomePage } from './pages/HomePage';
 import { CollectionPage } from './pages/CollectionPage';
 import { RequestPage } from './pages/RequestPage';
 import { CollectionsPage } from './pages/CollectionsPage';
+import { CollectionUpdatePage } from './pages/CollectionUpdatePage';
 
 export function App() {
   return (
     <AppProvider>
       <Router>
         <Switch>
+          <Route path="/collections/:uuid">
+            <FullPageLayout>
+              <CollectionUpdatePage />
+            </FullPageLayout>
+          </Route>
           <Route path="/collections">
             <FullPageLayout>
               <CollectionsPage />

@@ -75,8 +75,7 @@ export function CollectionsPage() {
   };
 
   const handleEditCollection = (collection) => {
-    // TODO: Implement edit collection functionality
-    console.log('Edit collection:', collection.name);
+    setLocation(`/collections/${collection.id}`);
     setOpenDropdown(null);
   };
 

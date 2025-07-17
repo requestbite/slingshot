@@ -104,6 +104,7 @@ export function SideBar() {
                 Add Folder
               </button>
               <button 
+                onClick={() => selectedCollection && setLocation(`/collections/${selectedCollection.id}`)}
                 class={`px-3 py-2 rounded-md transition-colors ${
                   selectedCollection 
                     ? 'bg-blue-50 text-blue-700 hover:bg-blue-100' 
