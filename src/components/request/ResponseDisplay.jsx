@@ -1,4 +1,5 @@
 import { useState } from 'preact/hooks';
+import { WelcomeMessage } from '../common/WelcomeMessage';
 
 export function ResponseDisplay({ response, isLoading, onCancel }) {
   const [showHeaders, setShowHeaders] = useState(true);
@@ -30,12 +31,7 @@ export function ResponseDisplay({ response, isLoading, onCancel }) {
   if (!response) {
     return (
       <div class="p-6 border-t border-gray-200 bg-gray-50">
-        <div class="text-center text-gray-500">
-          <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-          </svg>
-          <p class="text-sm">Click Send to make a request</p>
-        </div>
+        <WelcomeMessage />
       </div>
     );
   }

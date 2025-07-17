@@ -61,6 +61,16 @@ export function RequestEditor({ request, onRequestChange }) {
     }
   }, [request]);
 
+  // Update requestData when request prop changes
+  useEffect(() => {
+    if (request) {
+      setRequestData(prev => ({
+        ...prev,
+        ...request
+      }));
+    }
+  }, [request]);
+
   // Parse URL to extract query and path parameters
   useEffect(() => {
     if (requestData.url) {
@@ -266,20 +276,29 @@ export function RequestEditor({ request, onRequestChange }) {
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-3">
             <h2 class="text-lg font-semibold text-gray-900">
-              {request?.name || 'Untitled Request'}
+              {request?.name || 'Test Request'}
             </h2>
-            <span class="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
-              Unsaved changes
-            </span>
+            {!request && (
+              <span class="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                Standalone
+              </span>
+            )}
+            {request && (
+              <span class="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
+                Editing
+              </span>
+            )}
           </div>
-          <div class="flex space-x-2">
-            <button class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">
-              Save As
-            </button>
-            <button class="px-3 py-1.5 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-md transition-colors">
-              Update
-            </button>
-          </div>
+          {request && (
+            <div class="flex space-x-2">
+              <button class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">
+                Save As
+              </button>
+              <button class="px-3 py-1.5 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-md transition-colors">
+                Update
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
