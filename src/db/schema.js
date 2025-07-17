@@ -98,6 +98,18 @@ db.requests.defineClass({
   response_error_title: String,
   response_error_message: String,
   response_received_at: Date,
+  // Draft fields for request editing
+  has_draft_edits: Boolean,
+  draft_method: String,
+  draft_url: String,
+  draft_headers: Array,
+  draft_params: Array,
+  draft_path_params: Array,
+  draft_request_type: String,
+  draft_content_type: String,
+  draft_body: String,
+  draft_form_data: Array,
+  draft_url_encoded_data: Array,
 });
 
 /**

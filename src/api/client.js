@@ -326,13 +326,26 @@ export class SlingshotApiClient {
       content_type: requestData.content_type || '',
       body: requestData.body || '',
       form_data: requestData.form_data || [],
+      url_encoded_data: requestData.url_encoded_data || [],
       response_data: null,
       response_type: null,
       response_headers: null,
       response_status: null,
       response_time: null,
       response_size: null,
-      response_received_at: null
+      response_received_at: null,
+      // Initialize draft fields
+      has_draft_edits: false,
+      draft_method: null,
+      draft_url: null,
+      draft_headers: null,
+      draft_params: null,
+      draft_path_params: null,
+      draft_request_type: null,
+      draft_content_type: null,
+      draft_body: null,
+      draft_form_data: null,
+      draft_url_encoded_data: null
     };
 
     const id = await db.requests.add(request);
@@ -490,6 +503,105 @@ export class SlingshotApiClient {
    */
   async deleteRequest(id) {
     return await db.requests.delete(id);
+  }
+
+  /**
+   * Saves draft changes to a request without updating the main fields
+   * @param {string} id - Request ID
+   * @param {Object} draftData - Draft data to save
+   * @returns {Promise<import('../types/index.js').Request>} Updated request
+   */
+  async saveDraftChanges(id, draftData) {
+    const existing = await db.requests.get(id);
+    if (!existing) {
+      throw new Error('Request not found');
+    }
+
+    const draftUpdates = {
+      has_draft_edits: true,
+      draft_method: draftData.method,
+      draft_url: draftData.url,
+      draft_headers: draftData.headers || [],
+      draft_params: draftData.queryParams || [],
+      draft_path_params: draftData.pathParams || [],
+      draft_request_type: draftData.bodyType,
+      draft_content_type: draftData.contentType,
+      draft_body: draftData.bodyContent,
+      draft_form_data: draftData.formData || [],
+      draft_url_encoded_data: draftData.urlEncodedData || []
+    };
+
+    await db.requests.update(id, draftUpdates);
+    return await db.requests.get(id);
+  }
+
+  /**
+   * Applies draft changes to the main request fields and clears draft data
+   * @param {string} id - Request ID
+   * @returns {Promise<import('../types/index.js').Request>} Updated request
+   */
+  async applyDraftChanges(id) {
+    const existing = await db.requests.get(id);
+    if (!existing || !existing.has_draft_edits) {
+      throw new Error('Request not found or has no draft changes');
+    }
+
+    const updates = {
+      method: existing.draft_method || existing.method,
+      url: existing.draft_url || existing.url,
+      headers: existing.draft_headers || existing.headers,
+      params: existing.draft_params || existing.params,
+      path_params: existing.draft_path_params || existing.path_params,
+      request_type: existing.draft_request_type || existing.request_type,
+      content_type: existing.draft_content_type || existing.content_type,
+      body: existing.draft_body || existing.body,
+      form_data: existing.draft_form_data || existing.form_data,
+      url_encoded_data: existing.draft_url_encoded_data || existing.url_encoded_data,
+      // Clear draft fields
+      has_draft_edits: false,
+      draft_method: null,
+      draft_url: null,
+      draft_headers: null,
+      draft_params: null,
+      draft_path_params: null,
+      draft_request_type: null,
+      draft_content_type: null,
+      draft_body: null,
+      draft_form_data: null,
+      draft_url_encoded_data: null
+    };
+
+    await db.requests.update(id, updates);
+    return await db.requests.get(id);
+  }
+
+  /**
+   * Discards draft changes and restores the original request data
+   * @param {string} id - Request ID
+   * @returns {Promise<import('../types/index.js').Request>} Updated request
+   */
+  async discardDraftChanges(id) {
+    const existing = await db.requests.get(id);
+    if (!existing) {
+      throw new Error('Request not found');
+    }
+
+    const updates = {
+      has_draft_edits: false,
+      draft_method: null,
+      draft_url: null,
+      draft_headers: null,
+      draft_params: null,
+      draft_path_params: null,
+      draft_request_type: null,
+      draft_content_type: null,
+      draft_body: null,
+      draft_form_data: null,
+      draft_url_encoded_data: null
+    };
+
+    await db.requests.update(id, updates);
+    return await db.requests.get(id);
   }
 
   // Secret operations

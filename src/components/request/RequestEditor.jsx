@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { ParamsTab } from './tabs/ParamsTab';
 import { HeadersTab } from './tabs/HeadersTab';
 import { BodyTab } from './tabs/BodyTab';
@@ -23,6 +23,38 @@ const TAB_NAMES = {
 export function RequestEditor({ request, onRequestChange }) {
   const { selectedCollection } = useAppContext();
   const [activeTab, setActiveTab] = useState('params');
+  
+  // Helper function to get effective request data (draft if available, otherwise main)
+  const getEffectiveRequestData = (request) => {
+    if (!request) {
+      return {
+        method: 'GET',
+        url: '',
+        headers: [],
+        queryParams: [],
+        pathParams: [],
+        bodyType: 'none',
+        contentType: 'application/json',
+        bodyContent: '',
+        formData: [],
+        urlEncodedData: []
+      };
+    }
+    
+    return {
+      method: request.has_draft_edits && request.draft_method ? request.draft_method : (request.method || 'GET'),
+      url: request.has_draft_edits && request.draft_url ? request.draft_url : (request.url || ''),
+      headers: request.has_draft_edits && request.draft_headers ? request.draft_headers : (request.headers || []),
+      queryParams: request.has_draft_edits && request.draft_params ? request.draft_params : (request.params || []),
+      pathParams: request.has_draft_edits && request.draft_path_params ? request.draft_path_params : (request.path_params || []),
+      bodyType: request.has_draft_edits && request.draft_request_type ? request.draft_request_type : (request.request_type || 'none'),
+      contentType: request.has_draft_edits && request.draft_content_type ? request.draft_content_type : (request.content_type || 'application/json'),
+      bodyContent: request.has_draft_edits && request.draft_body ? request.draft_body : (request.body || ''),
+      formData: request.has_draft_edits && request.draft_form_data ? request.draft_form_data : (request.form_data || []),
+      urlEncodedData: request.has_draft_edits && request.draft_url_encoded_data ? request.draft_url_encoded_data : (request.url_encoded_data || [])
+    };
+  };
+
   const [requestData, setRequestData] = useState({
     method: 'GET',
     url: '',
@@ -36,21 +68,31 @@ export function RequestEditor({ request, onRequestChange }) {
     timeout: 30,
     formData: [],
     urlEncodedData: [],
-    ...request
+    ...(request ? getEffectiveRequestData(request) : {})
   });
 
   // Response state
   const [response, setResponse] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Draft state
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isDraftDirty, setIsDraftDirty] = useState(false);
+  const draftSaveTimeoutRef = useRef(null);
+  const originalDataRef = useRef(null);
+  
   // Modal state
   const [showCurlModal, setShowCurlModal] = useState(false);
   const [showCurlImportModal, setShowCurlImportModal] = useState(false);
   const [showSaveAsModal, setShowSaveAsModal] = useState(false);
 
-  // Update parent when request data changes
+  // Update parent when request data changes (but not during initial load or when editing existing requests)
   useEffect(() => {
-    if (onRequestChange) {
+    console.log('👆 PARENT UPDATE EFFECT - onRequestChange exists:', !!onRequestChange);
+    console.log('👆 PARENT UPDATE EFFECT - request exists:', !!request);
+    // Only call onRequestChange for new requests, not when editing existing ones
+    if (onRequestChange && !request) {
+      console.log('👆 Calling onRequestChange with:', requestData);
       onRequestChange(requestData);
     }
   }, [requestData, onRequestChange]);
@@ -67,20 +109,112 @@ export function RequestEditor({ request, onRequestChange }) {
 
   // Update requestData when request prop changes
   useEffect(() => {
+    console.log('🔄 REQUEST CHANGE EFFECT - Request:', request?.id, request?.name);
     if (request) {
+      // Use draft data if available, otherwise use main data
+      const dataToLoad = getEffectiveRequestData(request);
+      console.log('📥 Loading data for request:', dataToLoad);
+      setRequestData(prev => {
+        console.log('📥 Previous requestData:', prev);
+        const newData = { ...prev, ...dataToLoad };
+        console.log('📥 New requestData:', newData);
+        return newData;
+      });
+      
+      // Store original data for comparison (without draft changes)
+      originalDataRef.current = getEffectiveRequestData({
+        ...request,
+        has_draft_edits: false // Force getting original data without drafts
+      });
+      console.log('💾 Stored original data:', originalDataRef.current);
+      
+      // Set draft state based on request
+      setHasUnsavedChanges(request.has_draft_edits || false);
+      setIsDraftDirty(false);
+    } else {
+      console.log('🔄 No request - resetting to defaults');
+      // Reset to default values when no request is selected
+      const defaultData = getEffectiveRequestData(null);
       setRequestData(prev => ({
         ...prev,
-        ...request
+        ...defaultData
       }));
+      
+      originalDataRef.current = null;
+      setHasUnsavedChanges(false);
+      setIsDraftDirty(false);
     }
   }, [request]);
 
-  // Parse URL to extract query and path parameters
+  // Track changes for draft saving
   useEffect(() => {
-    if (requestData.url) {
+    console.log('🔍 CHANGE TRACKING EFFECT');
+    console.log('🔍 Request ID:', request?.id);
+    console.log('🔍 Original data exists:', !!originalDataRef.current);
+    console.log('🔍 Current requestData:', requestData);
+    console.log('🔍 isDraftDirty:', isDraftDirty);
+    
+    if (request && originalDataRef.current) {
+      const hasChanges = hasDataChanged(originalDataRef.current, requestData);
+      console.log('🔍 Has changes:', hasChanges);
+      
+      if (hasChanges && !isDraftDirty) {
+        console.log('🔍 Setting draft dirty and saving...');
+        setIsDraftDirty(true);
+        saveDraftChangesDebounced();
+      }
+    }
+  }, [requestData]);
+
+  // Check if data has changed from original
+  const hasDataChanged = (original, current) => {
+    if (!request) return false;
+    
+    const fieldsToCheck = ['method', 'url', 'headers', 'queryParams', 'pathParams', 'bodyType', 'contentType', 'bodyContent', 'formData', 'urlEncodedData'];
+    
+    return fieldsToCheck.some(field => {
+      const originalValue = original[field];
+      const currentValue = current[field];
+      
+      // For arrays and objects, do a JSON comparison
+      if (Array.isArray(originalValue) || Array.isArray(currentValue)) {
+        return JSON.stringify(originalValue) !== JSON.stringify(currentValue);
+      }
+      
+      return originalValue !== currentValue;
+    });
+  };
+
+  // Debounced draft save
+  const saveDraftChangesDebounced = () => {
+    console.log('💾 DEBOUNCED SAVE - Clearing existing timeout');
+    if (draftSaveTimeoutRef.current) {
+      clearTimeout(draftSaveTimeoutRef.current);
+    }
+    
+    console.log('💾 DEBOUNCED SAVE - Setting new timeout for request:', request?.id);
+    draftSaveTimeoutRef.current = setTimeout(async () => {
+      console.log('💾 EXECUTING DRAFT SAVE for request:', request?.id);
+      console.log('💾 Saving requestData:', requestData);
+      if (request?.id) {
+        try {
+          await apiClient.saveDraftChanges(request.id, requestData);
+          console.log('💾 Draft save completed successfully');
+          setHasUnsavedChanges(true);
+          setIsDraftDirty(false);
+        } catch (error) {
+          console.error('💾 Failed to save draft changes:', error);
+        }
+      }
+    }, 1000); // Save after 1 second of no changes
+  };
+
+  // Parse URL to extract query and path parameters (only for new requests, not when editing existing ones)
+  useEffect(() => {
+    if (requestData.url && !request) {
       parseUrlParameters(requestData.url);
     }
-  }, [requestData.url]);
+  }, [requestData.url, request]);
 
   const parseUrlParameters = (url) => {
     try {
@@ -96,7 +230,7 @@ export function RequestEditor({ request, onRequestChange }) {
       const pathParamMatches = url.match(/\{([^}]+)\}/g) || [];
       const pathParams = pathParamMatches.map(match => {
         const key = match.slice(1, -1); // Remove { and }
-        const existingParam = requestData.pathParams.find(p => p.key === key);
+        const existingParam = (requestData.pathParams || []).find(p => p.key === key);
         return {
           id: crypto.randomUUID(),
           key,
@@ -121,7 +255,13 @@ export function RequestEditor({ request, onRequestChange }) {
   };
 
   const updateRequestData = (updates) => {
-    setRequestData(prev => ({ ...prev, ...updates }));
+    console.log('📝 UPDATE REQUEST DATA:', updates);
+    console.log('📝 Previous data:', requestData);
+    setRequestData(prev => {
+      const newData = { ...prev, ...updates };
+      console.log('📝 New data after update:', newData);
+      return newData;
+    });
   };
 
   // Helper function to check if request has saved response data
@@ -190,6 +330,8 @@ export function RequestEditor({ request, onRequestChange }) {
   };
 
   const handleUrlChange = (url) => {
+    console.log('🖊️ URL CHANGE - New URL:', url);
+    console.log('🖊️ Current requestData before update:', requestData);
     updateRequestData({ url });
   };
 
@@ -273,6 +415,51 @@ export function RequestEditor({ request, onRequestChange }) {
     setResponse(null);
   };
 
+  // Handle restore (discard draft changes)
+  const handleRestore = async () => {
+    if (!request?.id) return;
+    
+    try {
+      const updatedRequest = await apiClient.discardDraftChanges(request.id);
+      
+      // Reload the original data
+      const originalData = getEffectiveRequestData(updatedRequest);
+      setRequestData(prev => ({
+        ...prev,
+        ...originalData
+      }));
+      
+      setHasUnsavedChanges(false);
+      setIsDraftDirty(false);
+      
+      // Trigger context refresh to update the request object
+      if (onRequestChange) {
+        onRequestChange(updatedRequest);
+      }
+    } catch (error) {
+      console.error('Failed to restore request:', error);
+    }
+  };
+
+  // Handle update (apply draft changes)
+  const handleUpdate = async () => {
+    if (!request?.id) return;
+    
+    try {
+      const updatedRequest = await apiClient.applyDraftChanges(request.id);
+      
+      setHasUnsavedChanges(false);
+      setIsDraftDirty(false);
+      
+      // Trigger context refresh to update the request object
+      if (onRequestChange) {
+        onRequestChange(updatedRequest);
+      }
+    } catch (error) {
+      console.error('Failed to update request:', error);
+    }
+  };
+
   return (
     <div class="flex flex-col h-full">
       {/* Request Name Bar */}
@@ -294,16 +481,38 @@ export function RequestEditor({ request, onRequestChange }) {
             )}
           </div>
           {request && (
-            <div class="flex space-x-2">
-              <button 
-                onClick={() => setShowSaveAsModal(true)}
-                class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-              >
-                Save As
-              </button>
-              <button class="px-3 py-1.5 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-md transition-colors">
-                Update
-              </button>
+            <div class="flex items-center space-x-3">
+              {hasUnsavedChanges && (
+                <span class="text-sm text-orange-600">
+                  Request has unsaved data ({' '}
+                  <button 
+                    onClick={handleRestore}
+                    class="underline hover:text-orange-700 transition-colors"
+                  >
+                    restore
+                  </button>
+                  )
+                </span>
+              )}
+              <div class="flex space-x-2">
+                <button 
+                  onClick={() => setShowSaveAsModal(true)}
+                  class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                >
+                  Save As
+                </button>
+                <button 
+                  onClick={handleUpdate}
+                  disabled={!hasUnsavedChanges}
+                  class={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    hasUnsavedChanges
+                      ? 'text-white bg-sky-600 hover:bg-sky-700'
+                      : 'text-gray-400 bg-gray-200 cursor-not-allowed'
+                  }`}
+                >
+                  Update
+                </button>
+              </div>
             </div>
           )}
           {!request && selectedCollection && (
