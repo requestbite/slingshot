@@ -293,14 +293,14 @@ export class SlingshotApiClient {
    * @param {Object} requestData - The request data
    * @param {string} requestData.name - Request name (required)
    * @param {string} requestData.collection_id - Collection ID (required)
-   * @param {string} requestData.url - Request URL (required)
+   * @param {string} [requestData.url] - Request URL
    * @param {string} [requestData.method='GET'] - HTTP method
    * @param {string} [requestData.folder_id] - Folder ID
    * @param {import('../types/index.js').KeyValuePair[]} [requestData.headers] - Request headers
    * @param {import('../types/index.js').KeyValuePair[]} [requestData.params] - Query parameters
    * @param {import('../types/index.js').KeyValuePair[]} [requestData.path_params] - Path parameters
    * @param {string} [requestData.request_type='none'] - Request body type
-   * @param {string} [requestData.content_type='json'] - Content type
+   * @param {string} [requestData.content_type] - Content type
    * @param {string} [requestData.body] - Request body
    * @param {import('../types/index.js').FormDataItem[]} [requestData.form_data] - Form data
    * @returns {Promise<import('../types/index.js').Request>} The created request
@@ -318,12 +318,12 @@ export class SlingshotApiClient {
       folder_id: requestData.folder_id || null,
       name: requestData.name,
       method: requestData.method || 'GET',
-      url: requestData.url,
+      url: requestData.url || '',
       headers: requestData.headers || [],
       params: requestData.params || [],
       path_params: requestData.path_params || [],
       request_type: requestData.request_type || 'none',
-      content_type: requestData.content_type || 'json',
+      content_type: requestData.content_type || '',
       body: requestData.body || '',
       form_data: requestData.form_data || [],
       response_data: null,

@@ -107,6 +107,15 @@ export function AppProvider({ children }) {
     setSelectedRequest(request);
   };
 
+  // Force refresh of collection data (useful after adding/editing requests)
+  const refreshCollectionData = () => {
+    // Trigger a re-render by updating a timestamp or counter
+    // This will cause components that depend on selectedCollection to reload their data
+    if (selectedCollection) {
+      setSelectedCollection({ ...selectedCollection, _refreshTrigger: Date.now() });
+    }
+  };
+
   const value = {
     // Collections
     collections,
@@ -122,7 +131,8 @@ export function AppProvider({ children }) {
     removeCollection,
     selectCollection,
     selectRequest,
-    setCurrentEnvironment
+    setCurrentEnvironment,
+    refreshCollectionData
   };
 
   return (

@@ -6,8 +6,10 @@ import { SettingsTab } from './tabs/SettingsTab';
 import { ResponseDisplay } from './ResponseDisplay';
 import { CurlExportModal } from '../modals/CurlExportModal';
 import { CurlImportModal } from '../modals/CurlImportModal';
+import { SaveAsModal } from '../modals/SaveAsModal';
 import { requestSubmitter } from '../../utils/requestSubmitter';
 import { apiClient } from '../../api';
+import { useAppContext } from '../../hooks/useAppContext';
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 
@@ -19,6 +21,7 @@ const TAB_NAMES = {
 };
 
 export function RequestEditor({ request, onRequestChange }) {
+  const { selectedCollection } = useAppContext();
   const [activeTab, setActiveTab] = useState('params');
   const [requestData, setRequestData] = useState({
     method: 'GET',
@@ -43,6 +46,7 @@ export function RequestEditor({ request, onRequestChange }) {
   // Modal state
   const [showCurlModal, setShowCurlModal] = useState(false);
   const [showCurlImportModal, setShowCurlImportModal] = useState(false);
+  const [showSaveAsModal, setShowSaveAsModal] = useState(false);
 
   // Update parent when request data changes
   useEffect(() => {
@@ -291,11 +295,24 @@ export function RequestEditor({ request, onRequestChange }) {
           </div>
           {request && (
             <div class="flex space-x-2">
-              <button class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">
+              <button 
+                onClick={() => setShowSaveAsModal(true)}
+                class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              >
                 Save As
               </button>
               <button class="px-3 py-1.5 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-md transition-colors">
                 Update
+              </button>
+            </div>
+          )}
+          {!request && selectedCollection && (
+            <div class="flex space-x-2">
+              <button 
+                onClick={() => setShowSaveAsModal(true)}
+                class="px-3 py-1.5 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-md transition-colors"
+              >
+                Save As
               </button>
             </div>
           )}
@@ -457,6 +474,18 @@ export function RequestEditor({ request, onRequestChange }) {
         isOpen={showCurlImportModal}
         onClose={() => setShowCurlImportModal(false)}
         onImport={handleCurlImport}
+      />
+
+      {/* Save As Modal */}
+      <SaveAsModal
+        isOpen={showSaveAsModal}
+        onClose={() => setShowSaveAsModal(false)}
+        requestData={requestData}
+        collection={selectedCollection}
+        onSuccess={(savedRequest) => {
+          console.log('Request saved successfully:', savedRequest);
+          // Could potentially navigate to the saved request or show notification
+        }}
       />
     </div>
   );

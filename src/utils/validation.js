@@ -9,15 +9,20 @@ export const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'O
 /** @type {string[]} Valid request body types */
 export const REQUEST_TYPES = ['none', 'raw', 'form', 'urlencoded'];
 
-/** @type {string[]} Valid content types */
-export const CONTENT_TYPES = ['json', 'xml', 'text'];
+/** @type {string[]} Valid content types - expanded to accept common MIME types */
+export const CONTENT_TYPES = [
+  'json', 'xml', 'text', 
+  'application/json', 'application/xml', 'text/plain', 'text/html',
+  'application/x-www-form-urlencoded', 'multipart/form-data',
+  'application/octet-stream', 'image/jpeg', 'image/png'
+];
 
 /**
  * Validates request data
  * @param {Object} request - Request data to validate
  * @param {string} request.name - Request name
- * @param {string} request.method - HTTP method
- * @param {string} request.url - Request URL
+ * @param {string} [request.method] - HTTP method
+ * @param {string} [request.url] - Request URL
  * @param {string} [request.request_type] - Request body type
  * @param {string} [request.content_type] - Content type
  * @returns {import('../types/index.js').ValidationResult} Validation result
@@ -25,24 +30,31 @@ export const CONTENT_TYPES = ['json', 'xml', 'text'];
 export function validateRequest(request) {
   const errors = [];
 
+  // Only require name, everything else is optional
   if (!request.name?.trim()) {
     errors.push('Request name is required');
   }
 
-  if (!HTTP_METHODS.includes(request.method)) {
+  // Validate method only if provided
+  if (request.method && !HTTP_METHODS.includes(request.method)) {
     errors.push('Invalid HTTP method');
   }
 
-  if (!request.url?.trim()) {
-    errors.push('Request URL is required');
-  }
-
+  // URL is now optional - users can save incomplete requests
+  
+  // Validate request type only if provided
   if (request.request_type && !REQUEST_TYPES.includes(request.request_type)) {
     errors.push('Invalid request type');
   }
 
-  if (request.content_type && !CONTENT_TYPES.includes(request.content_type)) {
-    errors.push('Invalid content type');
+  // Be more lenient with content types - allow any string that looks like a content type
+  if (request.content_type && request.content_type.trim()) {
+    const contentType = request.content_type.trim();
+    // Accept if it's in our list OR if it looks like a MIME type (contains /)
+    const isValidMimeType = contentType.includes('/') || CONTENT_TYPES.includes(contentType);
+    if (!isValidMimeType) {
+      errors.push('Invalid content type');
+    }
   }
 
   return {
