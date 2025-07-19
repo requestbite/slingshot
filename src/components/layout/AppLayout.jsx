@@ -8,17 +8,16 @@ export function AppLayout({ children }) {
   return (
     <div class="h-screen flex flex-col bg-white">
       <TopBar />
-      
+
       {/* Sidebar Toggle Button for Mobile - only show when sidebar is hidden */}
       <button
         onClick={() => setIsSidebarOpen(true)}
-        class={`fixed top-1/2 -left-1 transform -translate-y-1/2 z-50 bg-sky-100 hover:bg-sky-200 text-sky-700 p-2 rounded-r-lg shadow-lg cursor-pointer transition-all duration-200 hover:translate-x-1 ${
-          isSidebarOpen ? 'hidden' : 'block md:hidden'
-        }`}
+        class={`fixed top-1/2 -left-1 transform -translate-y-1/2 z-50 bg-sky-100 hover:bg-sky-200 text-sky-700 p-2 rounded-r-lg shadow-lg cursor-pointer transition-all duration-200 hover:translate-x-1 ${isSidebarOpen ? 'hidden' : 'block md:hidden'
+          }`}
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m6 17 5-5-5-5"/>
-          <path d="m13 17 5-5-5-5"/>
+          <path d="m6 17 5-5-5-5" />
+          <path d="m13 17 5-5-5-5" />
         </svg>
       </button>
 
@@ -32,18 +31,16 @@ export function AppLayout({ children }) {
           {/* Mobile Sidebar */}
           {isSidebarOpen && (
             <>
-              {/* Mobile Sidebar - takes full screen minus 75px, covers topbar */}
-              <div class="fixed left-0 top-0 bottom-0 right-[75px] bg-white z-50 md:hidden overflow-y-auto">
-                <div class="p-4 pt-20">
-                  <SideBar onClose={() => setIsSidebarOpen(false)} />
-                </div>
-              </div>
-              
-              {/* Overlay - 75px on the right side, covers topbar */}
+              {/* Full screen overlay covering topbar */}
               <div
-                class="fixed right-0 top-0 bottom-0 w-[75px] bg-gray-500/75 z-40 md:hidden"
+                class="fixed inset-0 bg-gray-500/75 z-[60] md:hidden"
                 onClick={() => setIsSidebarOpen(false)}
               />
+
+              {/* Mobile Sidebar - takes full screen minus 75px, covers topbar */}
+              <div class="fixed left-0 top-0 bottom-0 right-[75px] bg-white z-[70] md:hidden overflow-y-auto">
+                <SideBar onClose={() => setIsSidebarOpen(false)} />
+              </div>
             </>
           )}
 

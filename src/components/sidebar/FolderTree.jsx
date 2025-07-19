@@ -106,6 +106,20 @@ export function FolderTree({ searchTerm = '' }) {
       }
     });
 
+    // Sort folders and requests alphabetically
+    const sortByName = (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+    
+    // Sort root folders and their contents recursively
+    const sortFolderRecursively = (folder) => {
+      folder.subfolders.sort(sortByName);
+      folder.requests.sort(sortByName);
+      folder.subfolders.forEach(sortFolderRecursively);
+    };
+    
+    rootFolders.sort(sortByName);
+    rootFolders.forEach(sortFolderRecursively);
+    rootRequests.sort(sortByName);
+
     return {
       folders: rootFolders,
       requests: rootRequests
@@ -158,6 +172,20 @@ export function FolderTree({ searchTerm = '' }) {
       request.method.toLowerCase().includes(term) ||
       request.url.toLowerCase().includes(term)
     );
+
+    // Sort filtered results alphabetically
+    const sortByName = (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+    
+    // Sort folders and requests recursively
+    const sortFolderRecursively = (folder) => {
+      folder.subfolders.sort(sortByName);
+      folder.requests.sort(sortByName);
+      folder.subfolders.forEach(sortFolderRecursively);
+    };
+    
+    filteredFolders.sort(sortByName);
+    filteredFolders.forEach(sortFolderRecursively);
+    filteredRequests.sort(sortByName);
 
     setFilteredData({
       folders: filteredFolders,
