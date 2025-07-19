@@ -14,36 +14,27 @@ export function SideBar() {
   const [searchTerm, setSearchTerm] = useState('');
   const [, setLocation] = useLocation();
   const { collections, selectedCollection, selectCollection, isLoading } = useAppContext();
-  
+
   return (
     <>
       {/* Mobile overlay */}
       {isOpen && (
-        <div 
+        <div
           class="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
-      
+
       {/* Sidebar */}
       <aside class={`
-        w-[300px] flex-shrink-0 bg-white border-r border-gray-200
-        transform transition-transform duration-300 ease-in-out
+        bg-white rounded-lg border border-gray-300 h-full
         md:translate-x-0 md:static md:z-auto
-        fixed left-0 top-16 h-full z-30
+        fixed left-0 top-16 z-30
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div class="p-4 space-y-4">
-          {/* Environment Selector */}
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Environment</label>
-            <select class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-              <option>No Environment</option>
-            </select>
-          </div>
-
           {/* Import OpenAPI Button */}
-          <button 
+          <button
             onClick={() => setShowImportModal(true)}
             class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
           >
@@ -56,7 +47,7 @@ export function SideBar() {
               <label class="block text-sm font-medium text-gray-700">Collection</label>
             </div>
             <div class="flex space-x-2">
-              <select 
+              <select
                 class="flex-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={selectedCollection?.id || ''}
                 onChange={(e) => {
@@ -80,7 +71,7 @@ export function SideBar() {
                   </option>
                 ))}
               </select>
-              <button 
+              <button
                 onClick={() => setShowAddCollectionModal(true)}
                 class="px-3 py-2 bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-md transition-colors"
                 title="Create new collection"
@@ -88,28 +79,26 @@ export function SideBar() {
                 +
               </button>
             </div>
-            
+
             {/* Folder and Settings buttons */}
             <div class="flex space-x-2">
-              <button 
+              <button
                 onClick={() => setShowAddFolderModal(true)}
-                class={`flex-1 px-3 py-2 rounded-md text-sm transition-colors ${
-                  selectedCollection 
-                    ? 'bg-blue-50 text-blue-700 hover:bg-blue-100' 
-                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                }`}
+                class={`flex-1 px-3 py-2 rounded-md text-sm transition-colors ${selectedCollection
+                  ? 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
                 disabled={!selectedCollection}
                 title={selectedCollection ? 'Add folder to collection' : 'Select a collection first'}
               >
                 Add Folder
               </button>
-              <button 
+              <button
                 onClick={() => selectedCollection && setLocation(`/collections/${selectedCollection.id}`)}
-                class={`px-3 py-2 rounded-md transition-colors ${
-                  selectedCollection 
-                    ? 'bg-blue-50 text-blue-700 hover:bg-blue-100' 
-                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                }`}
+                class={`px-3 py-2 rounded-md transition-colors ${selectedCollection
+                  ? 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
                 disabled={!selectedCollection}
                 title={selectedCollection ? 'Collection settings' : 'Select a collection first'}
               >
@@ -124,17 +113,16 @@ export function SideBar() {
           {/* Search Filter */}
           <div>
             <div class="relative">
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="Filter requests..."
                 value={searchTerm}
                 onInput={(e) => setSearchTerm(e.target.value)}
-                class={`w-full pl-8 pr-8 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  selectedCollection ? '' : 'text-gray-500'
-                }`}
+                class={`w-full pl-8 pr-8 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${selectedCollection ? '' : 'text-gray-500'
+                  }`}
                 disabled={!selectedCollection}
               />
-              
+
               {/* Clear search button */}
               {searchTerm && (
                 <button
