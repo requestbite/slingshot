@@ -99,8 +99,17 @@ local function substitute_path_params(target_url, path_params)
     
     local result_url = target_url
     for param_name, param_value in pairs(path_params) do
-        local pattern = ":" .. param_name:gsub(":", "")
-        result_url = result_url:gsub(pattern, url.escape(param_value))
+        -- Remove leading colon from param_name if present, then add it back
+        local clean_param_name = param_name:gsub("^:", "")
+        local pattern = ":" .. clean_param_name
+        -- Use string.find and string.sub for literal replacement to avoid pattern issues
+        local start_pos = 1
+        while true do
+            local found_start, found_end = result_url:find(pattern, start_pos, true)
+            if not found_start then break end
+            result_url = result_url:sub(1, found_start - 1) .. url.escape(param_value) .. result_url:sub(found_end + 1)
+            start_pos = found_start + #url.escape(param_value)
+        end
     end
     return result_url
 end
