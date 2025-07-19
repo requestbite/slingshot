@@ -31,10 +31,10 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [] }) 
 
     // Check if we're on mobile (screen width < 768px)
     const isMobile = window.innerWidth < 768;
-    
+
     // Calculate position
     let left, top;
-    
+
     if (isMobile) {
       // Mobile: position to the left of the button
       left = triggerRect.left - menuWidth - 4;
@@ -48,25 +48,25 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [] }) 
         left = triggerRect.left - menuWidth - 4;
       }
     }
-    
+
     // Check if menu should open upward
     const spaceBelow = viewport.height - triggerRect.bottom;
     const spaceAbove = triggerRect.top;
     const shouldOpenUpward = spaceBelow < menuHeight && spaceAbove > menuHeight;
-    
+
     if (shouldOpenUpward) {
       // Position menu above the trigger button
       top = triggerRect.top - menuHeight - 4;
     } else {
       // Position menu below the trigger button
       top = triggerRect.bottom + 4;
-      
+
       // If it would go below viewport, try to position it above
       if (top + menuHeight > viewport.height - 8) {
         top = triggerRect.top - menuHeight - 4;
       }
     }
-    
+
     // Ensure menu doesn't go above viewport
     if (top < 8) {
       top = 8;
@@ -76,8 +76,8 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [] }) 
   };
 
   const handleClickOutside = (e) => {
-    if (menuRef.current && !menuRef.current.contains(e.target) && 
-        trigger && !trigger.contains(e.target)) {
+    if (menuRef.current && !menuRef.current.contains(e.target) &&
+      trigger && !trigger.contains(e.target)) {
       onClose();
     }
   };
@@ -98,11 +98,11 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [] }) 
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       ref={menuRef}
-      class="fixed z-50 w-40 bg-white py-1 shadow-lg ring-1 ring-black/5 rounded-md"
-      style={{ 
-        top: `${position.top}px`, 
+      class="fixed z-50 w-44 bg-white py-1 shadow-lg ring-1 ring-black/5 rounded-md"
+      style={{
+        top: `${position.top}px`,
         left: `${position.left}px`,
         minWidth: '120px',
         visibility: position.top === 0 && position.left === 0 ? 'hidden' : 'visible'
@@ -117,9 +117,8 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [] }) 
               key={index}
               onClick={() => handleItemClick(item)}
               disabled={item.disabled}
-              class={`block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer ${
-                item.disabled ? 'opacity-50 cursor-not-allowed' : ''
-              } ${item.destructive ? 'text-red-600 hover:text-red-700' : ''}`}
+              class={`block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''
+                } ${item.destructive ? 'text-red-600 hover:text-red-700' : ''}`}
             >
               {item.icon && (
                 <span class="inline-block w-4 h-4 mr-2">

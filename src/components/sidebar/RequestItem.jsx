@@ -85,7 +85,7 @@ export function RequestItem({ request, isSelected, level = 0, onRequestUpdate })
 
   const contextMenuItems = [
     {
-      label: 'Rename/Move',
+      label: 'Rename / Move...',
       onClick: () => {
         setShowContextMenu(false);
         setShowRenameModal(true);
@@ -109,7 +109,7 @@ export function RequestItem({ request, isSelected, level = 0, onRequestUpdate })
       divider: true
     },
     {
-      label: 'Delete',
+      label: 'Delete...',
       onClick: () => {
         setShowContextMenu(false);
         setShowDeleteModal(true);

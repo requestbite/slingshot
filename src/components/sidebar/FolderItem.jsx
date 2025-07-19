@@ -62,7 +62,7 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
 
   const contextMenuItems = [
     {
-      label: 'Add subfolder',
+      label: 'Add subfolder...',
       onClick: () => {
         setShowContextMenu(false);
         setShowAddSubfolderModal(true);
@@ -74,7 +74,7 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
       )
     },
     {
-      label: 'Rename/Move',
+      label: 'Rename / Move...',
       onClick: () => {
         setShowContextMenu(false);
         setShowRenameModal(true);
@@ -89,7 +89,7 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
       divider: true
     },
     {
-      label: 'Delete',
+      label: 'Delete...',
       onClick: () => {
         setShowContextMenu(false);
         setShowDeleteModal(true);
