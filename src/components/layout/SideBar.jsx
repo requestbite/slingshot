@@ -6,8 +6,7 @@ import { AddCollectionModal } from '../modals/AddCollectionModal';
 import { FolderTree } from '../sidebar/FolderTree';
 import { useAppContext } from '../../hooks/useAppContext';
 
-export function SideBar() {
-  const [isOpen, setIsOpen] = useState(false);
+export function SideBar({ onClose }) {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showAddFolderModal, setShowAddFolderModal] = useState(false);
   const [showAddCollectionModal, setShowAddCollectionModal] = useState(false);
@@ -17,21 +16,8 @@ export function SideBar() {
 
   return (
     <>
-      {/* Mobile overlay */}
-      {isOpen && (
-        <div
-          class="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-
       {/* Sidebar */}
-      <aside class={`
-        bg-white rounded-lg md:border border-gray-300 h-full
-        md:translate-x-0 md:static md:z-auto
-        fixed left-0 top-16 z-30
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
+      <aside class="bg-white rounded-lg md:border border-gray-300 h-full">
         <div class="flex grow flex-col gap-y-5 overflow-y-auto p-4">
           <nav class="flex flex-1 flex-col space-y-4">
             {/* Import OpenAPI Button */}
@@ -127,15 +113,17 @@ export function SideBar() {
               <div class="flex justify-between items-center mb-2">
                 <label class="block text-xs font-medium text-gray-600">Requests</label>
                 {selectedCollection && (
-                  <button
-                    onClick={() => {
+                  <a
+                    href={selectedCollection ? `/${selectedCollection.id}` : '#'}
+                    onClick={(e) => {
+                      e.preventDefault();
                       selectRequest(null); // Clear request editor fields
                       setLocation(`/${selectedCollection.id}`);
                     }}
                     class="text-xs text-sky-600 hover:text-sky-800 focus:outline-none cursor-pointer"
                   >
                     Add
-                  </button>
+                  </a>
                 )}
               </div>
 

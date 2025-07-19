@@ -86,6 +86,9 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
       )
     },
     {
+      divider: true
+    },
+    {
       label: 'Delete',
       onClick: () => {
         setShowContextMenu(false);

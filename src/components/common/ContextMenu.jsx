@@ -32,25 +32,44 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [] }) 
     // Check if we're on mobile (screen width < 768px)
     const isMobile = window.innerWidth < 768;
     
-    // Calculate position based on the original HTML template logic
+    // Calculate position
     let left, top;
     
     if (isMobile) {
       // Mobile: position to the left of the button
-      left = triggerRect.left - menuWidth - 4; // Menu width + 4px gap
+      left = triggerRect.left - menuWidth - 4;
       // Ensure menu doesn't go off-screen to the left
-      if (left < 4) left = 4;
+      if (left < 8) left = 8;
     } else {
       // Desktop: position to the right of the button
-      left = triggerRect.right + 4; // 4px gap to the right of button
+      left = triggerRect.right + 4;
+      // Ensure menu doesn't go off-screen to the right
+      if (left + menuWidth > viewport.width - 8) {
+        left = triggerRect.left - menuWidth - 4;
+      }
     }
     
-    // Position the top left corner just below the 3-dots button
-    top = triggerRect.bottom + 2; // Small 2px gap below the button
+    // Check if menu should open upward
+    const spaceBelow = viewport.height - triggerRect.bottom;
+    const spaceAbove = triggerRect.top;
+    const shouldOpenUpward = spaceBelow < menuHeight && spaceAbove > menuHeight;
     
-    // Check if menu goes below viewport and adjust if needed
-    if (top + menuHeight > viewport.height) {
-      top = triggerRect.top - menuHeight - 2;
+    if (shouldOpenUpward) {
+      // Position menu above the trigger button
+      top = triggerRect.top - menuHeight - 4;
+    } else {
+      // Position menu below the trigger button
+      top = triggerRect.bottom + 4;
+      
+      // If it would go below viewport, try to position it above
+      if (top + menuHeight > viewport.height - 8) {
+        top = triggerRect.top - menuHeight - 4;
+      }
+    }
+    
+    // Ensure menu doesn't go above viewport
+    if (top < 8) {
+      top = 8;
     }
 
     setPosition({ top, left });
@@ -85,7 +104,8 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [] }) 
       style={{ 
         top: `${position.top}px`, 
         left: `${position.left}px`,
-        minWidth: '120px'
+        minWidth: '120px',
+        visibility: position.top === 0 && position.left === 0 ? 'hidden' : 'visible'
       }}
     >
       {children || (
