@@ -1,4 +1,4 @@
-import { useState, useRef } from 'preact/hooks';
+import { useState, useRef, useEffect } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { ContextMenu } from '../common/ContextMenu';
 import { RenameRequestModal } from '../modals/RenameRequestModal';
@@ -15,6 +15,19 @@ export function RequestItem({ request, isSelected, level = 0, onRequestUpdate })
   const { selectedCollection, selectRequest, loadCollections } = useAppContext();
   const menuTriggerRef = useRef();
 
+  useEffect(() => {
+    const handleCloseAllContextMenus = (e) => {
+      if (e.detail.exceptId !== request.id) {
+        setShowContextMenu(false);
+      }
+    };
+
+    window.addEventListener('closeAllContextMenus', handleCloseAllContextMenus);
+    return () => {
+      window.removeEventListener('closeAllContextMenus', handleCloseAllContextMenus);
+    };
+  }, [request.id]);
+
   const handleRequestClick = () => {
     if (selectedCollection && request) {
       selectRequest(request);
@@ -25,6 +38,10 @@ export function RequestItem({ request, isSelected, level = 0, onRequestUpdate })
   const handleContextMenuClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // Close any other open context menus by dispatching a custom event
+    window.dispatchEvent(new CustomEvent('closeAllContextMenus', { detail: { exceptId: request.id } }));
+
     setShowContextMenu(true);
   };
 
@@ -41,15 +58,15 @@ export function RequestItem({ request, isSelected, level = 0, onRequestUpdate })
     try {
       setShowContextMenu(false);
       const duplicatedRequest = await apiClient.duplicateRequest(request.id);
-      
+
       // Refresh the sidebar to show the new request
       await loadCollections();
-      
+
       // Call parent callback if provided
       if (onRequestUpdate) {
         onRequestUpdate(duplicatedRequest);
       }
-      
+
       console.log('Request duplicated successfully:', duplicatedRequest.name);
     } catch (error) {
       console.error('Failed to duplicate request:', error);
@@ -89,6 +106,9 @@ export function RequestItem({ request, isSelected, level = 0, onRequestUpdate })
       )
     },
     {
+      divider: true
+    },
+    {
       label: 'Delete',
       onClick: () => {
         setShowContextMenu(false);
@@ -108,38 +128,37 @@ export function RequestItem({ request, isSelected, level = 0, onRequestUpdate })
 
   return (
     <li class="request relative">
-      <div 
-        class={`group flex items-center justify-between px-2 py-1.5 text-sm cursor-pointer rounded transition-colors ${
-          isSelected 
-            ? 'bg-sky-50 text-sky-900' 
-            : 'text-gray-700 hover:bg-gray-100'
-        }`}
-        style={{ marginLeft: `${marginLeft}rem` }}
-        onClick={handleRequestClick}
+      <div
+        class={`flex items-center justify-between relative hover:bg-gray-100 py-1 px-1 rounded ${isSelected ? 'bg-sky-50' : ''
+          }`}
+        style={{ marginLeft: `${marginLeft * 10}px` }}
       >
-        <div class="flex items-center min-w-0 flex-1">
-          {/* HTTP Method Badge */}
-          <span class={`text-[10px]/[12px] text-white py-0.5 px-1 rounded mr-2 flex-shrink-0 font-medium ${methodColor}`}>
+        <a
+          href={selectedCollection ? `/${selectedCollection.id}/${request.id}/` : '#'}
+          class="flex items-center flex-grow overflow-hidden cursor-pointer"
+          onClick={(e) => {
+            e.preventDefault();
+            handleRequestClick();
+          }}
+        >
+          <span class={`text-[10px]/[12px] text-white py-0.5 px-1 rounded mr-2 flex-shrink-0 ${methodColor}`}>
             {request.method}
           </span>
-          
-          {/* Request Name */}
-          <span class="truncate">
-            {request.name || request.url || 'Untitled Request'}
-          </span>
-        </div>
+          <span class="text-xs truncate">{request.name || request.url || 'Untitled Request'}</span>
+        </a>
 
         {/* Context Menu Trigger */}
         <button
           ref={menuTriggerRef}
           onClick={handleContextMenuClick}
-          class="opacity-0 group-hover:opacity-100 p-1 text-sky-400 hover:text-sky-700 transition-all focus:opacity-100 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
+          class="flex items-center text-sky-400 hover:text-sky-700 focus:outline-none cursor-pointer"
           title="More options"
         >
-          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="5" r="2" />
+          <span class="sr-only">Open options</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="flex-shrink-0">
+            <circle cx="5" cy="12" r="2" />
             <circle cx="12" cy="12" r="2" />
-            <circle cx="12" cy="19" r="2" />
+            <circle cx="19" cy="12" r="2" />
           </svg>
         </button>
       </div>

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'preact/hooks';
+import { useState, useRef, useEffect } from 'preact/hooks';
 import { ContextMenu } from '../common/ContextMenu';
 import { RequestItem } from './RequestItem';
 import { RenameFolderModal } from '../modals/RenameFolderModal';
@@ -15,9 +15,26 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
   const { loadCollections } = useAppContext();
   const menuTriggerRef = useRef();
 
+  useEffect(() => {
+    const handleCloseAllContextMenus = (e) => {
+      if (e.detail.exceptId !== folder.id) {
+        setShowContextMenu(false);
+      }
+    };
+
+    window.addEventListener('closeAllContextMenus', handleCloseAllContextMenus);
+    return () => {
+      window.removeEventListener('closeAllContextMenus', handleCloseAllContextMenus);
+    };
+  }, [folder.id]);
+
   const handleContextMenuClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // Close any other open context menus by dispatching a custom event
+    window.dispatchEvent(new CustomEvent('closeAllContextMenus', { detail: { exceptId: folder.id } }));
+
     setShowContextMenu(true);
   };
 
@@ -88,61 +105,47 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
 
   return (
     <li class="folder">
-      <div 
-        class="group flex items-center justify-between px-2 py-1.5 text-sm cursor-pointer rounded transition-colors text-gray-700 hover:bg-gray-100"
-        style={{ marginLeft: `${marginLeft}rem` }}
-        onClick={toggleExpanded}
+      <div
+        class="flex items-center justify-between text-gray-700 py-1 hover:bg-gray-100 rounded px-1 relative"
+        style={{ marginLeft: `${marginLeft * 10}px` }}
       >
-        <div class="flex items-center min-w-0 flex-1">
+        <div class="flex items-center overflow-hidden cursor-pointer" onClick={toggleExpanded}>
           {/* Expand/Collapse Arrow */}
           {hasChildren && (
-            <button
-              class="w-4 h-4 mr-1 flex items-center justify-center text-gray-400 hover:text-gray-600"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleExpanded();
-              }}
+            <svg
+              class={`w-3 h-3 mr-1 text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg 
-                class={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
           )}
-          
-          {/* Folder Icon */}
-          <svg class="w-3.5 h-3.5 mr-1 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1 text-gray-500 flex-shrink-0">
+            <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
           </svg>
-          
-          {/* Folder Name */}
-          <span class="truncate font-medium">
-            {folder.name}
-          </span>
+          <span class="text-xs truncate">{folder.name}</span>
         </div>
 
         {/* Context Menu Trigger */}
         <button
           ref={menuTriggerRef}
           onClick={handleContextMenuClick}
-          class="opacity-0 group-hover:opacity-100 p-1 text-sky-400 hover:text-sky-700 transition-all focus:opacity-100 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
+          class="flex items-center text-sky-400 hover:text-sky-700 focus:outline-none cursor-pointer"
           title="More options"
         >
-          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="5" r="2" />
+          <span class="sr-only">Open options</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="flex-shrink-0">
+            <circle cx="5" cy="12" r="2" />
             <circle cx="12" cy="12" r="2" />
-            <circle cx="12" cy="19" r="2" />
+            <circle cx="19" cy="12" r="2" />
           </svg>
         </button>
       </div>
 
       {/* Children (Subfolders and Requests) */}
       {isExpanded && hasChildren && (
-        <ul class="space-y-0">
+        <ul class="ml-4 space-y-0">
           {/* Render subfolders first */}
           {subfolders.map(subfolder => (
             <FolderItem
@@ -155,7 +158,7 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
               onFolderUpdate={onFolderUpdate}
             />
           ))}
-          
+
           {/* Render requests */}
           {requests.map(request => (
             <RequestItem
