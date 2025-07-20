@@ -146,7 +146,7 @@ export function RequestEditor({ request, onRequestChange }) {
     }
   }, [request]);
 
-  // Track changes for draft saving
+  // Track changes for immediate UI updates and debounced saving
   useEffect(() => {
     console.log('🔍 CHANGE TRACKING EFFECT');
     console.log('🔍 Request ID:', request?.id);
@@ -158,10 +158,16 @@ export function RequestEditor({ request, onRequestChange }) {
       const hasChanges = hasDataChanged(originalDataRef.current, requestData);
       console.log('🔍 Has changes:', hasChanges);
       
+      // Immediately update the hasUnsavedChanges state for UI
+      setHasUnsavedChanges(hasChanges);
+      
       if (hasChanges && !isDraftDirty) {
         console.log('🔍 Setting draft dirty and saving...');
         setIsDraftDirty(true);
         saveDraftChangesDebounced();
+      } else if (!hasChanges && isDraftDirty) {
+        // If changes were reverted, clear the dirty flag
+        setIsDraftDirty(false);
       }
     }
   }, [requestData]);
@@ -217,19 +223,32 @@ export function RequestEditor({ request, onRequestChange }) {
   }, [requestData.url, request]);
 
   const parseUrlParameters = (url) => {
-    try {
-      const urlObj = new URL(url);
-      
-      // Extract query parameters
-      const queryParams = [];
-      urlObj.searchParams.forEach((value, key) => {
-        queryParams.push({ id: crypto.randomUUID(), key, value, enabled: true });
-      });
+    if (!url) {
+      setRequestData(prev => ({
+        ...prev,
+        queryParams: [],
+        pathParams: []
+      }));
+      return;
+    }
 
-      // Extract path parameters (look for {param} patterns)
-      const pathParamMatches = url.match(/\{([^}]+)\}/g) || [];
+    try {
+      // Parse query parameters from URL
+      const queryParams = [];
+      const urlParts = url.split('?');
+      if (urlParts.length > 1) {
+        const queryString = urlParts[1].split('#')[0]; // Remove fragment if present
+        const searchParams = new URLSearchParams(queryString);
+        searchParams.forEach((value, key) => {
+          queryParams.push({ id: crypto.randomUUID(), key, value, enabled: true });
+        });
+      }
+
+      // Extract path parameters (look for :param patterns)
+      const pathPart = urlParts[0];
+      const pathParamMatches = pathPart.match(/:([a-zA-Z_][a-zA-Z0-9_]*)/g) || [];
       const pathParams = pathParamMatches.map(match => {
-        const key = match.slice(1, -1); // Remove { and }
+        const key = match.slice(1); // Remove :
         const existingParam = (requestData.pathParams || []).find(p => p.key === key);
         return {
           id: crypto.randomUUID(),
@@ -245,11 +264,23 @@ export function RequestEditor({ request, onRequestChange }) {
         pathParams
       }));
     } catch (error) {
-      // Invalid URL, clear params
+      // For invalid URLs, still try to parse path parameters
+      const pathParamMatches = url.match(/:([a-zA-Z_][a-zA-Z0-9_]*)/g) || [];
+      const pathParams = pathParamMatches.map(match => {
+        const key = match.slice(1); // Remove :
+        const existingParam = (requestData.pathParams || []).find(p => p.key === key);
+        return {
+          id: crypto.randomUUID(),
+          key,
+          value: existingParam?.value || '',
+          enabled: true
+        };
+      });
+
       setRequestData(prev => ({
         ...prev,
         queryParams: [],
-        pathParams: []
+        pathParams
       }));
     }
   };
@@ -332,7 +363,76 @@ export function RequestEditor({ request, onRequestChange }) {
   const handleUrlChange = (url) => {
     console.log('🖊️ URL CHANGE - New URL:', url);
     console.log('🖊️ Current requestData before update:', requestData);
-    updateRequestData({ url });
+    
+    // Parse URL parameters immediately and include in the update
+    const parsedParams = parseUrlParametersSync(url);
+    updateRequestData({ 
+      url, 
+      queryParams: parsedParams.queryParams,
+      pathParams: parsedParams.pathParams
+    });
+  };
+
+  const handleBodyTypeChange = (bodyType) => {
+    const updates = { bodyType };
+    
+    // If changing to 'raw', default to JSON content type
+    if (bodyType === 'raw') {
+      updates.contentType = 'application/json';
+    }
+    
+    updateRequestData(updates);
+  };
+
+  // Synchronous version of parseUrlParameters for immediate parsing
+  const parseUrlParametersSync = (url) => {
+    if (!url) {
+      return { queryParams: [], pathParams: [] };
+    }
+
+    try {
+      // Parse query parameters from URL
+      const queryParams = [];
+      const urlParts = url.split('?');
+      if (urlParts.length > 1) {
+        const queryString = urlParts[1].split('#')[0]; // Remove fragment if present
+        const searchParams = new URLSearchParams(queryString);
+        searchParams.forEach((value, key) => {
+          queryParams.push({ id: crypto.randomUUID(), key, value, enabled: true });
+        });
+      }
+
+      // Extract path parameters (look for :param patterns)
+      const pathPart = urlParts[0];
+      const pathParamMatches = pathPart.match(/:([a-zA-Z_][a-zA-Z0-9_]*)/g) || [];
+      const pathParams = pathParamMatches.map(match => {
+        const key = match.slice(1); // Remove :
+        const existingParam = (requestData.pathParams || []).find(p => p.key === key);
+        return {
+          id: crypto.randomUUID(),
+          key,
+          value: existingParam?.value || '',
+          enabled: true
+        };
+      });
+
+      return { queryParams, pathParams };
+    } catch (error) {
+      // For invalid URLs, still try to parse path parameters
+      const pathParamMatches = url.match(/:([a-zA-Z_][a-zA-Z0-9_]*)/g) || [];
+      const pathParams = pathParamMatches.map(match => {
+        const key = match.slice(1); // Remove :
+        const existingParam = (requestData.pathParams || []).find(p => p.key === key);
+        return {
+          id: crypto.randomUUID(),
+          key,
+          value: existingParam?.value || '',
+          enabled: true
+        };
+      });
+
+      return { queryParams: [], pathParams };
+    }
   };
 
   const getMethodColor = (method) => {
@@ -532,6 +632,7 @@ export function RequestEditor({ request, onRequestChange }) {
             <input
               type="text"
               value={requestData.url}
+              onInput={(e) => handleUrlChange(e.target.value)}
               onChange={(e) => handleUrlChange(e.target.value)}
               placeholder="https://example.com"
               class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 bg-white font-inter text-gray-900 overflow-hidden whitespace-nowrap"
@@ -582,10 +683,12 @@ export function RequestEditor({ request, onRequestChange }) {
             {Object.entries(TAB_NAMES).map(([key, name]) => (
               <button key={key} type="button" data-tab={key}
                 onClick={() => setActiveTab(key)}
-                class={`cursor-pointer px-4 py-2 text-xs rounded-t-md font-medium focus:outline-none ${
-                  activeTab === key
-                    ? 'text-sky-600 bg-sky-50 border-b-2 border-sky-600'
-                    : 'text-gray-600 hover:text-sky-600 hover:bg-gray-100'
+                class={`px-4 py-2 text-xs rounded-t-md font-medium focus:outline-none ${
+                  key === 'body' && isBodyDisabled
+                    ? 'text-gray-400 cursor-not-allowed'
+                    : activeTab === key
+                      ? 'text-sky-600 bg-sky-50 border-b-2 border-sky-600 cursor-pointer'
+                      : 'text-gray-600 hover:text-sky-600 hover:bg-gray-100 cursor-pointer'
                 }`}
                 disabled={key === 'body' && isBodyDisabled}
               >
@@ -600,8 +703,10 @@ export function RequestEditor({ request, onRequestChange }) {
                     {requestData.headers.length}
                   </span>
                 )}
-                {key === 'body' && isBodyDisabled && (
-                  <span class="bodyless-method-pill">Method doesn't allow body</span>
+                {key === 'body' && requestData.bodyType === 'form-data' && requestData.formData.length > 0 && (
+                  <span class="ml-1 text-xs bg-sky-100 text-sky-600 rounded-full px-1.5 py-0.5">
+                    {requestData.formData.length}
+                  </span>
                 )}
               </button>
             ))}
@@ -638,7 +743,7 @@ export function RequestEditor({ request, onRequestChange }) {
               method={requestData.method}
               formData={requestData.formData}
               urlEncodedData={requestData.urlEncodedData}
-              onBodyTypeChange={(bodyType) => updateRequestData({ bodyType })}
+              onBodyTypeChange={handleBodyTypeChange}
               onBodyContentChange={(bodyContent) => updateRequestData({ bodyContent })}
               onContentTypeChange={(contentType) => updateRequestData({ contentType })}
               onFormDataChange={(formData) => updateRequestData({ formData })}

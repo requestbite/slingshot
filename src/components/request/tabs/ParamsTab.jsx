@@ -79,16 +79,7 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
             <div>No query parameters found.</div>
           ) : (
             queryParams.map((param) => (
-              <div key={param.id} class="grid grid-cols-12 gap-2 items-center">
-                <div class="col-span-1 flex justify-center">
-                  <input
-                    type="checkbox"
-                    checked={param.enabled}
-                    class="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500"
-                    disabled
-                    title="Query parameters are automatically parsed from URL"
-                  />
-                </div>
+              <div key={param.id} class="grid grid-cols-11 gap-2 items-center">
                 <div class="col-span-5">
                   <input
                     type="text"

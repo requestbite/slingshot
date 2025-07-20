@@ -56,8 +56,10 @@ export function HeadersTab({ headers, onHeadersChange }) {
             </div>
             <div class="col-span-5">
               <input
+                key={`header-key-${header.id}`}
                 type="text"
                 value={header.key}
+                onInput={(e) => updateHeader(header.id, 'key', e.target.value)}
                 onChange={(e) => updateHeader(header.id, 'key', e.target.value)}
                 placeholder="Header name"
                 class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${
@@ -68,8 +70,10 @@ export function HeadersTab({ headers, onHeadersChange }) {
             </div>
             <div class="col-span-5">
               <input
+                key={`header-value-${header.id}`}
                 type="text"
                 value={header.value}
+                onInput={(e) => updateHeader(header.id, 'value', e.target.value)}
                 onChange={(e) => updateHeader(header.id, 'value', e.target.value)}
                 placeholder="Value"
                 class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${

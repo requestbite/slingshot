@@ -10,9 +10,7 @@ const BODY_TYPES = [
 const CONTENT_TYPES = [
   { value: 'application/json', label: 'JSON' },
   { value: 'application/xml', label: 'XML' },
-  { value: 'text/plain', label: 'Text' },
-  { value: 'text/html', label: 'HTML' },
-  { value: 'application/javascript', label: 'JavaScript' }
+  { value: 'text/plain', label: 'Text' }
 ];
 
 export function BodyTab({
@@ -111,6 +109,7 @@ export function BodyTab({
         <div>
           <textarea 
             value={bodyContent}
+            onInput={(e) => onBodyContentChange(e.target.value)}
             onChange={(e) => onBodyContentChange(e.target.value)}
             placeholder="Enter request body"
             class="w-full h-64 px-3 py-2 mb-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono text-sm"
@@ -146,8 +145,10 @@ export function BodyTab({
                 </div>
                 <div class="col-span-5">
                   <input
+                    key={`form-key-${field.id}`}
                     type="text"
                     value={field.key}
+                    onInput={(e) => updateFormDataField(field.id, 'key', e.target.value)}
                     onChange={(e) => updateFormDataField(field.id, 'key', e.target.value)}
                     placeholder="Key"
                     class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${
@@ -158,8 +159,10 @@ export function BodyTab({
                 </div>
                 <div class="col-span-5">
                   <input
+                    key={`form-value-${field.id}`}
                     type="text"
                     value={field.value}
+                    onInput={(e) => updateFormDataField(field.id, 'value', e.target.value)}
                     onChange={(e) => updateFormDataField(field.id, 'value', e.target.value)}
                     placeholder="Value"
                     class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${
