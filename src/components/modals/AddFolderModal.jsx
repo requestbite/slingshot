@@ -10,7 +10,7 @@ export function AddFolderModal({ isOpen, onClose, parentFolder = null, onSuccess
   });
   const [folders, setFolders] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [error, setError] = useState(null);
   const nameInputRef = useRef();
 
   // Initialize form data when modal opens
@@ -21,8 +21,9 @@ export function AddFolderModal({ isOpen, onClose, parentFolder = null, onSuccess
         name: '',
         parent_folder_id: parentFolder?.id || ''
       });
+      setError(null);
       loadFolders();
-      
+
       // Auto-focus on name input (matching Django behavior)
       setTimeout(() => {
         if (nameInputRef.current) {
@@ -34,7 +35,7 @@ export function AddFolderModal({ isOpen, onClose, parentFolder = null, onSuccess
 
   const loadFolders = async () => {
     if (!selectedCollection) return;
-    
+
     try {
       const allFolders = await apiClient.getFoldersByCollection(selectedCollection.id);
       setFolders(allFolders);
@@ -45,33 +46,32 @@ export function AddFolderModal({ isOpen, onClose, parentFolder = null, onSuccess
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear field error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
+    // Clear error when user starts typing
+    if (error) {
+      setError(null);
     }
   };
 
   const validateForm = () => {
-    const newErrors = {};
-
     // Allow empty name - will auto-generate "Untitled folder" (matching Django logic)
     if (formData.name.trim() && formData.name.trim().length > 100) {
-      newErrors.name = 'Folder name must be 100 characters or less';
+      setError('Folder name must be 100 characters or less');
+      return false;
     }
 
     // Check for duplicate names in the same parent folder
-    const siblingsInSameParent = folders.filter(f => 
+    const siblingsInSameParent = folders.filter(f =>
       f.parent_folder_id === (formData.parent_folder_id || null)
     );
-    
+
     const folderName = formData.name.trim() || generateUntitledName(siblingsInSameParent);
-    
+
     if (siblingsInSameParent.some(f => f.name.toLowerCase() === folderName.toLowerCase())) {
-      newErrors.name = 'A folder with this name already exists in the selected location';
+      setError('A folder with this name already exists in the selected location');
+      return false;
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return true;
   };
 
   // Generate auto name like Django does: "Untitled folder", "Untitled folder 2", etc.
@@ -79,30 +79,30 @@ export function AddFolderModal({ isOpen, onClose, parentFolder = null, onSuccess
     let baseName = 'Untitled folder';
     let counter = 0;
     let folderName = baseName;
-    
+
     while (existingFolders.some(f => f.name.toLowerCase() === folderName.toLowerCase())) {
       counter++;
       folderName = `${baseName} ${counter}`;
     }
-    
+
     return folderName;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       // Handle empty name by auto-generating (matching Django behavior)
-      const siblingsInSameParent = folders.filter(f => 
+      const siblingsInSameParent = folders.filter(f =>
         f.parent_folder_id === (formData.parent_folder_id || null)
       );
-      
+
       const folderName = formData.name.trim() || generateUntitledName(siblingsInSameParent);
-      
+
       const folderData = {
         name: folderName,
         collection_id: selectedCollection.id,
@@ -110,18 +110,18 @@ export function AddFolderModal({ isOpen, onClose, parentFolder = null, onSuccess
       };
 
       const newFolder = await apiClient.createFolder(folderData);
-      
+
       // Refresh collections to update sidebar
       await loadCollections();
-      
+
       if (onSuccess) {
         onSuccess(newFolder);
       }
-      
+
       onClose();
     } catch (error) {
       console.error('Failed to create folder:', error);
-      setErrors({ submit: 'Failed to create folder. Please try again.' });
+      setError('Failed to create folder. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -129,7 +129,7 @@ export function AddFolderModal({ isOpen, onClose, parentFolder = null, onSuccess
 
   const handleClose = () => {
     if (!isSubmitting) {
-      setErrors({});
+      setError(null);
       setFormData({ name: '', parent_folder_id: '' });
       onClose();
     }
@@ -139,39 +139,67 @@ export function AddFolderModal({ isOpen, onClose, parentFolder = null, onSuccess
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape' && isOpen) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleClose();
+      }
+    };
+
+    // Handle escape on input fields directly to bypass browser blur behavior
+    const handleInputEscape = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        e.preventDefault();
+        e.stopPropagation();
         handleClose();
       }
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-      return () => document.removeEventListener('keydown', handleEscape);
+      // Use keyup to fire after input blur completes
+      document.addEventListener('keyup', handleEscape, true);
+      
+      // Also add direct listeners to input fields to catch escape before blur
+      const inputs = document.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        input.addEventListener('keydown', handleInputEscape, true);
+      });
+      
+      return () => {
+        document.removeEventListener('keyup', handleEscape, true);
+        inputs.forEach(input => {
+          input.removeEventListener('keydown', handleInputEscape, true);
+        });
+      };
     }
   }, [isOpen]);
 
-  // Build folder tree for display
-  const buildFolderTree = (parentId = null, level = 0) => {
+  // Build folder tree for display with sorting
+  const buildFolderTree = (parentId = null, level = 0, parentPath = '') => {
     return folders
       .filter(f => f.parent_folder_id === parentId)
-      .map(f => ({
-        ...f,
-        level,
-        children: buildFolderTree(f.id, level + 1)
-      }));
+      .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
+      .map(f => {
+        const currentPath = parentPath ? `${parentPath} / ${f.name}` : f.name;
+        return {
+          ...f,
+          level,
+          displayName: currentPath,
+          children: buildFolderTree(f.id, level + 1, currentPath)
+        };
+      });
   };
 
-  const renderFolderOption = (folder, level = 0) => {
-    const indent = '  '.repeat(level);
+  const renderFolderOption = (folder) => {
     return (
       <option key={folder.id} value={folder.id}>
-        {indent}{folder.name}
+        {folder.displayName}
       </option>
     );
   };
 
   const renderFolderTree = (folderTree) => {
     return folderTree.map(folder => [
-      renderFolderOption(folder, folder.level),
+      renderFolderOption(folder),
       ...renderFolderTree(folder.children)
     ]).flat();
   };
@@ -179,115 +207,89 @@ export function AddFolderModal({ isOpen, onClose, parentFolder = null, onSuccess
   if (!isOpen || !selectedCollection) return null;
 
   const folderTree = buildFolderTree();
-  const isSubfolder = !!parentFolder;
 
   return (
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleClose}>
-      <div 
-        class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-semibold text-gray-900">
-            {isSubfolder ? 'Add Subfolder' : 'Add Folder'}
-          </h2>
-          <p class="text-sm text-gray-600 mt-1">
-            {isSubfolder 
-              ? `Create a new subfolder inside "${parentFolder.name}"`
-              : 'Create a new folder in this collection'
-            }
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} class="px-6 py-4 space-y-4">
-          {/* Folder Name */}
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              {isSubfolder ? 'Name of subfolder' : 'Name of folder'}
-            </label>
-            <input
-              ref={nameInputRef}
-              type="text"
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              class={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 ${
-                errors.name ? 'border-red-300' : 'border-gray-300'
-              }`}
-              placeholder={isSubfolder ? 'Name of subfolder' : 'Name of folder'}
-              disabled={isSubmitting}
-            />
-            {errors.name && (
-              <p class="text-red-600 text-xs mt-1">{errors.name}</p>
-            )}
-            <p class="text-xs text-gray-500 mt-1">
-              Leave empty to auto-generate a name
-            </p>
-          </div>
-
-          {/* Parent Folder Selection */}
-          {!isSubfolder && (
+    <div class="relative z-50" role="dialog" aria-modal="true">
+      <div class="fixed inset-0 bg-gray-500/75 transition-opacity" aria-hidden="true"></div>
+      <div class="fixed inset-0 z-50 w-screen overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
+          <div
+            class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 w-full sm:max-w-lg sm:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                Parent Folder
-              </label>
-              <select
-                value={formData.parent_folder_id}
-                onChange={(e) => handleInputChange('parent_folder_id', e.target.value)}
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
-                disabled={isSubmitting}
-              >
-                <option value="">No parent folder</option>
-                {renderFolderTree(folderTree)}
-              </select>
-              <p class="text-xs text-gray-500 mt-1">
-                Select a parent folder or leave empty for root level
-              </p>
+              <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
+                <button
+                  onClick={handleClose}
+                  type="button"
+                  class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 cursor-pointer"
+                  disabled={isSubmitting}
+                >
+                  <span class="sr-only">Close</span>
+                  <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit}>
+                <div class="text-center mt-0 sm:text-left">
+                  <h3 class="text-base font-semibold text-gray-900">Add Folder</h3>
+                  <div class="mt-2 text-sm text-gray-500">Create a new folder in this collection.</div>
+
+                  {error && (
+                    <div class="mt-2 text-sm text-red-600 bg-red-100 p-2 rounded-md">
+                      {error}
+                    </div>
+                  )}
+
+                  <div class="mt-6">
+                    <input
+                      ref={nameInputRef}
+                      type="text"
+                      placeholder="Name of folder"
+                      class="block w-full rounded-md px-3 py-1.5 text-gray-900 outline focus:outline-2 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-sky-500 text-sm/6"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  <div class="mt-6">
+                    <label for="parent-folder" class="block text-xs font-medium text-gray-600 mb-1">Parent Folder</label>
+                    <select
+                      id="parent-folder"
+                      value={formData.parent_folder_id}
+                      onChange={(e) => handleInputChange('parent_folder_id', e.target.value)}
+                      class="w-full appearance-none rounded-md bg-white py-2 pl-3 pr-8 text-sm text-gray-900 outline -outline-offset-1 outline-gray-300 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
+                      disabled={isSubmitting || !!parentFolder}
+                    >
+                      <option value="">No parent folder</option>
+                      {renderFolderTree(folderTree)}
+                    </select>
+                  </div>
+
+                  <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      class="inline-flex w-full justify-center rounded-md bg-sky-500 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-400 disabled:bg-sky-300 disabled:cursor-not-allowed sm:ml-3 sm:w-auto cursor-pointer"
+                    >
+                      {isSubmitting ? 'Creating...' : 'Create'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleClose}
+                      disabled={isSubmitting}
+                      class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed sm:mt-0 sm:w-auto cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </form>
             </div>
-          )}
-
-          {/* Collection Info */}
-          <div class="bg-blue-50 p-3 rounded-md">
-            <div class="text-xs text-blue-600 mb-1">Collection</div>
-            <div class="font-medium text-blue-900">{selectedCollection.name}</div>
-            {isSubfolder && (
-              <div class="text-xs text-blue-600 mt-1">
-                Parent: {parentFolder.name}
-              </div>
-            )}
           </div>
-
-          {errors.submit && (
-            <div class="text-red-600 text-sm">{errors.submit}</div>
-          )}
-        </form>
-
-        <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={isSubmitting}
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            class="px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? (
-              <div class="flex items-center space-x-2">
-                <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                <span>Creating...</span>
-              </div>
-            ) : (
-              'Create'
-            )}
-          </button>
         </div>
       </div>
     </div>

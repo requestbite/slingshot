@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { useAppContext } from '../../hooks/useAppContext';
 import { apiClient } from '../../api';
 
@@ -10,7 +10,8 @@ export function RenameRequestModal({ isOpen, onClose, request, onUpdate }) {
   });
   const [folders, setFolders] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [error, setError] = useState(null);
+  const nameInputRef = useRef();
 
   // Initialize form data when modal opens
   useEffect(() => {
@@ -19,7 +20,15 @@ export function RenameRequestModal({ isOpen, onClose, request, onUpdate }) {
         name: request.name,
         folder_id: request.folder_id || ''
       });
+      setError(null);
       loadFolders();
+
+      // Auto-focus on name input (matching Django behavior)
+      setTimeout(() => {
+        if (nameInputRef.current) {
+          nameInputRef.current.focus();
+        }
+      }, 100);
     }
   }, [isOpen, request]);
 
@@ -34,17 +43,16 @@ export function RenameRequestModal({ isOpen, onClose, request, onUpdate }) {
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear field error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
+    // Clear error when user starts typing
+    if (error) {
+      setError(null);
     }
   };
 
   const validateForm = async () => {
-    const newErrors = {};
-
     if (!formData.name.trim()) {
-      newErrors.name = 'Request name is required';
+      setError('Request name is required');
+      return false;
     }
 
     // Check for duplicate names in the same folder
@@ -52,33 +60,33 @@ export function RenameRequestModal({ isOpen, onClose, request, onUpdate }) {
       const requestsInSameFolder = formData.folder_id
         ? await apiClient.getRequestsByFolder(formData.folder_id)
         : await apiClient.getRequestsByCollection(request.collection_id).then(requests =>
-            requests.filter(r => !r.folder_id)
-          );
-      
-      const duplicateRequest = requestsInSameFolder.find(r => 
-        r.id !== request.id && 
+          requests.filter(r => !r.folder_id)
+        );
+
+      const duplicateRequest = requestsInSameFolder.find(r =>
+        r.id !== request.id &&
         r.name.toLowerCase() === formData.name.trim().toLowerCase()
       );
-      
+
       if (duplicateRequest) {
-        newErrors.name = 'A request with this name already exists in the selected folder';
+        setError('A request with this name already exists in the selected folder');
+        return false;
       }
     } catch (error) {
       console.error('Error checking for duplicates:', error);
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const isValid = await validateForm();
     if (!isValid) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       const updates = {
         name: formData.name.trim(),
@@ -86,15 +94,15 @@ export function RenameRequestModal({ isOpen, onClose, request, onUpdate }) {
       };
 
       const updatedRequest = await apiClient.updateRequest(request.id, updates);
-      
+
       if (onUpdate) {
         onUpdate(updatedRequest);
       }
-      
+
       onClose();
     } catch (error) {
       console.error('Failed to update request:', error);
-      setErrors({ submit: 'Failed to update request. Please try again.' });
+      setError('Failed to update request. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -102,34 +110,76 @@ export function RenameRequestModal({ isOpen, onClose, request, onUpdate }) {
 
   const handleClose = () => {
     if (!isSubmitting) {
-      setErrors({});
+      setError(null);
       onClose();
     }
   };
 
-  // Build folder tree for display
-  const buildFolderTree = (parentId = null, level = 0) => {
+  // Handle escape key to close modal (matching Django behavior)
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleClose();
+      }
+    };
+
+    // Handle escape on input fields directly to bypass browser blur behavior
+    const handleInputEscape = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleClose();
+      }
+    };
+
+    if (isOpen) {
+      // Use keyup to fire after input blur completes
+      document.addEventListener('keyup', handleEscape, true);
+      
+      // Also add direct listeners to input fields to catch escape before blur
+      const inputs = document.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        input.addEventListener('keydown', handleInputEscape, true);
+      });
+      
+      return () => {
+        document.removeEventListener('keyup', handleEscape, true);
+        inputs.forEach(input => {
+          input.removeEventListener('keydown', handleInputEscape, true);
+        });
+      };
+    }
+  }, [isOpen]);
+
+  // Build folder tree for display with sorting and hierarchical names
+  const buildFolderTree = (parentId = null, level = 0, parentPath = '') => {
     return folders
       .filter(f => f.parent_folder_id === parentId)
-      .map(f => ({
-        ...f,
-        level,
-        children: buildFolderTree(f.id, level + 1)
-      }));
+      .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
+      .map(f => {
+        const currentPath = parentPath ? `${parentPath} / ${f.name}` : f.name;
+        return {
+          ...f,
+          level,
+          displayName: currentPath,
+          children: buildFolderTree(f.id, level + 1, currentPath)
+        };
+      });
   };
 
-  const renderFolderOption = (folder, level = 0) => {
-    const indent = '  '.repeat(level);
+  const renderFolderOption = (folder) => {
     return (
       <option key={folder.id} value={folder.id}>
-        {indent}{folder.name}
+        {folder.displayName}
       </option>
     );
   };
 
   const renderFolderTree = (folderTree) => {
     return folderTree.map(folder => [
-      renderFolderOption(folder, folder.level),
+      renderFolderOption(folder),
       ...renderFolderTree(folder.children)
     ]).flat();
   };
@@ -139,91 +189,90 @@ export function RenameRequestModal({ isOpen, onClose, request, onUpdate }) {
   const folderTree = buildFolderTree();
 
   return (
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleClose}>
-      <div 
-        class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-semibold text-gray-900">Rename / Move Request</h2>
-          <p class="text-sm text-gray-600 mt-1">Update the request name and folder location</p>
-        </div>
+    <div class="relative z-50" role="dialog" aria-modal="true">
+      <div class="fixed inset-0 bg-gray-500/75 transition-opacity" aria-hidden="true"></div>
+      <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
+          <div
+            class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 w-full sm:max-w-lg sm:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
+                <button
+                  onClick={handleClose}
+                  type="button"
+                  class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 cursor-pointer"
+                  disabled={isSubmitting}
+                >
+                  <span class="sr-only">Close</span>
+                  <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
 
-        <form onSubmit={handleSubmit} class="px-6 py-4 space-y-4">
-          {/* Request Name */}
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Request Name *
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              class={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 ${
-                errors.name ? 'border-red-300' : 'border-gray-300'
-              }`}
-              placeholder="Enter request name"
-              disabled={isSubmitting}
-            />
-            {errors.name && (
-              <p class="text-red-600 text-xs mt-1">{errors.name}</p>
-            )}
-          </div>
+              <form onSubmit={handleSubmit}>
+                <div class="text-center mt-0 sm:text-left">
+                  <h3 class="text-base font-semibold text-gray-900">Update Request</h3>
+                  <div class="mt-2 text-sm text-gray-500">Update name and folder for this request.</div>
 
-          {/* Folder Selection */}
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Folder
-            </label>
-            <select
-              value={formData.folder_id}
-              onChange={(e) => handleInputChange('folder_id', e.target.value)}
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
-              disabled={isSubmitting}
-            >
-              <option value="">Root (No folder)</option>
-              {renderFolderTree(folderTree)}
-            </select>
-            <p class="text-xs text-gray-500 mt-1">
-              Select which folder to move this request to
-            </p>
-          </div>
+                  {error && (
+                    <div class="mt-2 text-sm text-red-600 bg-red-100 p-2 rounded-md">
+                      {error}
+                    </div>
+                  )}
 
-          {/* Request Details */}
-          <div class="bg-gray-50 p-3 rounded-md">
-            <div class="text-xs text-gray-500 mb-1">Request Details</div>
-            <div class="flex items-center space-x-2">
-              <span class="text-xs font-medium px-2 py-1 rounded bg-blue-100 text-blue-800">
-                {request?.method || 'GET'}
-              </span>
-              <span class="text-sm text-gray-700 truncate">
-                {request?.url || 'No URL'}
-              </span>
+                  <div class="mt-6">
+                    <label for="name" class="block text-xs font-medium text-gray-600 mb-1">Request Name</label>
+                    <input
+                      ref={nameInputRef}
+                      type="text"
+                      id="name"
+                      placeholder="Name of request"
+                      class="block w-full rounded-md px-3 py-1.5 text-gray-900 outline focus:outline-2 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-sky-500 text-sm/6"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      disabled={isSubmitting}
+                      required
+                    />
+                  </div>
+
+                  <div class="mt-6">
+                    <label for="folder_id" class="block text-xs font-medium text-gray-600 mb-1">Folder</label>
+                    <select
+                      id="folder_id"
+                      value={formData.folder_id}
+                      onChange={(e) => handleInputChange('folder_id', e.target.value)}
+                      class="w-full appearance-none rounded-md bg-white py-2 pl-3 pr-8 text-sm text-gray-900 outline -outline-offset-1 outline-gray-300 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
+                      disabled={isSubmitting}
+                    >
+                      <option value="">No folder</option>
+                      {renderFolderTree(folderTree)}
+                    </select>
+                  </div>
+
+                  <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      class="inline-flex w-full justify-center rounded-md bg-sky-500 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-400 disabled:bg-sky-300 disabled:cursor-not-allowed sm:ml-3 sm:w-auto cursor-pointer"
+                    >
+                      {isSubmitting ? 'Updating...' : 'Update'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleClose}
+                      disabled={isSubmitting}
+                      class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed sm:mt-0 sm:w-auto cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </form>
             </div>
           </div>
-
-          {errors.submit && (
-            <div class="text-red-600 text-sm">{errors.submit}</div>
-          )}
-        </form>
-
-        <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={isSubmitting}
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            disabled={isSubmitting || !formData.name.trim()}
-            class="px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? 'Updating...' : 'Update Request'}
-          </button>
         </div>
       </div>
     </div>
