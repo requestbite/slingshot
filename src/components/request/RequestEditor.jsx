@@ -461,112 +461,94 @@ export function RequestEditor({ request, onRequestChange }) {
   };
 
   return (
-    <div class="flex flex-col h-full">
-      {/* Request Name Bar */}
-      <div class="px-4 py-3 border-b border-gray-200 bg-white">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-3">
-            <h2 class="text-lg font-semibold text-gray-900">
-              {request?.name || 'Test Request'}
-            </h2>
-            {!request && (
-              <span class="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                Standalone
-              </span>
-            )}
-            {request && (
-              <span class="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
-                Editing
-              </span>
-            )}
-          </div>
-          {request && (
-            <div class="flex items-center space-x-3">
+    <>
+      {/* URL Input and HTTP Method Selection Bar */}
+      <div class="p-4">
+        <div class="mb-2 overflow-x-auto scrollbar-hide">
+          <div class="flex items-center justify-between flex-nowrap min-w-max">
+            <div class="text-sm font-medium text-gray-700 whitespace-nowrap mr-2">
+              ⚡️ <span>{request?.name || 'Test Request'}</span>
+            </div>
+            <div class="flex items-center space-x-2 whitespace-nowrap">
               {hasUnsavedChanges && (
-                <span class="text-sm text-orange-600">
-                  Request has unsaved data ({' '}
-                  <button 
-                    onClick={handleRestore}
-                    class="underline hover:text-orange-700 transition-colors"
-                  >
-                    restore
-                  </button>
-                  )
+                <span class="flex items-center text-xs text-gray-400 font-normal">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info mr-1">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4"/>
+                    <path d="M12 8h.01"/>
+                  </svg>
+                  Request has unsaved data ( <button onClick={handleRestore} class="text-sky-500 hover:text-sky-700">restore</button>)
                 </span>
               )}
-              <div class="flex space-x-2">
-                <button 
-                  onClick={() => setShowSaveAsModal(true)}
-                  class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-                >
-                  Save As
-                </button>
-                <button 
-                  onClick={handleUpdate}
-                  disabled={!hasUnsavedChanges}
-                  class={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                    hasUnsavedChanges
-                      ? 'text-white bg-sky-600 hover:bg-sky-700'
-                      : 'text-gray-400 bg-gray-200 cursor-not-allowed'
-                  }`}
-                >
-                  Update
-                </button>
-              </div>
-            </div>
-          )}
-          {!request && selectedCollection && (
-            <div class="flex space-x-2">
+              <button 
+                onClick={handleUpdate}
+                disabled={!hasUnsavedChanges}
+                class={`cursor-pointer rounded-md px-2 py-1 text-xs focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${
+                  hasUnsavedChanges
+                    ? 'bg-sky-100 hover:bg-sky-200 text-sky-700'
+                    : 'bg-gray-300 text-white'
+                }`}
+              >
+                Update
+              </button>
               <button 
                 onClick={() => setShowSaveAsModal(true)}
-                class="px-3 py-1.5 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-md transition-colors"
+                disabled={!selectedCollection}
+                title={selectedCollection ? 'Save the current request to collection' : 'Create or select a collection to save.'}
+                class={`cursor-pointer rounded-md px-2 py-1 text-xs focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${
+                  selectedCollection
+                    ? 'bg-sky-100 hover:bg-sky-200 text-sky-700'
+                    : 'bg-gray-300 text-white'
+                }`}
               >
-                Save As
+                Save as
               </button>
             </div>
-          )}
+          </div>
         </div>
-      </div>
-
-      {/* URL Bar Section */}
-      <div class="px-4 py-3 border-b border-gray-200 bg-white">
-        <div class="flex items-stretch space-x-2">
-          {/* HTTP Method Dropdown */}
-          <div class="relative w-28">
-            <select
+        <div class="flex flex-row items-stretch">
+          {/* HTTP Method selector dropdown */}
+          <div class="method-selector relative w-28 mr-2">
+            <select 
               value={requestData.method}
               onChange={(e) => handleMethodChange(e.target.value)}
-              class={`w-full appearance-none rounded-md bg-white pl-3 pr-8 py-2 text-sm font-medium outline-1 outline-gray-300 focus:outline focus:-outline-offset-2 focus:outline-sky-500 ${getMethodColor(requestData.method)}`}
+              class="w-full appearance-none rounded-md bg-white pl-3 pr-8 text-sm text-gray-900 outline -outline-offset-1 outline-gray-300 focus:outline focus:-outline-offset-2 focus:outline-sky-500" 
+              style="min-height: 38px; max-height: 38px; line-height: 22px; box-sizing: border-box;"
             >
               {HTTP_METHODS.map(method => (
                 <option key={method} value={method}>{method}</option>
               ))}
             </select>
-            <svg class="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            <svg class="pointer-events-none absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 h-4 w-4"
+              viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" data-slot="icon">
+              <path fill-rule="evenodd"
+                d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
+                clip-rule="evenodd" />
             </svg>
           </div>
 
-          {/* URL Input */}
-          <div class="flex-1">
+          {/* URL input */}
+          <div class="flex-1 mr-2" style="min-width: 0;">
             <input
               type="text"
               value={requestData.url}
               onChange={(e) => handleUrlChange(e.target.value)}
               placeholder="https://example.com"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 bg-white font-inter text-gray-900 overflow-hidden whitespace-nowrap"
+              style="min-height: 38px; max-height: 38px; line-height: 22px; width: 100%; box-sizing: border-box;"
+              autofocus
             />
           </div>
 
-          {/* Send and Code Buttons */}
-          <div class="flex space-x-2">
+          {/* Send and Code buttons */}
+          <div class="flex flex-none">
             <button 
               onClick={handleSendRequest}
               disabled={!requestData.url || isSubmitting}
-              class={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${
+              class={`cursor-pointer rounded-md px-3 py-2 text-sm font-semibold focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${
                 !requestData.url || isSubmitting
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-sky-600 hover:bg-sky-700 text-white'
+                  : 'bg-sky-500 hover:bg-sky-400 text-white'
               }`}
             >
               {isSubmitting ? 'Sending...' : 'Send'}
@@ -574,102 +556,116 @@ export function RequestEditor({ request, onRequestChange }) {
             <button 
               onClick={() => setShowCurlModal(true)}
               disabled={isSubmitting}
-              class={`px-4 py-2 text-sm font-semibold border rounded-md transition-colors ${
+              type="button"
+              class={`hidden ml-2 sm:block cursor-pointer rounded-md px-3 py-2 text-sm font-semibold border border-gray-300 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-gray-500 ${
                 isSubmitting
-                  ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300'
+                  ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
               }`}
             >
-              Code
+              <span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-code-icon lucide-code">
+                  <path d="m16 18 6-6-6-6"/>
+                  <path d="m8 6-6 6 6 6"/>
+                </svg>
+              </span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div class="border-b border-gray-200 px-4 overflow-x-auto bg-white">
-        <div class="flex space-x-2 min-w-max">
-          {Object.entries(TAB_NAMES).map(([key, name]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setActiveTab(key)}
-              class={`px-4 py-2 text-xs rounded-t-md font-medium focus:outline-none transition-colors ${
-                activeTab === key
-                  ? 'text-sky-600 bg-sky-50 border-b-2 border-sky-600'
-                  : 'text-gray-600 hover:text-sky-600 hover:bg-gray-100'
-              } ${key === 'body' && isBodyDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-              disabled={key === 'body' && isBodyDisabled}
+      {/* Tabs and Tab Content */}
+      <div>
+        {/* Tabs */}
+        <div class="border-b border-gray-200 px-4 overflow-x-auto scrollbar-hide">
+          <div class="flex space-x-2 flex-nowrap min-w-max">
+            {Object.entries(TAB_NAMES).map(([key, name]) => (
+              <button key={key} type="button" data-tab={key}
+                onClick={() => setActiveTab(key)}
+                class={`cursor-pointer px-4 py-2 text-xs rounded-t-md font-medium focus:outline-none ${
+                  activeTab === key
+                    ? 'text-sky-600 bg-sky-50 border-b-2 border-sky-600'
+                    : 'text-gray-600 hover:text-sky-600 hover:bg-gray-100'
+                }`}
+                disabled={key === 'body' && isBodyDisabled}
+              >
+                {name}
+                {key === 'params' && (requestData.queryParams.length + requestData.pathParams.length) > 0 && (
+                  <span class="ml-1 text-xs bg-sky-100 text-sky-600 rounded-full px-1.5 py-0.5">
+                    {requestData.queryParams.length + requestData.pathParams.length}
+                  </span>
+                )}
+                {key === 'headers' && requestData.headers.length > 0 && (
+                  <span class="ml-1 text-xs bg-sky-100 text-sky-600 rounded-full px-1.5 py-0.5">
+                    {requestData.headers.length}
+                  </span>
+                )}
+                {key === 'body' && isBodyDisabled && (
+                  <span class="bodyless-method-pill">Method doesn't allow body</span>
+                )}
+              </button>
+            ))}
+            <button type="button"
+              onClick={() => setShowCurlImportModal(true)}
+              class="cursor-pointer px-4 py-2 text-xs rounded-t-md font-medium text-sky-500 hover:text-sky-700 hover:bg-sky-50 focus:outline-none"
             >
-              {name}
-              {key === 'params' && (requestData.queryParams.length + requestData.pathParams.length) > 0 && (
-                <span class="ml-1 text-xs bg-sky-100 text-sky-600 rounded-full px-1.5 py-0.5">
-                  {requestData.queryParams.length + requestData.pathParams.length}
-                </span>
-              )}
-              {key === 'headers' && requestData.headers.length > 0 && (
-                <span class="ml-1 text-xs bg-sky-100 text-sky-600 rounded-full px-1.5 py-0.5">
-                  {requestData.headers.length}
-                </span>
-              )}
+              Import cURL
             </button>
-          ))}
-          <button 
-            onClick={() => setShowCurlImportModal(true)}
-            class="px-4 py-2 text-xs rounded-t-md font-medium text-sky-500 hover:text-sky-700 hover:bg-sky-50 transition-colors"
-          >
-            Import cURL
-          </button>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        <div class="p-4 pb-2">
+          {activeTab === 'params' && (
+            <ParamsTab
+              queryParams={requestData.queryParams}
+              pathParams={requestData.pathParams}
+              onQueryParamsChange={(params) => updateRequestData({ queryParams: params })}
+              onPathParamsChange={(params) => updateRequestData({ pathParams: params })}
+            />
+          )}
+          {activeTab === 'headers' && (
+            <HeadersTab
+              headers={requestData.headers}
+              onHeadersChange={(headers) => updateRequestData({ headers })}
+            />
+          )}
+          {activeTab === 'body' && (
+            <BodyTab
+              bodyType={requestData.bodyType}
+              bodyContent={requestData.bodyContent}
+              contentType={requestData.contentType}
+              method={requestData.method}
+              formData={requestData.formData}
+              urlEncodedData={requestData.urlEncodedData}
+              onBodyTypeChange={(bodyType) => updateRequestData({ bodyType })}
+              onBodyContentChange={(bodyContent) => updateRequestData({ bodyContent })}
+              onContentTypeChange={(contentType) => updateRequestData({ contentType })}
+              onFormDataChange={(formData) => updateRequestData({ formData })}
+              onUrlEncodedDataChange={(urlEncodedData) => updateRequestData({ urlEncodedData })}
+            />
+          )}
+          {activeTab === 'settings' && (
+            <SettingsTab
+              followRedirects={requestData.followRedirects}
+              timeout={requestData.timeout}
+              onFollowRedirectsChange={(followRedirects) => updateRequestData({ followRedirects })}
+              onTimeoutChange={(timeout) => updateRequestData({ timeout })}
+            />
+          )}
         </div>
       </div>
 
-      {/* Tab Content */}
-      <div class="flex-1 overflow-auto bg-gray-50">
-        {activeTab === 'params' && (
-          <ParamsTab
-            queryParams={requestData.queryParams}
-            pathParams={requestData.pathParams}
-            onQueryParamsChange={(params) => updateRequestData({ queryParams: params })}
-            onPathParamsChange={(params) => updateRequestData({ pathParams: params })}
+      {/* Response Section */}
+      <div class="p-4 border-t border-gray-200">
+        <div id="response-content-container">
+          <ResponseDisplay
+            response={response}
+            isLoading={isSubmitting}
+            onCancel={handleCancelRequest}
           />
-        )}
-        {activeTab === 'headers' && (
-          <HeadersTab
-            headers={requestData.headers}
-            onHeadersChange={(headers) => updateRequestData({ headers })}
-          />
-        )}
-        {activeTab === 'body' && (
-          <BodyTab
-            bodyType={requestData.bodyType}
-            bodyContent={requestData.bodyContent}
-            contentType={requestData.contentType}
-            method={requestData.method}
-            formData={requestData.formData}
-            urlEncodedData={requestData.urlEncodedData}
-            onBodyTypeChange={(bodyType) => updateRequestData({ bodyType })}
-            onBodyContentChange={(bodyContent) => updateRequestData({ bodyContent })}
-            onContentTypeChange={(contentType) => updateRequestData({ contentType })}
-            onFormDataChange={(formData) => updateRequestData({ formData })}
-            onUrlEncodedDataChange={(urlEncodedData) => updateRequestData({ urlEncodedData })}
-          />
-        )}
-        {activeTab === 'settings' && (
-          <SettingsTab
-            followRedirects={requestData.followRedirects}
-            timeout={requestData.timeout}
-            onFollowRedirectsChange={(followRedirects) => updateRequestData({ followRedirects })}
-            onTimeoutChange={(timeout) => updateRequestData({ timeout })}
-          />
-        )}
+        </div>
       </div>
-
-      {/* Response Display */}
-      <ResponseDisplay
-        response={response}
-        isLoading={isSubmitting}
-        onCancel={handleCancelRequest}
-      />
 
       {/* Curl Export Modal */}
       <CurlExportModal
@@ -696,6 +692,6 @@ export function RequestEditor({ request, onRequestChange }) {
           // Could potentially navigate to the saved request or show notification
         }}
       />
-    </div>
+    </>
   );
 }
