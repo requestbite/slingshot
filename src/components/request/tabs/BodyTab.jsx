@@ -2,7 +2,8 @@ import { useState, useEffect } from 'preact/hooks';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { xml } from '@codemirror/lang-xml';
-import { oneDark } from '@codemirror/theme-one-dark';
+import { dracula } from '@uiw/codemirror-theme-dracula';
+import { EditorView } from '@codemirror/view';
 import { autocompletion } from '@codemirror/autocomplete';
 import { bracketMatching } from '@codemirror/language';
 
@@ -92,7 +93,19 @@ export function BodyTab({
   const getCodeMirrorExtensions = (contentType) => {
     const baseExtensions = [
       bracketMatching(),
-      autocompletion()
+      autocompletion(),
+      // Auto-expanding height with minimum of ~7 lines (approximately 168px)
+      EditorView.theme({
+        "&": {
+          minHeight: "168px",
+        },
+        ".cm-content, .cm-gutter": {
+          minHeight: "168px !important"
+        },
+        ".cm-scroller": {
+          overflow: "auto"
+        }
+      })
     ];
 
     switch (contentType) {
@@ -217,7 +230,7 @@ export function BodyTab({
             onChange={handleBodyContentChange}
             placeholder="Enter request body"
             extensions={getCodeMirrorExtensions(contentType)}
-            theme="light"
+            theme={dracula}
             basicSetup={{
               lineNumbers: true,
               foldGutter: true,
@@ -232,12 +245,11 @@ export function BodyTab({
               highlightSelectionMatches: false
             }}
             style={{
-              border: '1px solid #d1d5db',
+              border: '1px solid #44475a',
               borderRadius: '0.375rem',
               fontSize: '12px',
               fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
             }}
-            height="256px"
           />
         </div>
       )}
