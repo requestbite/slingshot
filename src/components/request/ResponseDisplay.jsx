@@ -1,5 +1,11 @@
 import { useState } from 'preact/hooks';
 import { WelcomeMessage } from '../common/WelcomeMessage';
+import CodeMirror from '@uiw/react-codemirror';
+import { json } from '@codemirror/lang-json';
+import { xml } from '@codemirror/lang-xml';
+import { dracula } from '@uiw/codemirror-theme-dracula';
+import { EditorView } from '@codemirror/view';
+import { bracketMatching } from '@codemirror/language';
 
 export function ResponseDisplay({ response, isLoading, onCancel }) {
   const [showHeaders, setShowHeaders] = useState(true);
@@ -7,22 +13,16 @@ export function ResponseDisplay({ response, isLoading, onCancel }) {
 
   if (isLoading) {
     return (
-      <div class="p-6 border-t border-gray-200 bg-white">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-medium text-gray-900">Sending Request...</h3>
-          <button
+      <div class="flex items-center justify-center p-6 mb-4">
+        <div class="text-center">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-solid border-sky-500 border-r-transparent mb-4"></div>
+          <div class="text-sm text-gray-700 mb-3">Request in progress...</div>
+          <button 
             onClick={onCancel}
-            class="px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-md transition-colors"
+            class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-md text-sm font-medium cursor-pointer"
           >
-            Cancel
+            Cancel Request
           </button>
-        </div>
-        <div class="flex items-center space-x-3 text-gray-500">
-          <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-          </svg>
-          <span>Waiting for response...</span>
         </div>
       </div>
     );
@@ -30,7 +30,7 @@ export function ResponseDisplay({ response, isLoading, onCancel }) {
 
   if (!response) {
     return (
-      <div class="p-6 border-t border-gray-200 bg-gray-50">
+      <div class="px-6">
         <WelcomeMessage />
       </div>
     );
@@ -38,16 +38,22 @@ export function ResponseDisplay({ response, isLoading, onCancel }) {
 
   if (response.cancelled) {
     return (
-      <div class="p-6 border-t border-gray-200 bg-white">
-        <div class="text-center">
-          <div class="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+      <div id="response-section">
+        <div id="response-container">
+          <div id="response-details-wrapper">
+            <div id="cancelled-response-container">
+              <div class="text-center py-6">
+                {/* Cancelled Image */}
+                <div class="mb-4">
+                  <img src="/images/rabbit-timer-v1.webp" alt="Request Cancelled" class="mx-auto w-64 mb-4" />
+                </div>
+                {/* Cancelled Title */}
+                <h4 class="text-xl font-medium text-gray-900 mb-2">Request Cancelled</h4>
+                {/* Cancelled Message */}
+                <div class="text-sm text-gray-600">Oh, was it that slow? Perhaps there are some connectivity issues.</div>
+              </div>
+            </div>
           </div>
-          <h3 class="text-lg font-medium text-gray-900 mb-2">Request Cancelled</h3>
-          <p class="text-gray-600">The request was cancelled before completion.</p>
-          <p class="text-xs text-gray-500 mt-2">Time: {response.responseTime}</p>
         </div>
       </div>
     );
@@ -55,19 +61,30 @@ export function ResponseDisplay({ response, isLoading, onCancel }) {
 
   if (!response.success) {
     return (
-      <div class="p-6 border-t border-gray-200 bg-white">
-        <div class="text-center">
-          <div class="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-            <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+      <div id="response-section">
+        <div id="response-container">
+          <div id="response-details-wrapper">
+            <div id="error-response-container">
+              <div class="text-center py-6">
+                {/* Error Image */}
+                <div class="mb-4">
+                  <img src="/images/rabbit-dizzy-v1.webp" alt="Request Error" class="mx-auto w-64 mb-4" />
+                </div>
+                {/* Error Title */}
+                <h4 class="text-xl font-medium text-gray-900 mb-2">
+                  {response.errorTitle || "Oh no, an error occurred"}
+                </h4>
+                {/* Error Message */}
+                <div class="text-sm text-gray-600 mb-2">
+                  {response.errorMessage || "Unable to complete the request"}
+                </div>
+                {/* Error Type */}
+                <div class="text-xs font-mono text-gray-500 bg-gray-100 inline-block px-2 py-1 rounded">
+                  {response.errorType || "error_type"}
+                </div>
+              </div>
+            </div>
           </div>
-          <h3 class="text-lg font-medium text-gray-900 mb-2">{response.errorTitle}</h3>
-          <p class="text-gray-600 mb-4">{response.errorMessage}</p>
-          <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-            {response.errorType}
-          </div>
-          <p class="text-xs text-gray-500 mt-3">Time: {response.responseTime}</p>
         </div>
       </div>
     );
@@ -88,148 +105,197 @@ export function ResponseDisplay({ response, isLoading, onCancel }) {
     }
   };
 
+  // Get CodeMirror extensions based on response content type
+  const getResponseCodeMirrorExtensions = (response) => {
+    const baseExtensions = [
+      bracketMatching(),
+      // Auto-expanding height based on content
+      EditorView.theme({
+        "&": {
+          minHeight: "200px",
+        },
+        ".cm-content, .cm-gutter": {
+          minHeight: "200px !important"
+        },
+        ".cm-scroller": {
+          overflow: "auto"
+        }
+      }),
+      // Make editor read-only
+      EditorView.editable.of(false)
+    ];
+
+    // Determine content type from response headers or try to parse content
+    const contentTypeHeader = response.headers?.find(h =>
+      h.name.toLowerCase() === 'content-type'
+    );
+    const contentType = contentTypeHeader?.value || '';
+
+    if (contentType.includes('application/json') || isJsonContent(response.responseData)) {
+      return [...baseExtensions, json()];
+    } else if (contentType.includes('application/xml') || contentType.includes('text/xml')) {
+      return [...baseExtensions, xml()];
+    }
+
+    return baseExtensions;
+  };
+
+  // Helper function to detect if content is JSON
+  const isJsonContent = (content) => {
+    if (!content || typeof content !== 'string') return false;
+    const trimmed = content.trim();
+    return (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+      (trimmed.startsWith('[') && trimmed.endsWith(']'));
+  };
+
   return (
-    <div class="border-t border-gray-200 bg-white">
-      {/* Response Metadata */}
-      <div class="p-4 border-b border-gray-200">
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center space-x-3">
-            <h3 class="text-lg font-medium text-gray-900">Response</h3>
-            {response.saved && (
-              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                Saved
-              </span>
+    <div id="response-section">
+      <div id="response-container">
+        <div id="response-details-wrapper">
+
+          {/* Response Metadata - matching Django template structure */}
+          <div class="mb-4 overflow-x-auto scrollbar-hide" style="-ms-overflow-style: none; scrollbar-width: none;">
+            <style>
+              {`::-webkit-scrollbar { display: none; }`}
+            </style>
+            <div class="flex items-center justify-between flex-nowrap min-w-max">
+              <div class="flex items-center space-x-4 flex-nowrap">
+                <div class="flex items-center space-x-2 whitespace-nowrap">
+                  <span class="text-sm font-medium text-gray-700">Status:</span>
+                  <span class={`px-2 py-1 text-sm rounded-md ${getStatusColor(response.status)}`}>
+                    {response.status} {response.statusText}
+                  </span>
+                </div>
+                <div class="flex items-center space-x-2 whitespace-nowrap">
+                  <span class="text-sm font-medium text-gray-700">Time:</span>
+                  <span class="px-2 py-1 text-sm bg-blue-50 text-blue-700 rounded-md whitespace-nowrap">
+                    {response.responseTime}
+                  </span>
+                </div>
+                <div class="flex items-center space-x-2 whitespace-nowrap">
+                  <span class="text-sm font-medium text-gray-700">Size:</span>
+                  <span class="px-2 py-1 text-sm bg-amber-50 text-amber-700 rounded-md whitespace-nowrap">
+                    {response.responseSize}
+                  </span>
+                </div>
+                <div class="flex items-center space-x-2 whitespace-nowrap">
+                  <button
+                    onClick={() => setShowHeaders(!showHeaders)}
+                    class="flex items-center text-sm font-medium text-gray-700 cursor-pointer whitespace-nowrap mr-4"
+                  >
+                    <svg
+                      class={`h-4 w-4 mr-1 transition-transform duration-200 ${showHeaders ? 'rotate-90' : ''}`}
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                    </svg>
+                    Headers&nbsp;
+                    <span class="text-gray-500 font-normal ml-1">({response.headers?.length || 0})</span>
+                  </button>
+                  {response.saved && response.receivedAt && (
+                    <span class="text-xs text-gray-400 font-normal whitespace-nowrap mr-4">
+                      Cached response from {new Date(response.receivedAt).toLocaleString()}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Copy Response Button */}
+              {response.responseData && (
+                <div class="flex items-center">
+                  <button
+                    onClick={() => copyToClipboard(response.responseData)}
+                    class="inline-flex items-center text-sky-500 hover:text-sky-700 cursor-pointer"
+                  >
+                    <span class="inline-block w-4 h-4 mr-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-full h-full">
+                        <path d="M20 2H10c-1.103 0-2 .897-2 2v4H4c-1.103 0-2 .897-2 2v10c0 1.103.897 2 2 2h10c1.103 0 2-.897 2-2v-4h4c1.103 0 2-.897 2-2V4c0-1.103-.897-2-2-2zM4 20V10h10l.002 10H4zm16-6h-4v-4c0-1.103-.897-2-2-2h-4V4h10v10z"></path>
+                      </svg>
+                    </span>
+                    Copy
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Response Headers Collapsible Section */}
+            {response.headers && response.headers.length > 0 && (
+              <div id="response-headers-section">
+                <div class="max-w-full overflow-auto" style={{ display: showHeaders ? 'block' : 'none' }}>
+                  <table class="border-collapse text-xs w-full mb-2 mt-4 table-fixed">
+                    <colgroup>
+                      <col style="width: 25%;" />
+                      <col style="width: 75%;" />
+                    </colgroup>
+                    <thead>
+                      <tr>
+                        <th class="py-1 border-b border-slate-200 text-left font-mono font-bold">Name</th>
+                        <th class="py-1 border-b border-slate-200 text-left font-mono font-bold">Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {response.headers.map((header, index) => (
+                        <tr key={index}>
+                          <td class="border-b border-slate-100 py-1 pr-3 font-mono whitespace-nowrap overflow-hidden text-ellipsis truncate">
+                            {header.name}
+                          </td>
+                          <td class="border-b border-slate-100 py-1 font-mono text-indigo-600 whitespace-nowrap overflow-hidden text-ellipsis truncate">
+                            {header.value}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             )}
           </div>
-          <button
-            onClick={() => copyToClipboard(response.responseData)}
-            class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-md transition-colors"
-          >
-            Copy Response
-          </button>
-        </div>
-        
-        <div class="flex flex-wrap items-center gap-4 text-sm">
-          <div class="flex items-center space-x-2">
-            <span class="text-gray-500">Status:</span>
-            <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(response.status)}`}>
-              {response.status} {response.statusText}
-            </span>
-          </div>
-          
-          <div class="flex items-center space-x-2">
-            <span class="text-gray-500">Time:</span>
-            <span class="font-medium text-gray-900">{response.responseTime}</span>
-          </div>
-          
-          <div class="flex items-center space-x-2">
-            <span class="text-gray-500">Size:</span>
-            <span class="font-medium text-gray-900">{response.responseSize}</span>
-          </div>
-          
-          <div class="flex items-center space-x-2">
-            <span class="text-gray-500">Headers:</span>
-            <span class="font-medium text-gray-900">{response.headers?.length || 0}</span>
-          </div>
-          
-          {response.saved && response.receivedAt && (
-            <div class="flex items-center space-x-2">
-              <span class="text-gray-500">Received:</span>
-              <span class="font-medium text-gray-900">{new Date(response.receivedAt).toLocaleString()}</span>
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* Response Headers */}
-      {response.headers && response.headers.length > 0 && (
-        <div class="border-b border-gray-200">
-          <button
-            onClick={() => setShowHeaders(!showHeaders)}
-            class="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
-          >
-            <span class="text-sm font-medium text-gray-700">
-              Response Headers ({response.headers.length})
-            </span>
-            <svg 
-              class={`w-4 h-4 text-gray-400 transition-transform ${showHeaders ? 'rotate-90' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-          
-          {showHeaders && (
-            <div class="px-4 pb-4">
-              <div class="space-y-2">
-                {response.headers.map((header, index) => (
-                  <div key={index} class="grid grid-cols-12 gap-2 text-sm">
-                    <div class="col-span-4 font-medium text-gray-700">
-                      {header.isClickable ? (
-                        <a
-                          href={`https://docs.requestbite.com/http/response-headers/${header.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}/`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          class="text-sky-600 hover:text-sky-800 hover:underline"
-                        >
-                          {header.name}
-                          <svg class="inline w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                          </svg>
-                        </a>
-                      ) : (
-                        header.name
-                      )}
-                    </div>
-                    <div class="col-span-8 text-gray-900 break-all">
-                      {header.value}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+          {/* Response Body */}
+          <div>
+            <div class="response-container">
+              {/* No response body message */}
+              {!response.responseData && (
+                <div class="rounded-md bg-gray-50 p-4 mb-4 text-sm text-gray-600 font-medium">
+                  No response body received.
+                </div>
+              )}
 
-      {/* Response Body */}
-      <div class="p-4">
-        <div class="flex items-center justify-between mb-3">
-          <h4 class="text-sm font-medium text-gray-700">Response Body</h4>
-          {response.responseData && (
-            <div class="text-xs text-gray-500">
-              {response.responseSize}
+              {/* CodeMirror editor for response body */}
+              {response.responseData && (
+                <div>
+                  <CodeMirror
+                    value={response.responseData}
+                    extensions={getResponseCodeMirrorExtensions(response)}
+                    theme={dracula}
+                    editable={false}
+                    basicSetup={{
+                      lineNumbers: true,
+                      foldGutter: true,
+                      dropCursor: false,
+                      allowMultipleSelections: false,
+                      indentOnInput: false,
+                      bracketMatching: true,
+                      closeBrackets: false,
+                      autocompletion: false,
+                      rectangularSelection: false,
+                      searchKeymap: false,
+                      highlightSelectionMatches: false
+                    }}
+                    style={{
+                      border: '1px solid #44475a',
+                      borderRadius: '0.375rem',
+                      fontSize: '12px',
+                      fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+                    }}
+                  />
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
-        
-        {response.responseData ? (
-          <div class="relative">
-            <textarea
-              value={response.responseData}
-              readonly
-              class="w-full h-64 px-3 py-2 text-sm font-mono border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 resize-y bg-gray-50"
-            />
-            <button
-              onClick={() => copyToClipboard(response.responseData)}
-              class="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600 bg-white border border-gray-300 rounded"
-              title="Copy to clipboard"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </button>
-          </div>
-        ) : (
-          <div class="text-center py-8 text-gray-500">
-            <p class="text-sm">No response body</p>
-          </div>
-        )}
       </div>
     </div>
   );
