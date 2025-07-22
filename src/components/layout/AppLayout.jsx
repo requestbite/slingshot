@@ -6,7 +6,7 @@ export function AppLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div class="h-screen">
+    <div class="min-h-screen flex flex-col">
       <TopBar />
 
       {/* Sidebar Toggle Button for Mobile - only show when sidebar is hidden */}
@@ -21,8 +21,8 @@ export function AppLayout({ children }) {
         </svg>
       </button>
 
-      <main class="flex-grow flex flex-col">
-        <div class="flex-grow flex mt-[65px] p-4 bg-gray-100 overflow-x-hidden">
+      <main class="flex-grow flex flex-col min-h-0">
+        <div class="flex-grow flex mt-[65px] p-4 bg-gray-100 overflow-x-hidden min-h-0">
           {/* Sidebar - left column */}
           <div class="mt-[2px] w-[300px] flex-shrink-0 mr-4 min-h-full hidden md:block">
             <SideBar />
