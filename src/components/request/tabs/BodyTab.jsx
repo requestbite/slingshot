@@ -3,9 +3,10 @@ import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { xml } from '@codemirror/lang-xml';
 import { dracula } from '@uiw/codemirror-theme-dracula';
-import { EditorView } from '@codemirror/view';
+import { EditorView, keymap } from '@codemirror/view';
 import { autocompletion } from '@codemirror/autocomplete';
 import { bracketMatching } from '@codemirror/language';
+import { Prec } from '@codemirror/state';
 
 const BODY_TYPES = [
   { value: 'none', label: 'None' },
@@ -31,7 +32,9 @@ export function BodyTab({
   onBodyContentChange,
   onContentTypeChange,
   onFormDataChange,
-  onUrlEncodedDataChange
+  onUrlEncodedDataChange,
+  onEnterKeyPress,
+  onSendRequest
 }) {
   const isBodyDisabled = ['GET', 'HEAD', 'OPTIONS'].includes(method);
   
@@ -91,7 +94,40 @@ export function BodyTab({
 
   // Get CodeMirror extensions based on content type
   const getCodeMirrorExtensions = (contentType) => {
+    const sendRequestKeymap = keymap.of([
+      {
+        key: 'Ctrl-Enter',
+        preventDefault: true,
+        run: (view) => {
+          console.log('Ctrl+Enter pressed in CodeMirror');
+          if (onSendRequest) {
+            console.log('Calling onSendRequest');
+            onSendRequest();
+            return true;
+          }
+          console.log('onSendRequest not available');
+          return false;
+        }
+      },
+      {
+        key: 'Cmd-Enter',
+        preventDefault: true,
+        run: (view) => {
+          console.log('Cmd+Enter pressed in CodeMirror');
+          if (onSendRequest) {
+            console.log('Calling onSendRequest');
+            onSendRequest();
+            return true;
+          }
+          console.log('onSendRequest not available');
+          return false;
+        }
+      }
+    ]);
+
     const baseExtensions = [
+      // Add Ctrl/Cmd+Enter keymap for sending requests with high precedence
+      Prec.highest(sendRequestKeymap),
       bracketMatching(),
       autocompletion(),
       // Auto-expanding height with minimum of ~7 lines (approximately 168px)
@@ -287,6 +323,7 @@ export function BodyTab({
                     value={field.key}
                     onInput={(e) => updateFormDataField(field.id, 'key', e.target.value)}
                     onChange={(e) => updateFormDataField(field.id, 'key', e.target.value)}
+                    onKeyDown={onEnterKeyPress}
                     placeholder="Key"
                     class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${field.enabled ? 'bg-white' : 'bg-gray-50 text-gray-500'
                       }`}
@@ -300,6 +337,7 @@ export function BodyTab({
                     value={field.value}
                     onInput={(e) => updateFormDataField(field.id, 'value', e.target.value)}
                     onChange={(e) => updateFormDataField(field.id, 'value', e.target.value)}
+                    onKeyDown={onEnterKeyPress}
                     placeholder="Value"
                     class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${field.enabled ? 'bg-white' : 'bg-gray-50 text-gray-500'
                       }`}

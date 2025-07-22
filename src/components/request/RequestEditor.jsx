@@ -24,6 +24,9 @@ export function RequestEditor({ request, onRequestChange }) {
   const { selectedCollection } = useAppContext();
   const [activeTab, setActiveTab] = useState('params');
 
+  // Get placeholder URL from environment variable
+  const placeholderUrl = import.meta.env.VITE_HELLO_URL || 'https://example.com';
+
   // Helper function to get effective request data (draft if available, otherwise main)
   const getEffectiveRequestData = (request) => {
     if (!request) {
@@ -450,15 +453,37 @@ export function RequestEditor({ request, onRequestChange }) {
 
   const isBodyDisabled = ['GET', 'HEAD', 'OPTIONS'].includes(requestData.method);
 
+  // Handle Enter key press to trigger send
+  const handleEnterKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSendRequest();
+    }
+  };
+
+  // Get effective URL (use placeholder if URL is empty)
+  const getEffectiveUrl = () => {
+    return requestData.url.trim() || placeholderUrl;
+  };
+
   // Handle request submission
   const handleSendRequest = async () => {
-    if (!requestData.url || isSubmitting) return;
+    if (isSubmitting) return;
+
+    const effectiveUrl = getEffectiveUrl();
+    if (!effectiveUrl) return;
 
     setIsSubmitting(true);
     setResponse(null);
 
+    // Use effective URL for the request
+    const requestDataWithUrl = {
+      ...requestData,
+      url: effectiveUrl
+    };
+
     try {
-      const result = await requestSubmitter.submitRequest(requestData);
+      const result = await requestSubmitter.submitRequest(requestDataWithUrl);
       setResponse(result);
 
       // Save response to IndexedDB if we have a request ID
@@ -610,6 +635,7 @@ export function RequestEditor({ request, onRequestChange }) {
             <select
               value={requestData.method}
               onChange={(e) => handleMethodChange(e.target.value)}
+              onKeyDown={handleEnterKeyPress}
               class="w-full appearance-none rounded-md bg-white pl-3 pr-8 text-sm text-gray-900 outline -outline-offset-1 outline-gray-300 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
               style="min-height: 38px; max-height: 38px; line-height: 22px; box-sizing: border-box;"
             >
@@ -632,7 +658,8 @@ export function RequestEditor({ request, onRequestChange }) {
               value={requestData.url}
               onInput={(e) => handleUrlChange(e.target.value)}
               onChange={(e) => handleUrlChange(e.target.value)}
-              placeholder="https://example.com"
+              onKeyDown={handleEnterKeyPress}
+              placeholder={placeholderUrl}
               class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 bg-white font-inter text-gray-900 overflow-hidden whitespace-nowrap"
               style="min-height: 38px; max-height: 38px; line-height: 22px; width: 100%; box-sizing: border-box;"
               autofocus
@@ -643,8 +670,8 @@ export function RequestEditor({ request, onRequestChange }) {
           <div class="flex flex-none">
             <button
               onClick={handleSendRequest}
-              disabled={!requestData.url || isSubmitting}
-              class={`cursor-pointer rounded-md px-3 py-2 text-sm font-semibold focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${!requestData.url || isSubmitting
+              disabled={isSubmitting}
+              class={`cursor-pointer rounded-md px-3 py-2 text-sm font-semibold focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${isSubmitting
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-sky-500 hover:bg-sky-400 text-white'
                 }`}
@@ -722,12 +749,14 @@ export function RequestEditor({ request, onRequestChange }) {
               pathParams={requestData.pathParams}
               onQueryParamsChange={(params) => updateRequestData({ queryParams: params })}
               onPathParamsChange={(params) => updateRequestData({ pathParams: params })}
+              onEnterKeyPress={handleEnterKeyPress}
             />
           )}
           {activeTab === 'headers' && (
             <HeadersTab
               headers={requestData.headers}
               onHeadersChange={(headers) => updateRequestData({ headers })}
+              onEnterKeyPress={handleEnterKeyPress}
             />
           )}
           {activeTab === 'body' && (
@@ -743,6 +772,8 @@ export function RequestEditor({ request, onRequestChange }) {
               onContentTypeChange={(contentType) => updateRequestData({ contentType })}
               onFormDataChange={(formData) => updateRequestData({ formData })}
               onUrlEncodedDataChange={(urlEncodedData) => updateRequestData({ urlEncodedData })}
+              onEnterKeyPress={handleEnterKeyPress}
+              onSendRequest={handleSendRequest}
             />
           )}
           {activeTab === 'settings' && (
@@ -751,6 +782,7 @@ export function RequestEditor({ request, onRequestChange }) {
               timeout={requestData.timeout}
               onFollowRedirectsChange={(followRedirects) => updateRequestData({ followRedirects })}
               onTimeoutChange={(timeout) => updateRequestData({ timeout })}
+              onEnterKeyPress={handleEnterKeyPress}
             />
           )}
         </div>

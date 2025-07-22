@@ -2,7 +2,8 @@ export function SettingsTab({
   followRedirects,
   timeout,
   onFollowRedirectsChange,
-  onTimeoutChange
+  onTimeoutChange,
+  onEnterKeyPress
 }) {
   const handleTimeoutChange = (value) => {
     const numValue = parseInt(value, 10);
@@ -41,6 +42,7 @@ export function SettingsTab({
               min="1" 
               max="300"
               onChange={(e) => handleTimeoutChange(e.target.value)}
+              onKeyDown={onEnterKeyPress}
               class="w-24 px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
             <span class="ml-2 text-xs text-gray-500">(1-300 seconds)</span>

@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
 
-export function HeadersTab({ headers, onHeadersChange }) {
+export function HeadersTab({ headers, onHeadersChange, onEnterKeyPress }) {
   const addHeader = () => {
     const newHeader = {
       id: crypto.randomUUID(),
@@ -61,6 +61,7 @@ export function HeadersTab({ headers, onHeadersChange }) {
                 value={header.key}
                 onInput={(e) => updateHeader(header.id, 'key', e.target.value)}
                 onChange={(e) => updateHeader(header.id, 'key', e.target.value)}
+                onKeyDown={onEnterKeyPress}
                 placeholder="Header name"
                 class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${
                   header.enabled ? 'bg-white' : 'bg-gray-50 text-gray-500'
@@ -75,6 +76,7 @@ export function HeadersTab({ headers, onHeadersChange }) {
                 value={header.value}
                 onInput={(e) => updateHeader(header.id, 'value', e.target.value)}
                 onChange={(e) => updateHeader(header.id, 'value', e.target.value)}
+                onKeyDown={onEnterKeyPress}
                 placeholder="Value"
                 class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${
                   header.enabled ? 'bg-white' : 'bg-gray-50 text-gray-500'
