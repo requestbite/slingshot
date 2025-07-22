@@ -24,8 +24,8 @@ db.version(1).stores({
   folders: '++id, collection_id, parent_folder_id, name',
   /** Request table with indexes on id, collection_id, folder_id, name, method, url */
   requests: '++id, collection_id, folder_id, name, method, url',
-  /** Secret table with indexes on id, environment_id, collection_id, key, value */
-  secrets: '++id, environment_id, collection_id, key, value',
+  /** Variable table with indexes on id, environment_id, collection_id, key, value */
+  variables: '++id, environment_id, collection_id, key, value',
 });
 
 /**
@@ -113,10 +113,10 @@ db.requests.defineClass({
 });
 
 /**
- * Secret entity class definition
- * Represents sensitive key-value pairs associated with environments or collections
+ * Variable entity class definition
+ * Represents key-value pairs associated with environments or collections
  */
-db.secrets.defineClass({
+db.variables.defineClass({
   id: String,
   environment_id: String,
   collection_id: String,

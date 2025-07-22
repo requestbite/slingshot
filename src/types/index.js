@@ -61,12 +61,12 @@
  */
 
 /**
- * @typedef {Object} Secret
+ * @typedef {Object} Variable
  * @property {string} id - Unique identifier (UUID)
  * @property {string|null} environment_id - Reference to environment (nullable)
  * @property {string|null} collection_id - Reference to collection (nullable)
- * @property {string} key - Secret key
- * @property {string} value - Secret value
+ * @property {string} key - Variable key
+ * @property {string} value - Variable value
  */
 
 /**
@@ -91,7 +91,7 @@
  * @property {Collection[]} collections - All collections
  * @property {Folder[]} folders - All folders
  * @property {Request[]} requests - All requests
- * @property {Secret[]} secrets - All secrets
+ * @property {Variable[]} variables - All variables
  */
 
 export {};

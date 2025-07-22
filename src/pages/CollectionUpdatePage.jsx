@@ -9,8 +9,8 @@ export function CollectionUpdatePage() {
   const { loadCollections } = useAppContext();
   
   const [collection, setCollection] = useState(null);
-  const [originalSecrets, setOriginalSecrets] = useState([]);
-  const [pendingSecrets, setPendingSecrets] = useState([]);
+  const [originalVariables, setOriginalVariables] = useState([]);
+  const [pendingVariables, setPendingVariables] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notification, setNotification] = useState(null);
   
@@ -20,8 +20,8 @@ export function CollectionUpdatePage() {
     description: ''
   });
   
-  // Secret form state
-  const [secretForm, setSecretForm] = useState({
+  // Variable form state
+  const [variableForm, setVariableForm] = useState({
     key: '',
     value: ''
   });
@@ -30,20 +30,19 @@ export function CollectionUpdatePage() {
   const [hasChanges, setHasChanges] = useState(false);
   
   // Modal states
-  const [showSecretValues, setShowSecretValues] = useState(false);
-  const [editSecretModal, setEditSecretModal] = useState(false);
+  const [editVariableModal, setEditVariableModal] = useState(false);
   const [deleteCollectionModal, setDeleteCollectionModal] = useState(false);
-  const [deleteSecretModal, setDeleteSecretModal] = useState(false);
+  const [deleteVariableModal, setDeleteVariableModal] = useState(false);
   
-  // Edit secret state
-  const [editingSecret, setEditingSecret] = useState({
+  // Edit variable state
+  const [editingVariable, setEditingVariable] = useState({
     id: null,
     key: '',
     value: ''
   });
   
-  // Delete secret state
-  const [secretToDelete, setSecretToDelete] = useState(null);
+  // Delete variable state
+  const [variableToDelete, setVariableToDelete] = useState(null);
 
   useEffect(() => {
     if (match && params.uuid) {
@@ -68,10 +67,10 @@ export function CollectionUpdatePage() {
         description: collectionData.description || ''
       });
       
-      const secretsData = await apiClient.getSecretsByCollection(collectionId);
-      const sortedSecrets = secretsData.sort((a, b) => a.key.localeCompare(b.key));
-      setOriginalSecrets(sortedSecrets);
-      setPendingSecrets(sortedSecrets.map(s => ({ ...s, _status: 'existing' })));
+      const variablesData = await apiClient.getSecretsByCollection(collectionId);
+      const sortedVariables = variablesData.sort((a, b) => a.key.localeCompare(b.key));
+      setOriginalVariables(sortedVariables);
+      setPendingVariables(sortedVariables.map(s => ({ ...s, _status: 'existing' })));
       
     } catch (error) {
       console.error('Failed to load collection:', error);
@@ -96,28 +95,28 @@ export function CollectionUpdatePage() {
         description: formData.description.trim()
       });
       
-      // Process secret changes
-      for (const secret of pendingSecrets) {
-        if (secret._status === 'new') {
+      // Process variable changes
+      for (const variable of pendingVariables) {
+        if (variable._status === 'new') {
           await apiClient.createSecret({
             collection_id: collection.id,
-            key: secret.key,
-            value: secret.value
+            key: variable.key,
+            value: variable.value
           });
-        } else if (secret._status === 'updated') {
-          await apiClient.updateSecret(secret.id, {
-            key: secret.key,
-            value: secret.value
+        } else if (variable._status === 'updated') {
+          await apiClient.updateSecret(variable.id, {
+            key: variable.key,
+            value: variable.value
           });
         }
       }
       
-      // Delete removed secrets
-      const currentSecretIds = new Set(pendingSecrets.map(s => s.id).filter(id => id && !id.startsWith('temp_')));
-      const originalSecretIds = new Set(originalSecrets.map(s => s.id));
+      // Delete removed variables
+      const currentVariableIds = new Set(pendingVariables.map(s => s.id).filter(id => id && !id.startsWith('temp_')));
+      const originalVariableIds = new Set(originalVariables.map(s => s.id));
       
-      for (const originalId of originalSecretIds) {
-        if (!currentSecretIds.has(originalId)) {
+      for (const originalId of originalVariableIds) {
+        if (!currentVariableIds.has(originalId)) {
           await apiClient.deleteSecret(originalId);
         }
       }
@@ -131,81 +130,81 @@ export function CollectionUpdatePage() {
     }
   };
 
-  const handleAddSecret = (e) => {
+  const handleAddVariable = (e) => {
     e.preventDefault();
     
-    if (!secretForm.key.trim() || !secretForm.value.trim()) {
+    if (!variableForm.key.trim() || !variableForm.value.trim()) {
       setNotification('Both key and value are required');
       return;
     }
     
     // Check for duplicate keys
-    const existingKey = pendingSecrets.find(s => s.key === secretForm.key.trim());
+    const existingKey = pendingVariables.find(s => s.key === variableForm.key.trim());
     if (existingKey) {
-      setNotification('A secret with this key already exists');
+      setNotification('A variable with this key already exists');
       return;
     }
     
-    const newSecret = {
+    const newVariable = {
       id: `temp_${Date.now()}`,
-      key: secretForm.key.trim(),
-      value: secretForm.value.trim(),
+      key: variableForm.key.trim(),
+      value: variableForm.value.trim(),
       _status: 'new'
     };
     
-    setPendingSecrets([...pendingSecrets, newSecret].sort((a, b) => a.key.localeCompare(b.key)));
-    setSecretForm({ key: '', value: '' });
+    setPendingVariables([...pendingVariables, newVariable].sort((a, b) => a.key.localeCompare(b.key)));
+    setVariableForm({ key: '', value: '' });
     setHasChanges(true);
   };
 
-  const handleEditSecret = (secret) => {
-    setEditingSecret({
-      id: secret.id,
-      key: secret.key,
-      value: secret.value
+  const handleEditVariable = (variable) => {
+    setEditingVariable({
+      id: variable.id,
+      key: variable.key,
+      value: variable.value
     });
-    setEditSecretModal(true);
+    setEditVariableModal(true);
   };
 
-  const handleUpdateSecret = (e) => {
+  const handleUpdateVariable = (e) => {
     e.preventDefault();
     
-    if (!editingSecret.key.trim() || !editingSecret.value.trim()) {
+    if (!editingVariable.key.trim() || !editingVariable.value.trim()) {
       setNotification('Both key and value are required');
       return;
     }
     
-    // Check for duplicate keys (excluding the current secret)
-    const existingKey = pendingSecrets.find(s => s.key === editingSecret.key.trim() && s.id !== editingSecret.id);
+    // Check for duplicate keys (excluding the current variable)
+    const existingKey = pendingVariables.find(s => s.key === editingVariable.key.trim() && s.id !== editingVariable.id);
     if (existingKey) {
-      setNotification('A secret with this key already exists');
+      setNotification('A variable with this key already exists');
       return;
     }
     
-    const updatedSecrets = pendingSecrets.map(s => {
-      if (s.id === editingSecret.id) {
+    const updatedVariables = pendingVariables.map(s => {
+      if (s.id === editingVariable.id) {
         return {
           ...s,
-          key: editingSecret.key.trim(),
-          value: editingSecret.value.trim(),
+          key: editingVariable.key.trim(),
+          value: editingVariable.value.trim(),
           _status: s._status === 'new' ? 'new' : 'updated'
         };
       }
       return s;
     });
     
-    setPendingSecrets(updatedSecrets.sort((a, b) => a.key.localeCompare(b.key)));
-    setEditSecretModal(false);
+    setPendingVariables(updatedVariables.sort((a, b) => a.key.localeCompare(b.key)));
+    setEditVariableModal(false);
     setHasChanges(true);
   };
 
-  const handleDeleteSecret = () => {
-    if (!secretToDelete) return;
+  const handleDeleteVariable = () => {
+    if (!variableToDelete) return;
     
-    const updatedSecrets = pendingSecrets.filter(s => s.id !== secretToDelete);
-    setPendingSecrets(updatedSecrets);
-    setDeleteSecretModal(false);
-    setSecretToDelete(null);
+    const updatedVariables = pendingVariables.filter(s => s.id !== variableToDelete);
+    setPendingVariables(updatedVariables);
+    setDeleteVariableModal(false);
+    setVariableToDelete(null);
     setHasChanges(true);
   };
 
@@ -331,36 +330,36 @@ export function CollectionUpdatePage() {
               </div>
             </form>
 
-            {/* Secrets Section */}
+            {/* Variables Section */}
             <div class="mt-8">
-              <h2 class="text-base font-semibold text-gray-900">Secrets</h2>
-              <p class="mt-1 mb-4 text-sm text-gray-600">Secrets are encrypted and can also be used as variables.</p>
+              <h2 class="text-base font-semibold text-gray-900">Variables</h2>
+              <p class="mt-1 mb-4 text-sm text-gray-600">Variables can be used throughout your collection requests.</p>
 
-              {/* Add new secret form */}
+              {/* Add new variable form */}
               <div class="mb-6">
-                <form onSubmit={handleAddSecret} class="m-0 p-0">
+                <form onSubmit={handleAddVariable} class="m-0 p-0">
                   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                      <label for="secret_key" class="block text-sm font-medium text-gray-700">Key</label>
+                      <label for="variable_key" class="block text-sm font-medium text-gray-700">Key</label>
                       <input
                         type="text"
-                        id="secret_key"
-                        value={secretForm.key}
-                        onInput={(e) => setSecretForm({ ...secretForm, key: e.target.value })}
+                        id="variable_key"
+                        value={variableForm.key}
+                        onInput={(e) => setVariableForm({ ...variableForm, key: e.target.value })}
                         class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
                         placeholder="apiKey"
                       />
                     </div>
                     <div>
-                      <label for="secret_value" class="block text-sm font-medium text-gray-700">Value</label>
+                      <label for="variable_value" class="block text-sm font-medium text-gray-700">Value</label>
                       <div class="flex mt-1">
                         <input
                           type="text"
-                          id="secret_value"
-                          value={secretForm.value}
-                          onInput={(e) => setSecretForm({ ...secretForm, value: e.target.value })}
+                          id="variable_value"
+                          value={variableForm.value}
+                          onInput={(e) => setVariableForm({ ...variableForm, value: e.target.value })}
                           class="block w-full rounded-l-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
-                          placeholder="your-secret-value"
+                          placeholder="your-variable-value"
                         />
                         <button
                           type="submit"
@@ -374,7 +373,7 @@ export function CollectionUpdatePage() {
                 </form>
               </div>
 
-              {/* Existing secrets list */}
+              {/* Existing variables list */}
               <div class="overflow-hidden border border-gray-300 rounded-lg">
                 <table class="min-w-full divide-y divide-gray-300">
                   <thead class="bg-gray-50">
@@ -382,35 +381,26 @@ export function CollectionUpdatePage() {
                       <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Key</th>
                       <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Value</th>
                       <th class="relative py-3.5 pl-3 pr-4 sm:pr-6 text-right">
-                        <button
-                          type="button"
-                          onClick={() => setShowSecretValues(!showSecretValues)}
-                          class="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-md cursor-pointer"
-                        >
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                        </button>
+                        Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-gray-200 bg-white">
-                    {pendingSecrets.length > 0 ? (
-                      pendingSecrets.map((secret) => (
-                        <tr key={secret.id} class={secret._status === 'new' ? 'bg-blue-50' : secret._status === 'updated' ? 'bg-yellow-50' : ''}>
+                    {pendingVariables.length > 0 ? (
+                      pendingVariables.map((variable) => (
+                        <tr key={variable.id} class={variable._status === 'new' ? 'bg-blue-50' : variable._status === 'updated' ? 'bg-yellow-50' : ''}>
                           <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                            {secret.key}
-                            {secret._status === 'new' && <span class="ml-2 text-xs text-blue-600">(new)</span>}
-                            {secret._status === 'updated' && <span class="ml-2 text-xs text-yellow-600">(modified)</span>}
+                            {variable.key}
+                            {variable._status === 'new' && <span class="ml-2 text-xs text-blue-600">(new)</span>}
+                            {variable._status === 'updated' && <span class="ml-2 text-xs text-yellow-600">(modified)</span>}
                           </td>
                           <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
-                            {showSecretValues ? secret.value : '•••••••••••••'}
+                            {variable.value}
                           </td>
                           <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-2">
                             <button
                               type="button"
-                              onClick={() => handleEditSecret(secret)}
+                              onClick={() => handleEditVariable(variable)}
                               class="px-2 py-1 bg-sky-100 hover:bg-sky-200 text-sky-700 text-sm font-medium rounded-md cursor-pointer inline-block"
                             >
                               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -420,8 +410,8 @@ export function CollectionUpdatePage() {
                             <button
                               type="button"
                               onClick={() => {
-                                setSecretToDelete(secret.id);
-                                setDeleteSecretModal(true);
+                                setVariableToDelete(variable.id);
+                                setDeleteVariableModal(true);
                               }}
                               class="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium rounded-md cursor-pointer inline-block"
                             >
@@ -435,7 +425,7 @@ export function CollectionUpdatePage() {
                     ) : (
                       <tr>
                         <td colspan="3" class="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">
-                          No secrets added yet.
+                          No variables added yet.
                         </td>
                       </tr>
                     )}
@@ -476,16 +466,16 @@ export function CollectionUpdatePage() {
         </div>
       </div>
 
-      {/* Edit Secret Modal */}
-      {editSecretModal && (
+      {/* Edit Variable Modal */}
+      {editVariableModal && (
         <div class="fixed inset-0 bg-gray-500/75 transition-opacity z-50">
           <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
               <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 w-full sm:max-w-lg sm:p-6">
-                <form onSubmit={handleUpdateSecret}>
+                <form onSubmit={handleUpdateVariable}>
                   <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
                     <button
-                      onClick={() => setEditSecretModal(false)}
+                      onClick={() => setEditVariableModal(false)}
                       type="button"
                       class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 cursor-pointer"
                     >
@@ -496,34 +486,34 @@ export function CollectionUpdatePage() {
                     </button>
                   </div>
                   <div class="mt-0 sm:text-left">
-                    <h3 class="text-base font-semibold text-gray-900">Edit Secret</h3>
+                    <h3 class="text-base font-semibold text-gray-900">Edit Variable</h3>
                     <div class="mt-2">
-                      <p class="text-sm text-gray-500">Update your collection secret.</p>
+                      <p class="text-sm text-gray-500">Update your collection variable.</p>
                     </div>
                     <div class="mt-6">
-                      <label for="edit_secret_key" class="block text-sm font-medium text-gray-700">Key</label>
+                      <label for="edit_variable_key" class="block text-sm font-medium text-gray-700">Key</label>
                       <input
                         type="text"
-                        id="edit_secret_key"
-                        value={editingSecret.key}
-                        onInput={(e) => setEditingSecret({ ...editingSecret, key: e.target.value })}
+                        id="edit_variable_key"
+                        value={editingVariable.key}
+                        onInput={(e) => setEditingVariable({ ...editingVariable, key: e.target.value })}
                         class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
                       />
                     </div>
                     <div class="mt-6">
-                      <label for="edit_secret_value" class="block text-sm font-medium text-gray-700">Value</label>
+                      <label for="edit_variable_value" class="block text-sm font-medium text-gray-700">Value</label>
                       <input
                         type="text"
-                        id="edit_secret_value"
-                        value={editingSecret.value}
-                        onInput={(e) => setEditingSecret({ ...editingSecret, value: e.target.value })}
+                        id="edit_variable_value"
+                        value={editingVariable.value}
+                        onInput={(e) => setEditingVariable({ ...editingVariable, value: e.target.value })}
                         class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
                       />
                     </div>
                   </div>
                   <div class="mt-8 flex justify-end">
                     <button
-                      onClick={() => setEditSecretModal(false)}
+                      onClick={() => setEditVariableModal(false)}
                       type="button"
                       class="mr-3 inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 cursor-pointer"
                     >
@@ -598,15 +588,15 @@ export function CollectionUpdatePage() {
         </div>
       )}
 
-      {/* Delete Secret Modal */}
-      {deleteSecretModal && (
+      {/* Delete Variable Modal */}
+      {deleteVariableModal && (
         <div class="fixed inset-0 bg-gray-500/75 transition-opacity z-50">
           <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
               <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
                 <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
                   <button
-                    onClick={() => setDeleteSecretModal(false)}
+                    onClick={() => setDeleteVariableModal(false)}
                     type="button"
                     class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 cursor-pointer"
                   >
@@ -623,24 +613,24 @@ export function CollectionUpdatePage() {
                     </svg>
                   </div>
                   <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                    <h3 class="text-base font-semibold text-gray-900">Delete Secret</h3>
+                    <h3 class="text-base font-semibold text-gray-900">Delete Variable</h3>
                     <div class="mt-2">
                       <p class="text-sm text-gray-500">
-                        Are you sure you want to delete this secret? This action cannot be undone.
+                        Are you sure you want to delete this variable? This action cannot be undone.
                       </p>
                     </div>
                   </div>
                 </div>
                 <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                   <button
-                    onClick={handleDeleteSecret}
+                    onClick={handleDeleteVariable}
                     type="button"
                     class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-500 sm:ml-3 sm:w-auto cursor-pointer"
                   >
-                    Delete Secret
+                    Delete Variable
                   </button>
                   <button
-                    onClick={() => setDeleteSecretModal(false)}
+                    onClick={() => setDeleteVariableModal(false)}
                     type="button"
                     class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto cursor-pointer"
                   >

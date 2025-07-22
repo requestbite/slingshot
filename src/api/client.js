@@ -84,8 +84,8 @@ export class SlingshotApiClient {
    * @returns {Promise<void>}
    */
   async deleteEnvironment(id) {
-    // Delete related secrets first
-    await db.secrets.where('environment_id').equals(id).delete();
+    // Delete related variables first
+    await db.variables.where('environment_id').equals(id).delete();
     return await db.environments.delete(id);
   }
 
@@ -178,7 +178,7 @@ export class SlingshotApiClient {
     }
     
     await db.requests.where('collection_id').equals(id).delete();
-    await db.secrets.where('collection_id').equals(id).delete();
+    await db.variables.where('collection_id').equals(id).delete();
     
     return await db.collections.delete(id);
   }
@@ -624,8 +624,8 @@ export class SlingshotApiClient {
       value: secretData.value
     };
 
-    const id = await db.secrets.add(secret);
-    return await db.secrets.get(id);
+    const id = await db.variables.add(secret);
+    return await db.variables.get(id);
   }
 
   /**
@@ -634,7 +634,7 @@ export class SlingshotApiClient {
    * @returns {Promise<import('../types/index.js').Secret|undefined>} The secret or undefined if not found
    */
   async getSecret(id) {
-    return await db.secrets.get(id);
+    return await db.variables.get(id);
   }
 
   /**
@@ -643,7 +643,7 @@ export class SlingshotApiClient {
    * @returns {Promise<import('../types/index.js').Secret[]>} Array of secrets in the environment
    */
   async getSecretsByEnvironment(environmentId) {
-    return await db.secrets.where('environment_id').equals(environmentId).toArray();
+    return await db.variables.where('environment_id').equals(environmentId).toArray();
   }
 
   /**
@@ -652,7 +652,7 @@ export class SlingshotApiClient {
    * @returns {Promise<import('../types/index.js').Secret[]>} Array of secrets in the collection
    */
   async getSecretsByCollection(collectionId) {
-    return await db.secrets.where('collection_id').equals(collectionId).toArray();
+    return await db.variables.where('collection_id').equals(collectionId).toArray();
   }
 
   /**
@@ -663,17 +663,17 @@ export class SlingshotApiClient {
    * @throws {Error} If secret not found
    */
   async updateSecret(id, updates) {
-    const existing = await db.secrets.get(id);
+    const existing = await db.variables.get(id);
     if (!existing) {
-      throw new Error('Secret not found');
+      throw new Error('Variable not found');
     }
 
     const updatedData = {
       ...updates
     };
 
-    await db.secrets.update(id, updatedData);
-    return await db.secrets.get(id);
+    await db.variables.update(id, updatedData);
+    return await db.variables.get(id);
   }
 
   /**
@@ -682,7 +682,7 @@ export class SlingshotApiClient {
    * @returns {Promise<void>}
    */
   async deleteSecret(id) {
-    return await db.secrets.delete(id);
+    return await db.variables.delete(id);
   }
 
   // Utility methods
@@ -706,7 +706,7 @@ export class SlingshotApiClient {
       collections: await db.collections.toArray(),
       folders: await db.folders.toArray(),
       requests: await db.requests.toArray(),
-      secrets: await db.secrets.toArray()
+      variables: await db.variables.toArray()
     };
     return data;
   }
@@ -723,7 +723,7 @@ export class SlingshotApiClient {
     if (data.collections) await db.collections.bulkAdd(data.collections);
     if (data.folders) await db.folders.bulkAdd(data.folders);
     if (data.requests) await db.requests.bulkAdd(data.requests);
-    if (data.secrets) await db.secrets.bulkAdd(data.secrets);
+    if (data.variables) await db.variables.bulkAdd(data.variables);
   }
 }
 
