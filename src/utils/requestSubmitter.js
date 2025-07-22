@@ -225,7 +225,13 @@ export class RequestSubmitter {
     }
     
     try {
-      new URL(requestData.url);
+      // Normalize URL by adding http:// if no protocol is specified
+      let normalizedUrl = requestData.url;
+      if (!normalizedUrl.match(/^https?:\/\//i)) {
+        normalizedUrl = `http://${normalizedUrl}`;
+      }
+      
+      new URL(normalizedUrl);
     } catch {
       return 'Invalid URL format';
     }
@@ -295,6 +301,11 @@ export class RequestSubmitter {
    */
   processUrl(url, pathParams = []) {
     let processedUrl = url;
+    
+    // Add http:// prefix if no protocol is specified
+    if (processedUrl && !processedUrl.match(/^https?:\/\//i)) {
+      processedUrl = `http://${processedUrl}`;
+    }
     
     // Replace path parameters {param} with values for URL display
     // The proxy will handle the actual :param substitution
