@@ -6,7 +6,7 @@ export function AppLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div class="h-screen flex flex-col bg-white">
+    <div class="h-screen">
       <TopBar />
 
       {/* Sidebar Toggle Button for Mobile - only show when sidebar is hidden */}

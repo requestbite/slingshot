@@ -18,7 +18,7 @@ export function TopBar() {
   };
 
   return (
-    <header class="bg-white/95 backdrop-blur-lg border-b border-gray-200 fixed top-0 left-0 w-full z-50 h-16">
+    <header class="h-[65px] bg-white/75 backdrop-blur-lg border-b border-gray-300 fixed top-0 left-0 w-full z-10 text-sm">
       <div class="flex items-center h-full px-4">
         {/* Logo and Navigation */}
         <div class="flex items-center space-x-6">
@@ -39,7 +39,7 @@ export function TopBar() {
                 e.preventDefault();
                 setLocation('/');
               }}
-              class={`px-3 py-2 rounded-md font-medium transition-colors ${isSlingshotActive()
+              class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer ${isSlingshotActive()
                 ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 }`}
@@ -51,7 +51,7 @@ export function TopBar() {
                 e.preventDefault();
                 setLocation('/collections');
               }}
-              class={`px-3 py-2 rounded-md font-medium transition-colors ${isActive('/collections')
+              class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer ${isActive('/collections')
                 ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 }`}
@@ -63,11 +63,11 @@ export function TopBar() {
                 e.preventDefault();
                 // Add settings navigation when route is defined
               }}
-              class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 font-medium transition-colors"
+              class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 hover:cursor-pointer transition-colors"
             >
               Settings
             </button>
-            <a href="https://docs.requestbite.com" target="_blank" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 font-medium transition-colors">
+            <a href="https://docs.requestbite.com" target="_blank" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors">
               Documentation
             </a>
           </nav>
