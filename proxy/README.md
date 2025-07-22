@@ -1,358 +1,211 @@
-# RequestBite Slingshot Proxy
+# RequestBite Slingshot Proxy (Go)
 
-A Lua-based HTTP proxy server for sending raw and form-data requests to any
-HTTP target. This proxy can be used to bypass CORS restrictions and provides
-additional features like request cancellation and binary content handling.
+A high-performance HTTP proxy server written in Go for RequestBite Slingshot
+HTTP calls.
 
 ## Features
 
-- **Two proxy modes**:  
-  JSON-based requests and form data requests
-- **Request cancellation**:  
-  Active requests can be cancelled if the client disconnects
-- **Binary content handling**:  
-  Binary responses are base64-encoded in JSON output
-- **Flexible deployment**:  
-  Can run as standalone server or integrate with OpenResty/Nginx
-- **Error handling**:  
-  Comprehensive error handling with proper HTTP status codes
-- **Path parameter substitution**:  
-  Supports `:param` syntax for URL path parameters
-- **Multiple content types**:  
-  Supports raw, form-data, and URL-encoded request bodies
+- **Reliable Timeout Handling**: Uses Go's `context.WithTimeout()` for guaranteed timeout enforcement
+- **Proper Redirect Control**: Configurable redirect following with manual control
+- **Multiple Integration Modes**: Standalone server, CLI execution
+- **CORS Support**: Full browser compatibility with CORS headers
+- **Binary Content Support**: Automatic binary detection and base64 encoding
+- **Form Data Processing**: Support for both JSON and form-based requests
+- **Health Check Endpoint**: Built-in health monitoring
 
-## Installation
+## Quick Start
 
-### Prerequisites
-
-Required Lua modules:
+### Build
 
 ```bash
-# Ubuntu/Debian:
-sudo apt-get install luarocks
-
-# CentOS/RHEL:
-sudo yum install luarocks
-
-# Install required modules
-luarocks install lua-cjson
-luarocks install luasocket
-luarocks install lua-resty-http  # For OpenResty only
+go build -o proxy .
 ```
 
-### For OpenResty/Nginx
-
-Additional requirements:
+### Run
 
 ```bash
-# Install OpenResty
-# Ubuntu/Debian:
-sudo apt-get install openresty
+# Start on default port 8080
+./proxy-go
 
-# CentOS/RHEL:
-sudo yum install openresty
+# Start on custom port
+./proxy-go -port 8081
+
+# Show help
+./proxy-go -help
 ```
 
-## Usage
+## API Endpoints
 
-### 1. Standalone Server
+### POST /proxy/request
 
-Run the proxy as a standalone HTTP server:
+Executes HTTP requests from JSON payload.
 
-```bash
-# Default port 8080
-lua proxy.lua --port 8080
-
-# Custom port
-lua proxy.lua --port 3000
-```
-
-The server will listen on the specified port and handle requests at:
-
-- `POST /proxy/request` - JSON-based requests
-- `POST /proxy/form` - Form data requests
-- `OPTIONS /proxy/request` - CORS preflight requests
-- `OPTIONS /proxy/form` - CORS preflight requests
-
-### 2. OpenResty/Nginx Integration
-
-Add to your Nginx configuration:
-
-```nginx
-# nginx.conf
-http {
-    lua_package_path "/path/to/requestbite-slingshot/proxy/?.lua;;";
-    
-    server {
-        listen 80;
-        server_name your-domain.com;
-        
-        location /proxy/request {
-            access_by_lua_block {
-                local proxy = require('proxy')
-                proxy.openresty_handler()
-            }
-        }
-        
-        location /proxy/form {
-            access_by_lua_block {
-                local proxy = require('proxy')
-                proxy.openresty_handler()
-            }
-        }
-    }
-}
-```
-
-Or use content_by_lua_block for more control:
-
-```nginx
-location /proxy/ {
-    content_by_lua_block {
-        local proxy = require('proxy')
-        proxy.openresty_handler()
-    }
-}
-```
-
-### 3. Programmatic Usage
-
-Use as a Lua module in your application:
-
-```lua
-local proxy = require('proxy')
-
--- JSON request
-local request_data = {
-    method = "GET",
-    url = "https://api.example.com/data",
-    headers = {"Authorization: Bearer token123"},
-    timeout = 30
-}
-
-local result = proxy.proxy_request_view(request_data)
-print(require('cjson').encode(result))
-
--- Form data request
-local query_params = {
-    url = "https://api.example.com/submit",
-    method = "POST",
-    contentType = "application/x-www-form-urlencoded"
-}
-
-local form_data = {
-    name = "John Doe",
-    email = "john@example.com"
-}
-
-local result = proxy.proxy_form_data_view(query_params, form_data, {})
-print(require('cjson').encode(result))
-```
-
-## API Reference
-
-### JSON Request Format (POST /proxy/request)
+**Request Body:**
 
 ```json
 {
-    "method": "GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS",
-    "url": "https://api.example.com/endpoint",
-    "headers": [
-        "Authorization: Bearer token123",
-        "Content-Type: application/json"
-    ],
+    "method": "GET",
+    "url": "https://example.com/api",
+    "headers": ["Content-Type: application/json", "Authorization: Bearer token"],
     "body": "request body content",
+    "timeout": 30,
+    "followRedirects": true,
     "path_params": {
         ":id": "123",
-        ":name": "example"
-    },
-    "timeout": 30,
-    "followRedirects": true
+        ":category": "users"
+    }
 }
 ```
 
-### Form Data Request Format (POST /proxy/form)
-
-Query parameters:
-
-- `url` (required): Target URL
-- `method`: HTTP method (default: POST)
-- `contentType`: Content type (default: application/x-www-form-urlencoded)
-- `headers`: Comma-separated headers
-- `timeout`: Request timeout in seconds
-- `followRedirects`: Boolean for redirect handling
-- `path_params`: JSON string of path parameters
-
-Form data: Standard form fields in request body
-
-### Response Format
-
-#### Success Response
+**Response:**
 
 ```json
 {
     "success": true,
     "response_status": 200,
-    "response_headers": {
-        "content-type": "application/json",
-        "content-length": "1234"
-    },
-    "response_data": "response body content",
-    "response_size": "1.21 KB",
-    "response_time": "123.45 ms",
+    "response_headers": {"content-type": "application/json"},
+    "response_data": "response body",
+    "response_size": "1.2 KB",
+    "response_time": "156.78 ms",
     "content_type": "application/json",
     "is_binary": false,
     "cancelled": false
 }
 ```
 
-#### Binary Response
+### POST /proxy/form
 
-```json
-{
-    "success": true,
-    "response_status": 200,
-    "response_headers": {
-        "content-type": "image/png"
-    },
-    "response_data": "iVBORw0KGgoAAAANSUhEUgAA...",
-    "response_size": "45.67 KB",
-    "response_time": "89.12 ms",
-    "content_type": "image/png",
-    "is_binary": true,
-    "cancelled": false
+Executes form-based HTTP requests.
+
+**Query Parameters:**
+
+- `url`: Target URL (required)
+- `method`: HTTP method (default: POST)
+- `timeout`: Timeout in seconds (default: 60)
+- `followRedirects`: Whether to follow redirects (default: true)
+- `contentType`: Content type (application/x-www-form-urlencoded or multipart/form-data)
+- `headers`: Comma-separated header list
+
+**Form Data:**
+Standard form data in request body.
+
+## Key Improvements Over Lua Version
+
+### 1. **Reliable Timeout Handling**
+
+The Lua version used luasocket which has blocking behavior that ignores timeout settings. The Go version uses proper context cancellation:
+
+```go
+ctx, cancel := context.WithTimeout(r.Context(), time.Duration(req.Timeout)*time.Second)
+defer cancel()
+
+// This WILL timeout after the specified duration
+resp, err := client.Do(httpReq.WithContext(ctx))
+if ctx.Err() == context.DeadlineExceeded {
+    return TimeoutError
 }
 ```
 
-#### Error Response
+### 2. **No External Dependencies**
 
-```json
-{
-    "success": false,
-    "error_type": "connection_error",
-    "error_title": "Connection Failed",
-    "error_message": "Failed to connect to server: connection refused",
-    "cancelled": false,
-    "response_time": "5.00 ms",
-    "response_status": null,
-    "response_headers": {},
-    "response_data": null,
-    "response_size": null
+- **Lua version**: Required curl subprocess calls with shell execution overhead
+- **Go version**: Pure Go HTTP client with no external processes
+
+### 3. **Better Error Handling**
+
+Clear distinction between:
+
+- Timeout errors (`context.DeadlineExceeded`)
+- Connection errors (network failures)
+- Redirect errors (when redirects are disabled)
+- Validation errors (malformed URLs)
+
+### 4. **Performance Improvements**
+
+- Connection pooling and reuse
+- No temporary file creation for request bodies
+- No shell command parsing overhead
+- Efficient binary content handling
+
+## Testing
+
+Run the timeout functionality test:
+
+```bash
+./test_timeout.sh
+```
+
+This tests:
+
+1. Normal requests (should succeed)
+2. Timeout scenarios (should fail with timeout error)
+3. Redirect handling with `followRedirects: false` (should fail)
+4. Redirect handling with `followRedirects: true` (should succeed)
+5. The original failing case from the Lua implementation
+
+## Integration Options
+
+### 1. Standalone HTTP Service (Recommended)
+
+Run the proxy as a service and configure nginx to proxy to it:
+
+```nginx
+upstream proxy_backend {
+    server localhost:8080;
+}
+
+location /proxy/ {
+    proxy_pass http://proxy_backend;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
 }
 ```
 
-#### OPTIONS Response (CORS)
+### 2. Direct CLI Usage
 
-```json
-{
-    "success": true,
-    "message": "CORS preflight response",
-    "allowed_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    "allowed_headers": ["Content-Type", "Authorization", "X-Requested-With"],
-    "max_age": 86400
-}
+Drop-in replacement for the Lua version:
+
+```bash
+# Instead of: lua proxy.lua --port 8080
+./proxy-go -port 8080
 ```
-
-## Error Types
-
-- `request_format_error`:  
-  Invalid JSON input or missing required fields
-- `url_validation_error`:  
-  Invalid URL format
-- `connection_error`:  
-  Network connection failures
-- `timeout`:  
-  Request timeout exceeded
-- `cancelled`:  
-  Request was cancelled by client
-
-## Request Cancellation
-
-The proxy supports request cancellation through client disconnection detection:
-
-```lua
-local proxy = require('proxy')
-
--- Cancel a specific request (if you have the request ID)
-local cancelled = proxy.cancel_request(request_id)
-```
-
-For web applications, simply closing the connection will cancel the active request.
 
 ## Configuration
 
-Modify the configuration at the top of `proxy.lua`:
+Environment variables and configuration options can be added as needed. Currently supports:
 
-```lua
-local config = {
-    default_timeout = 60,           -- Default request timeout in seconds
-    max_response_size = 10 * 1024 * 1024, -- Maximum response size (10MB)
-    user_agent = 'rb-slingshot-lua/0.0.1', -- Default User-Agent header
-    buffer_size = 8192             -- Buffer size for reading responses
+- `-port`: Server port (default: 8080)
+- `-help`: Show help information
+- `-version`: Show version information
+
+## Error Types
+
+The proxy returns standardized error responses matching the original Lua API:
+
+- `url_validation_error`: Invalid URL format or scheme
+- `timeout`: Request exceeded specified timeout
+- `connection_error`: Network connection failed
+- `redirect_not_followed`: Redirect encountered but `followRedirects: false`
+- `request_format_error`: Invalid JSON or missing required fields
+
+## Monitoring
+
+Health check endpoint available at `/health`:
+
+```bash
+curl http://localhost:8080/health
+```
+
+Returns:
+
+```json
+{
+    "status": "ok",
+    "version": "0.1.0",
+    "uptime": "2m30s"
 }
 ```
 
-## Server Logging
-
-The proxy provides clean, minimal logging. Each proxied request shows a one-liner with the target method and URL:
-
-```
-RequestBite Slingshot Proxy listening on port 8080
-Press Ctrl+C to stop
-GET https://httpbin.org/get
-POST https://httpbin.org/post
-OPTIONS /proxy/request (CORS preflight)
-```
-
-- **Proxied requests**: Shows the actual HTTP method and target URL being proxied
-- **CORS requests**: Shows OPTIONS with endpoint and "(CORS preflight)" indicator
-- **No debug clutter**: Clean output focusing on actual proxy activity
-
-## Performance Considerations
-
-- **Memory usage**:  
-  Large responses are loaded into memory. Consider streaming for very large files.
-- **Concurrency**:  
-  The standalone server handles one request at a time. Use OpenResty for
-  high-concurrency scenarios.
-- **Timeout handling**:  
-  Set appropriate timeouts to prevent hanging requests.
-
-## Security Notes
-
-- **CORS**:  
-  The proxy adds permissive CORS headers (`Access-Control-Allow-Origin: *`).
-  Restrict in production.
-- **Input validation**:  
-  The proxy validates URLs and request formats but doesn't sanitize all inputs.
-- **Rate limiting**:  
-  Consider implementing rate limiting in production deployments.
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Module not found**:  
-   Ensure lua-cjson and luasocket are installed
-2. **Port already in use**:  
-   Change the port number or stop conflicting services
-3. **Permission denied**:  
-   Run with appropriate privileges for the chosen port
-4. **SSL/TLS errors**:  
-   Ensure OpenSSL is properly configured
-
-### Debug Mode
-
-The proxy includes minimal logging by default. For additional debugging, you can modify the script to add more verbose output:
-
-```lua
--- Add debug prints in specific functions
-print("Debug: Processing request with body: " .. (body or "nil"))
-```
-
-The current implementation provides clean one-liner logging for each proxied request, showing the target method and URL.
-
 ## License
 
-This proxy script is part of the RequestBite Slingshot project and follows the
-same license terms.
+Same as the parent RequestBite project.
