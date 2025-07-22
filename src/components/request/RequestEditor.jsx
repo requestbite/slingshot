@@ -23,7 +23,7 @@ const TAB_NAMES = {
 export function RequestEditor({ request, onRequestChange }) {
   const { selectedCollection } = useAppContext();
   const [activeTab, setActiveTab] = useState('params');
-  
+
   // Helper function to get effective request data (draft if available, otherwise main)
   const getEffectiveRequestData = (request) => {
     if (!request) {
@@ -40,7 +40,7 @@ export function RequestEditor({ request, onRequestChange }) {
         urlEncodedData: []
       };
     }
-    
+
     return {
       method: request.has_draft_edits && request.draft_method ? request.draft_method : (request.method || 'GET'),
       url: request.has_draft_edits && request.draft_url ? request.draft_url : (request.url || ''),
@@ -74,13 +74,13 @@ export function RequestEditor({ request, onRequestChange }) {
   // Response state
   const [response, setResponse] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Draft state
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isDraftDirty, setIsDraftDirty] = useState(false);
   const draftSaveTimeoutRef = useRef(null);
   const originalDataRef = useRef(null);
-  
+
   // Modal state
   const [showCurlModal, setShowCurlModal] = useState(false);
   const [showCurlImportModal, setShowCurlImportModal] = useState(false);
@@ -120,14 +120,14 @@ export function RequestEditor({ request, onRequestChange }) {
         console.log('📥 New requestData:', newData);
         return newData;
       });
-      
+
       // Store original data for comparison (without draft changes)
       originalDataRef.current = getEffectiveRequestData({
         ...request,
         has_draft_edits: false // Force getting original data without drafts
       });
       console.log('💾 Stored original data:', originalDataRef.current);
-      
+
       // Set draft state based on request
       setHasUnsavedChanges(request.has_draft_edits || false);
       setIsDraftDirty(false);
@@ -139,7 +139,7 @@ export function RequestEditor({ request, onRequestChange }) {
         ...prev,
         ...defaultData
       }));
-      
+
       originalDataRef.current = null;
       setHasUnsavedChanges(false);
       setIsDraftDirty(false);
@@ -153,14 +153,14 @@ export function RequestEditor({ request, onRequestChange }) {
     console.log('🔍 Original data exists:', !!originalDataRef.current);
     console.log('🔍 Current requestData:', requestData);
     console.log('🔍 isDraftDirty:', isDraftDirty);
-    
+
     if (request && originalDataRef.current) {
       const hasChanges = hasDataChanged(originalDataRef.current, requestData);
       console.log('🔍 Has changes:', hasChanges);
-      
+
       // Immediately update the hasUnsavedChanges state for UI
       setHasUnsavedChanges(hasChanges);
-      
+
       if (hasChanges && !isDraftDirty) {
         console.log('🔍 Setting draft dirty and saving...');
         setIsDraftDirty(true);
@@ -175,18 +175,18 @@ export function RequestEditor({ request, onRequestChange }) {
   // Check if data has changed from original
   const hasDataChanged = (original, current) => {
     if (!request) return false;
-    
+
     const fieldsToCheck = ['method', 'url', 'headers', 'queryParams', 'pathParams', 'bodyType', 'contentType', 'bodyContent', 'formData', 'urlEncodedData'];
-    
+
     return fieldsToCheck.some(field => {
       const originalValue = original[field];
       const currentValue = current[field];
-      
+
       // For arrays and objects, do a JSON comparison
       if (Array.isArray(originalValue) || Array.isArray(currentValue)) {
         return JSON.stringify(originalValue) !== JSON.stringify(currentValue);
       }
-      
+
       return originalValue !== currentValue;
     });
   };
@@ -197,7 +197,7 @@ export function RequestEditor({ request, onRequestChange }) {
     if (draftSaveTimeoutRef.current) {
       clearTimeout(draftSaveTimeoutRef.current);
     }
-    
+
     console.log('💾 DEBOUNCED SAVE - Setting new timeout for request:', request?.id);
     draftSaveTimeoutRef.current = setTimeout(async () => {
       console.log('💾 EXECUTING DRAFT SAVE for request:', request?.id);
@@ -298,8 +298,8 @@ export function RequestEditor({ request, onRequestChange }) {
   // Helper function to check if request has saved response data
   const hasSavedResponse = (request) => {
     return request && (
-      request.response_data !== null || 
-      request.response_status !== null || 
+      request.response_data !== null ||
+      request.response_status !== null ||
       request.response_error_type !== null
     );
   };
@@ -337,8 +337,8 @@ export function RequestEditor({ request, onRequestChange }) {
       headers: processedHeaders,
       responseTime: request.response_time,
       responseSize: request.response_size,
-      responseData: request.response_is_binary ? 
-        `[Binary content - ${request.response_size || '0 B'}]` : 
+      responseData: request.response_is_binary ?
+        `[Binary content - ${request.response_size || '0 B'}]` :
         request.response_data,
       rawHeaders: request.response_headers || {},
       rawResponseTime: request.response_raw_time,
@@ -353,7 +353,7 @@ export function RequestEditor({ request, onRequestChange }) {
 
   const handleMethodChange = (method) => {
     updateRequestData({ method });
-    
+
     // Disable body for methods that don't support it
     if (['GET', 'HEAD', 'OPTIONS'].includes(method)) {
       updateRequestData({ bodyType: 'none' });
@@ -363,11 +363,11 @@ export function RequestEditor({ request, onRequestChange }) {
   const handleUrlChange = (url) => {
     console.log('🖊️ URL CHANGE - New URL:', url);
     console.log('🖊️ Current requestData before update:', requestData);
-    
+
     // Parse URL parameters immediately and include in the update
     const parsedParams = parseUrlParametersSync(url);
-    updateRequestData({ 
-      url, 
+    updateRequestData({
+      url,
       queryParams: parsedParams.queryParams,
       pathParams: parsedParams.pathParams
     });
@@ -375,12 +375,12 @@ export function RequestEditor({ request, onRequestChange }) {
 
   const handleBodyTypeChange = (bodyType) => {
     const updates = { bodyType };
-    
+
     // If changing to 'raw', default to JSON content type
     if (bodyType === 'raw') {
       updates.contentType = 'application/json';
     }
-    
+
     updateRequestData(updates);
   };
 
@@ -438,7 +438,7 @@ export function RequestEditor({ request, onRequestChange }) {
   const getMethodColor = (method) => {
     const colors = {
       GET: 'text-blue-600',
-      POST: 'text-green-600', 
+      POST: 'text-green-600',
       PUT: 'text-orange-600',
       PATCH: 'text-yellow-600',
       DELETE: 'text-red-600',
@@ -453,14 +453,14 @@ export function RequestEditor({ request, onRequestChange }) {
   // Handle request submission
   const handleSendRequest = async () => {
     if (!requestData.url || isSubmitting) return;
-    
+
     setIsSubmitting(true);
     setResponse(null);
-    
+
     try {
       const result = await requestSubmitter.submitRequest(requestData);
       setResponse(result);
-      
+
       // Save response to IndexedDB if we have a request ID
       if (request?.id) {
         try {
@@ -471,7 +471,7 @@ export function RequestEditor({ request, onRequestChange }) {
           // Don't fail the request if saving fails
         }
       }
-      
+
     } catch (error) {
       console.error('Request submission failed:', error);
       const errorResponse = {
@@ -483,7 +483,7 @@ export function RequestEditor({ request, onRequestChange }) {
         receivedAt: new Date().toISOString()
       };
       setResponse(errorResponse);
-      
+
       // Save error response to IndexedDB if we have a request ID
       if (request?.id) {
         try {
@@ -510,7 +510,7 @@ export function RequestEditor({ request, onRequestChange }) {
       ...prev,
       ...importedData
     }));
-    
+
     // Clear any existing response since we're importing a new request
     setResponse(null);
   };
@@ -518,20 +518,20 @@ export function RequestEditor({ request, onRequestChange }) {
   // Handle restore (discard draft changes)
   const handleRestore = async () => {
     if (!request?.id) return;
-    
+
     try {
       const updatedRequest = await apiClient.discardDraftChanges(request.id);
-      
+
       // Reload the original data
       const originalData = getEffectiveRequestData(updatedRequest);
       setRequestData(prev => ({
         ...prev,
         ...originalData
       }));
-      
+
       setHasUnsavedChanges(false);
       setIsDraftDirty(false);
-      
+
       // Trigger context refresh to update the request object
       if (onRequestChange) {
         onRequestChange(updatedRequest);
@@ -544,13 +544,13 @@ export function RequestEditor({ request, onRequestChange }) {
   // Handle update (apply draft changes)
   const handleUpdate = async () => {
     if (!request?.id) return;
-    
+
     try {
       const updatedRequest = await apiClient.applyDraftChanges(request.id);
-      
+
       setHasUnsavedChanges(false);
       setIsDraftDirty(false);
-      
+
       // Trigger context refresh to update the request object
       if (onRequestChange) {
         onRequestChange(updatedRequest);
@@ -573,33 +573,31 @@ export function RequestEditor({ request, onRequestChange }) {
               {hasUnsavedChanges && (
                 <span class="flex items-center text-xs text-gray-400 font-normal">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info mr-1">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M12 16v-4"/>
-                    <path d="M12 8h.01"/>
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 16v-4" />
+                    <path d="M12 8h.01" />
                   </svg>
-                  Request has unsaved data ( <button onClick={handleRestore} class="text-sky-500 hover:text-sky-700">restore</button>)
+                  Request has unsaved data ( <button onClick={handleRestore} class="text-sky-500 hover:text-sky-700 cursor-pointer">restore</button>)
                 </span>
               )}
-              <button 
+              <button
                 onClick={handleUpdate}
                 disabled={!hasUnsavedChanges}
-                class={`cursor-pointer rounded-md px-2 py-1 text-xs focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${
-                  hasUnsavedChanges
+                class={`cursor-pointer rounded-md px-2 py-1 text-xs focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${hasUnsavedChanges
                     ? 'bg-sky-100 hover:bg-sky-200 text-sky-700'
                     : 'bg-gray-300 text-white'
-                }`}
+                  }`}
               >
                 Update
               </button>
-              <button 
+              <button
                 onClick={() => setShowSaveAsModal(true)}
                 disabled={!selectedCollection}
                 title={selectedCollection ? 'Save the current request to collection' : 'Create or select a collection to save.'}
-                class={`cursor-pointer rounded-md px-2 py-1 text-xs focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${
-                  selectedCollection
+                class={`cursor-pointer rounded-md px-2 py-1 text-xs focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${selectedCollection
                     ? 'bg-sky-100 hover:bg-sky-200 text-sky-700'
                     : 'bg-gray-300 text-white'
-                }`}
+                  }`}
               >
                 Save as
               </button>
@@ -609,10 +607,10 @@ export function RequestEditor({ request, onRequestChange }) {
         <div class="flex flex-row items-stretch">
           {/* HTTP Method selector dropdown */}
           <div class="method-selector relative w-28 mr-2">
-            <select 
+            <select
               value={requestData.method}
               onChange={(e) => handleMethodChange(e.target.value)}
-              class="w-full appearance-none rounded-md bg-white pl-3 pr-8 text-sm text-gray-900 outline -outline-offset-1 outline-gray-300 focus:outline focus:-outline-offset-2 focus:outline-sky-500" 
+              class="w-full appearance-none rounded-md bg-white pl-3 pr-8 text-sm text-gray-900 outline -outline-offset-1 outline-gray-300 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
               style="min-height: 38px; max-height: 38px; line-height: 22px; box-sizing: border-box;"
             >
               {HTTP_METHODS.map(method => (
@@ -643,31 +641,29 @@ export function RequestEditor({ request, onRequestChange }) {
 
           {/* Send and Code buttons */}
           <div class="flex flex-none">
-            <button 
+            <button
               onClick={handleSendRequest}
               disabled={!requestData.url || isSubmitting}
-              class={`cursor-pointer rounded-md px-3 py-2 text-sm font-semibold focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${
-                !requestData.url || isSubmitting
+              class={`cursor-pointer rounded-md px-3 py-2 text-sm font-semibold focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${!requestData.url || isSubmitting
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-sky-500 hover:bg-sky-400 text-white'
-              }`}
+                }`}
             >
               {isSubmitting ? 'Sending...' : 'Send'}
             </button>
-            <button 
+            <button
               onClick={() => setShowCurlModal(true)}
               disabled={isSubmitting}
               type="button"
-              class={`hidden ml-2 sm:block cursor-pointer rounded-md px-3 py-2 text-sm font-semibold border border-gray-300 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-gray-500 ${
-                isSubmitting
+              class={`hidden ml-2 sm:block cursor-pointer rounded-md px-3 py-2 text-sm font-semibold border border-gray-300 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-gray-500 ${isSubmitting
                   ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
                   : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              }`}
+                }`}
             >
               <span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-code-icon lucide-code">
-                  <path d="m16 18 6-6-6-6"/>
-                  <path d="m8 6-6 6 6 6"/>
+                  <path d="m16 18 6-6-6-6" />
+                  <path d="m8 6-6 6 6 6" />
                 </svg>
               </span>
             </button>
@@ -683,13 +679,12 @@ export function RequestEditor({ request, onRequestChange }) {
             {Object.entries(TAB_NAMES).map(([key, name]) => (
               <button key={key} type="button" data-tab={key}
                 onClick={() => setActiveTab(key)}
-                class={`px-4 py-2 text-xs rounded-t-md font-medium focus:outline-none ${
-                  key === 'body' && isBodyDisabled
+                class={`px-4 py-2 text-xs rounded-t-md font-medium focus:outline-none ${key === 'body' && isBodyDisabled
                     ? 'text-gray-400 cursor-not-allowed'
                     : activeTab === key
                       ? 'text-sky-600 bg-sky-50 border-b-2 border-sky-600 cursor-pointer'
                       : 'text-gray-600 hover:text-sky-600 hover:bg-gray-100 cursor-pointer'
-                }`}
+                  }`}
                 disabled={key === 'body' && isBodyDisabled}
               >
                 {name}
