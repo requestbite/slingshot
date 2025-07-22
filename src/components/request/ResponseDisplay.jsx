@@ -258,6 +258,16 @@ export function ResponseDisplay({ response, isLoading, onCancel }) {
     );
   }
 
+  // Check if we have any response data (status, responseData, etc.)
+  // If not, show welcome message even if response object exists
+  if (!response.status && !response.responseData && !response.cancelled && response.success !== false) {
+    return (
+      <div class="px-6">
+        <WelcomeMessage />
+      </div>
+    );
+  }
+
   if (response.cancelled) {
     return (
       <div id="response-section">

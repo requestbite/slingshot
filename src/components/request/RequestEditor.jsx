@@ -308,8 +308,8 @@ export function RequestEditor({ request, onRequestChange }) {
   const convertSavedResponseToDisplayFormat = (request) => {
     if (!request) return null;
 
-    // Handle error responses
-    if (!request.response_success) {
+    // Handle error responses (only if explicitly marked as failed or has error data)
+    if (request.response_success === false || request.response_error_type) {
       return {
         success: false,
         errorType: request.response_error_type,
