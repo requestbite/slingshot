@@ -1,5 +1,6 @@
 import { useState } from 'preact/hooks';
 import { WelcomeMessage } from '../common/WelcomeMessage';
+import { Toast, useToast } from '../common/Toast';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { xml } from '@codemirror/lang-xml';
@@ -232,6 +233,7 @@ const processResponseHeaders = (responseHeaders) => {
 export function ResponseDisplay({ response, isLoading, onCancel }) {
   const [showHeaders, setShowHeaders] = useState(true);
   const [activeTab, setActiveTab] = useState('body');
+  const [isToastVisible, showToast, hideToast] = useToast();
 
   if (isLoading) {
     return (
@@ -335,7 +337,7 @@ export function ResponseDisplay({ response, isLoading, onCancel }) {
   const copyToClipboard = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
-      // TODO: Show toast notification
+      showToast();
     } catch (error) {
       console.error('Failed to copy to clipboard:', error);
     }
@@ -609,6 +611,14 @@ export function ResponseDisplay({ response, isLoading, onCancel }) {
           </div>
         </div>
       </div>
+      
+      {/* Toast notification */}
+      <Toast 
+        message="Copied to clipboard!"
+        isVisible={isToastVisible}
+        onClose={hideToast}
+        type="success"
+      />
     </div>
   );
 }

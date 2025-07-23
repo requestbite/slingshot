@@ -263,8 +263,16 @@ export function VariableInput({
     const currentCursor = getCursorPosition(element);
     const currentText = element.textContent || '';
     
-    // Only update if the content has actually changed
-    if (currentText === value) {
+    // Update DOM content if it differs from the prop value
+    if (currentText !== value) {
+      const highlighted = parseAndHighlight(value);
+      element.innerHTML = highlighted.__html;
+      // Restore cursor position, but set to end if value was externally changed (like restore)
+      setTimeout(() => {
+        setCursorPosition(element, Math.min(currentCursor, value.length));
+      }, 0);
+    } else {
+      // Content matches, but highlighting might need update (e.g., variables changed)
       const highlighted = parseAndHighlight(value);
       if (element.innerHTML !== highlighted.__html) {
         element.innerHTML = highlighted.__html;

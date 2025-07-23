@@ -8,6 +8,7 @@ import { CurlExportModal } from '../modals/CurlExportModal';
 import { CurlImportModal } from '../modals/CurlImportModal';
 import { SaveAsModal } from '../modals/SaveAsModal';
 import { VariableInput } from '../common/VariableInput';
+import { Toast, useToast } from '../common/Toast';
 import { requestSubmitter } from '../../utils/requestSubmitter';
 import { apiClient } from '../../api';
 import { useAppContext } from '../../hooks/useAppContext';
@@ -89,6 +90,9 @@ export function RequestEditor({ request, onRequestChange }) {
   const [showCurlModal, setShowCurlModal] = useState(false);
   const [showCurlImportModal, setShowCurlImportModal] = useState(false);
   const [showSaveAsModal, setShowSaveAsModal] = useState(false);
+
+  // Toast state
+  const [isToastVisible, showToast, hideToast] = useToast();
 
   // Update parent when request data changes (but not during initial load or when editing existing requests)
   useEffect(() => {
@@ -210,7 +214,6 @@ export function RequestEditor({ request, onRequestChange }) {
         try {
           await apiClient.saveDraftChanges(request.id, requestData);
           console.log('💾 Draft save completed successfully');
-          setHasUnsavedChanges(true);
           setIsDraftDirty(false);
         } catch (error) {
           console.error('💾 Failed to save draft changes:', error);
@@ -622,6 +625,9 @@ export function RequestEditor({ request, onRequestChange }) {
         ...originalData
       }));
 
+      // Update the original data reference to prevent false positives in change detection
+      originalDataRef.current = originalData;
+
       setHasUnsavedChanges(false);
       setIsDraftDirty(false);
 
@@ -643,6 +649,9 @@ export function RequestEditor({ request, onRequestChange }) {
 
       setHasUnsavedChanges(false);
       setIsDraftDirty(false);
+
+      // Show success toast
+      showToast();
 
       // Trigger context refresh to update the request object
       if (onRequestChange) {
@@ -888,6 +897,14 @@ export function RequestEditor({ request, onRequestChange }) {
           console.log('Request saved successfully:', savedRequest);
           // Could potentially navigate to the saved request or show notification
         }}
+      />
+
+      {/* Toast notification */}
+      <Toast 
+        message="Request updated!"
+        isVisible={isToastVisible}
+        onClose={hideToast}
+        type="success"
       />
     </>
   );
