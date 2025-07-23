@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -178,17 +179,34 @@ func (s *ProxyServer) handleFormRequest(w http.ResponseWriter, r *http.Request) 
 		formReq.Timeout = 60
 	}
 
-	// Parse form data
-	if err := r.ParseForm(); err != nil {
-		s.writeErrorResponse(w, "request_format_error", "Invalid form data", fmt.Sprintf("Failed to parse form data: %v", err))
-		return
-	}
+	// For multipart/form-data, pass the raw body directly to preserve structure
+	var formData map[string]string
+	var rawBody []byte
+	
+	if strings.Contains(r.Header.Get("Content-Type"), "multipart/form-data") {
+		// For multipart, read raw body to preserve boundaries and files
+		var err error
+		rawBody, err = io.ReadAll(r.Body)
+		if err != nil {
+			s.writeErrorResponse(w, "request_format_error", "Failed to read request body", fmt.Sprintf("Error reading body: %v", err))
+			return
+		}
+		formReq.RawBody = rawBody
+		formReq.ContentType = r.Header.Get("Content-Type") // Preserve exact content-type with boundary
+	} else {
+		// For URL-encoded forms, parse normally
+		if err := r.ParseForm(); err != nil {
+			s.writeErrorResponse(w, "request_format_error", "Invalid form data", fmt.Sprintf("Failed to parse form data: %v", err))
+			return
+		}
 
-	// Convert form values to map
-	formData := make(map[string]string)
-	for key, values := range r.PostForm {
-		if len(values) > 0 {
-			formData[key] = values[0]
+		// Convert form values to map (preserve multiple values)
+		formData = make(map[string]string)
+		for key, values := range r.PostForm {
+			if len(values) > 0 {
+				// Join multiple values with comma (standard behavior)
+				formData[key] = strings.Join(values, ",")
+			}
 		}
 	}
 

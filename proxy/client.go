@@ -298,7 +298,12 @@ func (c *HTTPClient) ExecuteFormRequest(ctx context.Context, queryParams *FormPr
 	}
 
 	// Set content type and build body based on form data
-	if queryParams.ContentType == "application/x-www-form-urlencoded" {
+	if len(queryParams.RawBody) > 0 {
+		// Use raw body for multipart/form-data (preserves boundaries and files)
+		req.Body = string(queryParams.RawBody)
+		req.Headers = append(req.Headers, "Content-Type: "+queryParams.ContentType)
+	} else if queryParams.ContentType == "application/x-www-form-urlencoded" {
+		// Build URL-encoded body from form data
 		values := url.Values{}
 		for key, value := range formData {
 			values.Set(key, value)
@@ -306,7 +311,6 @@ func (c *HTTPClient) ExecuteFormRequest(ctx context.Context, queryParams *FormPr
 		req.Body = values.Encode()
 		req.Headers = append(req.Headers, "Content-Type: application/x-www-form-urlencoded")
 	}
-	// TODO: Add multipart/form-data support
 
 	return c.ExecuteRequest(ctx, req)
 }

@@ -25,6 +25,7 @@ type FormProxyRequest struct {
 	ContentType     string            `json:"contentType,omitempty"`
 	Headers         string            `json:"headers,omitempty"`
 	PathParams      string            `json:"path_params,omitempty"`
+	RawBody         []byte            `json:"-"` // For multipart data, exclude from JSON
 }
 
 // ProxyResponse represents the response structure matching the Lua API
