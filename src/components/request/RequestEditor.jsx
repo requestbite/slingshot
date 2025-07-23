@@ -466,6 +466,44 @@ export function RequestEditor({ request, onRequestChange }) {
     return requestData.url.trim() || placeholderUrl;
   };
 
+  // Get all available variables from collection and environment
+  const getAvailableVariables = async () => {
+    const variables = new Map();
+    
+    try {
+      // Collection variables (inline)
+      if (selectedCollection?.variables) {
+        selectedCollection.variables.forEach(v => variables.set(v.key, v.value));
+      }
+      
+      // Database collection variables
+      if (selectedCollection?.id) {
+        const collectionVars = await apiClient.getSecretsByCollection(selectedCollection.id);
+        collectionVars.forEach(v => variables.set(v.key, v.value));
+      }
+      
+      // Environment variables (if collection has environment)
+      if (selectedCollection?.environment_id) {
+        const envVars = await apiClient.getSecretsByEnvironment(selectedCollection.environment_id);
+        envVars.forEach(v => variables.set(v.key, v.value));
+      }
+    } catch (error) {
+      console.error('Failed to load variables:', error);
+    }
+    
+    return variables;
+  };
+
+  // Replace {{variable}} patterns with actual values
+  const replaceVariables = (text, variables) => {
+    if (!text || typeof text !== 'string') return text;
+    
+    return text.replace(/\{\{([^}]+)\}\}/g, (match, variableName) => {
+      const value = variables.get(variableName.trim());
+      return value !== undefined ? value : match; // Keep original if variable not found
+    });
+  };
+
   // Handle request submission
   const handleSendRequest = async () => {
     if (isSubmitting) return;
@@ -476,14 +514,43 @@ export function RequestEditor({ request, onRequestChange }) {
     setIsSubmitting(true);
     setResponse(null);
 
-    // Use effective URL for the request
-    const requestDataWithUrl = {
+    // Get all available variables for replacement
+    const variables = await getAvailableVariables();
+
+    // Replace variables in all request fields
+    const processedRequestData = {
       ...requestData,
-      url: effectiveUrl
+      url: replaceVariables(effectiveUrl, variables),
+      headers: requestData.headers.map(h => ({
+        ...h,
+        key: replaceVariables(h.key, variables),
+        value: replaceVariables(h.value, variables)
+      })),
+      queryParams: requestData.queryParams.map(p => ({
+        ...p,
+        key: replaceVariables(p.key, variables),
+        value: replaceVariables(p.value, variables)
+      })),
+      pathParams: requestData.pathParams.map(p => ({
+        ...p,
+        key: replaceVariables(p.key, variables),
+        value: replaceVariables(p.value, variables)
+      })),
+      bodyContent: replaceVariables(requestData.bodyContent, variables),
+      formData: requestData.formData?.map(f => ({
+        ...f,
+        key: replaceVariables(f.key, variables),
+        value: f.type === 'text' ? replaceVariables(f.value, variables) : f.value // Don't replace file values
+      })),
+      urlEncodedData: requestData.urlEncodedData?.map(u => ({
+        ...u,
+        key: replaceVariables(u.key, variables),
+        value: replaceVariables(u.value, variables)
+      }))
     };
 
     try {
-      const result = await requestSubmitter.submitRequest(requestDataWithUrl);
+      const result = await requestSubmitter.submitRequest(processedRequestData);
       setResponse(result);
 
       // Save response to IndexedDB if we have a request ID

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { xml } from '@codemirror/lang-xml';
@@ -7,6 +7,7 @@ import { EditorView, keymap } from '@codemirror/view';
 import { autocompletion } from '@codemirror/autocomplete';
 import { bracketMatching } from '@codemirror/language';
 import { Prec } from '@codemirror/state';
+import { ContextMenu } from '../../common/ContextMenu';
 
 const BODY_TYPES = [
   { value: 'none', label: 'None' },
@@ -20,6 +21,195 @@ const CONTENT_TYPES = [
   { value: 'application/xml', label: 'XML' },
   { value: 'text/plain', label: 'Text' }
 ];
+
+// FormDataSection component for both form-data and url-encoded data
+function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFiles = true }) {
+  const [showContextMenu, setShowContextMenu] = useState(false);
+  const [contextMenuTrigger, setContextMenuTrigger] = useState(null);
+  const addButtonRef = useRef();
+
+  const menuItems = [
+    {
+      label: 'Text',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14,2 14,8 20,8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <line x1="10" y1="9" x2="8" y2="9"/>
+        </svg>
+      ),
+      onClick: () => addField('text')
+    },
+    {
+      label: 'File',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14,2 14,8 20,8"/>
+        </svg>
+      ),
+      onClick: () => addField('file')
+    }
+  ];
+
+  const handleAddButtonClick = () => {
+    if (allowFiles) {
+      setContextMenuTrigger(addButtonRef.current);
+      setShowContextMenu(true);
+    } else {
+      // Directly add text field for URL-encoded (no files supported)
+      addField('text');
+    }
+  };
+
+  const addField = (type) => {
+    const newField = {
+      id: crypto.randomUUID(),
+      key: '',
+      value: type === 'file' ? null : '',
+      type: type,
+      enabled: true
+    };
+    onDataChange([...data, newField]);
+  };
+
+  const removeField = (id) => {
+    onDataChange(data.filter(field => field.id !== id));
+  };
+
+  const updateField = (id, field, value) => {
+    const updatedFields = data.map(item =>
+      item.id === id ? { ...item, [field]: value } : item
+    );
+    onDataChange(updatedFields);
+  };
+
+  const toggleFieldEnabled = (id) => {
+    const updatedFields = data.map(item =>
+      item.id === id ? { ...item, enabled: !item.enabled } : item
+    );
+    onDataChange(updatedFields);
+  };
+
+  const renderValueField = (field) => {
+    if (field.type === 'file') {
+      return (
+        <input
+          key={`${field.type}-value-${field.id}`}
+          type="file"
+          onChange={(e) => {
+            const file = e.target.files[0];
+            updateField(field.id, 'value', file);
+          }}
+          class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${
+            field.enabled ? 'bg-white' : 'bg-gray-50 text-gray-500'
+          }`}
+          disabled={!field.enabled}
+        />
+      );
+    } else {
+      return (
+        <input
+          key={`${field.type}-value-${field.id}`}
+          type="text"
+          value={field.value || ''}
+          onInput={(e) => updateField(field.id, 'value', e.target.value)}
+          onChange={(e) => updateField(field.id, 'value', e.target.value)}
+          onKeyDown={onEnterKeyPress}
+          placeholder="Value"
+          class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${
+            field.enabled ? 'bg-white' : 'bg-gray-50 text-gray-500'
+          }`}
+          disabled={!field.enabled}
+        />
+      );
+    }
+  };
+
+  return (
+    <div class="form-request-content">
+      <div class="flex justify-between items-center mb-2">
+        <button
+          ref={addButtonRef}
+          onClick={handleAddButtonClick}
+          class="px-3 py-1 bg-sky-100 hover:bg-sky-200 text-sky-700 text-sm font-medium rounded-md cursor-pointer flex items-center gap-1"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus">
+            <path d="M5 12h14" />
+            <path d="M12 5v14" />
+          </svg>
+          Add
+        </button>
+      </div>
+
+      {allowFiles && (
+        <ContextMenu
+          isOpen={showContextMenu}
+          onClose={() => setShowContextMenu(false)}
+          trigger={contextMenuTrigger}
+          items={menuItems}
+        />
+      )}
+
+      <div class="space-y-2">
+        {data.map((field) => (
+          <div key={field.id} class="grid grid-cols-12 gap-2 items-center">
+            <div class="col-span-1 flex justify-center">
+              <input
+                type="checkbox"
+                checked={field.enabled}
+                onChange={() => toggleFieldEnabled(field.id)}
+                class="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500"
+              />
+            </div>
+            {allowFiles && (
+              <div class="col-span-1 flex justify-center">
+                <span class={`text-xs px-2 py-1 rounded ${
+                  field.type === 'file' 
+                    ? 'bg-purple-100 text-purple-700' 
+                    : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {field.type === 'file' ? 'File' : 'Text'}
+                </span>
+              </div>
+            )}
+            <div class={allowFiles ? "col-span-4" : "col-span-5"}>
+              <input
+                key={`${field.type}-key-${field.id}`}
+                type="text"
+                value={field.key}
+                onInput={(e) => updateField(field.id, 'key', e.target.value)}
+                onChange={(e) => updateField(field.id, 'key', e.target.value)}
+                onKeyDown={onEnterKeyPress}
+                placeholder="Key"
+                class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${
+                  field.enabled ? 'bg-white' : 'bg-gray-50 text-gray-500'
+                }`}
+                disabled={!field.enabled}
+              />
+            </div>
+            <div class="col-span-5">
+              {renderValueField(field)}
+            </div>
+            <div class="col-span-1 flex justify-center">
+              <button
+                onClick={() => removeField(field.id)}
+                class="p-1 text-red-400 hover:text-red-600 transition-all"
+                title="Remove field"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function BodyTab({
   bodyType,
@@ -155,34 +345,6 @@ export function BodyTab({
     }
   };
 
-  const addFormDataField = () => {
-    const newField = {
-      id: crypto.randomUUID(),
-      key: '',
-      value: '',
-      type: 'text',
-      enabled: true
-    };
-    onFormDataChange([...formData, newField]);
-  };
-
-  const removeFormDataField = (id) => {
-    onFormDataChange(formData.filter(field => field.id !== id));
-  };
-
-  const updateFormDataField = (id, field, value) => {
-    const updatedFields = formData.map(item =>
-      item.id === id ? { ...item, [field]: value } : item
-    );
-    onFormDataChange(updatedFields);
-  };
-
-  const toggleFormDataFieldEnabled = (id) => {
-    const updatedFields = formData.map(item =>
-      item.id === id ? { ...item, enabled: !item.enabled } : item
-    );
-    onFormDataChange(updatedFields);
-  };
 
   return (
     <>
@@ -292,73 +454,24 @@ export function BodyTab({
 
       {/* Form Data Content */}
       {bodyType === 'form-data' && (
-        <div class="form-request-content">
-          <div class="flex justify-between items-center mb-2">
-            <button
-              onClick={addFormDataField}
-              class="px-3 py-1 bg-sky-100 hover:bg-sky-200 text-sky-700 text-sm font-medium rounded-md cursor-pointer"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus">
-                <path d="M5 12h14" />
-                <path d="M12 5v14" />
-              </svg>
-            </button>
-          </div>
+        <FormDataSection
+          data={formData}
+          onDataChange={onFormDataChange}
+          onEnterKeyPress={onEnterKeyPress}
+          title="Form Data"
+          allowFiles={true}
+        />
+      )}
 
-          <div class="space-y-2">
-            {formData.map((field) => (
-              <div key={field.id} class="grid grid-cols-12 gap-2 items-center">
-                <div class="col-span-1 flex justify-center">
-                  <input
-                    type="checkbox"
-                    checked={field.enabled}
-                    onChange={() => toggleFormDataFieldEnabled(field.id)}
-                    class="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500"
-                  />
-                </div>
-                <div class="col-span-5">
-                  <input
-                    key={`form-key-${field.id}`}
-                    type="text"
-                    value={field.key}
-                    onInput={(e) => updateFormDataField(field.id, 'key', e.target.value)}
-                    onChange={(e) => updateFormDataField(field.id, 'key', e.target.value)}
-                    onKeyDown={onEnterKeyPress}
-                    placeholder="Key"
-                    class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${field.enabled ? 'bg-white' : 'bg-gray-50 text-gray-500'
-                      }`}
-                    disabled={!field.enabled}
-                  />
-                </div>
-                <div class="col-span-5">
-                  <input
-                    key={`form-value-${field.id}`}
-                    type="text"
-                    value={field.value}
-                    onInput={(e) => updateFormDataField(field.id, 'value', e.target.value)}
-                    onChange={(e) => updateFormDataField(field.id, 'value', e.target.value)}
-                    onKeyDown={onEnterKeyPress}
-                    placeholder="Value"
-                    class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${field.enabled ? 'bg-white' : 'bg-gray-50 text-gray-500'
-                      }`}
-                    disabled={!field.enabled}
-                  />
-                </div>
-                <div class="col-span-1 flex justify-center">
-                  <button
-                    onClick={() => removeFormDataField(field.id)}
-                    class="p-1 text-red-400 hover:text-red-600 transition-all"
-                    title="Remove field"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* URL-Encoded Data Content */}
+      {bodyType === 'url-encoded' && (
+        <FormDataSection
+          data={urlEncodedData}
+          onDataChange={onUrlEncodedDataChange}
+          onEnterKeyPress={onEnterKeyPress}
+          title="URL-Encoded Data"
+          allowFiles={false}
+        />
       )}
     </>
   );
