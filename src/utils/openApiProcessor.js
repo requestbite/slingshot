@@ -230,7 +230,8 @@ async function createRequestFromOperation({ path, method, operation, baseUrl, fo
   const name = operation.summary || operation.operationId || `${method} ${path}`;
   
   // Convert OpenAPI path parameters to URL template format
-  const url = convertPathParameters(baseUrl + path);
+  // Use {{baseUrl}} variable instead of hardcoded baseUrl
+  const url = '{{baseUrl}}' + convertPathParameters(path);
   
   // Extract parameters
   const { headers, params: queryParams, pathParams } = extractParameters(operation);

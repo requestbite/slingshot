@@ -109,6 +109,16 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
         variables: processedData.variables || []
       });
 
+      // Create individual variable records for collection management UI
+      for (const variable of processedData.variables || []) {
+        await apiClient.createSecret({
+          collection_id: collection.id,
+          key: variable.key,
+          value: variable.value,
+          description: variable.description || ''
+        });
+      }
+
       // Create folders and requests
       const folderMap = new Map();
 
