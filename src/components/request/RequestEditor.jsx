@@ -7,6 +7,7 @@ import { ResponseDisplay } from './ResponseDisplay';
 import { CurlExportModal } from '../modals/CurlExportModal';
 import { CurlImportModal } from '../modals/CurlImportModal';
 import { SaveAsModal } from '../modals/SaveAsModal';
+import { VariableInput } from '../common/VariableInput';
 import { requestSubmitter } from '../../utils/requestSubmitter';
 import { apiClient } from '../../api';
 import { useAppContext } from '../../hooks/useAppContext';
@@ -720,16 +721,13 @@ export function RequestEditor({ request, onRequestChange }) {
 
           {/* URL input */}
           <div class="flex-1 mr-2" style="min-width: 0;">
-            <input
-              type="text"
+            <VariableInput
               value={requestData.url}
-              onInput={(e) => handleUrlChange(e.target.value)}
-              onChange={(e) => handleUrlChange(e.target.value)}
+              onChange={handleUrlChange}
               onKeyDown={handleEnterKeyPress}
               placeholder={placeholderUrl}
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 bg-white font-inter text-gray-900 overflow-hidden whitespace-nowrap"
-              style="min-height: 38px; max-height: 38px; line-height: 22px; width: 100%; box-sizing: border-box;"
-              autofocus
+              className="w-full text-sm font-inter text-gray-900"
+              style="min-height: 38px; line-height: 22px; width: 100%; box-sizing: border-box;"
             />
           </div>
 

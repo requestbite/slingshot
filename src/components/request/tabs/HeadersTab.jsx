@@ -1,4 +1,5 @@
 import { useState } from 'preact/hooks';
+import { VariableInput } from '../../common/VariableInput';
 
 export function HeadersTab({ headers, onHeadersChange, onEnterKeyPress }) {
   const addHeader = () => {
@@ -32,13 +33,13 @@ export function HeadersTab({ headers, onHeadersChange, onEnterKeyPress }) {
   return (
     <>
       <div class="flex justify-between items-center mb-2">
-        <button 
+        <button
           onClick={addHeader}
           class="px-3 py-1 bg-sky-100 hover:bg-sky-200 text-sky-700 text-sm font-medium rounded-md cursor-pointer"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus">
-            <path d="M5 12h14"/>
-            <path d="M12 5v14"/>
+            <path d="M5 12h14" />
+            <path d="M12 5v14" />
           </svg>
         </button>
       </div>
@@ -55,39 +56,33 @@ export function HeadersTab({ headers, onHeadersChange, onEnterKeyPress }) {
               />
             </div>
             <div class="col-span-5">
-              <input
+              <VariableInput
                 key={`header-key-${header.id}`}
-                type="text"
                 value={header.key}
-                onInput={(e) => updateHeader(header.id, 'key', e.target.value)}
-                onChange={(e) => updateHeader(header.id, 'key', e.target.value)}
+                onChange={(value) => updateHeader(header.id, 'key', value)}
                 onKeyDown={onEnterKeyPress}
                 placeholder="Header name"
-                class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${
-                  header.enabled ? 'bg-white' : 'bg-gray-50 text-gray-500'
-                }`}
+                className={`w-full text-sm ${header.enabled ? '' : 'opacity-50'
+                  }`}
                 disabled={!header.enabled}
               />
             </div>
             <div class="col-span-5">
-              <input
+              <VariableInput
                 key={`header-value-${header.id}`}
-                type="text"
                 value={header.value}
-                onInput={(e) => updateHeader(header.id, 'value', e.target.value)}
-                onChange={(e) => updateHeader(header.id, 'value', e.target.value)}
+                onChange={(value) => updateHeader(header.id, 'value', value)}
                 onKeyDown={onEnterKeyPress}
                 placeholder="Value"
-                class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${
-                  header.enabled ? 'bg-white' : 'bg-gray-50 text-gray-500'
-                }`}
+                className={`w-full text-sm ${header.enabled ? '' : 'opacity-50'
+                  }`}
                 disabled={!header.enabled}
               />
             </div>
             <div class="col-span-1 flex justify-center">
               <button
                 onClick={() => removeHeader(header.id)}
-                class="p-1 text-red-400 hover:text-red-600 transition-all"
+                class="p-1 text-red-400 hover:text-red-600 transition-all cursor-pointer"
                 title="Remove header"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

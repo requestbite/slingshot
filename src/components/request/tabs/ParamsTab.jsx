@@ -1,4 +1,5 @@
 import { useState } from 'preact/hooks';
+import { VariableInput } from '../../common/VariableInput';
 
 export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPathParamsChange, onEnterKeyPress }) {
   const handlePathParamChange = (id, field, value) => {
@@ -49,14 +50,13 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
                   />
                 </div>
                 <div class="col-span-6">
-                  <input
-                    type="text"
+                  <VariableInput
                     value={param.value}
-                    onChange={(e) => handlePathParamChange(param.id, 'value', e.target.value)}
+                    onChange={(value) => handlePathParamChange(param.id, 'value', value)}
                     onKeyDown={onEnterKeyPress}
                     placeholder="Enter value"
-                    class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${
-                      param.enabled ? 'bg-white' : 'bg-gray-50 text-gray-500'
+                    className={`w-full text-sm ${
+                      param.enabled ? '' : 'opacity-50'
                     }`}
                     disabled={!param.enabled}
                   />

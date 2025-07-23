@@ -8,6 +8,7 @@ import { autocompletion } from '@codemirror/autocomplete';
 import { bracketMatching } from '@codemirror/language';
 import { Prec } from '@codemirror/state';
 import { ContextMenu } from '../../common/ContextMenu';
+import { VariableInput } from '../../common/VariableInput';
 
 const BODY_TYPES = [
   { value: 'none', label: 'None' },
@@ -33,11 +34,11 @@ function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFile
       label: 'Text',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14,2 14,8 20,8"/>
-          <line x1="16" y1="13" x2="8" y2="13"/>
-          <line x1="16" y1="17" x2="8" y2="17"/>
-          <line x1="10" y1="9" x2="8" y2="9"/>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14,2 14,8 20,8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+          <line x1="10" y1="9" x2="8" y2="9" />
         </svg>
       ),
       onClick: () => addField('text')
@@ -46,8 +47,8 @@ function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFile
       label: 'File',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14,2 14,8 20,8"/>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14,2 14,8 20,8" />
         </svg>
       ),
       onClick: () => addField('file')
@@ -103,24 +104,21 @@ function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFile
             const file = e.target.files[0];
             updateField(field.id, 'value', file);
           }}
-          class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${
-            field.enabled ? 'bg-white' : 'bg-gray-50 text-gray-500'
-          }`}
+          class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${field.enabled ? 'bg-white' : 'bg-gray-50 text-gray-500'
+            }`}
           disabled={!field.enabled}
         />
       );
     } else {
       return (
-        <input
+        <VariableInput
           key={`${field.type}-value-${field.id}`}
-          type="text"
           value={field.value || ''}
-          onInput={(e) => updateField(field.id, 'value', e.target.value)}
-          onChange={(e) => updateField(field.id, 'value', e.target.value)}
+          onChange={(value) => updateField(field.id, 'value', value)}
           onKeyDown={onEnterKeyPress}
           placeholder="Value"
-          class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${
-            field.enabled ? 'bg-white' : 'bg-gray-50 text-gray-500'
+          className={`w-full text-sm ${
+            field.enabled ? '' : 'opacity-50'
           }`}
           disabled={!field.enabled}
         />
@@ -166,26 +164,23 @@ function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFile
             </div>
             {allowFiles && (
               <div class="col-span-1 flex justify-center">
-                <span class={`text-xs px-2 py-1 rounded ${
-                  field.type === 'file' 
-                    ? 'bg-purple-100 text-purple-700' 
+                <span class={`text-xs px-2 py-1 rounded ${field.type === 'file'
+                    ? 'bg-purple-100 text-purple-700'
                     : 'bg-blue-100 text-blue-700'
-                }`}>
+                  }`}>
                   {field.type === 'file' ? 'File' : 'Text'}
                 </span>
               </div>
             )}
             <div class={allowFiles ? "col-span-4" : "col-span-5"}>
-              <input
+              <VariableInput
                 key={`${field.type}-key-${field.id}`}
-                type="text"
                 value={field.key}
-                onInput={(e) => updateField(field.id, 'key', e.target.value)}
-                onChange={(e) => updateField(field.id, 'key', e.target.value)}
+                onChange={(value) => updateField(field.id, 'key', value)}
                 onKeyDown={onEnterKeyPress}
                 placeholder="Key"
-                class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${
-                  field.enabled ? 'bg-white' : 'bg-gray-50 text-gray-500'
+                className={`w-full text-sm ${
+                  field.enabled ? '' : 'opacity-50'
                 }`}
                 disabled={!field.enabled}
               />
@@ -196,7 +191,7 @@ function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFile
             <div class="col-span-1 flex justify-center">
               <button
                 onClick={() => removeField(field.id)}
-                class="p-1 text-red-400 hover:text-red-600 transition-all"
+                class="p-1 text-red-400 hover:text-red-600 transition-all cursor-pointer"
                 title="Remove field"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -227,7 +222,7 @@ export function BodyTab({
   onSendRequest
 }) {
   const isBodyDisabled = ['GET', 'HEAD', 'OPTIONS'].includes(method);
-  
+
   // JSON validation state
   const [isValidJson, setIsValidJson] = useState(true);
 
@@ -246,7 +241,7 @@ export function BodyTab({
       setIsValidJson(true);
       return true;
     }
-    
+
     try {
       JSON.parse(content);
       setIsValidJson(true);
@@ -260,7 +255,7 @@ export function BodyTab({
   // Handle body content change with JSON validation
   const handleBodyContentChange = (value) => {
     onBodyContentChange(value);
-    
+
     // Only validate JSON if content type is JSON
     if (contentType === 'application/json') {
       validateJson(value);
@@ -389,29 +384,28 @@ export function BodyTab({
                   clip-rule="evenodd" />
               </svg>
             </div>
-            
+
             {/* Prettify Button - only show for JSON content type */}
             {contentType === 'application/json' && (
-              <button 
+              <button
                 onClick={prettifyJson}
                 disabled={!isValidJson || !bodyContent.trim()}
-                class={`px-2 py-1 text-xs font-medium rounded-md cursor-pointer ${
-                  isValidJson && bodyContent.trim()
+                class={`px-2 py-1 text-xs font-medium rounded-md cursor-pointer ${isValidJson && bodyContent.trim()
                     ? 'bg-sky-100 hover:bg-sky-200 text-sky-700'
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                }`}
+                  }`}
               >
                 Prettify
               </button>
             )}
-            
+
             {/* Invalid JSON indicator */}
             {contentType === 'application/json' && !isValidJson && bodyContent.trim() && (
               <span class="flex items-center text-xs text-red-500 font-normal">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info mr-1">
-                  <circle cx="12" cy="12" r="10"/>
-                  <path d="M12 16v-4"/>
-                  <path d="M12 8h.01"/>
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 16v-4" />
+                  <path d="M12 8h.01" />
                 </svg>
                 Invalid JSON.
               </span>
