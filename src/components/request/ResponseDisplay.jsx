@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { WelcomeMessage } from '../common/WelcomeMessage';
 import { Toast, useToast } from '../common/Toast';
 import CodeMirror from '@uiw/react-codemirror';
@@ -229,6 +229,214 @@ const processResponseHeaders = (responseHeaders) => {
   });
 
   return processedHeaders;
+};
+
+// Supported image MIME types
+const SUPPORTED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/avif',
+  'image/svg+xml'
+];
+
+// Helper function to check if content type is a supported image
+const isSupportedImageType = (contentType) => {
+  if (!contentType) return false;
+  const lowerType = contentType.toLowerCase().split(';')[0].trim();
+  return SUPPORTED_IMAGE_TYPES.includes(lowerType);
+};
+
+// Helper function to extract filename from Content-Disposition header
+const extractFilename = (headers) => {
+  if (!headers || !Array.isArray(headers)) return null;
+
+  const contentDisposition = headers.find(h =>
+    h.name && h.name.toLowerCase() === 'content-disposition'
+  );
+
+  if (!contentDisposition) return null;
+
+  // Parse Content-Disposition header for filename
+  // Examples: 
+  // - attachment; filename="image.png"
+  // - attachment; filename*=UTF-8''image.png  
+  // - inline; filename=data.json
+  const value = contentDisposition.value;
+
+  // Try filename="..." first
+  let match = value.match(/filename\s*=\s*"([^"]+)"/i);
+  if (match) return match[1];
+
+  // Try filename=... (unquoted)
+  match = value.match(/filename\s*=\s*([^;,\s]+)/i);
+  if (match) return match[1];
+
+  // Try filename*=UTF-8''... (RFC 5987)
+  match = value.match(/filename\*\s*=\s*UTF-8''([^;,\s]+)/i);
+  if (match) return decodeURIComponent(match[1]);
+
+  return null;
+};
+
+// Helper function to get download filename
+const getDownloadFilename = (response) => {
+  // First try to get filename from Content-Disposition header
+  const filename = extractFilename(response.headers);
+  if (filename) return filename;
+
+  // Fall back to generic name based on content type
+  const contentTypeHeader = response.headers?.find(h =>
+    h.name && h.name.toLowerCase() === 'content-type'
+  );
+
+  if (contentTypeHeader && isSupportedImageType(contentTypeHeader.value)) {
+    // For images, use appropriate extension
+    const contentType = contentTypeHeader.value.toLowerCase().split(';')[0].trim();
+    const extension = contentType.replace('image/', '');
+    return `image.${extension === 'jpeg' ? 'jpg' : extension}`;
+  }
+
+  // Default for any other binary content
+  return 'binary.dat';
+};
+
+// Helper function to create download blob and trigger download
+const downloadBinaryContent = (response) => {
+  if (!response.binaryData && !response.responseData) return;
+
+  let data;
+  let mimeType = 'application/octet-stream';
+
+  // Get content type from headers
+  const contentTypeHeader = response.headers?.find(h =>
+    h.name && h.name.toLowerCase() === 'content-type'
+  );
+  if (contentTypeHeader) {
+    mimeType = contentTypeHeader.value.split(';')[0].trim();
+  }
+
+  // Handle binary data (base64 encoded)
+  if (response.binaryData) {
+    try {
+      // Convert base64 to binary
+      const binaryString = atob(response.binaryData);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      data = bytes;
+    } catch (error) {
+      console.error('Failed to decode binary data:', error);
+      return;
+    }
+  } else if (response.responseData) {
+    // Handle text data
+    data = new TextEncoder().encode(response.responseData);
+  } else {
+    return;
+  }
+
+  // Create blob and download
+  const blob = new Blob([data], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const filename = getDownloadFilename(response);
+
+  // Create temporary download link
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  // Clean up the URL
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+};
+
+// Component for displaying images with CodeMirror-style frame
+const ImageDisplay = ({ response }) => {
+  const [imageError, setImageError] = useState(false);
+  const [imageUrl, setImageUrl] = useState(null);
+
+  // Create image URL from binary data
+  useEffect(() => {
+    if (!response.binaryData) {
+      setImageError(true);
+      return;
+    }
+
+    try {
+      // Get content type
+      const contentTypeHeader = response.headers?.find(h =>
+        h.name && h.name.toLowerCase() === 'content-type'
+      );
+      const mimeType = contentTypeHeader?.value.split(';')[0].trim() || 'image/png';
+
+      // Convert base64 to blob
+      const binaryString = atob(response.binaryData);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      const blob = new Blob([bytes], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      setImageUrl(url);
+
+      // Cleanup function
+      return () => {
+        if (url) URL.revokeObjectURL(url);
+      };
+    } catch (error) {
+      console.error('Failed to create image URL:', error);
+      setImageError(true);
+    }
+  }, [response.binaryData, response.headers]);
+
+  if (imageError || !imageUrl) {
+    return (
+      <div
+        class="rounded-md p-4 text-center text-gray-600"
+        style={{
+          border: '1px solid #44475a',
+          backgroundColor: '#282a36',
+          minHeight: '200px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <div class="text-white">
+          Failed to load image
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      class="rounded-md p-4 text-center"
+      style={{
+        border: '1px solid #44475a',
+        backgroundColor: '#282a36',
+        minHeight: '200px'
+      }}
+    >
+      <img
+        src={imageUrl}
+        alt="Response content"
+        onError={() => setImageError(true)}
+        style={{
+          maxWidth: '100%',
+          height: 'auto',
+          borderRadius: '4px'
+        }}
+      />
+    </div>
+  );
 };
 
 export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
@@ -603,49 +811,102 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
           <div>
             <div class="response-container">
               {/* No response body message */}
-              {!response.responseData && (
+              {!response.responseData && !response.binaryData && (
                 <div class="rounded-md bg-gray-50 p-4 mb-4 text-sm text-gray-600 font-medium">
                   No response body received.
                 </div>
               )}
 
-              {/* CodeMirror editor for response body */}
-              {response.responseData && (
-                <div>
-                  <CodeMirror
-                    value={processResponseContent(response)}
-                    extensions={getResponseCodeMirrorExtensions(response)}
-                    theme={dracula}
-                    editable={false}
-                    basicSetup={{
-                      lineNumbers: true,
-                      foldGutter: true,
-                      dropCursor: false,
-                      allowMultipleSelections: false,
-                      indentOnInput: false,
-                      bracketMatching: true,
-                      closeBrackets: false,
-                      autocompletion: false,
-                      rectangularSelection: false,
-                      searchKeymap: false,
-                      highlightSelectionMatches: false
-                    }}
-                    style={{
-                      border: '1px solid #44475a',
-                      borderRadius: '0.375rem',
-                      fontSize: '12px',
-                      fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
-                    }}
-                  />
+              {/* Download link for binary content */}
+              {(response.isBinary || response.binaryData) && (
+                <div class="mb-4">
+                  <button
+                    onClick={() => downloadBinaryContent(response)}
+                    class="inline-flex items-center text-sky-500 hover:text-sky-700 cursor-pointer text-sm"
+                  >
+                    <span class="inline-block w-4 h-4 mr-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-full h-full">
+                        <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm-1 14.414L6.586 12 8 10.586l3 3V6h2v7.586l3-3L17.414 12 13 16.414z" />
+                      </svg>
+                    </span>
+                    Download {getDownloadFilename(response)}
+                  </button>
                 </div>
               )}
+
+              {/* Handle different content types */}
+              {(() => {
+                // Check if it's a supported image
+                const contentTypeHeader = response.headers?.find(h =>
+                  h.name && h.name.toLowerCase() === 'content-type'
+                );
+                const contentType = contentTypeHeader?.value || '';
+
+                if (response.binaryData && isSupportedImageType(contentType)) {
+                  // Show image
+                  return <ImageDisplay response={response} />;
+                } else if (response.isBinary && !response.responseData) {
+                  // Show binary content message
+                  return (
+                    <div
+                      class="rounded-md p-4 text-center text-gray-600"
+                      style={{
+                        border: '1px solid #44475a',
+                        backgroundColor: '#282a36',
+                        minHeight: '200px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <div class="text-white">
+                        <div class="text-lg mb-2">Binary Content</div>
+                        <div class="text-sm text-gray-300">
+                          {response.responseSize || 'Unknown size'} • {contentType || 'Unknown type'}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                } else if (response.responseData) {
+                  // Show text content with CodeMirror
+                  return (
+                    <CodeMirror
+                      value={processResponseContent(response)}
+                      extensions={getResponseCodeMirrorExtensions(response)}
+                      theme={dracula}
+                      editable={false}
+                      basicSetup={{
+                        lineNumbers: true,
+                        foldGutter: true,
+                        dropCursor: false,
+                        allowMultipleSelections: false,
+                        indentOnInput: false,
+                        bracketMatching: true,
+                        closeBrackets: false,
+                        autocompletion: false,
+                        rectangularSelection: false,
+                        searchKeymap: false,
+                        highlightSelectionMatches: false
+                      }}
+                      style={{
+                        border: '1px solid #44475a',
+                        borderRadius: '0.375rem',
+                        fontSize: '12px',
+                        fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+                      }}
+                    />
+                  );
+                }
+
+                return null;
+              })()}
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* Toast notification */}
-      <Toast 
+      <Toast
         message="Copied to clipboard!"
         isVisible={isToastVisible}
         onClose={hideToast}
