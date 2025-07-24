@@ -237,7 +237,7 @@ export function RequestEditor({ request, onRequestChange }) {
       const timeoutId = setTimeout(() => {
         parseUrlParameters(requestData.url);
       }, 500); // Wait 500ms after user stops typing
-      
+
       return () => clearTimeout(timeoutId);
     }
   }, [requestData.url, request]);
@@ -482,19 +482,19 @@ export function RequestEditor({ request, onRequestChange }) {
   // Get all available variables from collection and environment
   const getAvailableVariables = async () => {
     const variables = new Map();
-    
+
     try {
       // Collection variables (inline)
       if (selectedCollection?.variables) {
         selectedCollection.variables.forEach(v => variables.set(v.key, v.value));
       }
-      
+
       // Database collection variables
       if (selectedCollection?.id) {
         const collectionVars = await apiClient.getSecretsByCollection(selectedCollection.id);
         collectionVars.forEach(v => variables.set(v.key, v.value));
       }
-      
+
       // Environment variables (if collection has environment)
       if (selectedCollection?.environment_id) {
         const envVars = await apiClient.getSecretsByEnvironment(selectedCollection.environment_id);
@@ -503,14 +503,14 @@ export function RequestEditor({ request, onRequestChange }) {
     } catch (error) {
       console.error('Failed to load variables:', error);
     }
-    
+
     return variables;
   };
 
   // Replace {{variable}} patterns with actual values
   const replaceVariables = (text, variables) => {
     if (!text || typeof text !== 'string') return text;
-    
+
     return text.replace(/\{\{([^}]+)\}\}/g, (match, variableName) => {
       const value = variables.get(variableName.trim());
       return value !== undefined ? value : match; // Keep original if variable not found
@@ -531,11 +531,11 @@ export function RequestEditor({ request, onRequestChange }) {
     const variables = await getAvailableVariables();
 
     // Use collection settings if available, otherwise use local settings
-    const effectiveFollowRedirects = selectedCollection?.follow_redirects !== undefined 
-      ? selectedCollection.follow_redirects 
+    const effectiveFollowRedirects = selectedCollection?.follow_redirects !== undefined
+      ? selectedCollection.follow_redirects
       : requestData.followRedirects;
-    const effectiveTimeout = selectedCollection?.timeout !== undefined 
-      ? selectedCollection.timeout 
+    const effectiveTimeout = selectedCollection?.timeout !== undefined
+      ? selectedCollection.timeout
       : requestData.timeout;
 
     // Replace variables in all request fields
@@ -688,7 +688,7 @@ export function RequestEditor({ request, onRequestChange }) {
         <div class="mb-2 overflow-x-auto scrollbar-hide">
           <div class="flex items-center justify-between flex-nowrap min-w-max">
             <div class="text-sm font-medium text-gray-700 whitespace-nowrap mr-2">
-              ⚡️ <span>{request?.name || 'Test Request'}</span>
+              ⚡️ <span>{request?.name || 'Untitled request'}</span>
             </div>
             <div class="flex items-center space-x-2 whitespace-nowrap">
               {hasUnsavedChanges && (
@@ -705,8 +705,8 @@ export function RequestEditor({ request, onRequestChange }) {
                 onClick={handleUpdate}
                 disabled={!hasUnsavedChanges}
                 class={`cursor-pointer rounded-md px-2 py-1 text-xs focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${hasUnsavedChanges
-                    ? 'bg-sky-100 hover:bg-sky-200 text-sky-700'
-                    : 'bg-gray-300 text-white'
+                  ? 'bg-sky-100 hover:bg-sky-200 text-sky-700'
+                  : 'bg-gray-300 text-white'
                   }`}
               >
                 Update
@@ -716,8 +716,8 @@ export function RequestEditor({ request, onRequestChange }) {
                 disabled={!selectedCollection}
                 title={selectedCollection ? 'Save the current request to collection' : 'Create or select a collection to save.'}
                 class={`cursor-pointer rounded-md px-2 py-1 text-xs focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${selectedCollection
-                    ? 'bg-sky-100 hover:bg-sky-200 text-sky-700'
-                    : 'bg-gray-300 text-white'
+                  ? 'bg-sky-100 hover:bg-sky-200 text-sky-700'
+                  : 'bg-gray-300 text-white'
                   }`}
               >
                 Save as
@@ -765,8 +765,8 @@ export function RequestEditor({ request, onRequestChange }) {
               onClick={handleSendRequest}
               disabled={isSubmitting}
               class={`cursor-pointer rounded-md px-3 py-2 text-sm font-semibold focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${isSubmitting
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-sky-500 hover:bg-sky-400 text-white'
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-sky-500 hover:bg-sky-400 text-white'
                 }`}
             >
               {isSubmitting ? 'Sending...' : 'Send'}
@@ -776,8 +776,8 @@ export function RequestEditor({ request, onRequestChange }) {
               disabled={isSubmitting}
               type="button"
               class={`hidden ml-2 sm:block cursor-pointer rounded-md px-3 py-2 text-sm font-semibold border border-gray-300 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-gray-500 ${isSubmitting
-                  ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                 }`}
             >
               <span>
@@ -800,10 +800,10 @@ export function RequestEditor({ request, onRequestChange }) {
               <button key={key} type="button" data-tab={key}
                 onClick={() => setActiveTab(key)}
                 class={`px-4 py-2 text-xs rounded-t-md font-medium focus:outline-none ${key === 'body' && isBodyDisabled
-                    ? 'text-gray-400 cursor-not-allowed'
-                    : activeTab === key
-                      ? 'text-sky-600 bg-sky-50 border-b-2 border-sky-600 cursor-pointer'
-                      : 'text-gray-600 hover:text-sky-600 hover:bg-gray-100 cursor-pointer'
+                  ? 'text-gray-400 cursor-not-allowed'
+                  : activeTab === key
+                    ? 'text-sky-600 bg-sky-50 border-b-2 border-sky-600 cursor-pointer'
+                    : 'text-gray-600 hover:text-sky-600 hover:bg-gray-100 cursor-pointer'
                   }`}
                 disabled={key === 'body' && isBodyDisabled}
               >
@@ -919,7 +919,7 @@ export function RequestEditor({ request, onRequestChange }) {
       />
 
       {/* Toast notification */}
-      <Toast 
+      <Toast
         message="Request updated!"
         isVisible={isToastVisible}
         onClose={hideToast}
