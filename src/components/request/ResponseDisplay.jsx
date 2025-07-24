@@ -7,6 +7,7 @@ import { xml } from '@codemirror/lang-xml';
 import { dracula } from '@uiw/codemirror-theme-dracula';
 import { EditorView } from '@codemirror/view';
 import { bracketMatching } from '@codemirror/language';
+import { ansiColors, cleanAnsiText } from '../codemirror/ansiExtension.js';
 
 // Map of response headers to their URL-friendly names (matching Django implementation)
 const RESPONSE_HEADER_SLUGS = {
@@ -230,7 +231,7 @@ const processResponseHeaders = (responseHeaders) => {
   return processedHeaders;
 };
 
-export function ResponseDisplay({ response, isLoading, onCancel }) {
+export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
   const [showHeaders, setShowHeaders] = useState(true);
   const [activeTab, setActiveTab] = useState('body');
   const [isToastVisible, showToast, hideToast] = useToast();
@@ -373,6 +374,11 @@ export function ResponseDisplay({ response, isLoading, onCancel }) {
       return [...baseExtensions, json()];
     } else if (contentType.includes('application/xml') || contentType.includes('text/xml')) {
       return [...baseExtensions, xml()];
+    } else if (contentType.includes('text/plain') && collection?.parse_ansi_colors !== false) {
+      // Add ANSI color support for text/plain responses when enabled (default: true)
+      // Pass the original content with ANSI sequences for styling
+      const originalContent = getOriginalResponseContent(response);
+      return [...baseExtensions, ansiColors(originalContent)];
     }
 
     return baseExtensions;
@@ -406,6 +412,26 @@ export function ResponseDisplay({ response, isLoading, onCancel }) {
     return content;
   };
 
+  // Helper function to get original response content (with ANSI sequences)
+  const getOriginalResponseContent = (response) => {
+    if (!response.responseData) return '';
+
+    let content = response.responseData;
+
+    // Handle potential encoding issues
+    if (typeof content === 'string') {
+      try {
+        // Try to decode if it's been improperly encoded
+        content = decodeURIComponent(escape(content));
+      } catch (error) {
+        // If decoding fails, use original content
+        content = response.responseData;
+      }
+    }
+
+    return content;
+  };
+
   // Helper function to ensure UTF-8 encoding for response content
   const processResponseContent = (response) => {
     if (!response.responseData) return '';
@@ -429,6 +455,12 @@ export function ResponseDisplay({ response, isLoading, onCancel }) {
       h.name.toLowerCase() === 'content-type'
     );
     const contentType = contentTypeHeader?.value || '';
+
+    // For text/plain with ANSI parsing enabled, clean the content for CodeMirror
+    // but let the ANSI extension handle the styling
+    if (contentType.includes('text/plain') && collection?.parse_ansi_colors !== false) {
+      return cleanAnsiText(content);
+    }
 
     // Prettify JSON content
     return prettifyJsonContent(content, contentType);

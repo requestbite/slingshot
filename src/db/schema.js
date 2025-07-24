@@ -50,6 +50,7 @@ db.collections.defineClass({
   variables: Array,
   follow_redirects: Boolean,
   timeout: Number,
+  parse_ansi_colors: Boolean,
 });
 
 /**

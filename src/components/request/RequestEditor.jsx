@@ -888,6 +888,7 @@ export function RequestEditor({ request, onRequestChange }) {
             response={response}
             isLoading={isSubmitting}
             onCancel={handleCancelRequest}
+            collection={selectedCollection}
           />
         </div>
       </div>

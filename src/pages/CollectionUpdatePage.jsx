@@ -19,7 +19,8 @@ export function CollectionUpdatePage() {
     name: '',
     description: '',
     follow_redirects: true,
-    timeout: 30
+    timeout: 30,
+    parse_ansi_colors: true
   });
   
   // Variable form state
@@ -68,7 +69,8 @@ export function CollectionUpdatePage() {
         name: collectionData.name,
         description: collectionData.description || '',
         follow_redirects: collectionData.follow_redirects !== undefined ? collectionData.follow_redirects : true,
-        timeout: collectionData.timeout !== undefined ? collectionData.timeout : 30
+        timeout: collectionData.timeout !== undefined ? collectionData.timeout : 30,
+        parse_ansi_colors: collectionData.parse_ansi_colors !== undefined ? collectionData.parse_ansi_colors : true
       });
       
       const variablesData = await apiClient.getSecretsByCollection(collectionId);
@@ -98,7 +100,8 @@ export function CollectionUpdatePage() {
         name: formData.name.trim(),
         description: formData.description.trim(),
         follow_redirects: formData.follow_redirects,
-        timeout: formData.timeout
+        timeout: formData.timeout,
+        parse_ansi_colors: formData.parse_ansi_colors
       });
       
       // Process variable changes
@@ -374,6 +377,23 @@ export function CollectionUpdatePage() {
                             class="w-24 px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
                           />
                           <span class="ml-2 text-xs text-gray-500">(1-300 seconds)</span>
+                        </div>
+                        
+                        {/* Parse ANSI colors setting */}
+                        <div class="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            id="parse-ansi-colors-checkbox" 
+                            checked={formData.parse_ansi_colors}
+                            onChange={(e) => {
+                              setFormData({ ...formData, parse_ansi_colors: e.target.checked });
+                              setHasChanges(true);
+                            }}
+                            class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+                          />
+                          <label for="parse-ansi-colors-checkbox" class="ml-2 block text-sm text-gray-900">
+                            Parse ANSI color codes in text/plain responses
+                          </label>
                         </div>
                       </div>
                     </div>
