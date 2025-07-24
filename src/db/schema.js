@@ -48,6 +48,8 @@ db.collections.defineClass({
   name: String,
   description: String,
   variables: Array,
+  follow_redirects: Boolean,
+  timeout: Number,
 });
 
 /**

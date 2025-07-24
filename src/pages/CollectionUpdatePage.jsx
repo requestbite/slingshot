@@ -17,7 +17,9 @@ export function CollectionUpdatePage() {
   // Form state
   const [formData, setFormData] = useState({
     name: '',
-    description: ''
+    description: '',
+    follow_redirects: true,
+    timeout: 30
   });
   
   // Variable form state
@@ -64,7 +66,9 @@ export function CollectionUpdatePage() {
       setCollection(collectionData);
       setFormData({
         name: collectionData.name,
-        description: collectionData.description || ''
+        description: collectionData.description || '',
+        follow_redirects: collectionData.follow_redirects !== undefined ? collectionData.follow_redirects : true,
+        timeout: collectionData.timeout !== undefined ? collectionData.timeout : 30
       });
       
       const variablesData = await apiClient.getSecretsByCollection(collectionId);
@@ -92,7 +96,9 @@ export function CollectionUpdatePage() {
       // Update collection details
       await apiClient.updateCollection(collection.id, {
         name: formData.name.trim(),
-        description: formData.description.trim()
+        description: formData.description.trim(),
+        follow_redirects: formData.follow_redirects,
+        timeout: formData.timeout
       });
       
       // Process variable changes
@@ -324,6 +330,52 @@ export function CollectionUpdatePage() {
                         }}
                         class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
                       />
+                    </div>
+
+                    {/* Settings Section */}
+                    <div class="sm:col-span-6">
+                      <h3 class="text-base font-semibold text-gray-900 mb-4">Request Settings</h3>
+                      <div class="space-y-4">
+                        {/* Automatically follow redirects setting */}
+                        <div class="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            id="follow-redirects-checkbox" 
+                            checked={formData.follow_redirects}
+                            onChange={(e) => {
+                              setFormData({ ...formData, follow_redirects: e.target.checked });
+                              setHasChanges(true);
+                            }}
+                            class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+                          />
+                          <label for="follow-redirects-checkbox" class="ml-2 block text-sm text-gray-900">
+                            Automatically follow redirects
+                          </label>
+                        </div>
+                        
+                        {/* Request timeout setting */}
+                        <div class="flex items-center">
+                          <label for="request-timeout-input" class="block text-sm text-gray-900 mr-3">
+                            Request timeout (seconds):
+                          </label>
+                          <input 
+                            type="number" 
+                            id="request-timeout-input" 
+                            value={formData.timeout} 
+                            min="1" 
+                            max="300"
+                            onChange={(e) => {
+                              const numValue = parseInt(e.target.value, 10);
+                              if (numValue >= 1 && numValue <= 300) {
+                                setFormData({ ...formData, timeout: numValue });
+                                setHasChanges(true);
+                              }
+                            }}
+                            class="w-24 px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                          />
+                          <span class="ml-2 text-xs text-gray-500">(1-300 seconds)</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

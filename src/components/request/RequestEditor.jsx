@@ -15,12 +15,12 @@ import { useAppContext } from '../../hooks/useAppContext';
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 
-const TAB_NAMES = {
+const getTabNames = (hasActiveCollection) => ({
   params: 'Params',
   headers: 'Headers',
   body: 'Body',
-  settings: 'Settings'
-};
+  ...(hasActiveCollection ? {} : { settings: 'Settings' })
+});
 
 export function RequestEditor({ request, onRequestChange }) {
   const { selectedCollection } = useAppContext();
@@ -521,9 +521,19 @@ export function RequestEditor({ request, onRequestChange }) {
     // Get all available variables for replacement
     const variables = await getAvailableVariables();
 
+    // Use collection settings if available, otherwise use local settings
+    const effectiveFollowRedirects = selectedCollection?.follow_redirects !== undefined 
+      ? selectedCollection.follow_redirects 
+      : requestData.followRedirects;
+    const effectiveTimeout = selectedCollection?.timeout !== undefined 
+      ? selectedCollection.timeout 
+      : requestData.timeout;
+
     // Replace variables in all request fields
     const processedRequestData = {
       ...requestData,
+      followRedirects: effectiveFollowRedirects,
+      timeout: effectiveTimeout,
       url: replaceVariables(effectiveUrl, variables),
       headers: requestData.headers.map(h => ({
         ...h,
@@ -777,7 +787,7 @@ export function RequestEditor({ request, onRequestChange }) {
         {/* Tabs */}
         <div class="border-b border-gray-200 px-4 overflow-x-auto scrollbar-hide">
           <div class="flex space-x-2 flex-nowrap min-w-max">
-            {Object.entries(TAB_NAMES).map(([key, name]) => (
+            {Object.entries(getTabNames(!!selectedCollection)).map(([key, name]) => (
               <button key={key} type="button" data-tab={key}
                 onClick={() => setActiveTab(key)}
                 class={`px-4 py-2 text-xs rounded-t-md font-medium focus:outline-none ${key === 'body' && isBodyDisabled
@@ -850,7 +860,7 @@ export function RequestEditor({ request, onRequestChange }) {
               onSendRequest={handleSendRequest}
             />
           )}
-          {activeTab === 'settings' && (
+          {activeTab === 'settings' && !selectedCollection && (
             <SettingsTab
               followRedirects={requestData.followRedirects}
               timeout={requestData.timeout}

@@ -18,6 +18,8 @@
  * @property {string} name - Collection name
  * @property {string} description - Collection description
  * @property {KeyValuePair[]} variables - Collection variables (not encrypted)
+ * @property {boolean} follow_redirects - Whether to automatically follow redirects
+ * @property {number} timeout - Request timeout in seconds
  */
 
 /**
