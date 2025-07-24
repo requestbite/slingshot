@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { AddCollectionModal } from '../components/modals/AddCollectionModal';
 import { DeleteCollectionModal } from '../components/modals/DeleteCollectionModal';
+import { ContextMenu } from '../components/common/ContextMenu';
 import { useAppContext } from '../hooks/useAppContext';
 import { apiClient } from '../api';
 
@@ -13,7 +14,9 @@ export function CollectionsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState(null);
-  const [openDropdown, setOpenDropdown] = useState(null);
+  const [contextMenuOpen, setContextMenuOpen] = useState(false);
+  const [contextMenuTrigger, setContextMenuTrigger] = useState(null);
+  const [contextMenuCollection, setContextMenuCollection] = useState(null);
   const [notification, setNotification] = useState(null);
 
   useEffect(() => {
@@ -68,21 +71,38 @@ export function CollectionsPage() {
     }
   };
 
-  const handleOpenInAPIClient = (collection) => {
-    selectCollection(collection);
-    setLocation(`/${collection.id}`);
-    setOpenDropdown(null);
+  const handleOpenInAPIClient = () => {
+    if (contextMenuCollection) {
+      selectCollection(contextMenuCollection);
+      setLocation(`/${contextMenuCollection.id}`);
+    }
   };
 
-  const handleEditCollection = (collection) => {
-    setLocation(`/collections/${collection.id}`);
-    setOpenDropdown(null);
+  const handleEditCollection = (collection = null) => {
+    const targetCollection = collection || contextMenuCollection;
+    if (targetCollection) {
+      setLocation(`/collections/${targetCollection.id}`);
+    }
   };
 
-  const handleDeleteCollection = (collection) => {
-    setSelectedCollection(collection);
-    setShowDeleteModal(true);
-    setOpenDropdown(null);
+  const handleDeleteCollection = () => {
+    if (contextMenuCollection) {
+      setSelectedCollection(contextMenuCollection);
+      setShowDeleteModal(true);
+    }
+  };
+
+  const handleContextMenuOpen = (e, collection) => {
+    e.stopPropagation();
+    setContextMenuTrigger(e.currentTarget);
+    setContextMenuCollection(collection);
+    setContextMenuOpen(true);
+  };
+
+  const handleContextMenuClose = () => {
+    setContextMenuOpen(false);
+    setContextMenuTrigger(null);
+    setContextMenuCollection(null);
   };
 
   const handleDeleteSuccess = async () => {
@@ -109,19 +129,15 @@ export function CollectionsPage() {
     }
   };
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = () => setOpenDropdown(null);
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
 
   return (
-    <div class="h-full flex flex-col items-center bg-gray-100">
+    <div class="h-full bg-gray-100 overflow-y-auto">
+      <div class="min-h-full pt-[83px] pb-6">
       {/* Main Container */}
-      <div class="bg-white rounded-lg border border-gray-300 w-4xl mt-[83px]">
-        {/* Header Section */}
-        <div class="sm:flex sm:items-start p-6">
+      <div class="max-w-4xl mx-auto px-4">
+        <div class="bg-white rounded-lg border border-gray-300">
+          {/* Header Section */}
+          <div class="sm:flex sm:items-start p-6">
           <div class="sm:flex-auto">
             <h1 class="text-base/7 font-semibold text-gray-900">
               Collections
@@ -139,10 +155,10 @@ export function CollectionsPage() {
               Add Collection
             </button>
           </div>
-        </div>
+          </div>
 
-        {/* Content Section */}
-        <div class="p-0 pt-6 sm:p-6">
+          {/* Content Section */}
+          <div class="p-0 pt-6 sm:p-6">
           {isLoading ? (
             <div class="flex items-center justify-center p-8">
               <div class="flex items-center space-x-3 text-gray-500">
@@ -188,64 +204,30 @@ export function CollectionsPage() {
                       {collection.secret_count}
                     </td>
                     <td class="lg:table-cell py-4 pl-3 pr-6 text-right text-sm sm:pr-0">
-                      <div class="relative inline-block text-left">
-                        <div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenDropdown(openDropdown === collection.id ? null : collection.id);
-                            }}
-                            type="button"
-                            class="cursor-pointer inline-flex items-center text-sky-500 hover:text-sky-700 hover:underline"
-                            id={`collection-menu-button-${collection.id}`}
-                            aria-expanded="false"
-                            aria-haspopup="true"
-                          >
-                            <span class="sr-only">Open options menu for {collection.name}</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <circle cx="12" cy="12" r="1" />
-                              <circle cx="19" cy="12" r="1" />
-                              <circle cx="5" cy="12" r="1" />
-                            </svg>
-                          </button>
-                        </div>
-                        {openDropdown === collection.id && (
-                          <div class="absolute right-0 z-10 mt-2 w-60 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby={`collection-menu-button-${collection.id}`} tabindex="-1">
-                            <button
-                              onClick={() => handleOpenInAPIClient(collection)}
-                              class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
-                              role="menuitem"
-                              tabindex="-1"
-                            >
-                              Open in API client
-                            </button>
-                            <div class="border-t border-gray-200 my-1"></div>
-                            <button
-                              onClick={() => handleEditCollection(collection)}
-                              class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
-                              role="menuitem"
-                              tabindex="-1"
-                            >
-                              Edit collection
-                            </button>
-                            <button
-                              onClick={() => handleDeleteCollection(collection)}
-                              class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
-                              role="menuitem"
-                              tabindex="-1"
-                            >
-                              Delete collection ...
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                      <button
+                        onClick={(e) => handleContextMenuOpen(e, collection)}
+                        type="button"
+                        class="cursor-pointer inline-flex items-center text-sky-500 hover:text-sky-700 hover:underline"
+                        id={`collection-menu-button-${collection.id}`}
+                        aria-expanded="false"
+                        aria-haspopup="true"
+                      >
+                        <span class="sr-only">Open options menu for {collection.name}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="1" />
+                          <circle cx="19" cy="12" r="1" />
+                          <circle cx="5" cy="12" r="1" />
+                        </svg>
+                      </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
+          </div>
         </div>
+      </div>
       </div>
 
       {/* Success Notification */}
@@ -261,6 +243,28 @@ export function CollectionsPage() {
           </div>
         </div>
       )}
+
+      {/* Context Menu */}
+      <ContextMenu
+        isOpen={contextMenuOpen}
+        onClose={handleContextMenuClose}
+        trigger={contextMenuTrigger}
+        items={[
+          {
+            label: 'Open in API client',
+            onClick: handleOpenInAPIClient
+          },
+          { divider: true },
+          {
+            label: 'Edit collection',
+            onClick: () => handleEditCollection()
+          },
+          {
+            label: 'Delete collection ...',
+            onClick: handleDeleteCollection
+          }
+        ]}
+      />
 
       {/* Add Collection Modal */}
       <AddCollectionModal
