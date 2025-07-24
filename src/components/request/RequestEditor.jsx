@@ -85,6 +85,7 @@ export function RequestEditor({ request, onRequestChange }) {
   const [isDraftDirty, setIsDraftDirty] = useState(false);
   const draftSaveTimeoutRef = useRef(null);
   const originalDataRef = useRef(null);
+  const currentRequestDataRef = useRef(requestData);
 
   // Modal state
   const [showCurlModal, setShowCurlModal] = useState(false);
@@ -154,6 +155,11 @@ export function RequestEditor({ request, onRequestChange }) {
     }
   }, [request]);
 
+  // Update the ref whenever requestData changes
+  useEffect(() => {
+    currentRequestDataRef.current = requestData;
+  }, [requestData]);
+
   // Track changes for immediate UI updates and debounced saving
   useEffect(() => {
     console.log('🔍 CHANGE TRACKING EFFECT');
@@ -209,10 +215,12 @@ export function RequestEditor({ request, onRequestChange }) {
     console.log('💾 DEBOUNCED SAVE - Setting new timeout for request:', request?.id);
     draftSaveTimeoutRef.current = setTimeout(async () => {
       console.log('💾 EXECUTING DRAFT SAVE for request:', request?.id);
-      console.log('💾 Saving requestData:', requestData);
+      // Use the ref to get the latest state at save time
+      const currentData = currentRequestDataRef.current;
+      console.log('💾 Saving requestData:', currentData);
       if (request?.id) {
         try {
-          await apiClient.saveDraftChanges(request.id, requestData);
+          await apiClient.saveDraftChanges(request.id, currentData);
           console.log('💾 Draft save completed successfully');
           setIsDraftDirty(false);
         } catch (error) {
@@ -223,9 +231,14 @@ export function RequestEditor({ request, onRequestChange }) {
   };
 
   // Parse URL to extract query and path parameters (only for new requests, not when editing existing ones)
+  // Use debounced parsing to avoid interfering with typing
   useEffect(() => {
     if (requestData.url && !request) {
-      parseUrlParameters(requestData.url);
+      const timeoutId = setTimeout(() => {
+        parseUrlParameters(requestData.url);
+      }, 500); // Wait 500ms after user stops typing
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [requestData.url, request]);
 
@@ -371,13 +384,9 @@ export function RequestEditor({ request, onRequestChange }) {
     console.log('🖊️ URL CHANGE - New URL:', url);
     console.log('🖊️ Current requestData before update:', requestData);
 
-    // Parse URL parameters immediately and include in the update
-    const parsedParams = parseUrlParametersSync(url);
-    updateRequestData({
-      url,
-      queryParams: parsedParams.queryParams,
-      pathParams: parsedParams.pathParams
-    });
+    // Only update the URL directly, don't parse parameters during typing
+    // Parameter parsing will happen when the user finishes editing (see useEffect below)
+    updateRequestData({ url });
   };
 
   const handleBodyTypeChange = (bodyType) => {
