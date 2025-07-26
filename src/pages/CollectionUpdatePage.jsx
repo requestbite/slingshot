@@ -7,13 +7,13 @@ export function CollectionUpdatePage() {
   const [, setLocation] = useLocation();
   const [match, params] = useRoute('/collections/:uuid');
   const { loadCollections } = useAppContext();
-  
+
   const [collection, setCollection] = useState(null);
   const [originalVariables, setOriginalVariables] = useState([]);
   const [pendingVariables, setPendingVariables] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notification, setNotification] = useState(null);
-  
+
   // Form state
   const [formData, setFormData] = useState({
     name: '',
@@ -22,28 +22,28 @@ export function CollectionUpdatePage() {
     timeout: 30,
     parse_ansi_colors: true
   });
-  
+
   // Variable form state
   const [variableForm, setVariableForm] = useState({
     key: '',
     value: ''
   });
-  
+
   // Track changes
   const [hasChanges, setHasChanges] = useState(false);
-  
+
   // Modal states
   const [editVariableModal, setEditVariableModal] = useState(false);
   const [deleteCollectionModal, setDeleteCollectionModal] = useState(false);
   const [deleteVariableModal, setDeleteVariableModal] = useState(false);
-  
+
   // Edit variable state
   const [editingVariable, setEditingVariable] = useState({
     id: null,
     key: '',
     value: ''
   });
-  
+
   // Delete variable state
   const [variableToDelete, setVariableToDelete] = useState(null);
 
@@ -56,14 +56,14 @@ export function CollectionUpdatePage() {
   const loadCollectionData = async (collectionId) => {
     try {
       setIsLoading(true);
-      
+
       const collectionData = await apiClient.getCollection(collectionId);
       if (!collectionData) {
         setNotification('Collection not found');
         setLocation('/collections');
         return;
       }
-      
+
       setCollection(collectionData);
       setFormData({
         name: collectionData.name,
@@ -72,12 +72,12 @@ export function CollectionUpdatePage() {
         timeout: collectionData.timeout !== undefined ? collectionData.timeout : 30,
         parse_ansi_colors: collectionData.parse_ansi_colors !== undefined ? collectionData.parse_ansi_colors : true
       });
-      
+
       const variablesData = await apiClient.getSecretsByCollection(collectionId);
       const sortedVariables = variablesData.sort((a, b) => a.key.localeCompare(b.key));
       setOriginalVariables(sortedVariables);
       setPendingVariables(sortedVariables.map(s => ({ ...s, _status: 'existing' })));
-      
+
     } catch (error) {
       console.error('Failed to load collection:', error);
       setNotification('Failed to load collection');
@@ -88,12 +88,12 @@ export function CollectionUpdatePage() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim()) {
       setNotification('Collection name is required');
       return;
     }
-    
+
     try {
       // Update collection details
       await apiClient.updateCollection(collection.id, {
@@ -103,7 +103,7 @@ export function CollectionUpdatePage() {
         timeout: formData.timeout,
         parse_ansi_colors: formData.parse_ansi_colors
       });
-      
+
       // Process variable changes
       for (const variable of pendingVariables) {
         if (variable._status === 'new') {
@@ -119,17 +119,17 @@ export function CollectionUpdatePage() {
           });
         }
       }
-      
+
       // Delete removed variables
       const currentVariableIds = new Set(pendingVariables.map(s => s.id).filter(id => id && !id.startsWith('temp_')));
       const originalVariableIds = new Set(originalVariables.map(s => s.id));
-      
+
       for (const originalId of originalVariableIds) {
         if (!currentVariableIds.has(originalId)) {
           await apiClient.deleteSecret(originalId);
         }
       }
-      
+
       await loadCollections();
       setNotification('Collection updated successfully');
       setLocation('/collections');
@@ -141,26 +141,26 @@ export function CollectionUpdatePage() {
 
   const handleAddVariable = (e) => {
     e.preventDefault();
-    
+
     if (!variableForm.key.trim() || !variableForm.value.trim()) {
       setNotification('Both key and value are required');
       return;
     }
-    
+
     // Check for duplicate keys
     const existingKey = pendingVariables.find(s => s.key === variableForm.key.trim());
     if (existingKey) {
       setNotification('A variable with this key already exists');
       return;
     }
-    
+
     const newVariable = {
       id: `temp_${Date.now()}`,
       key: variableForm.key.trim(),
       value: variableForm.value.trim(),
       _status: 'new'
     };
-    
+
     setPendingVariables([...pendingVariables, newVariable].sort((a, b) => a.key.localeCompare(b.key)));
     setVariableForm({ key: '', value: '' });
     setHasChanges(true);
@@ -177,19 +177,19 @@ export function CollectionUpdatePage() {
 
   const handleUpdateVariable = (e) => {
     e.preventDefault();
-    
+
     if (!editingVariable.key.trim() || !editingVariable.value.trim()) {
       setNotification('Both key and value are required');
       return;
     }
-    
+
     // Check for duplicate keys (excluding the current variable)
     const existingKey = pendingVariables.find(s => s.key === editingVariable.key.trim() && s.id !== editingVariable.id);
     if (existingKey) {
       setNotification('A variable with this key already exists');
       return;
     }
-    
+
     const updatedVariables = pendingVariables.map(s => {
       if (s.id === editingVariable.id) {
         return {
@@ -201,7 +201,7 @@ export function CollectionUpdatePage() {
       }
       return s;
     });
-    
+
     setPendingVariables(updatedVariables.sort((a, b) => a.key.localeCompare(b.key)));
     setEditVariableModal(false);
     setHasChanges(true);
@@ -209,7 +209,7 @@ export function CollectionUpdatePage() {
 
   const handleDeleteVariable = () => {
     if (!variableToDelete) return;
-    
+
     const updatedVariables = pendingVariables.filter(s => s.id !== variableToDelete);
     setPendingVariables(updatedVariables);
     setDeleteVariableModal(false);
@@ -270,34 +270,11 @@ export function CollectionUpdatePage() {
   }
 
   return (
-    <div class="h-full flex flex-col">
-      {/* Page Header */}
-      <div class="bg-white border-b border-gray-200 px-6 py-4">
-        <div class="max-w-4xl mx-auto">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-4">
-              <button
-                onClick={() => setLocation('/collections')}
-                class="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <div>
-                <h1 class="text-2xl font-bold text-gray-900">Update Collection</h1>
-                <p class="text-sm text-gray-600 mt-1">Manage your collection details</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div class="flex-1 bg-gray-50 px-6 py-6">
-        <div class="max-w-4xl mx-auto">
+    <div class="h-full bg-gray-100 overflow-y-auto">
+      <div class="min-h-full pt-[83px] pb-6">
+        <div class="max-w-4xl mx-auto px-4">
           <div class="bg-white rounded-lg border border-gray-300 p-6">
-            
+
             {/* Collection Form */}
             <form onSubmit={handleFormSubmit} class="border-b border-gray-900/10 pb-6">
               <div class="space-y-8">
@@ -341,9 +318,9 @@ export function CollectionUpdatePage() {
                       <div class="space-y-4">
                         {/* Automatically follow redirects setting */}
                         <div class="flex items-center">
-                          <input 
-                            type="checkbox" 
-                            id="follow-redirects-checkbox" 
+                          <input
+                            type="checkbox"
+                            id="follow-redirects-checkbox"
                             checked={formData.follow_redirects}
                             onChange={(e) => {
                               setFormData({ ...formData, follow_redirects: e.target.checked });
@@ -355,17 +332,17 @@ export function CollectionUpdatePage() {
                             Automatically follow redirects
                           </label>
                         </div>
-                        
+
                         {/* Request timeout setting */}
                         <div class="flex items-center">
                           <label for="request-timeout-input" class="block text-sm text-gray-900 mr-3">
                             Request timeout (seconds):
                           </label>
-                          <input 
-                            type="number" 
-                            id="request-timeout-input" 
-                            value={formData.timeout} 
-                            min="1" 
+                          <input
+                            type="number"
+                            id="request-timeout-input"
+                            value={formData.timeout}
+                            min="1"
                             max="300"
                             onChange={(e) => {
                               const numValue = parseInt(e.target.value, 10);
@@ -378,12 +355,12 @@ export function CollectionUpdatePage() {
                           />
                           <span class="ml-2 text-xs text-gray-500">(1-300 seconds)</span>
                         </div>
-                        
+
                         {/* Parse ANSI colors setting */}
                         <div class="flex items-center">
-                          <input 
-                            type="checkbox" 
-                            id="parse-ansi-colors-checkbox" 
+                          <input
+                            type="checkbox"
+                            id="parse-ansi-colors-checkbox"
                             checked={formData.parse_ansi_colors}
                             onChange={(e) => {
                               setFormData({ ...formData, parse_ansi_colors: e.target.checked });
