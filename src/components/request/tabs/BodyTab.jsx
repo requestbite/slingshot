@@ -4,11 +4,16 @@ import { json } from '@codemirror/lang-json';
 import { xml } from '@codemirror/lang-xml';
 import { dracula } from '@uiw/codemirror-theme-dracula';
 import { EditorView, keymap } from '@codemirror/view';
-import { autocompletion } from '@codemirror/autocomplete';
-import { bracketMatching } from '@codemirror/language';
+import { autocompletion, CompletionContext } from '@codemirror/autocomplete';
+import { bracketMatching, HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { Prec } from '@codemirror/state';
+import { Decoration } from '@codemirror/view';
+import { StateField, StateEffect } from '@codemirror/state';
+import { tags } from '@lezer/highlight';
 import { ContextMenu } from '../../common/ContextMenu';
 import { VariableInput } from '../../common/VariableInput';
+import { useAppContext } from '../../../hooks/useAppContext';
+import { apiClient } from '../../../api';
 
 const BODY_TYPES = [
   { value: 'none', label: 'None' },
@@ -221,10 +226,44 @@ export function BodyTab({
   onEnterKeyPress,
   onSendRequest
 }) {
+  const { selectedCollection } = useAppContext();
+  const [availableVariables, setAvailableVariables] = useState(new Map());
   const isBodyDisabled = ['GET', 'HEAD', 'OPTIONS'].includes(method);
 
   // JSON validation state
   const [isValidJson, setIsValidJson] = useState(true);
+
+  // Load available variables
+  useEffect(() => {
+    const loadVariables = async () => {
+      const variables = new Map();
+
+      try {
+        // Collection variables (inline)
+        if (selectedCollection?.variables) {
+          selectedCollection.variables.forEach(v => variables.set(v.key, v.value));
+        }
+
+        // Database collection variables
+        if (selectedCollection?.id) {
+          const collectionVars = await apiClient.getSecretsByCollection(selectedCollection.id);
+          collectionVars.forEach(v => variables.set(v.key, v.value));
+        }
+
+        // Environment variables (if collection has environment)
+        if (selectedCollection?.environment_id) {
+          const envVars = await apiClient.getSecretsByEnvironment(selectedCollection.environment_id);
+          envVars.forEach(v => variables.set(v.key, v.value));
+        }
+      } catch (error) {
+        console.error('Failed to load variables:', error);
+      }
+
+      setAvailableVariables(variables);
+    };
+
+    loadVariables();
+  }, [selectedCollection]);
 
   // Validate JSON when content type changes to JSON
   useEffect(() => {
@@ -277,6 +316,100 @@ export function BodyTab({
     }
   };
 
+  // Variable completion source
+  const variableCompletionSource = (context) => {
+    const { state, pos } = context;
+    const line = state.doc.lineAt(pos);
+    const lineText = line.text;
+    const lineStart = line.from;
+    const cursorInLine = pos - lineStart;
+    
+    // Look for {{ pattern before cursor
+    const beforeCursor = lineText.substring(0, cursorInLine);
+    const match = beforeCursor.match(/\{\{([^}]*)$/);
+    
+    if (!match) return null;
+    
+    const matchStart = lineStart + match.index;
+    const currentWord = match[1];
+    
+    // Get variable keys and filter based on current input
+    const variableKeys = Array.from(availableVariables.keys());
+    const filtered = currentWord 
+      ? variableKeys.filter(key => key.toLowerCase().startsWith(currentWord.toLowerCase()))
+      : variableKeys;
+    
+    if (filtered.length === 0) return null;
+    
+    return {
+      from: matchStart,
+      options: filtered.map(key => ({
+        label: `{{${key}}}`,
+        detail: `Variable: ${availableVariables.get(key) || ''}`,
+        type: 'variable'
+      }))
+    };
+  };
+
+  // Variable highlighting decoration
+  const variableHighlightEffect = StateEffect.define();
+  
+  const variableHighlightField = StateField.define({
+    create() {
+      return Decoration.none;
+    },
+    update(decorations, tr) {
+      decorations = decorations.map(tr.changes);
+      
+      for (let effect of tr.effects) {
+        if (effect.is(variableHighlightEffect)) {
+          decorations = effect.value;
+        }
+      }
+      
+      return decorations;
+    },
+    provide: f => EditorView.decorations.from(f)
+  });
+
+  // Create variable decorations
+  const createVariableDecorations = (view) => {
+    const decorations = [];
+    const doc = view.state.doc;
+    const text = doc.toString();
+    const regex = /\{\{([^}]+)\}\}/g;
+    let match;
+    
+    while ((match = regex.exec(text)) !== null) {
+      const variableName = match[1];
+      const isValid = availableVariables.has(variableName);
+      const className = isValid ? 'cm-variable-valid' : 'cm-variable-invalid';
+      
+      const from = match.index;
+      const to = match.index + match[0].length;
+      
+      decorations.push(
+        Decoration.mark({
+          class: className,
+          attributes: {
+            title: isValid ? `${variableName}: ${availableVariables.get(variableName)}` : `Unknown variable: ${variableName}`
+          }
+        }).range(from, to)
+      );
+    }
+    
+    return Decoration.set(decorations);
+  };
+
+  // Update decorations when content or variables change
+  const updateVariableHighlighting = (view) => {
+    if (!view) return;
+    const decorations = createVariableDecorations(view);
+    view.dispatch({
+      effects: variableHighlightEffect.of(decorations)
+    });
+  };
+
   // Get CodeMirror extensions based on content type
   const getCodeMirrorExtensions = (contentType) => {
     const sendRequestKeymap = keymap.of([
@@ -314,8 +447,13 @@ export function BodyTab({
       // Add Ctrl/Cmd+Enter keymap for sending requests with high precedence
       Prec.highest(sendRequestKeymap),
       bracketMatching(),
-      autocompletion(),
-      // Auto-expanding height with minimum of ~7 lines (approximately 168px)
+      autocompletion({
+        override: [variableCompletionSource],
+        activateOnTyping: true,
+        closeOnBlur: true
+      }),
+      variableHighlightField,
+      // Custom theme for variable highlighting and auto-completion
       EditorView.theme({
         "&": {
           minHeight: "168px",
@@ -325,6 +463,68 @@ export function BodyTab({
         },
         ".cm-scroller": {
           overflow: "auto"
+        },
+        // Variable highlighting - matching VariableInput component
+        ".cm-variable-valid": {
+          backgroundColor: "#dcfce7",
+          color: "#166534",
+          fontWeight: "500",
+          borderRadius: "3px",
+          padding: "1px 3px"
+        },
+        ".cm-variable-invalid": {
+          backgroundColor: "#fef2f2",
+          color: "#dc2626",
+          fontWeight: "500",
+          borderRadius: "3px",
+          padding: "1px 3px"
+        },
+        // Auto-completion dropdown styling - matching VariableInput component
+        ".cm-tooltip.cm-tooltip-autocomplete": {
+          backgroundColor: "white",
+          border: "1px solid #d1d5db",
+          borderRadius: "6px",
+          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+          maxHeight: "192px",
+          fontFamily: "'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+          fontSize: "14px"
+        },
+        ".cm-tooltip.cm-tooltip-autocomplete > ul": {
+          maxHeight: "192px",
+          margin: "0",
+          padding: "0"
+        },
+        ".cm-completionLabel": {
+          fontFamily: "'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+          fontSize: "14px",
+          fontWeight: "500"
+        },
+        ".cm-completionDetail": {
+          fontFamily: "'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+          fontSize: "12px",
+          color: "#6b7280",
+          fontStyle: "normal"
+        },
+        ".cm-tooltip.cm-tooltip-autocomplete > ul > li": {
+          padding: "8px 12px",
+          color: "#374151",
+          cursor: "pointer",
+          borderBottom: "none"
+        },
+        ".cm-tooltip.cm-tooltip-autocomplete > ul > li:hover": {
+          backgroundColor: "#f3f4f6",
+          color: "#374151"
+        },
+        ".cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]": {
+          backgroundColor: "#f0f9ff",
+          color: "#0c4a6e"
+        }
+      }),
+      // Update decorations on document changes
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged || update.viewportChanged) {
+          // Debounce decoration updates
+          setTimeout(() => updateVariableHighlighting(update.view), 50);
         }
       })
     ];
@@ -419,7 +619,13 @@ export function BodyTab({
         <div class="mb-2">
           <CodeMirror
             value={bodyContent}
-            onChange={handleBodyContentChange}
+            onChange={(value, viewUpdate) => {
+              handleBodyContentChange(value);
+              // Update variable highlighting after content change
+              if (viewUpdate?.view) {
+                setTimeout(() => updateVariableHighlighting(viewUpdate.view), 100);
+              }
+            }}
             placeholder="Enter request body"
             extensions={getCodeMirrorExtensions(contentType)}
             theme={dracula}
@@ -443,6 +649,18 @@ export function BodyTab({
               fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
             }}
           />
+          
+          {/* Variable hint indicator */}
+          {availableVariables.size > 0 && (
+            <span class="flex items-center text-xs text-gray-400 font-normal whitespace-nowrap overflow-hidden mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info mr-1 flex-shrink-0">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 16v-4"/>
+                <path d="M12 8h.01"/>
+              </svg>
+              To insert a variable, type {"\"{{\"" + " followed by Ctrl+Space (or Cmd+Space on Mac)"}
+            </span>
+          )}
         </div>
       )}
 
