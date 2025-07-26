@@ -3,6 +3,7 @@ import { useLocation } from 'wouter-preact';
 import { OpenAPIImportModal } from '../import/OpenAPIImportModal';
 import { AddFolderModal } from '../modals/AddFolderModal';
 import { AddCollectionModal } from '../modals/AddCollectionModal';
+import { ExportPostmanModal } from '../modals/ExportPostmanModal';
 import { FolderTree } from '../sidebar/FolderTree';
 import { useAppContext } from '../../hooks/useAppContext';
 
@@ -10,6 +11,7 @@ export function SideBar({ onClose }) {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showAddFolderModal, setShowAddFolderModal] = useState(false);
   const [showAddCollectionModal, setShowAddCollectionModal] = useState(false);
+  const [showExportPostmanModal, setShowExportPostmanModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [, setLocation] = useLocation();
   const { collections, selectedCollection, selectCollection, selectRequest, isLoading } = useAppContext();
@@ -103,6 +105,15 @@ export function SideBar({ onClose }) {
                         <circle cx="12" cy="12" r="3" />
                       </svg>
                     </button>
+                    <button
+                      onClick={() => setShowExportPostmanModal(true)}
+                      class="justify-center rounded-md bg-sky-100 hover:bg-sky-200 h-[30px] w-[30px] text-sm font-medium text-sky-700 flex items-center p-0 cursor-pointer"
+                      title="Export as Postman collection"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto">
+                        <path d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                      </svg>
+                    </button>
                   </>
                 )}
               </div>
@@ -188,6 +199,13 @@ export function SideBar({ onClose }) {
         onSuccess={(collection) => {
           console.log('Collection created successfully:', collection.name);
         }}
+      />
+
+      {/* Export Postman Modal */}
+      <ExportPostmanModal
+        isOpen={showExportPostmanModal}
+        onClose={() => setShowExportPostmanModal(false)}
+        collection={selectedCollection}
       />
     </>
   );
