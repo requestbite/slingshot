@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import { useLocation, useRoute } from 'wouter-preact';
 import { DeleteCollectionModal } from '../components/modals/DeleteCollectionModal';
+import { Toast, useToast } from '../components/common/Toast';
 import { apiClient } from '../api';
 import { useAppContext } from '../hooks/useAppContext';
 
@@ -13,7 +14,9 @@ export function CollectionUpdatePage() {
   const [originalVariables, setOriginalVariables] = useState([]);
   const [pendingVariables, setPendingVariables] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [notification, setNotification] = useState(null);
+  const [isToastVisible, showToast, hideToast] = useToast();
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
 
   // Form state
   const [formData, setFormData] = useState({
@@ -60,7 +63,9 @@ export function CollectionUpdatePage() {
 
       const collectionData = await apiClient.getCollection(collectionId);
       if (!collectionData) {
-        setNotification('Collection not found');
+        setToastMessage('Collection not found');
+        setToastType('error');
+        showToast();
         setLocation('/collections');
         return;
       }
@@ -81,7 +86,9 @@ export function CollectionUpdatePage() {
 
     } catch (error) {
       console.error('Failed to load collection:', error);
-      setNotification('Failed to load collection');
+      setToastMessage('Failed to load collection');
+      setToastType('error');
+      showToast();
     } finally {
       setIsLoading(false);
     }
@@ -91,7 +98,9 @@ export function CollectionUpdatePage() {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      setNotification('Collection name is required');
+      setToastMessage('Collection name is required');
+      setToastType('error');
+      showToast();
       return;
     }
 
@@ -132,11 +141,15 @@ export function CollectionUpdatePage() {
       }
 
       await loadCollections();
-      setNotification('Collection updated successfully');
+      setToastMessage('Collection updated successfully');
+      setToastType('success');
+      showToast();
       setLocation('/collections');
     } catch (error) {
       console.error('Failed to update collection:', error);
-      setNotification('Failed to update collection');
+      setToastMessage('Failed to update collection');
+      setToastType('error');
+      showToast();
     }
   };
 
@@ -144,14 +157,18 @@ export function CollectionUpdatePage() {
     e.preventDefault();
 
     if (!variableForm.key.trim() || !variableForm.value.trim()) {
-      setNotification('Both key and value are required');
+      setToastMessage('Both key and value are required');
+      setToastType('error');
+      showToast();
       return;
     }
 
     // Check for duplicate keys
     const existingKey = pendingVariables.find(s => s.key === variableForm.key.trim());
     if (existingKey) {
-      setNotification('A variable with this key already exists');
+      setToastMessage('A variable with this key already exists');
+      setToastType('error');
+      showToast();
       return;
     }
 
@@ -180,14 +197,18 @@ export function CollectionUpdatePage() {
     e.preventDefault();
 
     if (!editingVariable.key.trim() || !editingVariable.value.trim()) {
-      setNotification('Both key and value are required');
+      setToastMessage('Both key and value are required');
+      setToastType('error');
+      showToast();
       return;
     }
 
     // Check for duplicate keys (excluding the current variable)
     const existingKey = pendingVariables.find(s => s.key === editingVariable.key.trim() && s.id !== editingVariable.id);
     if (existingKey) {
-      setNotification('A variable with this key already exists');
+      setToastMessage('A variable with this key already exists');
+      setToastType('error');
+      showToast();
       return;
     }
 
@@ -219,7 +240,9 @@ export function CollectionUpdatePage() {
   };
 
   const handleDeleteSuccess = async () => {
-    setNotification('Collection deleted successfully');
+    setToastMessage('Collection deleted successfully');
+    setToastType('success');
+    showToast();
     setLocation('/collections');
   };
 
@@ -233,10 +256,6 @@ export function CollectionUpdatePage() {
     }
   };
 
-  const showNotification = (message) => {
-    setNotification(message);
-    setTimeout(() => setNotification(null), 3000);
-  };
 
   if (isLoading) {
     return (
@@ -270,9 +289,9 @@ export function CollectionUpdatePage() {
           <div class="bg-white rounded-lg border border-gray-300 p-6">
 
             {/* Collection Form */}
-            <form onSubmit={handleFormSubmit} class="border-b border-gray-900/10 pb-6">
+            <form onSubmit={handleFormSubmit}>
               <div class="space-y-8">
-                <div class="border-b border-gray-900/10 pb-12">
+                <div class="border-b border-gray-900/10 pb-8">
                   <h2 class="text-base font-semibold text-gray-900">Update Collection</h2>
                   <p class="mt-1 text-sm text-gray-600">Manage your collection details.</p>
 
@@ -307,7 +326,7 @@ export function CollectionUpdatePage() {
                     </div>
 
                     {/* Settings Section */}
-                    <div class="sm:col-span-6">
+                    <div class="sm:col-span-6 border-t border-gray-900/10 pt-8 mt-4">
                       <h3 class="text-base font-semibold text-gray-900 mb-4">Request Settings</h3>
                       <div class="space-y-4">
                         {/* Automatically follow redirects setting */}
@@ -639,19 +658,13 @@ export function CollectionUpdatePage() {
         </div>
       )}
 
-      {/* Notification */}
-      {notification && (
-        <div class="fixed top-4 right-4 z-50">
-          <div class="bg-green-50 border border-green-200 rounded-md p-4 max-w-sm">
-            <div class="flex items-center">
-              <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p class="text-sm font-medium text-green-800">{notification}</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Toast Notification */}
+      <Toast
+        message={toastMessage}
+        isVisible={isToastVisible}
+        onClose={hideToast}
+        type={toastType}
+      />
     </div>
   );
 }
