@@ -7,7 +7,7 @@
 export const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 
 /** @type {string[]} Valid request body types */
-export const REQUEST_TYPES = ['none', 'raw', 'form', 'urlencoded'];
+export const REQUEST_TYPES = ['none', 'raw', 'form', 'urlencoded', 'form-data', 'url-encoded'];
 
 /** @type {string[]} Valid content types - expanded to accept common MIME types */
 export const CONTENT_TYPES = [
