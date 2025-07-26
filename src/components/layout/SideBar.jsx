@@ -1,17 +1,22 @@
-import { useState } from 'preact/hooks';
+import { useState, useRef } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { OpenAPIImportModal } from '../import/OpenAPIImportModal';
+import { PostmanImportModal } from '../import/PostmanImportModal';
 import { AddFolderModal } from '../modals/AddFolderModal';
 import { AddCollectionModal } from '../modals/AddCollectionModal';
 import { ExportPostmanModal } from '../modals/ExportPostmanModal';
+import { ContextMenu } from '../common/ContextMenu';
 import { FolderTree } from '../sidebar/FolderTree';
 import { useAppContext } from '../../hooks/useAppContext';
 
 export function SideBar({ onClose }) {
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showPostmanImportModal, setShowPostmanImportModal] = useState(false);
   const [showAddFolderModal, setShowAddFolderModal] = useState(false);
   const [showAddCollectionModal, setShowAddCollectionModal] = useState(false);
   const [showExportPostmanModal, setShowExportPostmanModal] = useState(false);
+  const [showImportContextMenu, setShowImportContextMenu] = useState(false);
+  const importButtonRef = useRef();
   const [searchTerm, setSearchTerm] = useState('');
   const [, setLocation] = useLocation();
   const { collections, selectedCollection, selectCollection, selectRequest, isLoading } = useAppContext();
@@ -22,18 +27,24 @@ export function SideBar({ onClose }) {
       <aside class="bg-white rounded-lg md:border border-gray-300 h-full">
         <div class="flex grow flex-col gap-y-5 overflow-y-auto p-4">
           <nav class="flex flex-1 flex-col space-y-4">
-            {/* Import OpenAPI Button */}
-            <div>
+            {/* Import Button with Dropdown */}
+            <div class="relative">
               <button
-                onClick={() => setShowImportModal(true)}
-                class="w-full justify-center rounded-md bg-sky-100 hover:bg-sky-200 py-2 text-sm font-medium text-sky-700 flex items-center cursor-pointer"
+                ref={importButtonRef}
+                onClick={() => setShowImportContextMenu(true)}
+                class="w-full justify-between rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
-                  <path d="M12 15V3" />
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <path d="m7 10 5 5 5-5" />
+                <div class="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                    <path d="M12 15V3" />
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <path d="m7 10 5 5 5-5" />
+                  </svg>
+                  Import
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m6 9 6 6 6-6" />
                 </svg>
-                Import OpenAPI
               </button>
             </div>
 
@@ -206,6 +217,57 @@ export function SideBar({ onClose }) {
         isOpen={showExportPostmanModal}
         onClose={() => setShowExportPostmanModal(false)}
         collection={selectedCollection}
+      />
+
+      {/* Postman Import Modal */}
+      <PostmanImportModal
+        isOpen={showPostmanImportModal}
+        onClose={() => setShowPostmanImportModal(false)}
+        onSuccess={(collection) => {
+          console.log('Postman collection imported successfully:', collection);
+        }}
+      />
+
+      {/* Import Context Menu */}
+      <ContextMenu
+        isOpen={showImportContextMenu}
+        onClose={() => setShowImportContextMenu(false)}
+        trigger={importButtonRef.current}
+        width={200}
+        position="below"
+        items={[
+          {
+            label: 'OpenAPI spec',
+            onClick: () => {
+              setShowImportModal(true);
+              setShowImportContextMenu(false);
+            },
+            icon: (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14,2 14,8 20,8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10,9 9,9 8,9" />
+              </svg>
+            )
+          },
+          {
+            label: 'Postman collection',
+            onClick: () => {
+              setShowPostmanImportModal(true);
+              setShowImportContextMenu(false);
+            },
+            icon: (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14,2 14,8 20,8" />
+                <circle cx="12" cy="13" r="2" />
+                <path d="M12 11v6" />
+              </svg>
+            )
+          }
+        ]}
       />
     </>
   );

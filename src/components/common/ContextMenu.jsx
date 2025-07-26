@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 
-export function ContextMenu({ isOpen, onClose, trigger, children, items = [] }) {
-  const [position, setPosition] = useState({ top: 0, left: 0 });
+export function ContextMenu({ isOpen, onClose, trigger, children, items = [], width, position = "right" }) {
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const menuRef = useRef();
   const triggerRef = useRef();
 
@@ -23,7 +23,7 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [] }) 
 
     const triggerRect = trigger.getBoundingClientRect();
     const menuHeight = 120; // Approximate menu height
-    const menuWidth = 160; // Menu width to match original (w-40 = 160px)
+    const menuWidth = width || 160; // Use provided width or default to 160px
     const viewport = {
       width: window.innerWidth,
       height: window.innerHeight
@@ -35,35 +35,55 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [] }) 
     // Calculate position
     let left, top;
 
-    if (isMobile) {
-      // Mobile: position to the left of the button
-      left = triggerRect.left - menuWidth - 4;
-      // Ensure menu doesn't go off-screen to the left
-      if (left < 8) left = 8;
-    } else {
-      // Desktop: position to the right of the button
-      left = triggerRect.right + 4;
+    if (position === "below") {
+      // Position below the trigger, aligned to bottom-left
+      left = triggerRect.left;
+      top = triggerRect.bottom + 4;
+      
       // Ensure menu doesn't go off-screen to the right
       if (left + menuWidth > viewport.width - 8) {
-        left = triggerRect.left - menuWidth - 4;
+        left = viewport.width - menuWidth - 8;
       }
-    }
-
-    // Check if menu should open upward
-    const spaceBelow = viewport.height - triggerRect.bottom;
-    const spaceAbove = triggerRect.top;
-    const shouldOpenUpward = spaceBelow < menuHeight && spaceAbove > menuHeight;
-
-    if (shouldOpenUpward) {
-      // Position menu above the trigger button
-      top = triggerRect.top - menuHeight - 4;
-    } else {
-      // Position menu below the trigger button
-      top = triggerRect.bottom + 4;
-
-      // If it would go below viewport, try to position it above
+      
+      // Ensure menu doesn't go off-screen to the left
+      if (left < 8) left = 8;
+      
+      // If it would go below viewport, position above instead
       if (top + menuHeight > viewport.height - 8) {
         top = triggerRect.top - menuHeight - 4;
+      }
+    } else {
+      // Default "right" position behavior
+      if (isMobile) {
+        // Mobile: position to the left of the button
+        left = triggerRect.left - menuWidth - 4;
+        // Ensure menu doesn't go off-screen to the left
+        if (left < 8) left = 8;
+      } else {
+        // Desktop: position to the right of the button
+        left = triggerRect.right + 4;
+        // Ensure menu doesn't go off-screen to the right
+        if (left + menuWidth > viewport.width - 8) {
+          left = triggerRect.left - menuWidth - 4;
+        }
+      }
+
+      // Check if menu should open upward
+      const spaceBelow = viewport.height - triggerRect.bottom;
+      const spaceAbove = triggerRect.top;
+      const shouldOpenUpward = spaceBelow < menuHeight && spaceAbove > menuHeight;
+
+      if (shouldOpenUpward) {
+        // Position menu above the trigger button
+        top = triggerRect.top - menuHeight - 4;
+      } else {
+        // Position menu below the trigger button
+        top = triggerRect.bottom + 4;
+
+        // If it would go below viewport, try to position it above
+        if (top + menuHeight > viewport.height - 8) {
+          top = triggerRect.top - menuHeight - 4;
+        }
       }
     }
 
@@ -72,7 +92,7 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [] }) 
       top = 8;
     }
 
-    setPosition({ top, left });
+    setMenuPosition({ top, left });
   };
 
   const handleClickOutside = (e) => {
@@ -100,12 +120,13 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [] }) 
   return (
     <div
       ref={menuRef}
-      class="fixed z-50 w-44 bg-white py-1 shadow-lg ring-1 ring-black/5 rounded-md"
+      class="fixed z-50 bg-white py-1 shadow-lg ring-1 ring-black/5 rounded-md"
       style={{
-        top: `${position.top}px`,
-        left: `${position.left}px`,
-        minWidth: '120px',
-        visibility: position.top === 0 && position.left === 0 ? 'hidden' : 'visible'
+        top: `${menuPosition.top}px`,
+        left: `${menuPosition.left}px`,
+        width: width ? `${width}px` : '176px', // w-44 = 176px default
+        minWidth: width ? `${width}px` : '120px',
+        visibility: menuPosition.top === 0 && menuPosition.left === 0 ? 'hidden' : 'visible'
       }}
     >
       {children || (
