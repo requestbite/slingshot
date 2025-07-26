@@ -3,6 +3,7 @@ import { useLocation } from 'wouter-preact';
 import { AddCollectionModal } from '../components/modals/AddCollectionModal';
 import { DeleteCollectionModal } from '../components/modals/DeleteCollectionModal';
 import { ContextMenu } from '../components/common/ContextMenu';
+import { Toast, useToast } from '../components/common/Toast';
 import { useAppContext } from '../hooks/useAppContext';
 import { apiClient } from '../api';
 
@@ -17,7 +18,8 @@ export function CollectionsPage() {
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [contextMenuTrigger, setContextMenuTrigger] = useState(null);
   const [contextMenuCollection, setContextMenuCollection] = useState(null);
-  const [notification, setNotification] = useState(null);
+  const [isToastVisible, showToast, hideToast] = useToast();
+  const [toastMessage, setToastMessage] = useState('');
 
   useEffect(() => {
     loadCollectionsWithCounts();
@@ -107,17 +109,19 @@ export function CollectionsPage() {
 
   const handleDeleteSuccess = async () => {
     await loadCollectionsWithCounts();
-    showNotification('Collection deleted successfully');
+    setToastMessage('Collection deleted successfully');
+    showToast();
   };
 
   const handleCreateSuccess = async (collection) => {
     await loadCollectionsWithCounts();
-    showNotification('Collection created successfully');
+    setToastMessage('Collection created successfully');
+    showToast();
   };
 
   const showNotification = (message) => {
-    setNotification(message);
-    setTimeout(() => setNotification(null), 3000);
+    setToastMessage(message);
+    showToast();
   };
 
   const copyToClipboard = async (text, message) => {
@@ -238,19 +242,13 @@ export function CollectionsPage() {
         </div>
       </div>
 
-      {/* Success Notification */}
-      {notification && (
-        <div class="fixed top-4 right-4 z-50">
-          <div class="bg-green-50 border border-green-200 rounded-md p-4 max-w-sm">
-            <div class="flex items-center">
-              <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p class="text-sm font-medium text-green-800">{notification}</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Toast Notification */}
+      <Toast
+        message={toastMessage}
+        isVisible={isToastVisible}
+        onClose={hideToast}
+        type="success"
+      />
 
       {/* Context Menu */}
       <ContextMenu
