@@ -1,17 +1,22 @@
-# RequestBite Slingshot Proxy (Go)
+# RequestBite Slingshot Proxy
 
 A high-performance HTTP proxy server written in Go for RequestBite Slingshot
 HTTP calls.
 
 ## Features
 
-- **Reliable Timeout Handling**: Uses Go's `context.WithTimeout()` for guaranteed timeout enforcement
-- **Proper Redirect Control**: Configurable redirect following with manual control
-- **Multiple Integration Modes**: Standalone server, CLI execution
-- **CORS Support**: Full browser compatibility with CORS headers
-- **Binary Content Support**: Automatic binary detection and base64 encoding
-- **Form Data Processing**: Support for both JSON and form-based requests
-- **Health Check Endpoint**: Built-in health monitoring
+- **Reliable Timeout Handling**:  
+  Uses Go's `context.WithTimeout()` for guaranteed timeout enforcement
+- **Proper Redirect Control**:  
+  Configurable redirect following with manual control
+- **Multiple Integration Modes**:  
+  Standalone server, CLI execution
+- **CORS Support**:  
+  Full browser compatibility with CORS headers
+- **Binary Content Support**:  
+  Automatic binary detection and base64 encoding
+- **Form Data Processing**:  
+  Support for both JSON and form-based requests
 
 ## Quick Start
 
@@ -25,13 +30,13 @@ go build -o proxy .
 
 ```bash
 # Start on default port 8080
-./proxy-go
+./proxy
 
 # Start on custom port
-./proxy-go -port 8081
+./proxy -port 8081
 
 # Show help
-./proxy-go -help
+./proxy -help
 ```
 
 ## API Endpoints

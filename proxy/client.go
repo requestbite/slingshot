@@ -66,7 +66,7 @@ func (c *HTTPClient) ExecuteRequest(ctx context.Context, req *ProxyRequest) (*Pr
 
 	// Set default User-Agent if not provided
 	if httpReq.Header.Get("User-Agent") == "" {
-		httpReq.Header.Set("User-Agent", "rb-slingshot-go/0.1.0")
+    httpReq.Header.Set("User-Agent", fmt.Sprintf("rb-slingshot/%s (https://requestbite.com/slingshot)", Version))
 	}
 
 	// Set Content-Length for POST/PUT/PATCH requests with body

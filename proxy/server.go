@@ -239,7 +239,6 @@ func (s *ProxyServer) handleHealthCheck(w http.ResponseWriter, r *http.Request) 
 	healthResponse := map[string]interface{}{
 		"status":  "ok",
 		"version": Version,
-		"uptime":  time.Since(time.Now()).String(),
 	}
 	
 	json.NewEncoder(w).Encode(healthResponse)
