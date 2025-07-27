@@ -278,7 +278,8 @@ function extractParameters(operation) {
     const paramObj = {
       key: param.name,
       value: getExampleValue(param),
-      description: param.description || ''
+      description: param.description || '',
+      enabled: true // Enable all parameters by default in RequestBite
     };
     
     switch (param.in) {

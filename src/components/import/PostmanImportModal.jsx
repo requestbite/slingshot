@@ -120,20 +120,31 @@ export function PostmanImportModal({ isOpen, onClose, onSuccess }) {
       }
 
       // Create folders and requests
-      const folderMap = new Map();
+      const folderMap = new Map(); // Maps temp UUID to database ID
 
-      // Create folders first
-      for (const folderName of processedData.folders) {
-        const folder = await apiClient.createFolder({
-          name: folderName,
-          collection_id: collection.id
-        });
-        folderMap.set(folderName, folder.id);
-      }
+      // Create folders in hierarchical order (parents first)
+      const createFoldersRecursively = async (parentId = null) => {
+        const foldersAtLevel = processedData.folders.filter(f => f.parent_folder_id === parentId);
+        
+        for (const folderData of foldersAtLevel) {
+          const folder = await apiClient.createFolder({
+            name: folderData.name,
+            collection_id: collection.id,
+            parent_folder_id: folderData.parent_folder_id ? folderMap.get(folderData.parent_folder_id) : null,
+            description: folderData.description || ''
+          });
+          folderMap.set(folderData.id, folder.id);
+          
+          // Create child folders
+          await createFoldersRecursively(folderData.id);
+        }
+      };
+      
+      await createFoldersRecursively();
 
       // Create requests
       for (const requestData of processedData.requests) {
-        const folderId = requestData.folderName ? folderMap.get(requestData.folderName) : null;
+        const folderId = requestData.folderId ? folderMap.get(requestData.folderId) : null;
 
         await apiClient.createRequest({
           collection_id: collection.id,

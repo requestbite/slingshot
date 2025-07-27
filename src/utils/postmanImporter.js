@@ -32,7 +32,7 @@ export async function processPostmanCollection(fileContent, collectionName = '')
       collectionName: metadata.name,
       description: metadata.description,
       variables,
-      folders: Array.from(folders),
+      folders,
       requests
     };
     
@@ -126,11 +126,11 @@ function extractVariables(collection) {
 /**
  * Processes items (folders and requests) recursively
  * @param {Array} items - Array of items from Postman collection
- * @param {string} parentFolderName - Parent folder name for nested items
+ * @param {string|null} parentFolderId - Parent folder ID for nested items
  * @returns {Object} Folders and requests
  */
-async function processItems(items, parentFolderName) {
-  const folders = new Set();
+async function processItems(items, parentFolderId = null) {
+  const folders = [];
   const requests = [];
   
   for (const item of items) {
@@ -139,20 +139,30 @@ async function processItems(items, parentFolderName) {
     // Check if item is a folder or request
     if (item.item && Array.isArray(item.item)) {
       // It's a folder
+      const folderId = generateUUID();
       const folderName = item.name || 'Untitled Folder';
-      folders.add(folderName);
       
-      // Process nested items
+      // Create folder object with proper hierarchy
+      const folder = {
+        id: folderId,
+        name: folderName,
+        parent_folder_id: parentFolderId,
+        description: item.description || ''
+      };
+      
+      folders.push(folder);
+      
+      // Process nested items with this folder as parent
       const { folders: nestedFolders, requests: nestedRequests } = 
-        await processItems(item.item, folderName);
+        await processItems(item.item, folderId);
       
       // Add nested folders and requests
-      nestedFolders.forEach(folder => folders.add(folder));
+      folders.push(...nestedFolders);
       requests.push(...nestedRequests);
       
     } else if (item.request) {
       // It's a request
-      const request = await createRequestFromItem(item, parentFolderName);
+      const request = await createRequestFromItem(item, parentFolderId);
       requests.push(request);
     }
   }
@@ -163,10 +173,10 @@ async function processItems(items, parentFolderName) {
 /**
  * Creates a request object from a Postman item
  * @param {Object} item - Postman request item
- * @param {string} folderName - Folder name for the request
+ * @param {string|null} folderId - Folder ID for the request
  * @returns {Object} Request data
  */
-async function createRequestFromItem(item, folderName) {
+async function createRequestFromItem(item, folderId) {
   const request = item.request;
   const name = item.name || 'Untitled Request';
   
@@ -200,7 +210,7 @@ async function createRequestFromItem(item, folderName) {
     body,
     formData,
     urlEncodedData,
-    folderName
+    folderId
   };
 }
 
@@ -261,11 +271,11 @@ function extractHeaders(headerData) {
   if (!headerData || !Array.isArray(headerData)) return [];
   
   return headerData
-    .filter(header => header && header.key && !header.disabled)
+    .filter(header => header && header.key)
     .map(header => ({
       key: header.key,
       value: header.value || '',
-      disabled: header.disabled || false
+      enabled: true // Enable all headers by default in RequestBite
     }));
 }
 
@@ -280,11 +290,11 @@ function extractQueryParams(urlData) {
   // If URL has query array
   if (urlData.query && Array.isArray(urlData.query)) {
     return urlData.query
-      .filter(param => param && param.key && !param.disabled)
+      .filter(param => param && param.key)
       .map(param => ({
         key: param.key,
         value: param.value || '',
-        disabled: param.disabled || false
+        enabled: true // Enable all params by default in RequestBite
       }));
   }
   
@@ -311,7 +321,7 @@ function parseQueryParamsFromString(urlString) {
       params.push({
         key,
         value,
-        disabled: false
+        enabled: true
       });
     }
     
@@ -337,7 +347,7 @@ function extractPathParams(url) {
     pathParams.push({
       key: match[1],
       value: '',
-      disabled: false
+      enabled: true
     });
   }
   
@@ -433,12 +443,12 @@ function extractFormData(formData) {
   if (!formData || !Array.isArray(formData)) return [];
   
   return formData
-    .filter(item => item && item.key && !item.disabled)
+    .filter(item => item && item.key)
     .map(item => ({
       key: item.key,
       value: item.value || '',
       type: item.type || 'text',
-      disabled: item.disabled || false
+      enabled: true // Enable all form fields by default in RequestBite
     }));
 }
 
@@ -451,10 +461,10 @@ function extractUrlEncodedData(urlEncodedData) {
   if (!urlEncodedData || !Array.isArray(urlEncodedData)) return [];
   
   return urlEncodedData
-    .filter(item => item && item.key && !item.disabled)
+    .filter(item => item && item.key)
     .map(item => ({
       key: item.key,
       value: item.value || '',
-      disabled: item.disabled || false
+      enabled: true // Enable all URL-encoded fields by default in RequestBite
     }));
 }
