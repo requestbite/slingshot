@@ -46,7 +46,7 @@ func (s *ProxyServer) Start() error {
 	router.HandleFunc("/proxy/form", s.handleFormRequest).Methods("POST", "OPTIONS")
 
 	// Health check endpoint
-	router.HandleFunc("/health", s.handleHealthCheck).Methods("GET")
+	router.HandleFunc("/health", s.handleHealthCheck).Methods("GET", "OPTIONS")
 
 	s.server = &http.Server{
 		Addr:    fmt.Sprintf(":%d", s.port),
@@ -233,12 +233,19 @@ func (s *ProxyServer) handleFormRequest(w http.ResponseWriter, r *http.Request) 
 
 // handleHealthCheck handles the health check endpoint
 func (s *ProxyServer) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
+	// Handle OPTIONS for CORS preflight
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	
 	healthResponse := map[string]interface{}{
-		"status":  "ok",
-		"version": Version,
+		"status":     "ok",
+		"version":    Version,
+		"user-agent": fmt.Sprintf("rb-slingshot/%s (https://requestbite.com/slingshot)", Version),
 	}
 	
 	json.NewEncoder(w).Encode(healthResponse)
