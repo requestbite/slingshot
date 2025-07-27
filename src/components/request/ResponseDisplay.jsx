@@ -440,9 +440,26 @@ const ImageDisplay = ({ response }) => {
 };
 
 export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
-  const [showHeaders, setShowHeaders] = useState(true);
+  // Initialize headers visibility from localStorage, defaulting to false (closed)
+  const [showHeaders, setShowHeaders] = useState(() => {
+    try {
+      const saved = localStorage.getItem('requestbite-headers-visible');
+      return saved !== null ? JSON.parse(saved) : false;
+    } catch {
+      return false;
+    }
+  });
   const [activeTab, setActiveTab] = useState('body');
   const [isToastVisible, showToast, hideToast] = useToast();
+
+  // Save headers visibility preference to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('requestbite-headers-visible', JSON.stringify(showHeaders));
+    } catch {
+      // Ignore localStorage errors (e.g., private browsing mode)
+    }
+  }, [showHeaders]);
 
   if (isLoading) {
     return (
