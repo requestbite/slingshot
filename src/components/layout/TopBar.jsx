@@ -61,9 +61,12 @@ export function TopBar() {
             <button
               onClick={(e) => {
                 e.preventDefault();
-                // Add settings navigation when route is defined
+                setLocation('/settings');
               }}
-              class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 hover:cursor-pointer transition-colors"
+              class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer ${isActive('/settings')
+                ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
             >
               Settings
             </button>

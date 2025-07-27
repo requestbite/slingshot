@@ -7,6 +7,7 @@ import { CollectionPage } from './pages/CollectionPage';
 import { RequestPage } from './pages/RequestPage';
 import { CollectionsPage } from './pages/CollectionsPage';
 import { CollectionUpdatePage } from './pages/CollectionUpdatePage';
+import { SettingsPage } from './pages/SettingsPage';
 
 export function App() {
   return (
@@ -21,6 +22,11 @@ export function App() {
           <Route path="/collections">
             <FullPageLayout>
               <CollectionsPage />
+            </FullPageLayout>
+          </Route>
+          <Route path="/settings">
+            <FullPageLayout>
+              <SettingsPage />
             </FullPageLayout>
           </Route>
           <Route>
