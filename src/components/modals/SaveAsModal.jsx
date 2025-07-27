@@ -123,6 +123,37 @@ export function SaveAsModal({ isOpen, onClose, requestData, collection, onSucces
     onClose();
   };
 
+  // Build folder tree for display with sorting and hierarchical names
+  const buildFolderTree = (parentId = null, level = 0, parentPath = '') => {
+    return folders
+      .filter(f => f.parent_folder_id === parentId)
+      .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
+      .map(f => {
+        const currentPath = parentPath ? `${parentPath} / ${f.name}` : f.name;
+        return {
+          ...f,
+          level,
+          displayName: currentPath,
+          children: buildFolderTree(f.id, level + 1, currentPath)
+        };
+      });
+  };
+
+  const renderFolderOption = (folder) => {
+    return (
+      <option key={folder.id} value={folder.id}>
+        {folder.displayName}
+      </option>
+    );
+  };
+
+  const renderFolderTree = (folderTree) => {
+    return folderTree.map(folder => [
+      renderFolderOption(folder),
+      ...renderFolderTree(folder.children)
+    ]).flat();
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -188,11 +219,7 @@ export function SaveAsModal({ isOpen, onClose, requestData, collection, onSucces
                     disabled={isLoading}
                   >
                     <option value="">No folder</option>
-                    {folders.map(folder => (
-                      <option key={folder.id} value={folder.id}>
-                        {folder.name}
-                      </option>
-                    ))}
+                    {renderFolderTree(buildFolderTree())}
                   </select>
                 </div>
                 
