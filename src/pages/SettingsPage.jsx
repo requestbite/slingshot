@@ -48,6 +48,22 @@ export function SettingsPage() {
     }
   };
 
+  // Add protocol if missing
+  const normalizeUrl = (url) => {
+    const trimmedUrl = url.trim();
+    if (!trimmedUrl) return '';
+    
+    if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://')) {
+      // Default to http:// for localhost, https:// for everything else
+      if (trimmedUrl.startsWith('localhost') || trimmedUrl.startsWith('127.0.0.1')) {
+        return 'http://' + trimmedUrl;
+      } else {
+        return 'https://' + trimmedUrl;
+      }
+    }
+    return trimmedUrl;
+  };
+
   // Test proxy health endpoint
   const testProxy = async () => {
     if (!formData.customProxyUrl.trim()) {
@@ -57,7 +73,9 @@ export function SettingsPage() {
       return;
     }
 
-    if (!isValidUrl(formData.customProxyUrl)) {
+    const normalizedUrl = normalizeUrl(formData.customProxyUrl);
+    
+    if (!isValidUrl(normalizedUrl)) {
       setToastMessage('Please enter a valid URL');
       setToastType('error');
       showToast();
@@ -68,7 +86,7 @@ export function SettingsPage() {
     setProxyTestResult(null);
 
     try {
-      const healthUrl = formData.customProxyUrl.replace(/\/$/, '') + '/health';
+      const healthUrl = normalizedUrl.replace(/\/$/, '') + '/health';
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
@@ -96,6 +114,8 @@ export function SettingsPage() {
       // Check if response has required fields
       if (data.status === 'ok' && data['user-agent'] && data['user-agent'].includes('rb-slingshot')) {
         setProxyTestResult('valid');
+        // Update form data with normalized URL
+        setFormData(prev => ({ ...prev, customProxyUrl: normalizedUrl }));
         setToastMessage('Valid proxy found');
         setToastType('success');
         showToast();
@@ -136,7 +156,8 @@ export function SettingsPage() {
         return;
       }
 
-      if (!isValidUrl(formData.customProxyUrl)) {
+      const normalizedUrl = normalizeUrl(formData.customProxyUrl);
+      if (!isValidUrl(normalizedUrl)) {
         setToastMessage('Please enter a valid URL');
         setToastType('error');
         showToast();
@@ -155,15 +176,15 @@ export function SettingsPage() {
       // Save settings to localStorage
       const settings = {
         proxyType: formData.proxyType,
-        customProxyUrl: formData.proxyType === 'custom' ? formData.customProxyUrl.trim() : ''
+        customProxyUrl: formData.proxyType === 'custom' ? normalizeUrl(formData.customProxyUrl) : ''
       };
 
       localStorage.setItem('slingshot-settings', JSON.stringify(settings));
       
       setHasChanges(false);
-      setToastMessage('Settings saved successfully');
-      setToastType('success');
-      showToast();
+      
+      // Redirect to Slingshot root page immediately after successful save
+      setLocation('/');
     } catch (error) {
       console.error('Failed to save settings:', error);
       setToastMessage('Failed to save settings');
@@ -214,64 +235,45 @@ export function SettingsPage() {
 
                   <div class="mt-10 grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
                     
-                    {/* Proxy Settings */}
-                    <div class="sm:col-span-6">
-                      <h3 class="text-base font-semibold text-gray-900 mb-4">Proxy Configuration</h3>
-                      
-                      {/* Proxy Type Dropdown */}
-                      <div class="mb-6">
-                        <label for="proxy-type" class="block text-sm font-medium text-gray-700">Proxy</label>
-                        <select
-                          id="proxy-type"
-                          value={formData.proxyType}
-                          onChange={(e) => handleProxyTypeChange(e.target.value)}
-                          class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-sky-500 text-sm"
-                        >
-                          <option value="hosted">Hosted Slingshot proxy</option>
-                          <option value="custom">Custom proxy URL</option>
-                        </select>
-                      </div>
-
-                      {/* Custom Proxy URL Input */}
-                      {formData.proxyType === 'custom' && (
-                        <div class="space-y-4">
-                          <div>
-                            <label for="custom-proxy-url" class="block text-sm font-medium text-gray-700">Proxy URL</label>
-                            <div class="mt-1 flex">
-                              <input
-                                type="url"
-                                id="custom-proxy-url"
-                                value={formData.customProxyUrl}
-                                onInput={(e) => handleCustomUrlChange(e.target.value)}
-                                placeholder="https://your-proxy-server.com"
-                                class="block w-full rounded-l-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
-                              />
-                              <button
-                                type="button"
-                                onClick={testProxy}
-                                disabled={isTestingProxy || !formData.customProxyUrl.trim() || !isValidUrl(formData.customProxyUrl)}
-                                class="rounded-r-md bg-sky-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-sky-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 cursor-pointer disabled:bg-gray-300 disabled:cursor-not-allowed"
-                              >
-                                {isTestingProxy ? 'Testing...' : 'Test'}
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Test Result */}
-                          {proxyTestResult && (
-                            <div class={`p-3 rounded-md text-sm ${
-                              proxyTestResult === 'valid' 
-                                ? 'bg-green-50 text-green-800 border border-green-200' 
-                                : 'bg-red-50 text-red-800 border border-red-200'
-                            }`}>
-                              {proxyTestResult === 'valid' && '✓ Valid proxy found'}
-                              {proxyTestResult === 'invalid' && '✗ No valid proxy found'}
-                              {proxyTestResult === 'unreachable' && '✗ Proxy cannot be reached'}
-                            </div>
-                          )}
-                        </div>
-                      )}
+                    {/* Proxy Type Dropdown */}
+                    <div class="sm:col-span-4">
+                      <label for="proxy-type" class="block text-sm font-medium text-gray-700">Proxy</label>
+                      <select
+                        id="proxy-type"
+                        value={formData.proxyType}
+                        onChange={(e) => handleProxyTypeChange(e.target.value)}
+                        class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-sky-500 text-sm"
+                      >
+                        <option value="hosted">Hosted Slingshot proxy</option>
+                        <option value="custom">Custom proxy URL</option>
+                      </select>
                     </div>
+
+                    {/* Custom Proxy URL Input */}
+                    {formData.proxyType === 'custom' && (
+                      <div class="sm:col-span-4">
+                        <label for="custom-proxy-url" class="block text-sm font-medium text-gray-700">Proxy URL</label>
+                        <div class="mt-1 flex">
+                          <input
+                            type="text"
+                            id="custom-proxy-url"
+                            value={formData.customProxyUrl}
+                            onInput={(e) => handleCustomUrlChange(e.target.value)}
+                            placeholder="your-proxy-server.com"
+                            class="block w-full rounded-l-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={testProxy}
+                            disabled={isTestingProxy || !formData.customProxyUrl.trim()}
+                            class="rounded-r-md bg-sky-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-sky-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 cursor-pointer disabled:bg-gray-300 disabled:cursor-not-allowed"
+                          >
+                            {isTestingProxy ? 'Testing...' : 'Test'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
 
                   </div>
                 </div>
