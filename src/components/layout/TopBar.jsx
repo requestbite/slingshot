@@ -137,8 +137,24 @@ export function TopBar() {
           >
             Settings
           </button>
-          <a href="https://docs.requestbite.com" target="_blank" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors">
+          <a href="https://docs.requestbite.com" target="_blank" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors flex items-center">
             Docs
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="ml-1"
+            >
+              <path d="M15 3h6v6" />
+              <path d="M10 14 21 3" />
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            </svg>
           </a>
         </nav>
 
@@ -239,7 +255,25 @@ export function TopBar() {
                     target="_blank"
                     class="block px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer"
                   >
-                    <div>Docs</div>
+                    <div class="flex items-center">
+                      Docs
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="ml-1"
+                      >
+                        <path d="M15 3h6v6" />
+                        <path d="M10 14 21 3" />
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      </svg>
+                    </div>
                     <span class="text-xs text-gray-500 mt-1">Documentation</span>
                   </a>
 
