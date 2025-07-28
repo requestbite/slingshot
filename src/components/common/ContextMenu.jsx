@@ -3,7 +3,6 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 export function ContextMenu({ isOpen, onClose, trigger, children, items = [], width, position = "right" }) {
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const menuRef = useRef();
-  const triggerRef = useRef();
 
   useEffect(() => {
     if (isOpen && trigger) {

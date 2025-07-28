@@ -128,7 +128,7 @@ export class PostmanExporter {
       }));
   }
 
-  static convertUrl(url, queryParams, pathParams) {
+  static convertUrl(url, queryParams, _pathParams) {
     if (!url) return '';
 
     // Handle string URL
@@ -153,7 +153,7 @@ export class PostmanExporter {
               (parsedUrl.protocol === 'https:' && parsedUrl.port === '443'))) {
           urlObj.port = parsedUrl.port;
         }
-      } catch (e) {
+      } catch (_e) {
         // If URL parsing fails, return as raw string
         return url;
       }

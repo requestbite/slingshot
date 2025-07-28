@@ -318,7 +318,7 @@ function parseQueryParams(url) {
         enabled: true
       });
     });
-  } catch (error) {
+  } catch (_error) {
     // If URL parsing fails, try to extract query string manually
     const queryIndex = url.indexOf('?');
     if (queryIndex !== -1) {

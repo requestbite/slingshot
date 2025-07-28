@@ -222,7 +222,7 @@ export function VariableInput({
     );
 
     let node;
-    while (node = walker.nextNode()) {
+    while ((node = walker.nextNode())) {
       const nodeLength = node.textContent.length;
       if (currentPosition + nodeLength >= position) {
         targetNode = node;

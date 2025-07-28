@@ -49,7 +49,7 @@ export async function processPostmanCollection(fileContent, collectionName = '')
 async function parseCollection(content) {
   try {
     return JSON.parse(content);
-  } catch (error) {
+  } catch (_error) {
     throw new Error('Invalid JSON format');
   }
 }
@@ -326,7 +326,7 @@ function parseQueryParamsFromString(urlString) {
     }
     
     return params;
-  } catch (error) {
+  } catch (_error) {
     return [];
   }
 }

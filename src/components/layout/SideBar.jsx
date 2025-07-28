@@ -9,7 +9,7 @@ import { ContextMenu } from '../common/ContextMenu';
 import { FolderTree } from '../sidebar/FolderTree';
 import { useAppContext } from '../../hooks/useAppContext';
 
-export function SideBar({ onClose }) {
+export function SideBar({ onClose: _onClose }) {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showPostmanImportModal, setShowPostmanImportModal] = useState(false);
   const [showAddFolderModal, setShowAddFolderModal] = useState(false);

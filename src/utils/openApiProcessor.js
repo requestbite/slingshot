@@ -51,11 +51,11 @@ async function parseSpecification(content) {
   try {
     // Try JSON first
     return JSON.parse(content);
-  } catch (jsonError) {
+  } catch (_jsonError) {
     try {
       // If JSON fails, try YAML (basic YAML parsing)
       return parseYAML(content);
-    } catch (yamlError) {
+    } catch (_yamlError) {
       throw new Error('Invalid JSON or YAML format');
     }
   }
@@ -226,7 +226,7 @@ async function processPaths(spec, baseUrl) {
  * @param {Object} params - Operation parameters
  * @returns {Object} Request data
  */
-async function createRequestFromOperation({ path, method, operation, baseUrl, folderName, spec }) {
+async function createRequestFromOperation({ path, method, operation, baseUrl: _baseUrl, folderName, spec }) {
   const name = operation.summary || operation.operationId || `${method} ${path}`;
   
   // Convert OpenAPI path parameters to URL template format
@@ -394,7 +394,7 @@ function generateExampleFromSchema(schema, spec) {
   try {
     const example = generateExample(schema, spec, new Set());
     return JSON.stringify(example, null, 2);
-  } catch (error) {
+  } catch (_error) {
     return '{}';
   }
 }
@@ -448,7 +448,7 @@ function generateExample(schema, spec, visited) {
         return [generateExample(schema.items, spec, visited)];
       }
       return [];
-    case 'object':
+    case 'object': {
       const obj = {};
       if (schema.properties) {
         for (const [key, prop] of Object.entries(schema.properties)) {
@@ -456,6 +456,7 @@ function generateExample(schema, spec, visited) {
         }
       }
       return obj;
+    }
     default:
       return null;
   }

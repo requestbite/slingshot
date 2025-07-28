@@ -52,11 +52,11 @@ function createAnsiDecorations(originalContent) {
 function createAnsiViewPlugin(originalContent) {
   return ViewPlugin.fromClass(
     class {
-      constructor(view) {
+      constructor(_view) {
         this.decorations = createAnsiDecorations(originalContent);
       }
       
-      update(update) {
+      update(_update) {
         // Decorations are static for this content - no need to update
         // unless we want to support live editing of ANSI content
       }
