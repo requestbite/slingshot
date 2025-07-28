@@ -573,6 +573,9 @@ export function RequestEditor({ request, onRequestChange }) {
     };
 
     try {
+      // Update proxy URL to respect current settings before making the request
+      requestSubmitter.updateProxyUrl(requestSubmitter.getCurrentProxyUrl());
+      
       const result = await requestSubmitter.submitRequest(processedRequestData);
       setResponse(result);
 

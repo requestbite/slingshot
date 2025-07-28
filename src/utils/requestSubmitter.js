@@ -4,9 +4,37 @@
  */
 
 export class RequestSubmitter {
-  constructor(proxyUrl = 'http://localhost:8080') {
+  constructor(proxyUrl = import.meta.env.VITE_PROXY_HOST || 'http://localhost:8080') {
     this.proxyUrl = proxyUrl;
     this.abortController = null;
+  }
+
+  /**
+   * Update the proxy URL (useful when settings change)
+   */
+  updateProxyUrl(newProxyUrl) {
+    this.proxyUrl = newProxyUrl;
+  }
+
+  /**
+   * Get current proxy URL from settings or fallback
+   */
+  getCurrentProxyUrl() {
+    // Check localStorage for custom proxy settings
+    try {
+      const savedSettings = localStorage.getItem('slingshot-settings');
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        if (settings.proxyType === 'custom' && settings.customProxyUrl) {
+          return settings.customProxyUrl;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load proxy settings from localStorage:', error);
+    }
+    
+    // Fall back to environment variable or default
+    return import.meta.env.VITE_PROXY_HOST || 'http://localhost:8080';
   }
 
   /**
@@ -99,7 +127,8 @@ export class RequestSubmitter {
       });
     }
 
-    const response = await fetch(`${this.proxyUrl}/proxy/request`, {
+    const currentProxyUrl = this.getCurrentProxyUrl();
+    const response = await fetch(`${currentProxyUrl}/proxy/request`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -198,7 +227,8 @@ export class RequestSubmitter {
       };
     }
 
-    const response = await fetch(`${this.proxyUrl}/proxy/form?${queryParams}`, fetchOptions);
+    const currentProxyUrl = this.getCurrentProxyUrl();
+    const response = await fetch(`${currentProxyUrl}/proxy/form?${queryParams}`, fetchOptions);
 
     if (!response.ok) {
       throw new Error(`Proxy form request failed: ${response.status} ${response.statusText}`);
@@ -424,7 +454,24 @@ export class RequestSubmitter {
   }
 }
 
-// Export singleton instance with default proxy URL
-// You can configure this by setting VITE_PROXY_URL environment variable
-const proxyUrl = import.meta.env.VITE_PROXY_URL || 'http://localhost:8080';
-export const requestSubmitter = new RequestSubmitter(proxyUrl);
+// Get proxy URL from settings or environment variable
+function getProxyUrl() {
+  // Check localStorage for custom proxy settings
+  try {
+    const savedSettings = localStorage.getItem('slingshot-settings');
+    if (savedSettings) {
+      const settings = JSON.parse(savedSettings);
+      if (settings.proxyType === 'custom' && settings.customProxyUrl) {
+        return settings.customProxyUrl;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to load proxy settings from localStorage:', error);
+  }
+  
+  // Fall back to environment variable or default
+  return import.meta.env.VITE_PROXY_HOST || 'http://localhost:8080';
+}
+
+// Export singleton instance with dynamic proxy URL
+export const requestSubmitter = new RequestSubmitter(getProxyUrl());
