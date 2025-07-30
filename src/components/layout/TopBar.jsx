@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
-import LogoHorizontal from '../../assets/logo-horizontal.svg';
+import LogoHorizontal from '../../assets/logo-horizontal-slingshot.svg';
 
 export function TopBar() {
   const [location, setLocation] = useLocation();
