@@ -1,15 +1,38 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { generateFormattedCurlCommand } from '../../utils/curlGenerator';
+import { resolveRequestVariables } from '../../utils/variableResolver';
+import { useAppContext } from '../../hooks/useAppContext';
 
 export function CurlExportModal({ isOpen, onClose, requestData }) {
+  const { selectedCollection } = useAppContext();
   const [copySuccess, setCopySuccess] = useState(false);
+  const [curlCommand, setCurlCommand] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const preRef = useRef();
 
-  const curlCommand = generateFormattedCurlCommand(requestData || {});
+  // Generate curl command with resolved variables when modal opens or requestData changes
+  useEffect(() => {
+    if (isOpen && requestData) {
+      setIsLoading(true);
+      resolveRequestVariables(requestData, selectedCollection)
+        .then(resolvedData => {
+          const command = generateFormattedCurlCommand(resolvedData);
+          setCurlCommand(command);
+        })
+        .catch(error => {
+          console.error('Failed to resolve variables:', error);
+          // Fallback to unresolved command
+          setCurlCommand(generateFormattedCurlCommand(requestData));
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  }, [isOpen, requestData, selectedCollection]);
 
   // Auto-select content when modal opens
   useEffect(() => {
-    if (isOpen && preRef.current) {
+    if (isOpen && preRef.current && curlCommand) {
       setTimeout(() => {
         const range = document.createRange();
         range.selectNodeContents(preRef.current);
@@ -19,7 +42,7 @@ export function CurlExportModal({ isOpen, onClose, requestData }) {
         preRef.current.focus();
       }, 50);
     }
-  }, [isOpen]);
+  }, [isOpen, curlCommand]);
 
   const handleCopy = async () => {
     try {
@@ -89,7 +112,7 @@ export function CurlExportModal({ isOpen, onClose, requestData }) {
                     class="w-full h-32 p-2 font-mono text-xs rounded-md text-white bg-slate-800 overflow-auto whitespace-pre-wrap cursor-text"
                     tabIndex="0"
                   >
-                    {curlCommand}
+                    {isLoading ? 'Resolving variables...' : curlCommand}
                   </pre>
                 </div>
               </div>
