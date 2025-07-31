@@ -3,6 +3,8 @@
  * Based on common curl parsing patterns and command line argument processing
  */
 
+import { generateUUID } from './uuid.js';
+
 export function parseCurlCommand(curlCommand) {
   if (!curlCommand || typeof curlCommand !== 'string') {
     throw new Error('Invalid curl command');
@@ -66,7 +68,7 @@ export function parseCurlCommand(curlCommand) {
             if (key && valueParts.length > 0) {
               const value = valueParts.join(':').trim();
               requestData.headers.push({
-                id: crypto.randomUUID(),
+                id: generateUUID(),
                 key: key.trim(),
                 value: value,
                 enabled: true
@@ -264,7 +266,7 @@ function parseUrlEncodedData(data) {
     const [key, value] = pair.split('=');
     if (key) {
       fields.push({
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         key: decodeURIComponent(key),
         value: value ? decodeURIComponent(value) : '',
         enabled: true
@@ -285,7 +287,7 @@ function parseFormField(fieldValue) {
   // Check if it's a file upload
   if (value && value.startsWith('@')) {
     return {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       key: key,
       value: value.substring(1), // Remove @ prefix
       type: 'file',
@@ -293,7 +295,7 @@ function parseFormField(fieldValue) {
     };
   } else {
     return {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       key: key,
       value: value || '',
       type: 'text',
@@ -312,7 +314,7 @@ function parseQueryParams(url) {
     const urlObj = new URL(url);
     urlObj.searchParams.forEach((value, key) => {
       params.push({
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         key: key,
         value: value,
         enabled: true
@@ -329,7 +331,7 @@ function parseQueryParams(url) {
         const [key, value] = pair.split('=');
         if (key) {
           params.push({
-            id: crypto.randomUUID(),
+            id: generateUUID(),
             key: decodeURIComponent(key),
             value: value ? decodeURIComponent(value) : '',
             enabled: true

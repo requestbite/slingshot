@@ -8,6 +8,7 @@ import { CurlExportModal } from '../modals/CurlExportModal';
 import { CurlImportModal } from '../modals/CurlImportModal';
 import { SaveAsModal } from '../modals/SaveAsModal';
 import { VariableInput } from '../common/VariableInput';
+import { generateUUID } from '../../utils/uuid.js';
 import { Toast, useToast } from '../common/Toast';
 import { requestSubmitter } from '../../utils/requestSubmitter';
 import { apiClient } from '../../api';
@@ -263,7 +264,7 @@ export function RequestEditor({ request, onRequestChange }) {
           // Try to preserve existing parameter data (ID, enabled state) but use new URL value
           const existingParam = (requestData.queryParams || []).find(p => p.key === key);
           queryParams.push({ 
-            id: existingParam?.id || crypto.randomUUID(), 
+            id: existingParam?.id || generateUUID(), 
             key, 
             value: value, // Always use the value from URL
             enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true 
@@ -278,7 +279,7 @@ export function RequestEditor({ request, onRequestChange }) {
         const key = match.slice(1); // Remove :
         const existingParam = (requestData.pathParams || []).find(p => p.key === key);
         return {
-          id: existingParam?.id || crypto.randomUUID(),
+          id: existingParam?.id || generateUUID(),
           key,
           value: existingParam?.value || '',
           enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true
@@ -297,7 +298,7 @@ export function RequestEditor({ request, onRequestChange }) {
         const key = match.slice(1); // Remove :
         const existingParam = (requestData.pathParams || []).find(p => p.key === key);
         return {
-          id: existingParam?.id || crypto.randomUUID(),
+          id: existingParam?.id || generateUUID(),
           key,
           value: existingParam?.value || '',
           enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true
@@ -424,7 +425,7 @@ export function RequestEditor({ request, onRequestChange }) {
           // Try to preserve existing parameter data (ID, enabled state) but use new URL value
           const existingParam = (requestData.queryParams || []).find(p => p.key === key);
           queryParams.push({ 
-            id: existingParam?.id || crypto.randomUUID(), 
+            id: existingParam?.id || generateUUID(), 
             key, 
             value: value, // Always use the value from URL
             enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true 
@@ -439,7 +440,7 @@ export function RequestEditor({ request, onRequestChange }) {
         const key = match.slice(1); // Remove :
         const existingParam = (requestData.pathParams || []).find(p => p.key === key);
         return {
-          id: existingParam?.id || crypto.randomUUID(),
+          id: existingParam?.id || generateUUID(),
           key,
           value: existingParam?.value || '',
           enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true
@@ -454,7 +455,7 @@ export function RequestEditor({ request, onRequestChange }) {
         const key = match.slice(1); // Remove :
         const existingParam = (requestData.pathParams || []).find(p => p.key === key);
         return {
-          id: existingParam?.id || crypto.randomUUID(),
+          id: existingParam?.id || generateUUID(),
           key,
           value: existingParam?.value || '',
           enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true

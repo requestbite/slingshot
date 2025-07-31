@@ -1,10 +1,11 @@
 import { useState } from 'preact/hooks';
 import { VariableInput } from '../../common/VariableInput';
+import { generateUUID } from '../../../utils/uuid.js';
 
 export function HeadersTab({ headers, onHeadersChange, onEnterKeyPress }) {
   const addHeader = () => {
     const newHeader = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       key: '',
       value: '',
       enabled: true

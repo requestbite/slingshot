@@ -8,6 +8,7 @@ import { autocompletion, CompletionContext } from '@codemirror/autocomplete';
 import { bracketMatching, HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { Prec } from '@codemirror/state';
 import { Decoration } from '@codemirror/view';
+import { generateUUID } from '../../../utils/uuid.js';
 import { StateField, StateEffect } from '@codemirror/state';
 import { tags } from '@lezer/highlight';
 import { ContextMenu } from '../../common/ContextMenu';
@@ -72,7 +73,7 @@ function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFile
 
   const addField = (type) => {
     const newField = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       key: '',
       value: type === 'file' ? null : '',
       type: type,
