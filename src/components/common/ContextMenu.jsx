@@ -119,7 +119,7 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
   return (
     <div
       ref={menuRef}
-      class="fixed z-50 bg-white py-1 shadow-lg ring-1 ring-black/5 rounded-md"
+      class="fixed z-[80] bg-white py-1 shadow-lg ring-1 ring-black/5 rounded-md"
       style={{
         top: `${menuPosition.top}px`,
         left: `${menuPosition.left}px`,

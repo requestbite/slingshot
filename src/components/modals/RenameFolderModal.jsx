@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { useAppContext } from '../../hooks/useAppContext';
 import { apiClient } from '../../api';
+import { Portal } from '../common/Portal';
 
 export function RenameFolderModal({ isOpen, onClose, folder, onUpdate }) {
   const { selectedCollection, collections } = useAppContext();
@@ -25,13 +26,28 @@ export function RenameFolderModal({ isOpen, onClose, folder, onUpdate }) {
       setError(null);
       loadFolders();
 
+      // Lock body scroll and hide scrollbars
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+
       // Auto-focus on name input (matching Django behavior)
       setTimeout(() => {
         if (nameInputRef.current) {
           nameInputRef.current.focus();
         }
       }, 100);
+    } else {
+      // Restore body scroll
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
     }
+
+    return () => {
+      // Cleanup on unmount
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
   }, [isOpen, folder]);
 
   const loadFolders = async () => {
@@ -191,9 +207,36 @@ export function RenameFolderModal({ isOpen, onClose, folder, onUpdate }) {
   const folderTree = buildFolderTree();
 
   return (
-    <div class="relative z-50" role="dialog" aria-modal="true">
-      <div class="fixed inset-0 bg-gray-500/75 transition-opacity" aria-hidden="true"></div>
-      <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+    <Portal>
+      <div class="relative z-[80]" role="dialog" aria-modal="true" style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 9999,
+        WebkitBackfaceVisibility: 'hidden',
+        backfaceVisibility: 'hidden',
+        WebkitTransform: 'translate3d(0,0,0)',
+        transform: 'translate3d(0,0,0)'
+      }}>
+      <div class="fixed inset-0 bg-gray-500/75 transition-opacity" aria-hidden="true" style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 9998
+      }}></div>
+      <div class="fixed inset-0 z-[80] w-screen overflow-y-auto" style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 9999,
+        WebkitOverflowScrolling: 'touch'
+      }}>
         <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
           <div
             class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 w-full sm:max-w-lg sm:p-6"
@@ -277,6 +320,7 @@ export function RenameFolderModal({ isOpen, onClose, folder, onUpdate }) {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </Portal>
   );
 }

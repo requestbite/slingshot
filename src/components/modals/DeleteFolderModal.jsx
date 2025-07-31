@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'preact/hooks';
 import { apiClient } from '../../api';
+import { Portal } from '../common/Portal';
 
 export function DeleteFolderModal({ isOpen, onClose, folder, onDelete }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState(null);
 
-  // Handle escape key to close modal (matching Django behavior)
+  // Handle escape key to close modal and manage body scroll
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape' && isOpen) {
@@ -14,8 +15,18 @@ export function DeleteFolderModal({ isOpen, onClose, folder, onDelete }) {
     };
 
     if (isOpen) {
+      // Lock body scroll and hide scrollbars
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      
       document.addEventListener('keydown', handleEscape);
-      return () => document.removeEventListener('keydown', handleEscape);
+      return () => {
+        document.removeEventListener('keydown', handleEscape);
+        // Restore body scroll
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+      };
     }
   }, [isOpen]);
 
@@ -51,9 +62,36 @@ export function DeleteFolderModal({ isOpen, onClose, folder, onDelete }) {
   if (!isOpen || !folder) return null;
 
   return (
-    <div class="relative z-50" role="dialog" aria-modal="true">
-      <div class="fixed inset-0 bg-gray-500/75 transition-opacity" aria-hidden="true"></div>
-      <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+    <Portal>
+      <div class="relative z-[80]" role="dialog" aria-modal="true" style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 9999,
+        WebkitBackfaceVisibility: 'hidden',
+        backfaceVisibility: 'hidden',
+        WebkitTransform: 'translate3d(0,0,0)',
+        transform: 'translate3d(0,0,0)'
+      }}>
+      <div class="fixed inset-0 bg-gray-500/75 transition-opacity" aria-hidden="true" style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 9998
+      }}></div>
+      <div class="fixed inset-0 z-[80] w-screen overflow-y-auto" style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 9999,
+        WebkitOverflowScrolling: 'touch'
+      }}>
         <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
           <div 
             class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6"
@@ -125,6 +163,7 @@ export function DeleteFolderModal({ isOpen, onClose, folder, onDelete }) {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </Portal>
   );
 }
