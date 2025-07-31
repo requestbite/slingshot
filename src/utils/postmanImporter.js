@@ -184,13 +184,22 @@ async function createRequestFromItem(item, folderId) {
   const method = typeof request.method === 'string' ? request.method.toUpperCase() : 'GET';
   
   // Extract URL
-  const url = extractUrl(request.url);
+  let url = extractUrl(request.url);
   
   // Extract headers
   const headers = extractHeaders(request.header);
   
   // Extract query parameters
   const params = extractQueryParams(request.url);
+  
+  // Append query parameters to URL so RequestEditor can parse them
+  // Only if the URL doesn't already contain query parameters
+  if (params.length > 0 && !url.includes('?')) {
+    const queryString = params
+      .map(param => `${encodeURIComponent(param.key)}=${encodeURIComponent(param.value)}`)
+      .join('&');
+    url += '?' + queryString;
+  }
   
   // Extract path parameters (if any are defined in the URL)
   const pathParams = extractPathParams(url);

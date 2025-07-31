@@ -231,10 +231,18 @@ async function createRequestFromOperation({ path, method, operation, baseUrl: _b
   
   // Convert OpenAPI path parameters to URL template format
   // Use {{baseUrl}} variable instead of hardcoded baseUrl
-  const url = '{{baseUrl}}' + convertPathParameters(path);
+  let url = '{{baseUrl}}' + convertPathParameters(path);
   
   // Extract parameters
   const { headers, params: queryParams, pathParams } = extractParameters(operation);
+  
+  // Append query parameters to URL so RequestEditor can parse them
+  if (queryParams.length > 0) {
+    const queryString = queryParams
+      .map(param => `${encodeURIComponent(param.key)}=${encodeURIComponent(param.value)}`)
+      .join('&');
+    url += '?' + queryString;
+  }
   
   // Determine request type and body
   const { requestType, contentType, body } = extractRequestBody(operation, spec);
