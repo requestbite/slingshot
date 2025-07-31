@@ -76,7 +76,7 @@ export function SideBar({ onClose: _onClose }) {
                   }}
                   disabled={isLoading}
                 >
-                  <option value="" disabled>
+                  <option value="" disabled={collections.length > 0}>
                     {isLoading ? 'Loading...' : 'Pick a collection...'}
                   </option>
                   {collections.map(collection => (
