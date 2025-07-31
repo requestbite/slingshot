@@ -230,17 +230,17 @@ export function RequestEditor({ request, onRequestChange }) {
     }, 1000); // Save after 1 second of no changes
   };
 
-  // Parse URL to extract query and path parameters (only for new requests, not when editing existing ones)
+  // Parse URL to extract query and path parameters
   // Use debounced parsing to avoid interfering with typing
   useEffect(() => {
-    if (requestData.url && !request) {
+    if (requestData.url) {
       const timeoutId = setTimeout(() => {
         parseUrlParameters(requestData.url);
       }, 500); // Wait 500ms after user stops typing
 
       return () => clearTimeout(timeoutId);
     }
-  }, [requestData.url, request]);
+  }, [requestData.url]);
 
   const parseUrlParameters = (url) => {
     if (!url) {
@@ -260,7 +260,14 @@ export function RequestEditor({ request, onRequestChange }) {
         const queryString = urlParts[1].split('#')[0]; // Remove fragment if present
         const searchParams = new URLSearchParams(queryString);
         searchParams.forEach((value, key) => {
-          queryParams.push({ id: crypto.randomUUID(), key, value, enabled: true });
+          // Try to preserve existing parameter data (ID, enabled state) but use new URL value
+          const existingParam = (requestData.queryParams || []).find(p => p.key === key);
+          queryParams.push({ 
+            id: existingParam?.id || crypto.randomUUID(), 
+            key, 
+            value: value, // Always use the value from URL
+            enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true 
+          });
         });
       }
 
@@ -271,10 +278,10 @@ export function RequestEditor({ request, onRequestChange }) {
         const key = match.slice(1); // Remove :
         const existingParam = (requestData.pathParams || []).find(p => p.key === key);
         return {
-          id: crypto.randomUUID(),
+          id: existingParam?.id || crypto.randomUUID(),
           key,
           value: existingParam?.value || '',
-          enabled: true
+          enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true
         };
       });
 
@@ -290,10 +297,10 @@ export function RequestEditor({ request, onRequestChange }) {
         const key = match.slice(1); // Remove :
         const existingParam = (requestData.pathParams || []).find(p => p.key === key);
         return {
-          id: crypto.randomUUID(),
+          id: existingParam?.id || crypto.randomUUID(),
           key,
           value: existingParam?.value || '',
-          enabled: true
+          enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true
         };
       });
 
@@ -414,7 +421,14 @@ export function RequestEditor({ request, onRequestChange }) {
         const queryString = urlParts[1].split('#')[0]; // Remove fragment if present
         const searchParams = new URLSearchParams(queryString);
         searchParams.forEach((value, key) => {
-          queryParams.push({ id: crypto.randomUUID(), key, value, enabled: true });
+          // Try to preserve existing parameter data (ID, enabled state) but use new URL value
+          const existingParam = (requestData.queryParams || []).find(p => p.key === key);
+          queryParams.push({ 
+            id: existingParam?.id || crypto.randomUUID(), 
+            key, 
+            value: value, // Always use the value from URL
+            enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true 
+          });
         });
       }
 
@@ -425,10 +439,10 @@ export function RequestEditor({ request, onRequestChange }) {
         const key = match.slice(1); // Remove :
         const existingParam = (requestData.pathParams || []).find(p => p.key === key);
         return {
-          id: crypto.randomUUID(),
+          id: existingParam?.id || crypto.randomUUID(),
           key,
           value: existingParam?.value || '',
-          enabled: true
+          enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true
         };
       });
 
@@ -440,10 +454,10 @@ export function RequestEditor({ request, onRequestChange }) {
         const key = match.slice(1); // Remove :
         const existingParam = (requestData.pathParams || []).find(p => p.key === key);
         return {
-          id: crypto.randomUUID(),
+          id: existingParam?.id || crypto.randomUUID(),
           key,
           value: existingParam?.value || '',
-          enabled: true
+          enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true
         };
       });
 
