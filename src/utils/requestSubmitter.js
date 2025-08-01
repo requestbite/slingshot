@@ -337,12 +337,14 @@ export class RequestSubmitter {
       processedUrl = `http://${processedUrl}`;
     }
     
-    // Replace path parameters {param} with values for URL display
+    // Replace path parameters :param with values for URL display
     // The proxy will handle the actual :param substitution
     pathParams?.forEach(param => {
-      if (param.enabled && param.value) {
-        const pattern = `{${param.key}}`;
-        processedUrl = processedUrl.replace(pattern, encodeURIComponent(param.value));
+      if (param.enabled && param.key) {
+        const pattern = `:${param.key}`;
+        // Replace with value if provided, otherwise with empty string if enabled
+        const replacement = param.value || '';
+        processedUrl = processedUrl.replace(new RegExp(pattern, 'g'), encodeURIComponent(replacement));
       }
     });
     

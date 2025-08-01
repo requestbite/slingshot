@@ -17,9 +17,13 @@ export function generateCurlCommand(requestData) {
   // Replace path parameters
   if (requestData.pathParams && requestData.pathParams.length > 0) {
     requestData.pathParams.forEach(param => {
-      if (param.enabled && param.key && param.value) {
-        const pattern = `{${param.key}}`;
-        url = url.replace(pattern, encodeURIComponent(param.value));
+      if (param.enabled && param.key) {
+        // Handle both {param} and :param formats
+        const curlyPattern = `{${param.key}}`;
+        const colonPattern = `:${param.key}`;
+        const replacement = encodeURIComponent(param.value || '');
+        url = url.replace(new RegExp(curlyPattern.replace(/[{}]/g, '\\$&'), 'g'), replacement);
+        url = url.replace(new RegExp(colonPattern.replace(/[:]/g, '\\$&'), 'g'), replacement);
       }
     });
   }
@@ -141,9 +145,13 @@ export function generateFormattedCurlCommand(requestData) {
   // Replace path parameters
   if (requestData.pathParams && requestData.pathParams.length > 0) {
     requestData.pathParams.forEach(param => {
-      if (param.enabled && param.key && param.value) {
-        const pattern = `{${param.key}}`;
-        url = url.replace(pattern, encodeURIComponent(param.value));
+      if (param.enabled && param.key) {
+        // Handle both {param} and :param formats
+        const curlyPattern = `{${param.key}}`;
+        const colonPattern = `:${param.key}`;
+        const replacement = encodeURIComponent(param.value || '');
+        url = url.replace(new RegExp(curlyPattern.replace(/[{}]/g, '\\$&'), 'g'), replacement);
+        url = url.replace(new RegExp(colonPattern.replace(/[:]/g, '\\$&'), 'g'), replacement);
       }
     });
   }
