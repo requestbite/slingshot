@@ -101,6 +101,9 @@ export function TopBar() {
 
         {/* Desktop Navigation */}
         <nav class="hidden sm:flex items-center space-x-1">
+          <a href="https://requestbite.com" class="hidden lg:flex text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors flex items-center">
+            RequestBite
+          </a>
           <button
             onClick={(e) => {
               e.preventDefault();
