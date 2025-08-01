@@ -87,6 +87,7 @@ export function RequestEditor({ request, onRequestChange }) {
   const draftSaveTimeoutRef = useRef(null);
   const originalDataRef = useRef(null);
   const currentRequestDataRef = useRef(requestData);
+  const isInitialLoadRef = useRef(false);
 
   // Modal state
   const [showCurlModal, setShowCurlModal] = useState(false);
@@ -121,6 +122,9 @@ export function RequestEditor({ request, onRequestChange }) {
   useEffect(() => {
     console.log('🔄 REQUEST CHANGE EFFECT - Request:', request?.id, request?.name);
     if (request) {
+      // Set initial load flag to prevent URL parsing from triggering change detection
+      isInitialLoadRef.current = true;
+      
       // Use draft data if available, otherwise use main data
       const dataToLoad = getEffectiveRequestData(request);
       console.log('📥 Loading data for request:', dataToLoad);
@@ -141,8 +145,15 @@ export function RequestEditor({ request, onRequestChange }) {
       // Set draft state based on request
       setHasUnsavedChanges(request.has_draft_edits || false);
       setIsDraftDirty(false);
+      
+      // Clear the initial load flag after a delay to allow URL parsing to complete
+      setTimeout(() => {
+        isInitialLoadRef.current = false;
+      }, 1000);
     } else {
       console.log('🔄 No request - resetting to defaults');
+      isInitialLoadRef.current = false;
+      
       // Reset to default values when no request is selected
       const defaultData = getEffectiveRequestData(null);
       setRequestData(prev => ({
@@ -168,6 +179,13 @@ export function RequestEditor({ request, onRequestChange }) {
     console.log('🔍 Original data exists:', !!originalDataRef.current);
     console.log('🔍 Current requestData:', requestData);
     console.log('🔍 isDraftDirty:', isDraftDirty);
+    console.log('🔍 isInitialLoad:', isInitialLoadRef.current);
+
+    // Skip change tracking during initial load to prevent false positives
+    if (isInitialLoadRef.current) {
+      console.log('🔍 Skipping change tracking during initial load');
+      return;
+    }
 
     if (request && originalDataRef.current) {
       const hasChanges = hasDataChanged(originalDataRef.current, requestData);
@@ -233,27 +251,15 @@ export function RequestEditor({ request, onRequestChange }) {
 
   // Parse URL to extract query and path parameters
   // Use debounced parsing to avoid interfering with typing
-  // Skip parsing for existing requests that already have stored parameters
   useEffect(() => {
     if (requestData.url) {
       const timeoutId = setTimeout(() => {
-        // Skip URL parsing for existing requests that already have parameters stored
-        // This prevents false "unsaved changes" detection when loading saved requests
-        const hasExistingParams = request && (
-          (request.params && request.params.length > 0) ||
-          (request.path_params && request.path_params.length > 0) ||
-          (request.draft_params && request.draft_params.length > 0) ||
-          (request.draft_path_params && request.draft_path_params.length > 0)
-        );
-        
-        if (!hasExistingParams) {
-          parseUrlParameters(requestData.url);
-        }
+        parseUrlParameters(requestData.url);
       }, 500); // Wait 500ms after user stops typing
 
       return () => clearTimeout(timeoutId);
     }
-  }, [requestData.url, request]);
+  }, [requestData.url]);
 
   const parseUrlParameters = (url) => {
     if (!url) {
@@ -265,64 +271,66 @@ export function RequestEditor({ request, onRequestChange }) {
       return;
     }
 
-    try {
-      // Parse query parameters from URL
-      const queryParams = [];
-      const urlParts = url.split('?');
-      if (urlParts.length > 1) {
-        const queryString = urlParts[1].split('#')[0]; // Remove fragment if present
-        const searchParams = new URLSearchParams(queryString);
-        searchParams.forEach((value, key) => {
-          // Try to preserve existing parameter data (ID, enabled state) but use new URL value
-          const existingParam = (requestData.queryParams || []).find(p => p.key === key);
-          queryParams.push({ 
-            id: existingParam?.id || generateUUID(), 
-            key, 
-            value: value, // Always use the value from URL
-            enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true 
+    setRequestData(prev => {
+      try {
+        // Parse query parameters from URL
+        const queryParams = [];
+        const urlParts = url.split('?');
+        if (urlParts.length > 1) {
+          const queryString = urlParts[1].split('#')[0]; // Remove fragment if present
+          const searchParams = new URLSearchParams(queryString);
+          searchParams.forEach((value, key) => {
+            // Try to preserve existing parameter data (ID, enabled state) but use new URL value
+            const existingParam = (prev.queryParams || []).find(p => p.key === key);
+            queryParams.push({ 
+              id: existingParam?.id || generateUUID(), 
+              key, 
+              value: value, // Always use the value from URL
+              enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true 
+            });
           });
+        }
+
+        // Extract path parameters (look for :param patterns)
+        const pathPart = urlParts[0];
+        const pathParamMatches = pathPart.match(/:([a-zA-Z_][a-zA-Z0-9_]*)/g) || [];
+        const pathParams = pathParamMatches.map(match => {
+          const key = match.slice(1); // Remove :
+          const existingParam = (prev.pathParams || []).find(p => p.key === key);
+          return {
+            id: existingParam?.id || generateUUID(),
+            key,
+            value: existingParam?.value || '',
+            enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true
+          };
         });
+
+        return {
+          ...prev,
+          queryParams,
+          pathParams
+        };
+      } catch (error) {
+        // For invalid URLs, still try to parse path parameters
+        const pathParamMatches = url.match(/:([a-zA-Z_][a-zA-Z0-9_]*)/g) || [];
+        const pathParams = pathParamMatches.map(match => {
+          const key = match.slice(1); // Remove :
+          const existingParam = (prev.pathParams || []).find(p => p.key === key);
+          return {
+            id: existingParam?.id || generateUUID(),
+            key,
+            value: existingParam?.value || '',
+            enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true
+          };
+        });
+
+        return {
+          ...prev,
+          queryParams: [],
+          pathParams
+        };
       }
-
-      // Extract path parameters (look for :param patterns)
-      const pathPart = urlParts[0];
-      const pathParamMatches = pathPart.match(/:([a-zA-Z_][a-zA-Z0-9_]*)/g) || [];
-      const pathParams = pathParamMatches.map(match => {
-        const key = match.slice(1); // Remove :
-        const existingParam = (requestData.pathParams || []).find(p => p.key === key);
-        return {
-          id: existingParam?.id || generateUUID(),
-          key,
-          value: existingParam?.value || '',
-          enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true
-        };
-      });
-
-      setRequestData(prev => ({
-        ...prev,
-        queryParams,
-        pathParams
-      }));
-    } catch (error) {
-      // For invalid URLs, still try to parse path parameters
-      const pathParamMatches = url.match(/:([a-zA-Z_][a-zA-Z0-9_]*)/g) || [];
-      const pathParams = pathParamMatches.map(match => {
-        const key = match.slice(1); // Remove :
-        const existingParam = (requestData.pathParams || []).find(p => p.key === key);
-        return {
-          id: existingParam?.id || generateUUID(),
-          key,
-          value: existingParam?.value || '',
-          enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true
-        };
-      });
-
-      setRequestData(prev => ({
-        ...prev,
-        queryParams: [],
-        pathParams
-      }));
-    }
+    });
   };
 
   const updateRequestData = (updates) => {
