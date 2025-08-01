@@ -8,7 +8,7 @@ source-code in this repository is what powers [RequestBite
 Slingshot](https://s.requestbite.com) at <https://s.requestbite.com>.
 
 <p align="center">
-  <img alt="RequestBite Slingshot" src="https://github.com/user-attachments/assets/6c764d86-1124-47b9-83bb-821c3759f3f4">
+  <img alt="RequestBite Slingshot" src="https://github.com/user-attachments/assets/95909a82-5832-42db-b2d2-86f2fe644128">
 </p>
 
 ### Some notable features
