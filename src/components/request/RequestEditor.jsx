@@ -233,15 +233,27 @@ export function RequestEditor({ request, onRequestChange }) {
 
   // Parse URL to extract query and path parameters
   // Use debounced parsing to avoid interfering with typing
+  // Skip parsing for existing requests that already have stored parameters
   useEffect(() => {
     if (requestData.url) {
       const timeoutId = setTimeout(() => {
-        parseUrlParameters(requestData.url);
+        // Skip URL parsing for existing requests that already have parameters stored
+        // This prevents false "unsaved changes" detection when loading saved requests
+        const hasExistingParams = request && (
+          (request.params && request.params.length > 0) ||
+          (request.path_params && request.path_params.length > 0) ||
+          (request.draft_params && request.draft_params.length > 0) ||
+          (request.draft_path_params && request.draft_path_params.length > 0)
+        );
+        
+        if (!hasExistingParams) {
+          parseUrlParameters(requestData.url);
+        }
       }, 500); // Wait 500ms after user stops typing
 
       return () => clearTimeout(timeoutId);
     }
-  }, [requestData.url]);
+  }, [requestData.url, request]);
 
   const parseUrlParameters = (url) => {
     if (!url) {
