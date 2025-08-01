@@ -9,7 +9,7 @@ import { EditorView } from '@codemirror/view';
 import { bracketMatching } from '@codemirror/language';
 import { ansiColors, cleanAnsiText } from '../codemirror/ansiExtension.js';
 
-// Map of response headers to their URL-friendly names (matching Django implementation)
+// Map of response headers to their URL-friendly names
 const RESPONSE_HEADER_SLUGS = {
   // Standard response headers
   'Accept-Ranges': 'accept-ranges',
@@ -46,7 +46,7 @@ const RESPONSE_HEADER_SLUGS = {
   'X-XSS-Protection': 'x-xss-protection'
 };
 
-// Map of status codes to their URL-friendly names (matching Django implementation)
+// Map of status codes to their URL-friendly names
 const STATUS_CODE_SLUGS = {
   // 1xx - Informational
   100: '100-continue',
@@ -117,7 +117,7 @@ const STATUS_CODE_SLUGS = {
   511: '511-network-authentication-required'
 };
 
-// Convert header names to camel case matching the Django implementation
+// Convert header names to camel case
 const convertToCamelCase = (headerName) => {
   // Special case handling for common headers
   const commonHeaders = {
@@ -696,7 +696,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
       <div id="response-container">
         <div id="response-details-wrapper">
 
-          {/* Response Metadata - matching Django template structure */}
+          {/* Response Metadata */}
           <div class="mb-4 overflow-x-auto scrollbar-hide" style="-ms-overflow-style: none; scrollbar-width: none;">
             <style>
               {`::-webkit-scrollbar { display: none; }`}

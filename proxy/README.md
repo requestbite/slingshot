@@ -1,22 +1,14 @@
 # RequestBite Slingshot Proxy
 
-A high-performance HTTP proxy server written in Go for RequestBite Slingshot
-HTTP calls.
+## About
 
-## Features
-
-- **Reliable Timeout Handling**:  
-  Uses Go's `context.WithTimeout()` for guaranteed timeout enforcement
-- **Proper Redirect Control**:  
-  Configurable redirect following with manual control
-- **Multiple Integration Modes**:  
-  Standalone server, CLI execution
-- **CORS Support**:  
-  Full browser compatibility with CORS headers
-- **Binary Content Support**:  
-  Automatic binary detection and base64 encoding
-- **Form Data Processing**:  
-  Support for both JSON and form-based requests
+Since it's almost impossible for a webapp (such as Slingshot) to make HTTP
+requests to any HTTP resource due to CORS restrictions, a proxy is needed. The
+proxy used for Slingshot is this one, written in Go, which you can host yourself
+or run locally if you don't want to proxy your Slingshot requests through our
+servers. Running it locally also provides a means for accessing APIs and other
+resources that are not accessible on the public Internet, such as APIs in
+development our resources behind a firewall or VPN.
 
 ## Quick Start
 
@@ -49,16 +41,19 @@ Executes HTTP requests from JSON payload.
 
 ```json
 {
-    "method": "GET",
-    "url": "https://example.com/api",
-    "headers": ["Content-Type: application/json", "Authorization: Bearer token"],
-    "body": "request body content",
-    "timeout": 30,
-    "followRedirects": true,
-    "path_params": {
-        ":id": "123",
-        ":category": "users"
-    }
+  "method": "GET",
+  "url": "https://example.com/api",
+  "headers": [
+    "Content-Type: application/json",
+    "Authorization: Bearer token"
+  ],
+  "body": "request body content",
+  "timeout": 30,
+  "followRedirects": true,
+  "path_params": {
+    ":id": "123",
+    ":category": "users"
+  }
 }
 ```
 
@@ -66,15 +61,17 @@ Executes HTTP requests from JSON payload.
 
 ```json
 {
-    "success": true,
-    "response_status": 200,
-    "response_headers": {"content-type": "application/json"},
-    "response_data": "response body",
-    "response_size": "1.2 KB",
-    "response_time": "156.78 ms",
-    "content_type": "application/json",
-    "is_binary": false,
-    "cancelled": false
+  "success": true,
+  "response_status": 200,
+  "response_headers": {
+    "content-type": "application/json"
+  },
+  "response_data": "response body",
+  "response_size": "1.2 KB",
+  "response_time": "156.78 ms",
+  "content_type": "application/json",
+  "is_binary": false,
+  "cancelled": false
 }
 ```
 
@@ -94,44 +91,6 @@ Executes form-based HTTP requests.
 **Form Data:**
 Standard form data in request body.
 
-## Key Improvements Over Lua Version
-
-### 1. **Reliable Timeout Handling**
-
-The Lua version used luasocket which has blocking behavior that ignores timeout settings. The Go version uses proper context cancellation:
-
-```go
-ctx, cancel := context.WithTimeout(r.Context(), time.Duration(req.Timeout)*time.Second)
-defer cancel()
-
-// This WILL timeout after the specified duration
-resp, err := client.Do(httpReq.WithContext(ctx))
-if ctx.Err() == context.DeadlineExceeded {
-    return TimeoutError
-}
-```
-
-### 2. **No External Dependencies**
-
-- **Lua version**: Required curl subprocess calls with shell execution overhead
-- **Go version**: Pure Go HTTP client with no external processes
-
-### 3. **Better Error Handling**
-
-Clear distinction between:
-
-- Timeout errors (`context.DeadlineExceeded`)
-- Connection errors (network failures)
-- Redirect errors (when redirects are disabled)
-- Validation errors (malformed URLs)
-
-### 4. **Performance Improvements**
-
-- Connection pooling and reuse
-- No temporary file creation for request bodies
-- No shell command parsing overhead
-- Efficient binary content handling
-
 ## Testing
 
 Run the timeout functionality test:
@@ -148,9 +107,11 @@ This tests:
 4. Redirect handling with `followRedirects: true` (should succeed)
 5. The original failing case from the Lua implementation
 
-## Integration Options
+## How to run the proxy
 
-### 1. Standalone HTTP Service (Recommended)
+Run the proxy in any of the two following supported modes:
+
+### 1. Standalone HTTP Service
 
 Run the proxy as a service and configure nginx to proxy to it:
 
@@ -168,10 +129,9 @@ location /proxy/ {
 
 ### 2. Direct CLI Usage
 
-Drop-in replacement for the Lua version:
+CLI version of proxy.
 
 ```bash
-# Instead of: lua proxy.lua --port 8080
 ./proxy-go -port 8080
 ```
 
@@ -205,9 +165,9 @@ Returns:
 
 ```json
 {
-    "status": "ok",
-    "version": "0.1.0",
-    "uptime": "2m30s"
+  "status": "ok",
+  "user-agent": "rb-slingshot/0.1.0 (https://requestbite.com/slingshot)",
+  "version": "0.1.0"
 }
 ```
 

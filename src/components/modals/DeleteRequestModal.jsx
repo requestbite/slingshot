@@ -5,7 +5,7 @@ export function DeleteRequestModal({ isOpen, onClose, request, onDelete }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState(null);
 
-  // Handle escape key to close modal (matching Django behavior)
+  // Handle escape key to close modal
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape' && isOpen) {
@@ -21,17 +21,17 @@ export function DeleteRequestModal({ isOpen, onClose, request, onDelete }) {
 
   const handleDelete = async () => {
     if (!request) return;
-    
+
     setIsDeleting(true);
     setError(null);
-    
+
     try {
       await apiClient.deleteRequest(request.id);
-      
+
       if (onDelete) {
         onDelete(request);
       }
-      
+
       onClose();
     } catch (error) {
       console.error('Failed to delete request:', error);
@@ -55,7 +55,7 @@ export function DeleteRequestModal({ isOpen, onClose, request, onDelete }) {
       <div class="fixed inset-0 bg-gray-500/75 transition-opacity" aria-hidden="true"></div>
       <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
         <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
-          <div 
+          <div
             class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
@@ -72,7 +72,7 @@ export function DeleteRequestModal({ isOpen, onClose, request, onDelete }) {
                 </svg>
               </button>
             </div>
-            
+
             <form onSubmit={(e) => { e.preventDefault(); handleDelete(); }}>
               <div class="sm:flex sm:items-start">
                 <div class="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:size-10">

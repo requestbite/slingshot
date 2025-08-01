@@ -59,7 +59,7 @@ export function CollectionsPage() {
         })
       );
 
-      // Sort by name (matching Django ordering)
+      // Sort by name
       collectionsData.sort((a, b) => a.name.localeCompare(b.name));
       setCollectionsWithCounts(collectionsData);
 
