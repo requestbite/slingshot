@@ -129,7 +129,18 @@ export function App() {
         await apiClient.deleteEnvironment(environment.id);
       }
       
+      // Clear the encrypted reference from localStorage since we're starting fresh
+      localStorage.removeItem('encrypted-reference');
+      
+      // Reset all modal states
       setClearEnvironmentsModal(false);
+      setEncryptionKeyModal({
+        isOpen: false,
+        environmentCount: 0,
+        secretCount: 0
+      });
+      
+      // Initialize the app normally
       initializeApp();
     } catch (error) {
       console.error('Failed to clear environments:', error);
@@ -232,22 +243,6 @@ export function App() {
         onSuccess={handleUrlImportSuccess}
       />
 
-      {/* App Encryption Key Modal */}
-      <AppEncryptionKeyModal
-        isOpen={encryptionKeyModal.isOpen}
-        onClose={handleEncryptionKeyClose}
-        onSuccess={handleEncryptionKeySuccess}
-        environmentCount={encryptionKeyModal.environmentCount}
-        secretCount={encryptionKeyModal.secretCount}
-        onForgotPassword={handleForgotPassword}
-      />
-
-      {/* Clear Environments Modal */}
-      <ClearEnvironmentsModal
-        isOpen={clearEnvironmentsModal}
-        onClose={handleClearEnvironmentsCancel}
-        onClear={handleClearEnvironments}
-      />
     </AppProvider>
   );
 }
