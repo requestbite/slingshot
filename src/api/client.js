@@ -7,6 +7,7 @@
 import db from '../db/schema.js';
 import { generateUUID } from '../utils/uuid.js';
 import { validateRequest, validateEnvironment, validateCollection, validateFolder } from '../utils/validation.js';
+import { encryptSecret, decryptSecret, hasSessionKey } from '../utils/encryption.js';
 
 /**
  * Client-side API for managing RequestBite Slingshot data
@@ -33,7 +34,8 @@ export class SlingshotApiClient {
     const environment = {
       id: generateUUID(),
       name: environmentData.name,
-      description: environmentData.description || ''
+      description: environmentData.description || '',
+      secrets: []
     };
 
     const id = await db.environments.add(environment);
@@ -79,7 +81,7 @@ export class SlingshotApiClient {
   }
 
   /**
-   * Deletes an environment and all related secrets
+   * Deletes an environment and all related data
    * @param {string} id - Environment ID
    * @returns {Promise<void>}
    */
@@ -683,6 +685,126 @@ export class SlingshotApiClient {
    */
   async deleteSecret(id) {
     return await db.variables.delete(id);
+  }
+
+  // Environment secret operations
+
+  /**
+   * Checks if encryption key is required for environment secrets
+   * @returns {boolean} True if encryption key is needed
+   */
+  requiresEncryptionKey() {
+    return !hasSessionKey();
+  }
+
+  /**
+   * Adds a new encrypted secret to an environment
+   * @param {Object} secretData - The secret data
+   * @param {string} secretData.environment_id - Environment ID (required)
+   * @param {string} secretData.key - Secret key (required)
+   * @param {string} secretData.value - Secret value (required)
+   * @returns {Promise<import('../types/index.js').Environment>} The updated environment
+   * @throws {Error} If encryption fails or no encryption key available
+   */
+  async createEnvironmentSecret(secretData) {
+    if (!secretData.environment_id || !secretData.key || !secretData.value) {
+      throw new Error('Environment ID, key, and value are required');
+    }
+
+    const environment = await db.environments.get(secretData.environment_id);
+    if (!environment) {
+      throw new Error('Environment not found');
+    }
+
+    const { encrypted_value, iv } = await encryptSecret(secretData.value);
+
+    const newSecret = {
+      key: secretData.key,
+      encrypted_value,
+      iv
+    };
+
+    const updatedSecrets = [...(environment.secrets || []), newSecret];
+    
+    await db.environments.update(secretData.environment_id, { secrets: updatedSecrets });
+    return await db.environments.get(secretData.environment_id);
+  }
+
+  /**
+   * Retrieves all encrypted environment secrets for an environment
+   * @param {string} environmentId - Environment ID
+   * @returns {Promise<import('../types/index.js').EncryptedSecret[]>} Array of encrypted secrets
+   */
+  async getEnvironmentSecrets(environmentId) {
+    const environment = await db.environments.get(environmentId);
+    return environment?.secrets || [];
+  }
+
+  /**
+   * Retrieves and decrypts all environment secrets for an environment
+   * @param {string} environmentId - Environment ID
+   * @returns {Promise<import('../types/index.js').DecryptedSecret[]>} Array of decrypted secrets
+   * @throws {Error} If no encryption key available or decryption fails
+   */
+  async getDecryptedEnvironmentSecrets(environmentId) {
+    const encryptedSecrets = await this.getEnvironmentSecrets(environmentId);
+    const decryptedSecrets = [];
+
+    for (const secret of encryptedSecrets) {
+      try {
+        const decryptedValue = await decryptSecret(secret.encrypted_value, secret.iv);
+        decryptedSecrets.push({
+          key: secret.key,
+          value: decryptedValue
+        });
+      } catch (error) {
+        console.error(`Failed to decrypt secret ${secret.key}:`, error);
+        // Include the secret with an error indicator
+        decryptedSecrets.push({
+          key: secret.key,
+          value: '[DECRYPTION_FAILED]'
+        });
+      }
+    }
+
+    return decryptedSecrets;
+  }
+
+  /**
+   * Updates the secrets array for an environment
+   * @param {string} environmentId - Environment ID
+   * @param {import('../types/index.js').DecryptedSecret[]} secrets - Array of decrypted secrets
+   * @returns {Promise<import('../types/index.js').Environment>} The updated environment
+   * @throws {Error} If encryption fails or no encryption key available
+   */
+  async updateEnvironmentSecrets(environmentId, secrets) {
+    const environment = await db.environments.get(environmentId);
+    if (!environment) {
+      throw new Error('Environment not found');
+    }
+
+    const encryptedSecrets = [];
+    for (const secret of secrets) {
+      const { encrypted_value, iv } = await encryptSecret(secret.value);
+      encryptedSecrets.push({
+        key: secret.key,
+        encrypted_value,
+        iv
+      });
+    }
+
+    await db.environments.update(environmentId, { secrets: encryptedSecrets });
+    return await db.environments.get(environmentId);
+  }
+
+  /**
+   * Counts the number of environment secrets for an environment
+   * @param {string} environmentId - Environment ID
+   * @returns {Promise<number>} Number of secrets
+   */
+  async countEnvironmentSecrets(environmentId) {
+    const environment = await db.environments.get(environmentId);
+    return environment?.secrets?.length || 0;
   }
 
   // Utility methods

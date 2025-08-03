@@ -8,6 +8,8 @@ import { CollectionPage } from './pages/CollectionPage';
 import { RequestPage } from './pages/RequestPage';
 import { CollectionsPage } from './pages/CollectionsPage';
 import { CollectionUpdatePage } from './pages/CollectionUpdatePage';
+import { EnvironmentsPage } from './pages/EnvironmentsPage';
+import { EnvironmentUpdatePage } from './pages/EnvironmentUpdatePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { URLImportModal } from './components/import/URLImportModal';
 
@@ -60,6 +62,16 @@ export function App() {
           <Route path="/collections">
             <FullPageLayout>
               <CollectionsPage />
+            </FullPageLayout>
+          </Route>
+          <Route path="/environments/:uuid">
+            <FullPageLayout>
+              <EnvironmentUpdatePage />
+            </FullPageLayout>
+          </Route>
+          <Route path="/environments">
+            <FullPageLayout>
+              <EnvironmentsPage />
             </FullPageLayout>
           </Route>
           <Route path="/settings">

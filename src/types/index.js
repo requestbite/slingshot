@@ -1,8 +1,16 @@
 /**
+ * @typedef {Object} EncryptedSecret
+ * @property {string} key - Secret key name (not encrypted)
+ * @property {string} encrypted_value - Base64 encoded encrypted value
+ * @property {string} iv - Base64 encoded initialization vector
+ */
+
+/**
  * @typedef {Object} Environment
  * @property {string} id - Unique identifier (UUID)
  * @property {string} name - Environment name
  * @property {string} description - Environment description
+ * @property {EncryptedSecret[]} secrets - Array of encrypted secrets
  */
 
 /**
@@ -70,6 +78,12 @@
  * @property {string|null} collection_id - Reference to collection (nullable)
  * @property {string} key - Variable key
  * @property {string} value - Variable value
+ */
+
+/**
+ * @typedef {Object} DecryptedSecret
+ * @property {string} key - Secret key name
+ * @property {string} value - Decrypted value
  */
 
 /**

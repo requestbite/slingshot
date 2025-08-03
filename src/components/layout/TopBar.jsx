@@ -119,6 +119,18 @@ export function TopBar() {
           <button
             onClick={(e) => {
               e.preventDefault();
+              setLocation('/environments');
+            }}
+            class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer ${isActive('/environments')
+              ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+          >
+            Environments
+          </button>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
               setLocation('/collections');
             }}
             class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer ${isActive('/collections')
@@ -232,6 +244,16 @@ export function TopBar() {
                   >
                     <div>Slingshot</div>
                     <span class="text-xs text-gray-500 mt-1">Send HTTP requests</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setLocation('/environments');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer"
+                  >
+                    <div>Environments</div>
+                    <span class="text-xs text-gray-500 mt-1">Manage encrypted environments</span>
                   </button>
                   <button
                     onClick={() => {
