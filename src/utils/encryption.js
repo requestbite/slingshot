@@ -270,6 +270,57 @@ export async function decryptSecret(encryptedValue, ivBase64) {
 }
 
 /**
+ * Stores an encrypted reference value in localStorage for password verification
+ * @param {string} password - User password
+ * @param {Uint8Array} salt - Salt used for key derivation
+ * @returns {Promise<void>}
+ */
+export async function storeEncryptedReference(password, salt) {
+  try {
+    const key = await deriveKeyFromPassword(password, salt);
+    const { encryptedData, iv } = await encryptValue('slingshot', key);
+    const encryptedReference = {
+      encrypted_value: arrayBufferToBase64(encryptedData),
+      iv: bytesToBase64(iv),
+      salt: bytesToBase64(salt)
+    };
+    localStorage.setItem('encrypted-reference', JSON.stringify(encryptedReference));
+  } catch (error) {
+    console.error('Failed to store encrypted reference:', error);
+    throw new Error('Failed to store password verification');
+  }
+}
+
+/**
+ * Verifies a password by trying to decrypt the stored reference
+ * @param {string} password - Password to verify
+ * @returns {Promise<boolean>} True if password is correct
+ */
+export async function verifyPassword(password) {
+  try {
+    const storedReference = localStorage.getItem('encrypted-reference');
+    if (!storedReference) {
+      return false; // No reference stored
+    }
+
+    const { encrypted_value, iv, salt } = JSON.parse(storedReference);
+    const saltBytes = base64ToBytes(salt);
+    const key = await deriveKeyFromPassword(password, saltBytes);
+
+    // Try to decrypt the reference value
+    const decryptedValue = await decryptValue(
+      base64ToArrayBuffer(encrypted_value),
+      base64ToBytes(iv),
+      key
+    );
+
+    return decryptedValue === 'slingshot';
+  } catch (error) {
+    return false; // Decryption failed, wrong password
+  }
+}
+
+/**
  * Sets up encryption key from user password
  * @param {string} password - User password
  * @param {Uint8Array} [salt] - Optional salt (generates new one if not provided)

@@ -6,7 +6,7 @@ import { ContextMenu } from '../components/common/ContextMenu';
 import { Toast, useToast } from '../components/common/Toast';
 import { useAppContext } from '../hooks/useAppContext';
 import { apiClient } from '../api';
-import { setupEncryptionKey, hasSessionKey } from '../utils/encryption';
+import { setupEncryptionKey, hasSessionKey, storeEncryptedReference } from '../utils/encryption';
 
 export function EnvironmentsPage() {
   const [, setLocation] = useLocation();
@@ -153,7 +153,10 @@ export function EnvironmentsPage() {
     setError(null);
 
     try {
-      await setupEncryptionKey(password);
+      const { key, salt } = await setupEncryptionKey(password);
+      // Store encrypted reference for password verification
+      await storeEncryptedReference(password, salt);
+      
       setToastMessage('Encryption key setup successfully');
       showToast();
       
