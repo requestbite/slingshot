@@ -148,3 +148,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Proxy binary
+proxy/proxy
