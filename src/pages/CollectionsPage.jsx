@@ -174,7 +174,7 @@ export function CollectionsPage() {
                   </div>
                 </div>
               ) : collectionsWithCounts.length === 0 ? (
-                <p class="px-6 sm:p-0">No collections found for this account.</p>
+                <p class="px-6 sm:p-0">No collections found.</p>
               ) : (
                 <table class="w-full table-fixed divide-y divide-gray-300">
                   <thead>
