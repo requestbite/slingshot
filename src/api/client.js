@@ -639,14 +639,6 @@ export class SlingshotApiClient {
     return await db.variables.get(id);
   }
 
-  /**
-   * Retrieves all secrets for an environment
-   * @param {string} environmentId - Environment ID
-   * @returns {Promise<import('../types/index.js').Secret[]>} Array of secrets in the environment
-   */
-  async getSecretsByEnvironment(environmentId) {
-    return await db.variables.where('environment_id').equals(environmentId).toArray();
-  }
 
   /**
    * Retrieves all secrets for a collection

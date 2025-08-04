@@ -24,7 +24,7 @@ const getTabNames = (hasActiveCollection) => ({
 });
 
 export function RequestEditor({ request, onRequestChange }) {
-  const { selectedCollection } = useAppContext();
+  const { selectedCollection, currentEnvironment } = useAppContext();
   const [activeTab, setActiveTab] = useState('params');
 
   // Get placeholder URL from environment variable
@@ -530,9 +530,11 @@ export function RequestEditor({ request, onRequestChange }) {
         collectionVars.forEach(v => variables.set(v.key, v.value));
       }
 
-      // Environment variables (if collection has environment)
-      if (selectedCollection?.environment_id) {
-        const envVars = await apiClient.getSecretsByEnvironment(selectedCollection.environment_id);
+      // Environment variables - use currentEnvironment if available, 
+      // otherwise fall back to collection's default environment
+      const environmentId = currentEnvironment?.id || selectedCollection?.environment_id;
+      if (environmentId) {
+        const envVars = await apiClient.getDecryptedEnvironmentSecrets(environmentId);
         envVars.forEach(v => variables.set(v.key, v.value));
       }
     } catch (error) {
@@ -788,12 +790,14 @@ export function RequestEditor({ request, onRequestChange }) {
           {/* URL input */}
           <div class="flex-1 mr-2" style="min-width: 0;">
             <VariableInput
+              key={`url-${currentEnvironment?.id || 'none'}`}
               value={requestData.url}
               onChange={handleUrlChange}
               onKeyDown={handleEnterKeyPress}
               placeholder={placeholderUrl}
               className="w-full text-sm font-inter text-gray-900"
               style="min-height: 38px; line-height: 22px; width: 100%; box-sizing: border-box;"
+              selectedEnvironment={currentEnvironment}
             />
           </div>
 
@@ -881,6 +885,7 @@ export function RequestEditor({ request, onRequestChange }) {
               onQueryParamsChange={(params) => updateRequestData({ queryParams: params })}
               onPathParamsChange={(params) => updateRequestData({ pathParams: params })}
               onEnterKeyPress={handleEnterKeyPress}
+              selectedEnvironment={currentEnvironment}
             />
           )}
           {activeTab === 'headers' && (
@@ -888,6 +893,7 @@ export function RequestEditor({ request, onRequestChange }) {
               headers={requestData.headers}
               onHeadersChange={(headers) => updateRequestData({ headers })}
               onEnterKeyPress={handleEnterKeyPress}
+              selectedEnvironment={currentEnvironment}
             />
           )}
           {activeTab === 'body' && (
@@ -905,6 +911,7 @@ export function RequestEditor({ request, onRequestChange }) {
               onUrlEncodedDataChange={(urlEncodedData) => updateRequestData({ urlEncodedData })}
               onEnterKeyPress={handleEnterKeyPress}
               onSendRequest={handleSendRequest}
+              selectedEnvironment={currentEnvironment}
             />
           )}
           {activeTab === 'settings' && !selectedCollection && (

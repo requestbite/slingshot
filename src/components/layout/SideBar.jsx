@@ -21,34 +21,37 @@ export function SideBar({ onClose: _onClose }) {
   const importButtonRef = useRef();
   const [searchTerm, setSearchTerm] = useState('');
   const [, setLocation] = useLocation();
-  const { collections, selectedCollection, selectCollection, selectRequest, isLoading, updateCollection } = useAppContext();
+  const { collections, selectedCollection, selectCollection, selectRequest, isLoading, updateCollection, currentEnvironment, setCurrentEnvironment } = useAppContext();
 
   // Environment state
   const [environments, setEnvironments] = useState([]);
-  const [selectedEnvironment, setSelectedEnvironment] = useState(null);
   const [isLoadingEnvironments, setIsLoadingEnvironments] = useState(false);
   const [isUpdatingDefault, setIsUpdatingDefault] = useState(false);
   const [showDefaultSuccess, setShowDefaultSuccess] = useState(false);
+  const hasManuallySelectedEnvironment = useRef(false);
 
   // Load environments when component mounts
   useEffect(() => {
     loadEnvironments();
   }, []);
 
-  // Update selected environment when selectedCollection changes
+  // Update current environment when selectedCollection changes, but respect manual selection
   useEffect(() => {
     if (selectedCollection) {
-      if (selectedCollection.environment_id && environments.length > 0) {
-        const currentEnvironment = environments.find(env => env.id === selectedCollection.environment_id);
-        setSelectedEnvironment(currentEnvironment || null);
-      } else {
+      // Only auto-set environment if user hasn't manually selected one
+      if (!hasManuallySelectedEnvironment.current && selectedCollection.environment_id && environments.length > 0) {
+        const environment = environments.find(env => env.id === selectedCollection.environment_id);
+        setCurrentEnvironment(environment || null);
+      } else if (!hasManuallySelectedEnvironment.current) {
         // No environment set or environment doesn't exist anymore
-        setSelectedEnvironment(null);
+        setCurrentEnvironment(null);
       }
+      // If user has manually selected an environment, don't override it
     } else {
-      setSelectedEnvironment(null);
+      setCurrentEnvironment(null);
+      hasManuallySelectedEnvironment.current = false; // Reset when no collection
     }
-  }, [selectedCollection, environments]);
+  }, [selectedCollection, environments, setCurrentEnvironment]);
 
   const loadEnvironments = async () => {
     // Only load environments if encryption key is available
@@ -72,11 +75,12 @@ export function SideBar({ onClose: _onClose }) {
   };
 
   const handleEnvironmentChange = (environmentId) => {
+    hasManuallySelectedEnvironment.current = true; // Mark that user manually selected an environment
     if (environmentId === 'none') {
-      setSelectedEnvironment(null);
+      setCurrentEnvironment(null);
     } else {
       const environment = environments.find(env => env.id === environmentId);
-      setSelectedEnvironment(environment || null);
+      setCurrentEnvironment(environment || null);
     }
   };
 
@@ -87,7 +91,7 @@ export function SideBar({ onClose: _onClose }) {
 
     try {
       setIsUpdatingDefault(true);
-      const environmentId = selectedEnvironment ? selectedEnvironment.id : null;
+      const environmentId = currentEnvironment ? currentEnvironment.id : null;
 
       await apiClient.updateCollection(selectedCollection.id, {
         ...selectedCollection,
@@ -114,8 +118,8 @@ export function SideBar({ onClose: _onClose }) {
   };
 
   const isDefaultEnvironment = selectedCollection && (
-    (selectedEnvironment && selectedCollection.environment_id === selectedEnvironment.id) ||
-    (!selectedEnvironment && !selectedCollection.environment_id)
+    (currentEnvironment && selectedCollection.environment_id === currentEnvironment.id) ||
+    (!currentEnvironment && !selectedCollection.environment_id)
   );
 
   return (
@@ -243,7 +247,7 @@ export function SideBar({ onClose: _onClose }) {
                   <select
                     id="environment-select"
                     class="w-full appearance-none rounded-md bg-white py-2 pl-3 pr-8 text-sm text-gray-900 outline -outline-offset-1 outline-gray-300 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
-                    value={selectedEnvironment?.id || (selectedEnvironment === null ? 'none' : '')}
+                    value={currentEnvironment?.id || (currentEnvironment === null ? 'none' : '')}
                     onChange={(e) => {
                       const environmentId = e.target.value;
                       handleEnvironmentChange(environmentId);
@@ -271,16 +275,16 @@ export function SideBar({ onClose: _onClose }) {
                 </div>
                 <div class="mt-2 flex space-x-2">
                   <a
-                    href={selectedEnvironment ? `/environments/${selectedEnvironment.id}` : '/environments'}
+                    href={currentEnvironment ? `/environments/${currentEnvironment.id}` : '/environments'}
                     onClick={(e) => {
                       e.preventDefault();
-                      if (selectedEnvironment) {
-                        setLocation(`/environments/${selectedEnvironment.id}`);
+                      if (currentEnvironment) {
+                        setLocation(`/environments/${currentEnvironment.id}`);
                       } else {
                         setLocation('/environments');
                       }
                     }}
-                    class={`justify-center rounded-md h-[30px] w-[30px] text-sm font-medium flex items-center p-0 no-underline ${selectedEnvironment || environments.length === 0
+                    class={`justify-center rounded-md h-[30px] w-[30px] text-sm font-medium flex items-center p-0 no-underline ${currentEnvironment || environments.length === 0
                       ? 'bg-sky-100 hover:bg-sky-200 text-sky-700 cursor-pointer'
                       : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                       }`}
@@ -304,10 +308,10 @@ export function SideBar({ onClose: _onClose }) {
                       }`}
                     title={
                       isDefaultEnvironment
-                        ? selectedEnvironment
+                        ? currentEnvironment
                           ? "This environment is already the default for this collection"
                           : "No environment is already the default for this collection"
-                        : selectedEnvironment
+                        : currentEnvironment
                           ? "Make environment the default for this collection"
                           : "Clear the default environment for this collection"
                     }
@@ -317,10 +321,10 @@ export function SideBar({ onClose: _onClose }) {
                       : showDefaultSuccess
                         ? 'Updated!'
                         : isDefaultEnvironment
-                          ? selectedEnvironment
+                          ? currentEnvironment
                             ? 'Default environment'
                             : 'No default environment'
-                          : selectedEnvironment
+                          : currentEnvironment
                             ? 'Make default'
                             : 'Clear default'
                     }

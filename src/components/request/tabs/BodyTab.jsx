@@ -118,7 +118,7 @@ function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFile
     } else {
       return (
         <VariableInput
-          key={`${field.type}-value-${field.id}`}
+          key={`${field.type}-value-${field.id}-${selectedEnvironment?.id || 'none'}`}
           value={field.value || ''}
           onChange={(value) => updateField(field.id, 'value', value)}
           onKeyDown={onEnterKeyPress}
@@ -127,6 +127,7 @@ function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFile
             field.enabled ? '' : 'opacity-50'
           }`}
           disabled={!field.enabled}
+          selectedEnvironment={selectedEnvironment}
         />
       );
     }
@@ -180,7 +181,7 @@ function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFile
             )}
             <div class={allowFiles ? "col-span-4" : "col-span-5"}>
               <VariableInput
-                key={`${field.type}-key-${field.id}`}
+                key={`${field.type}-key-${field.id}-${selectedEnvironment?.id || 'none'}`}
                 value={field.key}
                 onChange={(value) => updateField(field.id, 'key', value)}
                 onKeyDown={onEnterKeyPress}
@@ -189,6 +190,7 @@ function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFile
                   field.enabled ? '' : 'opacity-50'
                 }`}
                 disabled={!field.enabled}
+                selectedEnvironment={selectedEnvironment}
               />
             </div>
             <div class="col-span-5">
@@ -225,7 +227,8 @@ export function BodyTab({
   onFormDataChange,
   onUrlEncodedDataChange,
   onEnterKeyPress,
-  onSendRequest
+  onSendRequest,
+  selectedEnvironment
 }) {
   const { selectedCollection } = useAppContext();
   const [availableVariables, setAvailableVariables] = useState(new Map());
@@ -251,9 +254,11 @@ export function BodyTab({
           collectionVars.forEach(v => variables.set(v.key, v.value));
         }
 
-        // Environment variables (if collection has environment)
-        if (selectedCollection?.environment_id) {
-          const envVars = await apiClient.getSecretsByEnvironment(selectedCollection.environment_id);
+        // Environment variables - use selectedEnvironment if provided, 
+        // otherwise fall back to collection's default environment
+        const environmentId = selectedEnvironment?.id || selectedCollection?.environment_id;
+        if (environmentId) {
+          const envVars = await apiClient.getDecryptedEnvironmentSecrets(environmentId);
           envVars.forEach(v => variables.set(v.key, v.value));
         }
       } catch (error) {
@@ -264,7 +269,7 @@ export function BodyTab({
     };
 
     loadVariables();
-  }, [selectedCollection]);
+  }, [selectedCollection, selectedEnvironment]);
 
   // Validate JSON when content type changes to JSON
   useEffect(() => {
@@ -619,6 +624,7 @@ export function BodyTab({
       {bodyType === 'raw' && (
         <div class="mb-2">
           <CodeMirror
+            key={`codemirror-${selectedEnvironment?.id || 'none'}-${availableVariables.size}`}
             value={bodyContent}
             onChange={(value, viewUpdate) => {
               handleBodyContentChange(value);
