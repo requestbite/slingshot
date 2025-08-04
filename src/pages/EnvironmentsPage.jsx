@@ -156,10 +156,10 @@ export function EnvironmentsPage() {
       const { key, salt } = await setupEncryptionKey(password);
       // Store encrypted reference for password verification
       await storeEncryptedReference(password, salt);
-      
+
       setToastMessage('Encryption key setup successfully');
       showToast();
-      
+
       // Clear form
       setPassword('');
       setConfirmPassword('');
@@ -377,6 +377,7 @@ export function EnvironmentsPage() {
         isOpen={contextMenuOpen}
         onClose={handleContextMenuClose}
         trigger={contextMenuTrigger}
+        width={190}
         items={[
           {
             label: 'Edit environment',

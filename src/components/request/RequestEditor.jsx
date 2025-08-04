@@ -744,7 +744,7 @@ export function RequestEditor({ request, onRequestChange }) {
                 disabled={!hasUnsavedChanges}
                 class={`cursor-pointer rounded-md px-2 py-1 text-xs focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${hasUnsavedChanges
                   ? 'bg-sky-100 hover:bg-sky-200 text-sky-700'
-                  : 'bg-gray-300 text-white'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   }`}
               >
                 Update
@@ -755,7 +755,7 @@ export function RequestEditor({ request, onRequestChange }) {
                 title={selectedCollection ? 'Save the current request to collection' : 'Create or select a collection to save.'}
                 class={`cursor-pointer rounded-md px-2 py-1 text-xs focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${selectedCollection
                   ? 'bg-sky-100 hover:bg-sky-200 text-sky-700'
-                  : 'bg-gray-300 text-white'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   }`}
               >
                 Save as

@@ -152,7 +152,7 @@ export function TopBar() {
           >
             Settings
           </button>
-          <a href="https://docs.requestbite.com" target="_blank" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors flex items-center">
+          <a href="https://docs.requestbite.com" target="_blank" class="hidden lg:flex text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors flex items-center">
             Docs
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -173,31 +173,34 @@ export function TopBar() {
           </a>
         </nav>
 
-        {/* Desktop Proxy Status Banner */}
-        <button
-          onClick={() => setLocation('/settings')}
-          class={`hidden sm:flex px-2 py-1 rounded-md text-xs transition-colors cursor-pointer items-center ${banner.bgColor} ${banner.textColor} ${banner.hoverColor}`}
-        >
-          <WaypointsIcon />
-          <span class="hidden xl:inline">{banner.textXl}</span>
-          <span class="xl:hidden">{proxyConfig.proxyType === 'custom' ? 'Custom proxy' : banner.text}</span>
-        </button>
-
-        {/* Mobile Hamburger Menu */}
-        <div class="block sm:hidden">
+        {/* Right Section: Proxy Banner + Mobile Menu */}
+        <div class="flex items-center space-x-3">
+          {/* Desktop Proxy Status Banner */}
           <button
-            onClick={() => setIsMobileMenuOpen(true)}
-            type="button"
-            class="cursor-pointer text-gray-600 hover:text-gray-900"
+            onClick={() => setLocation('/settings')}
+            class={`hidden md:flex px-2 py-1 rounded-md text-xs transition-colors cursor-pointer items-center ${banner.bgColor} ${banner.textColor} ${banner.hoverColor}`}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="currentColor" class="w-6 h-6">
-              <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
-                <path d="M7.94971 11.9497H39.9497" />
-                <path d="M7.94971 23.9497H39.9497" />
-                <path d="M7.94971 35.9497H39.9497" />
-              </g>
-            </svg>
+            <WaypointsIcon />
+            <span class="hidden xl:inline">{banner.textXl}</span>
+            <span class="xl:hidden">{proxyConfig.proxyType === 'custom' ? 'Custom proxy' : banner.text}</span>
           </button>
+
+          {/* Mobile Hamburger Menu */}
+          <div class="block lg:hidden">
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              type="button"
+              class="cursor-pointer text-gray-600 hover:text-gray-900"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="currentColor" class="w-6 h-6">
+                <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
+                  <path d="M7.94971 11.9497H39.9497" />
+                  <path d="M7.94971 23.9497H39.9497" />
+                  <path d="M7.94971 35.9497H39.9497" />
+                </g>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
