@@ -30,7 +30,7 @@ const CONTENT_TYPES = [
 ];
 
 // FormDataSection component for both form-data and url-encoded data
-function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFiles = true }) {
+function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFiles = true, selectedEnvironment }) {
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuTrigger, setContextMenuTrigger] = useState(null);
   const addButtonRef = useRef();
@@ -230,7 +230,7 @@ export function BodyTab({
   onSendRequest,
   selectedEnvironment
 }) {
-  const { selectedCollection } = useAppContext();
+  const { selectedCollection, hasManuallySelectedEnvironment } = useAppContext();
   const [availableVariables, setAvailableVariables] = useState(new Map());
   const isBodyDisabled = ['GET', 'HEAD', 'OPTIONS'].includes(method);
 
@@ -255,8 +255,8 @@ export function BodyTab({
         }
 
         // Environment variables - use selectedEnvironment if provided, 
-        // otherwise fall back to collection's default environment
-        const environmentId = selectedEnvironment?.id || selectedCollection?.environment_id;
+        // otherwise fall back to collection's default environment only if user hasn't manually selected
+        const environmentId = selectedEnvironment?.id || (!hasManuallySelectedEnvironment ? selectedCollection?.environment_id : null);
         if (environmentId) {
           const envVars = await apiClient.getDecryptedEnvironmentSecrets(environmentId);
           envVars.forEach(v => variables.set(v.key, v.value));
@@ -269,7 +269,7 @@ export function BodyTab({
     };
 
     loadVariables();
-  }, [selectedCollection, selectedEnvironment]);
+  }, [selectedCollection, selectedEnvironment, hasManuallySelectedEnvironment]);
 
   // Validate JSON when content type changes to JSON
   useEffect(() => {
@@ -679,6 +679,7 @@ export function BodyTab({
           onEnterKeyPress={onEnterKeyPress}
           title="Form Data"
           allowFiles={true}
+          selectedEnvironment={selectedEnvironment}
         />
       )}
 
@@ -690,6 +691,7 @@ export function BodyTab({
           onEnterKeyPress={onEnterKeyPress}
           title="URL-Encoded Data"
           allowFiles={false}
+          selectedEnvironment={selectedEnvironment}
         />
       )}
     </>

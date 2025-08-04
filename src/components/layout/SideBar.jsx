@@ -21,14 +21,13 @@ export function SideBar({ onClose: _onClose }) {
   const importButtonRef = useRef();
   const [searchTerm, setSearchTerm] = useState('');
   const [, setLocation] = useLocation();
-  const { collections, selectedCollection, selectCollection, selectRequest, isLoading, updateCollection, currentEnvironment, setCurrentEnvironment } = useAppContext();
+  const { collections, selectedCollection, selectCollection, selectRequest, isLoading, updateCollection, currentEnvironment, setCurrentEnvironment, hasManuallySelectedEnvironment, setHasManuallySelectedEnvironment } = useAppContext();
 
   // Environment state
   const [environments, setEnvironments] = useState([]);
   const [isLoadingEnvironments, setIsLoadingEnvironments] = useState(false);
   const [isUpdatingDefault, setIsUpdatingDefault] = useState(false);
   const [showDefaultSuccess, setShowDefaultSuccess] = useState(false);
-  const hasManuallySelectedEnvironment = useRef(false);
 
   // Load environments when component mounts
   useEffect(() => {
@@ -39,19 +38,19 @@ export function SideBar({ onClose: _onClose }) {
   useEffect(() => {
     if (selectedCollection) {
       // Only auto-set environment if user hasn't manually selected one
-      if (!hasManuallySelectedEnvironment.current && selectedCollection.environment_id && environments.length > 0) {
+      if (!hasManuallySelectedEnvironment && selectedCollection.environment_id && environments.length > 0) {
         const environment = environments.find(env => env.id === selectedCollection.environment_id);
         setCurrentEnvironment(environment || null);
-      } else if (!hasManuallySelectedEnvironment.current) {
+      } else if (!hasManuallySelectedEnvironment) {
         // No environment set or environment doesn't exist anymore
         setCurrentEnvironment(null);
       }
       // If user has manually selected an environment, don't override it
     } else {
       setCurrentEnvironment(null);
-      hasManuallySelectedEnvironment.current = false; // Reset when no collection
+      setHasManuallySelectedEnvironment(false); // Reset when no collection
     }
-  }, [selectedCollection, environments, setCurrentEnvironment]);
+  }, [selectedCollection, environments, setCurrentEnvironment, hasManuallySelectedEnvironment, setHasManuallySelectedEnvironment]);
 
   const loadEnvironments = async () => {
     // Only load environments if encryption key is available
@@ -75,7 +74,7 @@ export function SideBar({ onClose: _onClose }) {
   };
 
   const handleEnvironmentChange = (environmentId) => {
-    hasManuallySelectedEnvironment.current = true; // Mark that user manually selected an environment
+    setHasManuallySelectedEnvironment(true); // Mark that user manually selected an environment
     if (environmentId === 'none') {
       setCurrentEnvironment(null);
     } else {

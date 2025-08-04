@@ -24,7 +24,7 @@ const getTabNames = (hasActiveCollection) => ({
 });
 
 export function RequestEditor({ request, onRequestChange }) {
-  const { selectedCollection, currentEnvironment } = useAppContext();
+  const { selectedCollection, currentEnvironment, hasManuallySelectedEnvironment } = useAppContext();
   const [activeTab, setActiveTab] = useState('params');
 
   // Get placeholder URL from environment variable
@@ -531,8 +531,8 @@ export function RequestEditor({ request, onRequestChange }) {
       }
 
       // Environment variables - use currentEnvironment if available, 
-      // otherwise fall back to collection's default environment
-      const environmentId = currentEnvironment?.id || selectedCollection?.environment_id;
+      // otherwise fall back to collection's default environment only if user hasn't manually selected
+      const environmentId = currentEnvironment?.id || (!hasManuallySelectedEnvironment ? selectedCollection?.environment_id : null);
       if (environmentId) {
         const envVars = await apiClient.getDecryptedEnvironmentSecrets(environmentId);
         envVars.forEach(v => variables.set(v.key, v.value));
