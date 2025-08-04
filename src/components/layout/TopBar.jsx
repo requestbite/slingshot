@@ -104,54 +104,58 @@ export function TopBar() {
           <a href="https://requestbite.com" class="hidden lg:flex text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors flex items-center">
             RequestBite
           </a>
-          <button
+          <a
+            href="/"
             onClick={(e) => {
               e.preventDefault();
               setLocation('/');
             }}
-            class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer ${isSlingshotActive()
+            class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isSlingshotActive()
               ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
           >
             Slingshot
-          </button>
-          <button
+          </a>
+          <a
+            href="/environments"
             onClick={(e) => {
               e.preventDefault();
               setLocation('/environments');
             }}
-            class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer ${isActive('/environments')
+            class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/environments')
               ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
           >
             Environments
-          </button>
-          <button
+          </a>
+          <a
+            href="/collections"
             onClick={(e) => {
               e.preventDefault();
               setLocation('/collections');
             }}
-            class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer ${isActive('/collections')
+            class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/collections')
               ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
           >
             Collections
-          </button>
-          <button
+          </a>
+          <a
+            href="/settings"
             onClick={(e) => {
               e.preventDefault();
               setLocation('/settings');
             }}
-            class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer ${isActive('/settings')
+            class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/settings')
               ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
           >
             Settings
-          </button>
+          </a>
           <a href="https://docs.requestbite.com" target="_blank" class="hidden lg:flex text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors flex items-center">
             Docs
             <svg
@@ -238,46 +242,61 @@ export function TopBar() {
             <div class="mt-6 flow-root text-sm bg-white">
               <div class="-my-6 divide-y divide-gray-500/10">
                 <div class="space-y-2 py-6">
-                  <button
-                    onClick={() => {
+                  <a
+                    href="https://requestbite.com"
+                    class="block px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
+                  >
+                    <div>RequestBite</div>
+                    <span class="text-xs text-gray-500 mt-1">RequestBite website</span>
+                  </a>
+                  <a
+                    href="/"
+                    onClick={(e) => {
+                      e.preventDefault();
                       setLocation('/');
                       setIsMobileMenuOpen(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer"
+                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
                   >
                     <div>Slingshot</div>
                     <span class="text-xs text-gray-500 mt-1">Send HTTP requests</span>
-                  </button>
-                  <button
-                    onClick={() => {
+                  </a>
+                  <a
+                    href="/environments"
+                    onClick={(e) => {
+                      e.preventDefault();
                       setLocation('/environments');
                       setIsMobileMenuOpen(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer"
+                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
                   >
                     <div>Environments</div>
                     <span class="text-xs text-gray-500 mt-1">Manage encrypted environments</span>
-                  </button>
-                  <button
-                    onClick={() => {
+                  </a>
+                  <a
+                    href="/collections"
+                    onClick={(e) => {
+                      e.preventDefault();
                       setLocation('/collections');
                       setIsMobileMenuOpen(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer"
+                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
                   >
                     <div>Collections</div>
                     <span class="text-xs text-gray-500 mt-1">Manage request collections</span>
-                  </button>
-                  <button
-                    onClick={() => {
+                  </a>
+                  <a
+                    href="/settings"
+                    onClick={(e) => {
+                      e.preventDefault();
                       setLocation('/settings');
                       setIsMobileMenuOpen(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer"
+                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
                   >
                     <div>Settings</div>
                     <span class="text-xs text-gray-500 mt-1">Configure app settings</span>
-                  </button>
+                  </a>
                   <a
                     href="https://docs.requestbite.com"
                     target="_blank"
