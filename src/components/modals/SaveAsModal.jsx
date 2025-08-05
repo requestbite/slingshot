@@ -1,18 +1,25 @@
 import { useState, useEffect } from 'preact/hooks';
+import { useLocation } from 'wouter-preact';
 import { apiClient } from '../../api';
 import { useAppContext } from '../../hooks/useAppContext';
 
 export function SaveAsModal({ isOpen, onClose, requestData, collection, onSuccess }) {
-  const { loadCollections, refreshCollectionData } = useAppContext();
+  const { collections, selectedCollection, selectCollection, loadCollections, refreshCollectionData } = useAppContext();
+  const [, setLocation] = useLocation();
   const [name, setName] = useState('');
+  const [selectedCollectionId, setSelectedCollectionId] = useState('');
   const [selectedFolderId, setSelectedFolderId] = useState('');
   const [folders, setFolders] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (isOpen && collection) {
-      loadFolders();
+    if (isOpen) {
+      // Set default collection if one was passed
+      if (collection) {
+        setSelectedCollectionId(collection.id);
+        loadFolders(collection.id);
+      }
       // Only set default name when modal first opens, not on every requestData change
       if (name === '') {
         const defaultName = generateDefaultName(requestData);
@@ -29,12 +36,17 @@ export function SaveAsModal({ isOpen, onClose, requestData, collection, onSucces
     }
   }, [isOpen]);
 
-  const loadFolders = async () => {
+  const loadFolders = async (collectionId) => {
+    if (!collectionId) {
+      setFolders([]);
+      return;
+    }
     try {
-      const folderData = await apiClient.getFoldersByCollection(collection.id);
+      const folderData = await apiClient.getFoldersByCollection(collectionId);
       setFolders(folderData);
     } catch (error) {
       console.error('Failed to load folders:', error);
+      setFolders([]);
     }
   };
 
@@ -75,6 +87,11 @@ export function SaveAsModal({ isOpen, onClose, requestData, collection, onSucces
       return;
     }
 
+    if (!selectedCollectionId) {
+      setError('Please select a collection');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 
@@ -82,7 +99,7 @@ export function SaveAsModal({ isOpen, onClose, requestData, collection, onSucces
       // Convert request data to the format expected by apiClient
       const requestToSave = {
         name: name.trim(),
-        collection_id: collection.id,
+        collection_id: selectedCollectionId,
         folder_id: selectedFolderId || null,
         method: requestData.method || 'GET',
         url: requestData.url || '',  // Allow empty URL
@@ -101,6 +118,15 @@ export function SaveAsModal({ isOpen, onClose, requestData, collection, onSucces
       // Refresh the sidebar to show the new request
       refreshCollectionData();
       
+      // If the user selected a different collection than the currently active one, redirect to it
+      if (selectedCollectionId !== selectedCollection?.id) {
+        const targetCollection = collections.find(c => c.id === selectedCollectionId);
+        if (targetCollection) {
+          selectCollection(targetCollection);
+          setLocation(`/${selectedCollectionId}`);
+        }
+      }
+      
       if (onSuccess) {
         onSuccess(savedRequest);
       }
@@ -117,7 +143,9 @@ export function SaveAsModal({ isOpen, onClose, requestData, collection, onSucces
   const handleClose = () => {
     // Reset state when modal closes
     setName('');
+    setSelectedCollectionId('');
     setSelectedFolderId('');
+    setFolders([]);
     setError('');
     setIsLoading(false);
     onClose();
@@ -182,7 +210,7 @@ export function SaveAsModal({ isOpen, onClose, requestData, collection, onSucces
               <div class="text-center mt-0 sm:text-left">
                 <h3 class="text-base font-semibold text-gray-900">Save Request</h3>
                 <div class="mt-2 text-sm text-gray-500">
-                  Save a new request to {collection?.name || 'this collection'}.
+                  Save a new request to a collection.
                 </div>
                 
                 {error && (
@@ -208,6 +236,35 @@ export function SaveAsModal({ isOpen, onClose, requestData, collection, onSucces
                 </div>
                 
                 <div class="mt-6">
+                  <label for="collection-select" class="block text-xs font-medium text-gray-600 mb-1">
+                    Collection
+                  </label>
+                  <select
+                    id="collection-select"
+                    value={selectedCollectionId}
+                    onChange={(e) => {
+                      const collectionId = e.target.value;
+                      setSelectedCollectionId(collectionId);
+                      setSelectedFolderId(''); // Reset folder selection
+                      loadFolders(collectionId);
+                    }}
+                    class="w-full appearance-none rounded-md bg-white py-2 pl-3 pr-8 text-sm text-gray-900 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-sky-500"
+                    disabled={isLoading}
+                    required
+                  >
+                    <option value="">Select a collection</option>
+                    {collections.map(col => (
+                      <option key={col.id} value={col.id}>{col.name}</option>
+                    ))}
+                  </select>
+                  {!selectedCollectionId && error && (
+                    <div class="mt-1 text-xs text-red-600">
+                      Please select a collection
+                    </div>
+                  )}
+                </div>
+                
+                <div class="mt-6">
                   <label for="folder-select" class="block text-xs font-medium text-gray-600 mb-1">
                     Folder
                   </label>
@@ -227,7 +284,7 @@ export function SaveAsModal({ isOpen, onClose, requestData, collection, onSucces
                 <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                   <button
                     type="submit"
-                    disabled={isLoading || !name.trim()}
+                    disabled={isLoading || !name.trim() || !selectedCollectionId}
                     class="inline-flex w-full justify-center rounded-md bg-sky-500 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-400 disabled:bg-sky-300 disabled:cursor-not-allowed sm:ml-3 sm:w-auto cursor-pointer"
                   >
                     {isLoading ? 'Saving...' : 'Save'}
