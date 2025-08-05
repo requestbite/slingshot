@@ -1,9 +1,9 @@
 import { RequestEditor } from '../components/request/RequestEditor';
 
-export function HomePage() {
+export function HomePage({ sharedRequestData }) {
   return (
     <div class="h-full">
-      <RequestEditor />
+      <RequestEditor sharedRequestData={sharedRequestData} />
     </div>
   );
 }

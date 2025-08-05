@@ -17,6 +17,7 @@ import { AppEncryptionKeyModal } from './components/modals/AppEncryptionKeyModal
 import { ClearEnvironmentsModal } from './components/modals/ClearEnvironmentsModal';
 import { apiClient } from './api';
 import { hasSessionKey } from './utils/encryption';
+import { generateUUID } from './utils/uuid.js';
 
 export function App() {
   const [urlImportModal, setUrlImportModal] = useState({
@@ -30,6 +31,7 @@ export function App() {
   });
   const [clearEnvironmentsModal, setClearEnvironmentsModal] = useState(false);
   const [isAppReady, setIsAppReady] = useState(false);
+  const [sharedRequestData, setSharedRequestData] = useState(null);
 
   // Check for environments and encryption key on mount
   useEffect(() => {
@@ -72,6 +74,7 @@ export function App() {
     // Check for import URL parameter after app is ready
     const urlParams = new URLSearchParams(window.location.search);
     const importUrl = urlParams.get('import');
+    const sharedRequest = urlParams.get('r');
     
     if (importUrl) {
       // Show the import modal
@@ -79,6 +82,57 @@ export function App() {
         isOpen: true,
         importUrl: decodeURIComponent(importUrl)
       });
+    }
+    
+    // Check for shared request parameter (only on base URL)
+    if (sharedRequest && window.location.pathname === '/') {
+      try {
+        const decodedJson = atob(sharedRequest);
+        const requestData = JSON.parse(decodedJson);
+        
+        // Transform the data to match RequestEditor's expected format
+        const formattedRequestData = {
+          method: requestData.method || 'GET',
+          url: requestData.url || '',
+          headers: requestData.headers?.map(h => ({
+            id: generateUUID(),
+            key: h.key,
+            value: h.value,
+            enabled: true
+          })) || [],
+          queryParams: requestData.params?.map(p => ({
+            id: generateUUID(),
+            key: p.key,
+            value: p.value,
+            enabled: true
+          })) || [],
+          pathParams: [],
+          bodyType: requestData.requestType || 'none',
+          contentType: requestData.contentType || 'application/json',
+          bodyContent: requestData.body || '',
+          formData: requestData.formData?.map(f => ({
+            id: generateUUID(),
+            key: f.key,
+            value: f.value,
+            type: f.type || 'text',
+            enabled: true
+          })) || [],
+          urlEncodedData: []
+        };
+        
+        setSharedRequestData(formattedRequestData);
+        
+        // Clean up the URL parameter
+        const url = new URL(window.location);
+        url.searchParams.delete('r');
+        window.history.replaceState({}, '', url.toString());
+      } catch (error) {
+        console.error('Failed to decode shared request:', error);
+        // Clean up invalid parameter
+        const url = new URL(window.location);
+        url.searchParams.delete('r');
+        window.history.replaceState({}, '', url.toString());
+      }
     }
   };
 
@@ -231,7 +285,9 @@ export function App() {
             <Route>
               <AppLayout>
                 <Switch>
-                  <Route path="/" component={HomePage} />
+                  <Route path="/">
+                    <HomePage sharedRequestData={sharedRequestData} />
+                  </Route>
                   <Route path="/:collectionId" component={CollectionPage} />
                   <Route path="/:collectionId/:requestId" component={RequestPage} />
                 </Switch>

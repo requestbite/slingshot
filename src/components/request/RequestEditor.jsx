@@ -7,6 +7,7 @@ import { ResponseDisplay } from './ResponseDisplay';
 import { CurlExportModal } from '../modals/CurlExportModal';
 import { CurlImportModal } from '../modals/CurlImportModal';
 import { SaveAsModal } from '../modals/SaveAsModal';
+import { CopyRequestModal } from '../modals/CopyRequestModal';
 import { VariableInput } from '../common/VariableInput';
 import { generateUUID } from '../../utils/uuid.js';
 import { Toast, useToast } from '../common/Toast';
@@ -23,7 +24,7 @@ const getTabNames = (hasActiveCollection) => ({
   ...(hasActiveCollection ? {} : { settings: 'Settings' })
 });
 
-export function RequestEditor({ request, onRequestChange }) {
+export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   const { selectedCollection, currentEnvironment, hasManuallySelectedEnvironment } = useAppContext();
   const [activeTab, setActiveTab] = useState('params');
 
@@ -74,7 +75,8 @@ export function RequestEditor({ request, onRequestChange }) {
     timeout: 30,
     formData: [],
     urlEncodedData: [],
-    ...(request ? getEffectiveRequestData(request) : {})
+    ...(request ? getEffectiveRequestData(request) : {}),
+    ...(sharedRequestData || {})
   });
 
   // Response state
@@ -93,6 +95,7 @@ export function RequestEditor({ request, onRequestChange }) {
   const [showCurlModal, setShowCurlModal] = useState(false);
   const [showCurlImportModal, setShowCurlImportModal] = useState(false);
   const [showSaveAsModal, setShowSaveAsModal] = useState(false);
+  const [showCopyRequestModal, setShowCopyRequestModal] = useState(false);
 
   // Toast state
   const [isToastVisible, showToast, hideToast] = useToast();
@@ -157,6 +160,16 @@ export function RequestEditor({ request, onRequestChange }) {
       setIsDraftDirty(false);
     }
   }, [request]);
+
+  // Handle shared request data
+  useEffect(() => {
+    if (sharedRequestData && !request) {
+      setRequestData(prev => ({
+        ...prev,
+        ...sharedRequestData
+      }));
+    }
+  }, [sharedRequestData, request]);
 
   // Update the ref whenever requestData changes
   useEffect(() => {
@@ -838,6 +851,12 @@ export function RequestEditor({ request, onRequestChange }) {
             >
               Import cURL
             </button>
+            <button type="button"
+              onClick={() => setShowCopyRequestModal(true)}
+              class="cursor-pointer px-4 py-2 text-xs rounded-t-md font-medium text-sky-500 hover:text-sky-700 hover:bg-sky-50 focus:outline-none"
+            >
+              Copy request
+            </button>
           </div>
         </div>
 
@@ -927,6 +946,15 @@ export function RequestEditor({ request, onRequestChange }) {
           console.log('Request saved successfully:', savedRequest);
           // Could potentially navigate to the saved request or show notification
         }}
+      />
+
+      {/* Copy Request Modal */}
+      <CopyRequestModal
+        isOpen={showCopyRequestModal}
+        onClose={() => setShowCopyRequestModal(false)}
+        requestData={requestData}
+        getAvailableVariables={getAvailableVariables}
+        replaceVariables={replaceVariables}
       />
 
       {/* Toast notification */}
