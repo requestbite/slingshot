@@ -1,12 +1,7 @@
-import { TopBar } from './TopBar';
-
 export function FullPageLayout({ children }) {
   return (
-    <div class="h-screen flex flex-col bg-gray-50">
-      <TopBar />
-      <main class="flex-1 overflow-hidden">
-        {children}
-      </main>
-    </div>
+    <main class="flex-1 overflow-hidden mt-[65px]">{/* TopBar now handled at App level, add margin-top for fixed TopBar */}
+      {children}
+    </main>
   );
 }

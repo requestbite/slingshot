@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useMemo } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import LogoHorizontal from '../../assets/logo-horizontal-slingshot.svg';
 
@@ -21,7 +21,7 @@ export function TopBar() {
   };
 
   // Load proxy settings from localStorage
-  useEffect(() => {
+  const loadProxySettings = () => {
     const savedSettings = localStorage.getItem('slingshot-settings');
     if (savedSettings) {
       try {
@@ -34,7 +34,37 @@ export function TopBar() {
         console.error('Failed to load proxy settings:', error);
       }
     }
-  }, [location]); // Re-check when location changes (e.g., when coming back from settings)
+  };
+
+  // Load proxy settings on component mount
+  useEffect(() => {
+    loadProxySettings();
+  }, []);
+
+  // Listen for localStorage changes to update proxy settings when user changes them in settings
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'slingshot-settings') {
+        loadProxySettings();
+      }
+    };
+
+    // Listen for storage events (cross-tab changes)
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  // Also reload settings when navigating away from settings page
+  // This handles same-tab changes that don't trigger storage events
+  useEffect(() => {
+    // Only reload if we're coming FROM settings page (not going TO it)
+    if (location !== '/settings') {
+      loadProxySettings();
+    }
+  }, [location]);
 
   // Function to get banner text and styling
   const getProxyBanner = (isMobile = false) => {
@@ -82,7 +112,8 @@ export function TopBar() {
     </svg>
   );
 
-  const banner = getProxyBanner();
+  // Memoize banner calculation to prevent unnecessary re-renders
+  const banner = useMemo(() => getProxyBanner(), [proxyConfig]);
 
   return (
     <header class="h-[65px] bg-white/75 backdrop-blur-lg border-b border-gray-300 fixed top-0 left-0 w-full z-10 text-sm">

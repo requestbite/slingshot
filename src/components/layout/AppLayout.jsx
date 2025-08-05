@@ -1,13 +1,11 @@
 import { useState } from 'preact/hooks';
-import { TopBar } from './TopBar';
 import { SideBar } from './SideBar';
 
 export function AppLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div class="min-h-screen flex flex-col">
-      <TopBar />
+    <div class="flex-grow flex flex-col min-h-0">{/* TopBar now handled at App level */}
 
       {/* Sidebar Toggle Button for Mobile - only show when sidebar is hidden */}
       <button
