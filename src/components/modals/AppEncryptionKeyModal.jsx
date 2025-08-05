@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { Portal } from '../common/Portal';
-import { setupEncryptionKey, verifyPassword } from '../../utils/encryption';
+import { setupEncryptionKey, verifyPassword, base64ToBytes } from '../../utils/encryption';
 
 export function AppEncryptionKeyModal({ isOpen, onClose, onSuccess, environmentCount, secretCount, onForgotPassword }) {
   const [password, setPassword] = useState('');
@@ -59,8 +59,19 @@ export function AppEncryptionKeyModal({ isOpen, onClose, onSuccess, environmentC
         return;
       }
 
-      // If password is valid, set up the encryption key
-      await setupEncryptionKey(password);
+      // Get the stored salt from the encrypted reference
+      const storedReference = localStorage.getItem('encrypted-reference');
+      if (!storedReference) {
+        setError('No encryption reference found. Please set up encryption again.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const { salt } = JSON.parse(storedReference);
+      const saltBytes = base64ToBytes(salt);
+
+      // If password is valid, set up the encryption key using the stored salt
+      await setupEncryptionKey(password, saltBytes);
       
       if (onSuccess) {
         onSuccess();

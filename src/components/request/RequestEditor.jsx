@@ -99,11 +99,8 @@ export function RequestEditor({ request, onRequestChange }) {
 
   // Update parent when request data changes (but not during initial load or when editing existing requests)
   useEffect(() => {
-    console.log('👆 PARENT UPDATE EFFECT - onRequestChange exists:', !!onRequestChange);
-    console.log('👆 PARENT UPDATE EFFECT - request exists:', !!request);
     // Only call onRequestChange for new requests, not when editing existing ones
     if (onRequestChange && !request) {
-      console.log('👆 Calling onRequestChange with:', requestData);
       onRequestChange(requestData);
     }
   }, [requestData, onRequestChange]);
@@ -120,18 +117,14 @@ export function RequestEditor({ request, onRequestChange }) {
 
   // Update requestData when request prop changes
   useEffect(() => {
-    console.log('🔄 REQUEST CHANGE EFFECT - Request:', request?.id, request?.name);
     if (request) {
       // Set initial load flag to prevent URL parsing from triggering change detection
       isInitialLoadRef.current = true;
-      
+
       // Use draft data if available, otherwise use main data
       const dataToLoad = getEffectiveRequestData(request);
-      console.log('📥 Loading data for request:', dataToLoad);
       setRequestData(prev => {
-        console.log('📥 Previous requestData:', prev);
         const newData = { ...prev, ...dataToLoad };
-        console.log('📥 New requestData:', newData);
         return newData;
       });
 
@@ -140,20 +133,18 @@ export function RequestEditor({ request, onRequestChange }) {
         ...request,
         has_draft_edits: false // Force getting original data without drafts
       });
-      console.log('💾 Stored original data:', originalDataRef.current);
 
       // Set draft state based on request
       setHasUnsavedChanges(request.has_draft_edits || false);
       setIsDraftDirty(false);
-      
+
       // Clear the initial load flag after a delay to allow URL parsing to complete
       setTimeout(() => {
         isInitialLoadRef.current = false;
       }, 1000);
     } else {
-      console.log('🔄 No request - resetting to defaults');
       isInitialLoadRef.current = false;
-      
+
       // Reset to default values when no request is selected
       const defaultData = getEffectiveRequestData(null);
       setRequestData(prev => ({
@@ -174,28 +165,18 @@ export function RequestEditor({ request, onRequestChange }) {
 
   // Track changes for immediate UI updates and debounced saving
   useEffect(() => {
-    console.log('🔍 CHANGE TRACKING EFFECT');
-    console.log('🔍 Request ID:', request?.id);
-    console.log('🔍 Original data exists:', !!originalDataRef.current);
-    console.log('🔍 Current requestData:', requestData);
-    console.log('🔍 isDraftDirty:', isDraftDirty);
-    console.log('🔍 isInitialLoad:', isInitialLoadRef.current);
-
     // Skip change tracking during initial load to prevent false positives
     if (isInitialLoadRef.current) {
-      console.log('🔍 Skipping change tracking during initial load');
       return;
     }
 
     if (request && originalDataRef.current) {
       const hasChanges = hasDataChanged(originalDataRef.current, requestData);
-      console.log('🔍 Has changes:', hasChanges);
 
       // Immediately update the hasUnsavedChanges state for UI
       setHasUnsavedChanges(hasChanges);
 
       if (hasChanges && !isDraftDirty) {
-        console.log('🔍 Setting draft dirty and saving...');
         setIsDraftDirty(true);
         saveDraftChangesDebounced();
       } else if (!hasChanges && isDraftDirty) {
@@ -226,21 +207,16 @@ export function RequestEditor({ request, onRequestChange }) {
 
   // Debounced draft save
   const saveDraftChangesDebounced = () => {
-    console.log('💾 DEBOUNCED SAVE - Clearing existing timeout');
     if (draftSaveTimeoutRef.current) {
       clearTimeout(draftSaveTimeoutRef.current);
     }
 
-    console.log('💾 DEBOUNCED SAVE - Setting new timeout for request:', request?.id);
     draftSaveTimeoutRef.current = setTimeout(async () => {
-      console.log('💾 EXECUTING DRAFT SAVE for request:', request?.id);
       // Use the ref to get the latest state at save time
       const currentData = currentRequestDataRef.current;
-      console.log('💾 Saving requestData:', currentData);
       if (request?.id) {
         try {
           await apiClient.saveDraftChanges(request.id, currentData);
-          console.log('💾 Draft save completed successfully');
           setIsDraftDirty(false);
         } catch (error) {
           console.error('💾 Failed to save draft changes:', error);
@@ -282,11 +258,11 @@ export function RequestEditor({ request, onRequestChange }) {
           searchParams.forEach((value, key) => {
             // Try to preserve existing parameter data (ID, enabled state) but use new URL value
             const existingParam = (prev.queryParams || []).find(p => p.key === key);
-            queryParams.push({ 
-              id: existingParam?.id || generateUUID(), 
-              key, 
+            queryParams.push({
+              id: existingParam?.id || generateUUID(),
+              key,
               value: value, // Always use the value from URL
-              enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true 
+              enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true
             });
           });
         }
@@ -334,11 +310,8 @@ export function RequestEditor({ request, onRequestChange }) {
   };
 
   const updateRequestData = (updates) => {
-    console.log('📝 UPDATE REQUEST DATA:', updates);
-    console.log('📝 Previous data:', requestData);
     setRequestData(prev => {
       const newData = { ...prev, ...updates };
-      console.log('📝 New data after update:', newData);
       return newData;
     });
   };
@@ -409,9 +382,6 @@ export function RequestEditor({ request, onRequestChange }) {
   };
 
   const handleUrlChange = (url) => {
-    console.log('🖊️ URL CHANGE - New URL:', url);
-    console.log('🖊️ Current requestData before update:', requestData);
-
     // Only update the URL directly, don't parse parameters during typing
     // Parameter parsing will happen when the user finishes editing (see useEffect below)
     updateRequestData({ url });
@@ -444,11 +414,11 @@ export function RequestEditor({ request, onRequestChange }) {
         searchParams.forEach((value, key) => {
           // Try to preserve existing parameter data (ID, enabled state) but use new URL value
           const existingParam = (requestData.queryParams || []).find(p => p.key === key);
-          queryParams.push({ 
-            id: existingParam?.id || generateUUID(), 
-            key, 
+          queryParams.push({
+            id: existingParam?.id || generateUUID(),
+            key,
             value: value, // Always use the value from URL
-            enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true 
+            enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true
           });
         });
       }
@@ -612,7 +582,7 @@ export function RequestEditor({ request, onRequestChange }) {
     try {
       // Update proxy URL to respect current settings before making the request
       requestSubmitter.updateProxyUrl(requestSubmitter.getCurrentProxyUrl());
-      
+
       const result = await requestSubmitter.submitRequest(processedRequestData);
       setResponse(result);
 
@@ -620,7 +590,6 @@ export function RequestEditor({ request, onRequestChange }) {
       if (request?.id) {
         try {
           await apiClient.saveRequestResponse(request.id, result);
-          console.log('Response saved to database');
         } catch (saveError) {
           console.error('Failed to save response to database:', saveError);
           // Don't fail the request if saving fails
