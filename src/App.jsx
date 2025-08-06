@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
-import { Router, Route, Switch } from 'wouter-preact';
+import { Router, Route, Switch, useLocation } from 'wouter-preact';
 import { AppProvider } from './context/AppContext';
 import { AppLayout } from './components/layout/AppLayout';
 import { FullPageLayout } from './components/layout/FullPageLayout';
@@ -42,7 +42,7 @@ export function App() {
     try {
       // Check if we have environments
       const environments = await apiClient.getAllEnvironments();
-      
+
       if (environments.length > 0 && !hasSessionKey()) {
         // Count total secrets across all environments
         let totalSecrets = 0;
@@ -50,7 +50,7 @@ export function App() {
           const secretCount = await apiClient.countEnvironmentSecrets(environment.id);
           totalSecrets += secretCount;
         }
-        
+
         // Show encryption key modal
         setEncryptionKeyModal({
           isOpen: true,
@@ -70,12 +70,12 @@ export function App() {
 
   const initializeApp = () => {
     setIsAppReady(true);
-    
+
     // Check for import URL parameter after app is ready
     const urlParams = new URLSearchParams(window.location.search);
     const importUrl = urlParams.get('import');
     const sharedRequest = urlParams.get('r');
-    
+
     if (importUrl) {
       // Show the import modal
       setUrlImportModal({
@@ -83,13 +83,13 @@ export function App() {
         importUrl: decodeURIComponent(importUrl)
       });
     }
-    
+
     // Check for shared request parameter (only on base URL)
     if (sharedRequest && window.location.pathname === '/') {
       try {
         const decodedJson = atob(sharedRequest);
         const requestData = JSON.parse(decodedJson);
-        
+
         // Transform the data to match RequestEditor's expected format
         const formattedRequestData = {
           method: requestData.method || 'GET',
@@ -119,9 +119,9 @@ export function App() {
           })) || [],
           urlEncodedData: []
         };
-        
+
         setSharedRequestData(formattedRequestData);
-        
+
         // Clean up the URL parameter
         const url = new URL(window.location);
         url.searchParams.delete('r');
@@ -141,7 +141,7 @@ export function App() {
       isOpen: false,
       importUrl: ''
     });
-    
+
     // Clear the import parameter from URL
     const url = new URL(window.location);
     url.searchParams.delete('import');
@@ -183,10 +183,10 @@ export function App() {
       for (const environment of environments) {
         await apiClient.deleteEnvironment(environment.id);
       }
-      
+
       // Clear the encrypted reference from localStorage since we're starting fresh
       localStorage.removeItem('encrypted-reference');
-      
+
       // Reset all modal states
       setClearEnvironmentsModal(false);
       setEncryptionKeyModal({
@@ -194,7 +194,7 @@ export function App() {
         environmentCount: 0,
         secretCount: 0
       });
-      
+
       // Initialize the app normally
       initializeApp();
     } catch (error) {
@@ -249,14 +249,26 @@ export function App() {
     );
   }
 
-  return (
-    <AppProvider>
-      <div class="min-h-screen flex flex-col bg-gray-50">
+  // Component to handle route-specific styling
+  function AppContent() {
+    const [location] = useLocation();
+    
+    // Check if current route should use min-h-screen instead of h-screen
+    // These are the routes that use AppLayout (not FullPageLayout)
+    const isAppLayoutRoute = location === '/' || 
+                           (location.match(/^\/[^/]+$/) && !location.startsWith('/collections') && !location.startsWith('/environments') && !location.startsWith('/settings')) ||
+                           (location.match(/^\/[^/]+\/[^/]+$/) && !location.startsWith('/collections/') && !location.startsWith('/environments/'));
+    
+    const containerClass = isAppLayoutRoute ? 
+      "min-h-screen flex flex-col bg-gray-50" : 
+      "h-screen flex flex-col bg-gray-50";
+
+    return (
+      <div class={containerClass}>
         {/* Persistent TopBar across all routes */}
         <TopBar />
-        
-        <Router>
-          <Switch>
+
+        <Switch>
             <Route path="/collections/:uuid">
               <FullPageLayout>
                 <CollectionUpdatePage />
@@ -294,7 +306,6 @@ export function App() {
               </AppLayout>
             </Route>
           </Switch>
-        </Router>
 
         {/* URL Import Modal */}
         <URLImportModal
@@ -304,6 +315,14 @@ export function App() {
           onSuccess={handleUrlImportSuccess}
         />
       </div>
+    );
+  }
+
+  return (
+    <AppProvider>
+      <Router>
+        <AppContent />
+      </Router>
     </AppProvider>
   );
 }
