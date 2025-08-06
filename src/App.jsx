@@ -94,18 +94,18 @@ export function App() {
         const formattedRequestData = {
           method: requestData.method || 'GET',
           url: requestData.url || '',
-          headers: requestData.headers?.map(h => ({
+          headers: requestData.headers ? Object.entries(requestData.headers).map(([key, value]) => ({
             id: generateUUID(),
-            key: h.key,
-            value: h.value,
+            key: key,
+            value: value,
             enabled: true
-          })) || [],
-          queryParams: requestData.params?.map(p => ({
+          })) : [],
+          queryParams: requestData.params ? Object.entries(requestData.params).map(([key, value]) => ({
             id: generateUUID(),
-            key: p.key,
-            value: p.value,
+            key: key,
+            value: value,
             enabled: true
-          })) || [],
+          })) : [],
           pathParams: [],
           bodyType: requestData.requestType || 'none',
           contentType: requestData.contentType || 'application/json',

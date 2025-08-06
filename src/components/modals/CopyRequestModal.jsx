@@ -14,14 +14,14 @@ export function CopyRequestModal({ isOpen, onClose, requestData, getAvailableVar
       const processedData = {
         method: requestData.method || 'GET',
         url: replaceVariables(requestData.url || '', variables),
-        headers: requestData.headers?.filter(h => h.enabled && h.key.trim()).map(h => ({
-          key: replaceVariables(h.key, variables),
-          value: replaceVariables(h.value, variables)
-        })) || [],
-        params: requestData.queryParams?.filter(p => p.enabled && p.key.trim()).map(p => ({
-          key: replaceVariables(p.key, variables),
-          value: replaceVariables(p.value, variables)
-        })) || [],
+        headers: requestData.headers?.filter(h => h.enabled && h.key.trim()).reduce((acc, h) => {
+          acc[replaceVariables(h.key, variables)] = replaceVariables(h.value, variables);
+          return acc;
+        }, {}) || {},
+        params: requestData.queryParams?.filter(p => p.enabled && p.key.trim()).reduce((acc, p) => {
+          acc[replaceVariables(p.key, variables)] = replaceVariables(p.value, variables);
+          return acc;
+        }, {}) || {},
         requestType: requestData.bodyType || 'none',
         contentType: requestData.contentType || '',
         body: replaceVariables(requestData.bodyContent || '', variables),
@@ -36,8 +36,8 @@ export function CopyRequestModal({ isOpen, onClose, requestData, getAvailableVar
       const cleanData = {};
       if (processedData.method && processedData.method !== 'GET') cleanData.method = processedData.method;
       if (processedData.url) cleanData.url = processedData.url;
-      if (processedData.headers.length > 0) cleanData.headers = processedData.headers;
-      if (processedData.params.length > 0) cleanData.params = processedData.params;
+      if (Object.keys(processedData.headers).length > 0) cleanData.headers = processedData.headers;
+      if (Object.keys(processedData.params).length > 0) cleanData.params = processedData.params;
       if (processedData.requestType && processedData.requestType !== 'none') cleanData.requestType = processedData.requestType;
       if (processedData.contentType) cleanData.contentType = processedData.contentType;
       if (processedData.body) cleanData.body = processedData.body;
