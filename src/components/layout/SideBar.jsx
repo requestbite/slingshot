@@ -10,6 +10,7 @@ import { FolderTree } from '../sidebar/FolderTree';
 import { useAppContext } from '../../hooks/useAppContext';
 import { apiClient } from '../../api';
 import { hasSessionKey } from '../../utils/encryption';
+import { setLastSlingshotUrl } from '../../utils/slingshotNavigation';
 
 export function SideBar({ onClose: _onClose }) {
   const [showImportModal, setShowImportModal] = useState(false);
@@ -170,7 +171,9 @@ export function SideBar({ onClose: _onClose }) {
                       const collection = collections.find(c => c.id === collectionId);
                       if (collection) {
                         selectCollection(collection);
-                        setLocation(`/${collectionId}`);
+                        const url = `/${collectionId}`;
+                        setLastSlingshotUrl(url);
+                        setLocation(url);
                       }
                     }
                   }}
@@ -363,7 +366,9 @@ export function SideBar({ onClose: _onClose }) {
                     onClick={(e) => {
                       e.preventDefault();
                       selectRequest(null); // Clear request editor fields
-                      setLocation(`/${selectedCollection.id}`);
+                      const url = `/${selectedCollection.id}`;
+                      setLastSlingshotUrl(url);
+                      setLocation(url);
                     }}
                     class="text-xs text-sky-600 hover:text-sky-800 focus:outline-none cursor-pointer"
                   >

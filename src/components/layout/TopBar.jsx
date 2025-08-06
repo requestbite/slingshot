@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import LogoHorizontal from '../../assets/logo-horizontal-slingshot.svg';
+import { getLastSlingshotUrl, setLastSlingshotUrl, isValidSlingshotUrl } from '../../utils/slingshotNavigation';
 
 export function TopBar() {
   const [location, setLocation] = useLocation();
@@ -66,6 +67,13 @@ export function TopBar() {
     }
   }, [location]);
 
+  // Track route changes and store valid Slingshot URLs
+  useEffect(() => {
+    if (isValidSlingshotUrl(location)) {
+      setLastSlingshotUrl(location);
+    }
+  }, [location]);
+
   // Function to get banner text and styling
   const getProxyBanner = (isMobile = false) => {
     if (proxyConfig.proxyType === 'custom' && proxyConfig.customProxyUrl) {
@@ -120,7 +128,7 @@ export function TopBar() {
       <div class="flex items-center justify-between h-full px-4">
         {/* Logo */}
         <button
-          onClick={() => setLocation('/')}
+          onClick={() => setLocation(getLastSlingshotUrl())}
           class="flex items-center hover:opacity-80 transition-opacity hover:cursor-pointer"
         >
           <img
@@ -136,10 +144,10 @@ export function TopBar() {
             RequestBite
           </a>
           <a
-            href="/"
+            href={getLastSlingshotUrl()}
             onClick={(e) => {
               e.preventDefault();
-              setLocation('/');
+              setLocation(getLastSlingshotUrl());
             }}
             class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isSlingshotActive()
               ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
@@ -252,7 +260,7 @@ export function TopBar() {
           <div class="fixed top-0 right-0 inset-y-0 h-screen w-[calc(100%-75px)] bg-white shadow-lg z-50 text-left overflow-y-auto">
             <div class="flex items-center justify-between border-b border-gray-300">
               <button
-                onClick={() => setLocation('/')}
+                onClick={() => setLocation(getLastSlingshotUrl())}
                 class="ml-3 mr-1.5 p-1.5 hover:opacity-80 transition-opacity"
               >
                 <span class="sr-only">RequestBite</span>
@@ -281,10 +289,10 @@ export function TopBar() {
                     <span class="text-xs text-gray-500 mt-1">RequestBite website</span>
                   </a>
                   <a
-                    href="/"
+                    href={getLastSlingshotUrl()}
                     onClick={(e) => {
                       e.preventDefault();
-                      setLocation('/');
+                      setLocation(getLastSlingshotUrl());
                       setIsMobileMenuOpen(false);
                     }}
                     class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"

@@ -6,6 +6,7 @@ import { DeleteRequestModal } from '../modals/DeleteRequestModal';
 import { getMethodColor } from '../../utils/httpMethods';
 import { useAppContext } from '../../hooks/useAppContext';
 import { apiClient } from '../../api';
+import { setLastSlingshotUrl } from '../../utils/slingshotNavigation';
 
 export function RequestItem({ request, isSelected, level = 0, onRequestUpdate }) {
   const [showContextMenu, setShowContextMenu] = useState(false);
@@ -31,7 +32,9 @@ export function RequestItem({ request, isSelected, level = 0, onRequestUpdate })
   const handleRequestClick = () => {
     if (selectedCollection && request) {
       selectRequest(request);
-      setLocation(`/${selectedCollection.id}/${request.id}`);
+      const url = `/${selectedCollection.id}/${request.id}`;
+      setLastSlingshotUrl(url);
+      setLocation(url);
     }
   };
 
