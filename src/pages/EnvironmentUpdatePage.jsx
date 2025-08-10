@@ -7,7 +7,7 @@ import { apiClient } from '../api';
 
 export function EnvironmentUpdatePage() {
   const [, setLocation] = useLocation();
-  const [match, params] = useRoute('/environments/:uuid');
+  const [match, params] = useRoute('/environments/:uuid/:section?');
 
   const [environment, setEnvironment] = useState(null);
   const [originalSecrets, setOriginalSecrets] = useState([]);
@@ -34,8 +34,8 @@ export function EnvironmentUpdatePage() {
   const [hasGeneralChanges, setHasGeneralChanges] = useState(false);
   const [hasSecretsChanges, setHasSecretsChanges] = useState(false);
 
-  // Active section state
-  const [activeSection, setActiveSection] = useState('general');
+  // Active section state - determine from URL
+  const [activeSection, setActiveSection] = useState(params.section === 'secrets' ? 'secrets' : 'general');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Modal states
@@ -59,6 +59,11 @@ export function EnvironmentUpdatePage() {
       loadEnvironmentData(params.uuid);
     }
   }, [match, params.uuid]);
+
+  // Update active section when URL changes
+  useEffect(() => {
+    setActiveSection(params.section === 'secrets' ? 'secrets' : 'general');
+  }, [params.section]);
 
   const loadEnvironmentData = async (environmentId) => {
     try {
@@ -364,6 +369,14 @@ export function EnvironmentUpdatePage() {
     }
   };
 
+  // Navigation helper for section links
+  const handleSectionNavigation = (section, e) => {
+    e.preventDefault();
+    const basePath = `/environments/${params.uuid}`;
+    const newPath = section === 'secrets' ? `${basePath}/secrets` : basePath;
+    setLocation(newPath);
+  };
+
   if (isLoading) {
     return (
       <div class="h-full flex items-center justify-center">
@@ -418,8 +431,9 @@ export function EnvironmentUpdatePage() {
                         <div class="text-xs mb-2 text-gray-500">Environment</div>
                         <ul role="list" class="-mx-2 space-y-1">
                           <li>
-                            <button
-                              onClick={() => setActiveSection('general')}
+                            <a
+                              href={`/environments/${params.uuid}`}
+                              onClick={(e) => handleSectionNavigation('general', e)}
                               class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${
                                 activeSection === 'general'
                                   ? 'bg-sky-50 text-sky-500'
@@ -432,11 +446,12 @@ export function EnvironmentUpdatePage() {
                                 <path d="M12 1.25C6.063 1.25 1.25 6.063 1.25 12S6.063 22.75 12 22.75S22.75 17.937 22.75 12S17.937 1.25 12 1.25M2.75 12a9.25 9.25 0 1 1 16.282 6.01a4.84 4.84 0 0 0-1.17-2.034c-.782-.813-1.76-1.286-2.608-1.55c-.626-.195-1.216.03-1.604.293c-.36.242-.94.531-1.65.531s-1.29-.29-1.65-.531c-.388-.262-.978-.488-1.604-.293c-.849.264-1.826.737-2.608 1.55a4.84 4.84 0 0 0-1.17 2.033A9.2 9.2 0 0 1 2.75 12m3.513 7.256c.076-1.011.46-1.724.957-2.241c.553-.576 1.28-.941 1.972-1.157a.2.2 0 0 1 .103.003a.7.7 0 0 1 .216.101c.501.338 1.374.788 2.489.788s1.988-.45 2.489-.788a.7.7 0 0 1 .216-.1a.2.2 0 0 1 .103-.004c.692.216 1.419.581 1.972 1.157c.497.517.88 1.23.957 2.241A9.2 9.2 0 0 1 12 21.25a9.2 9.2 0 0 1-5.737-1.994M9.75 10c0-1.25.97-2.25 2.25-2.25s2.25 1 2.25 2.25s-.97 2.25-2.25 2.25s-2.25-1-2.25-2.25M12 6.25A3.72 3.72 0 0 0 8.25 10A3.72 3.72 0 0 0 12 13.75A3.72 3.72 0 0 0 15.75 10A3.72 3.72 0 0 0 12 6.25" />
                               </svg>
                               General
-                            </button>
+                            </a>
                           </li>
                           <li>
-                            <button
-                              onClick={() => setActiveSection('secrets')}
+                            <a
+                              href={`/environments/${params.uuid}/secrets`}
+                              onClick={(e) => handleSectionNavigation('secrets', e)}
                               class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${
                                 activeSection === 'secrets'
                                   ? 'bg-sky-50 text-sky-500'
@@ -449,7 +464,7 @@ export function EnvironmentUpdatePage() {
                                 <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M10 12a1 1 0 0 0-1 1v1a1 1 0 0 1-1 1 1 1 0 0 1 1 1v1a1 1 0 0 0 1 1" /><path d="M14 18a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1 1 1 0 0 1-1-1v-1a1 1 0 0 0-1-1" />
                               </svg>
                               Secrets
-                            </button>
+                            </a>
                           </li>
                         </ul>
                       </li>
@@ -477,9 +492,10 @@ export function EnvironmentUpdatePage() {
                           <div class="text-xs mb-2 text-gray-500">Environment</div>
                           <ul role="list" class="-mx-2 space-y-1">
                             <li>
-                              <button
-                                onClick={() => {
-                                  setActiveSection('general');
+                              <a
+                                href={`/environments/${params.uuid}`}
+                                onClick={(e) => {
+                                  handleSectionNavigation('general', e);
                                   setIsSidebarOpen(false);
                                 }}
                                 class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${
@@ -491,15 +507,16 @@ export function EnvironmentUpdatePage() {
                                 <svg xmlns="http://www.w3.org/2000/svg" class={`size-6 shrink-0 ${
                                   activeSection === 'general' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
                                 }`} viewBox="0 0 24 24" fill="currentColor">
-                                  <path d="M12 1.25C6.063 1.25 1.25 6.063 1.25 12S6.063 22.75 12 22.75S22.75 17.937 22.75 12S17.937 1.25 12 1.25M2.75 12a9.25 9.25 0 1 1 16.282 6.01a4.84 4.84 0 0 0-1.17-2.034c-.782-.813-1.76-1.286-2.608-1.55c-.626-.195-1.216.03-1.604.293c-.36.242-.94.531-1.65.531s-1.29-.29-1.65-.531c-.388-.262-.978-.488-1.604-.293c-.849.264-1.826.737-2.608 1.55a4.84 4.84 0 0 0-1.17 2.033A9.2 9.2 0 0 1 2.75 12m3.513 7.256c.076-1.011.46-1.724.957-2.241c.553-.576 1.28-.941 1.972-1.157a.2.2 0 0 1 .103.003a.7.7 0 0 1 .216.101c.501.338 1.374.788 2.489.788s1.988-.45 2.489-.788a.7.7 0 0 1 .216-.1a.2.2 0 0 1 .103-.004c.692.216 1.419.581 1.972 1.157c.497.517.88 1.23.957 2.241A9.2 9.2 0 0 1 12 21.25a9.2 9.2 0 0 1-5.737-1.994M9.75 10c0-1.25.97-2.25 2.25-2.25s2.25 1 2.25 2.25s-.97 2.25-2.25 2.25s-2.25-1-2.25-2.25M12 6.25A3.72 3.72 0 0 0 8.25 10A3.72 3.72 0 0 0 12 13.75A3.72 3.72 0 0 0 15.75 10A3.72 3.72 0 0 0 12 6.25" />
+                                  <path d="M12 1.25C6.063 1.25 1.25 6.063 1.25 12S6.063 22.75 12 22.75S22.75 17.937 22.75 12S17.937 1.25 12 1.25M2.75 12a9.25 9.25 0 1 1 16.282 6.01a4.84 4.84 0 0 0-1.17-2.034c-.782-.813-1.76-1.286-2.608-1.55c-.626-.195-1.216.03-1.604.293c-.36.242-.94.531-1.65.531s-1.29-.29-1.65-.531c-.388-.262-.978-.488-1.604-.293c-.849.264-1.826.737-2.608 1.55a4.84 4.84 0 0 0-1.17 2.033A9.2 9.2 0 0 1 2.75 12m3.513 7.256c.076-1.011.46-1.724.957-2.241c.553-.576 1.28-.941 1.972-1.157a.2.2 0 0 1 .103.003a.7.7 0 0 1 .216.101c.501.338 1.374.788 2.489.788s1.988-.45 2.489-.788a .7.7 0 0 1 .216-.1a.2.2 0 0 1 .103-.004c.692.216 1.419.581 1.972 1.157c.497.517.88 1.23.957 2.241A9.2 9.2 0 0 1 12 21.25a9.2 9.2 0 0 1-5.737-1.994M9.75 10c0-1.25.97-2.25 2.25-2.25s2.25 1 2.25 2.25s-.97 2.25-2.25 2.25s-2.25-1-2.25-2.25M12 6.25A3.72 3.72 0 0 0 8.25 10A3.72 3.72 0 0 0 12 13.75A3.72 3.72 0 0 0 15.75 10A3.72 3.72 0 0 0 12 6.25" />
                                 </svg>
                                 General
-                              </button>
+                              </a>
                             </li>
                             <li>
-                              <button
-                                onClick={() => {
-                                  setActiveSection('secrets');
+                              <a
+                                href={`/environments/${params.uuid}/secrets`}
+                                onClick={(e) => {
+                                  handleSectionNavigation('secrets', e);
                                   setIsSidebarOpen(false);
                                 }}
                                 class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${
@@ -514,7 +531,7 @@ export function EnvironmentUpdatePage() {
                                   <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M10 12a1 1 0 0 0-1 1v1a1 1 0 0 1-1 1 1 1 0 0 1 1 1v1a1 1 0 0 0 1 1" /><path d="M14 18a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1 1 1 0 0 1-1-1v-1a1 1 0 0 0-1-1" />
                                 </svg>
                                 Secrets
-                              </button>
+                              </a>
                             </li>
                           </ul>
                         </li>

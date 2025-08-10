@@ -279,6 +279,11 @@ export function App() {
                 <CollectionsPage />
               </FullPageLayout>
             </Route>
+            <Route path="/environments/:uuid/secrets">
+              <FullPageLayout>
+                <EnvironmentUpdatePage />
+              </FullPageLayout>
+            </Route>
             <Route path="/environments/:uuid">
               <FullPageLayout>
                 <EnvironmentUpdatePage />
