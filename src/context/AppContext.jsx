@@ -11,6 +11,7 @@ export function AppProvider({ children }) {
   const [selectedCollection, setSelectedCollection] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [currentEnvironment, setCurrentEnvironment] = useState(null);
+  const [hasManuallySelectedEnvironment, setHasManuallySelectedEnvironment] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load collections on app start
@@ -122,6 +123,7 @@ export function AppProvider({ children }) {
     selectedCollection,
     selectedRequest,
     currentEnvironment,
+    hasManuallySelectedEnvironment,
     isLoading,
     
     // Actions
@@ -132,6 +134,7 @@ export function AppProvider({ children }) {
     selectCollection,
     selectRequest,
     setCurrentEnvironment,
+    setHasManuallySelectedEnvironment,
     refreshCollectionData
   };
 

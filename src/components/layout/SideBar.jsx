@@ -1,4 +1,4 @@
-import { useState, useRef } from 'preact/hooks';
+import { useState, useRef, useEffect } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { OpenAPIImportModal } from '../import/OpenAPIImportModal';
 import { PostmanImportModal } from '../import/PostmanImportModal';
@@ -8,6 +8,9 @@ import { ExportPostmanModal } from '../modals/ExportPostmanModal';
 import { ContextMenu } from '../common/ContextMenu';
 import { FolderTree } from '../sidebar/FolderTree';
 import { useAppContext } from '../../hooks/useAppContext';
+import { apiClient } from '../../api';
+import { hasSessionKey } from '../../utils/encryption';
+import { setLastSlingshotUrl } from '../../utils/slingshotNavigation';
 
 export function SideBar({ onClose: _onClose }) {
   const [showImportModal, setShowImportModal] = useState(false);
@@ -19,7 +22,105 @@ export function SideBar({ onClose: _onClose }) {
   const importButtonRef = useRef();
   const [searchTerm, setSearchTerm] = useState('');
   const [, setLocation] = useLocation();
-  const { collections, selectedCollection, selectCollection, selectRequest, isLoading } = useAppContext();
+  const { collections, selectedCollection, selectCollection, selectRequest, isLoading, updateCollection, currentEnvironment, setCurrentEnvironment, hasManuallySelectedEnvironment, setHasManuallySelectedEnvironment } = useAppContext();
+
+  // Environment state
+  const [environments, setEnvironments] = useState([]);
+  const [isLoadingEnvironments, setIsLoadingEnvironments] = useState(false);
+  const [isUpdatingDefault, setIsUpdatingDefault] = useState(false);
+  const [showDefaultSuccess, setShowDefaultSuccess] = useState(false);
+
+  // Load environments when component mounts
+  useEffect(() => {
+    loadEnvironments();
+  }, []);
+
+  // Update current environment when selectedCollection changes, but respect manual selection
+  useEffect(() => {
+    if (selectedCollection) {
+      // Only auto-set environment if user hasn't manually selected one
+      if (!hasManuallySelectedEnvironment && selectedCollection.environment_id && environments.length > 0) {
+        const environment = environments.find(env => env.id === selectedCollection.environment_id);
+        setCurrentEnvironment(environment || null);
+      } else if (!hasManuallySelectedEnvironment) {
+        // No environment set or environment doesn't exist anymore
+        setCurrentEnvironment(null);
+      }
+      // If user has manually selected an environment, don't override it
+    } else {
+      setCurrentEnvironment(null);
+      setHasManuallySelectedEnvironment(false); // Reset when no collection
+    }
+  }, [selectedCollection, environments, setCurrentEnvironment, hasManuallySelectedEnvironment, setHasManuallySelectedEnvironment]);
+
+  const loadEnvironments = async () => {
+    // Only load environments if encryption key is available
+    if (!hasSessionKey()) {
+      setEnvironments([]);
+      return;
+    }
+
+    try {
+      setIsLoadingEnvironments(true);
+      const allEnvironments = await apiClient.getAllEnvironments();
+      // Sort alphabetically
+      allEnvironments.sort((a, b) => a.name.localeCompare(b.name));
+      setEnvironments(allEnvironments);
+    } catch (error) {
+      console.error('Failed to load environments:', error);
+      setEnvironments([]);
+    } finally {
+      setIsLoadingEnvironments(false);
+    }
+  };
+
+  const handleEnvironmentChange = (environmentId) => {
+    setHasManuallySelectedEnvironment(true); // Mark that user manually selected an environment
+    if (environmentId === 'none') {
+      setCurrentEnvironment(null);
+    } else {
+      const environment = environments.find(env => env.id === environmentId);
+      setCurrentEnvironment(environment || null);
+    }
+  };
+
+  const handleMakeDefault = async () => {
+    if (!selectedCollection || isUpdatingDefault) {
+      return;
+    }
+
+    try {
+      setIsUpdatingDefault(true);
+      const environmentId = currentEnvironment ? currentEnvironment.id : null;
+
+      await apiClient.updateCollection(selectedCollection.id, {
+        ...selectedCollection,
+        environment_id: environmentId
+      });
+
+      // Fetch the updated collection from database to ensure we have latest data
+      const updatedCollection = await apiClient.getCollection(selectedCollection.id);
+
+      // Update both the selected collection and the collections cache
+      selectCollection(updatedCollection);
+      updateCollection(updatedCollection);
+
+      // Show success feedback and fade back to blue
+      setShowDefaultSuccess(true);
+      setTimeout(() => {
+        setShowDefaultSuccess(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Failed to update collection environment:', error);
+    } finally {
+      setIsUpdatingDefault(false);
+    }
+  };
+
+  const isDefaultEnvironment = selectedCollection && (
+    (currentEnvironment && selectedCollection.environment_id === currentEnvironment.id) ||
+    (!currentEnvironment && !selectedCollection.environment_id)
+  );
 
   return (
     <>
@@ -70,7 +171,9 @@ export function SideBar({ onClose: _onClose }) {
                       const collection = collections.find(c => c.id === collectionId);
                       if (collection) {
                         selectCollection(collection);
-                        setLocation(`/${collectionId}`);
+                        const url = `/${collectionId}`;
+                        setLastSlingshotUrl(url);
+                        setLocation(url);
                       }
                     }
                   }}
@@ -95,6 +198,22 @@ export function SideBar({ onClose: _onClose }) {
               <div class="mt-2 flex space-x-2">
                 {selectedCollection && (
                   <>
+                    <a
+                      href={selectedCollection ? `/collections/${selectedCollection.id}` : '#'}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (selectedCollection) {
+                          setLocation(`/collections/${selectedCollection.id}`);
+                        }
+                      }}
+                      class="justify-center rounded-md bg-sky-100 hover:bg-sky-200 h-[30px] w-[30px] text-sm font-medium text-sky-700 flex items-center p-0 cursor-pointer no-underline"
+                      title="Collection settings"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto">
+                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    </a>
                     <button
                       onClick={() => setShowAddFolderModal(true)}
                       class="justify-center rounded-md bg-sky-100 hover:bg-sky-200 h-[30px] w-[30px] text-sm font-medium text-sky-700 flex items-center p-0 cursor-pointer"
@@ -104,16 +223,6 @@ export function SideBar({ onClose: _onClose }) {
                         <path d="M12 10v6" />
                         <path d="M9 13h6" />
                         <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => selectedCollection && setLocation(`/collections/${selectedCollection.id}`)}
-                      class="justify-center rounded-md bg-sky-100 hover:bg-sky-200 h-[30px] w-[30px] text-sm font-medium text-sky-700 flex items-center p-0 cursor-pointer"
-                      title="Collection settings"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto">
-                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-                        <circle cx="12" cy="12" r="3" />
                       </svg>
                     </button>
                     <button
@@ -130,11 +239,107 @@ export function SideBar({ onClose: _onClose }) {
               </div>
             </div>
 
+            {/* Environment Management */}
+            {selectedCollection && (
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <label for="environment-select" class="block text-xs font-medium text-gray-600">Environment</label>
+                </div>
+                <div class="relative">
+                  <select
+                    id="environment-select"
+                    class="w-full appearance-none rounded-md bg-white py-2 pl-3 pr-8 text-sm text-gray-900 outline -outline-offset-1 outline-gray-300 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
+                    value={currentEnvironment?.id || (currentEnvironment === null ? 'none' : '')}
+                    onChange={(e) => {
+                      const environmentId = e.target.value;
+                      handleEnvironmentChange(environmentId);
+                    }}
+                    disabled={isLoadingEnvironments}
+                  >
+                    <option value="" disabled={environments.length > 0}>
+                      {isLoadingEnvironments ? 'Loading...' : 'Pick an environment...'}
+                    </option>
+                    <option value="none">
+                      No environment
+                    </option>
+                    {environments.map(environment => (
+                      <option key={environment.id} value={environment.id}>
+                        {environment.name} &middot; local
+                      </option>
+                    ))}
+                  </select>
+                  <svg class="pointer-events-none absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 h-4 w-4"
+                    viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd"
+                      d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
+                      clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div class="mt-2 flex space-x-2">
+                  <a
+                    href={currentEnvironment ? `/environments/${currentEnvironment.id}` : '/environments'}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (currentEnvironment) {
+                        setLocation(`/environments/${currentEnvironment.id}`);
+                      } else {
+                        setLocation('/environments');
+                      }
+                    }}
+                    class={`justify-center rounded-md h-[30px] w-[30px] text-sm font-medium flex items-center p-0 no-underline ${currentEnvironment || environments.length === 0
+                      ? 'bg-sky-100 hover:bg-sky-200 text-sky-700 cursor-pointer'
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      }`}
+                    title="Environment settings"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto">
+                      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </a>
+                  <button
+                    onClick={handleMakeDefault}
+                    disabled={isUpdatingDefault || isDefaultEnvironment}
+                    class={`flex-1 justify-center rounded-md h-[30px] text-xs font-medium flex items-center cursor-pointer transition-colors duration-300 ${showDefaultSuccess
+                      ? 'bg-green-100 text-green-700'
+                      : isDefaultEnvironment && !showDefaultSuccess
+                        ? 'bg-sky-100 text-sky-700 cursor-default'
+                        : !isUpdatingDefault
+                          ? 'bg-sky-100 hover:bg-sky-200 text-sky-700'
+                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      }`}
+                    title={
+                      isDefaultEnvironment
+                        ? currentEnvironment
+                          ? "This environment is already the default for this collection"
+                          : "No environment is already the default for this collection"
+                        : currentEnvironment
+                          ? "Make environment the default for this collection"
+                          : "Clear the default environment for this collection"
+                    }
+                  >
+                    {isUpdatingDefault
+                      ? 'Updating...'
+                      : showDefaultSuccess
+                        ? 'Updated!'
+                        : isDefaultEnvironment
+                          ? currentEnvironment
+                            ? 'Default environment'
+                            : 'No default environment'
+                          : currentEnvironment
+                            ? 'Make default'
+                            : 'Clear default'
+                    }
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Collection Tree View */}
             <div class="mt-4" style={{ display: selectedCollection ? 'block' : 'none' }}>
               {/* Local Collection Banner */}
               {selectedCollection && (
-                <div class="mb-3 px-2 py-1 rounded-md text-xs bg-sky-100 text-sky-800 flex items-center">
+                <div class="mb-3 px-2 py-1 rounded-md text-xs bg-gray-100 text-gray-500 flex items-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="12"
@@ -161,7 +366,9 @@ export function SideBar({ onClose: _onClose }) {
                     onClick={(e) => {
                       e.preventDefault();
                       selectRequest(null); // Clear request editor fields
-                      setLocation(`/${selectedCollection.id}`);
+                      const url = `/${selectedCollection.id}`;
+                      setLastSlingshotUrl(url);
+                      setLocation(url);
                     }}
                     class="text-xs text-sky-600 hover:text-sky-800 focus:outline-none cursor-pointer"
                   >

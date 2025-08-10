@@ -1,7 +1,7 @@
 import { useState } from 'preact/hooks';
 import { VariableInput } from '../../common/VariableInput';
 
-export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPathParamsChange, onEnterKeyPress }) {
+export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPathParamsChange, onEnterKeyPress, selectedEnvironment }) {
   const handlePathParamChange = (id, field, value) => {
     const updatedParams = pathParams.map(param =>
       param.id === id ? { ...param, [field]: value } : param
@@ -51,6 +51,7 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
                 </div>
                 <div class="col-span-6">
                   <VariableInput
+                    key={`pathparam-${param.id}-${selectedEnvironment?.id || 'none'}`}
                     value={param.value}
                     onChange={(value) => handlePathParamChange(param.id, 'value', value)}
                     onKeyDown={onEnterKeyPress}
@@ -59,6 +60,7 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
                       param.enabled ? '' : 'opacity-50'
                     }`}
                     disabled={!param.enabled}
+                    selectedEnvironment={selectedEnvironment}
                   />
                 </div>
               </div>

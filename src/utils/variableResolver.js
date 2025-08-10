@@ -131,7 +131,7 @@ async function loadVariables(collection) {
     
     // Environment variables (if collection has environment)
     if (collection?.environment_id) {
-      const envVars = await apiClient.getSecretsByEnvironment(collection.environment_id);
+      const envVars = await apiClient.getDecryptedEnvironmentSecrets(collection.environment_id);
       envVars.forEach(v => vars.set(v.key, v.value));
     }
   } catch (error) {

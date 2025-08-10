@@ -14,9 +14,10 @@ export function VariableInput({
   placeholder = '',
   className = '',
   disabled = false,
+  selectedEnvironment = null, // Override for current environment selection
   ...props
 }) {
-  const { selectedCollection } = useAppContext();
+  const { selectedCollection, hasManuallySelectedEnvironment } = useAppContext();
   const [variables, setVariables] = useState(new Map());
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [filteredVariables, setFilteredVariables] = useState([]);
@@ -27,10 +28,10 @@ export function VariableInput({
   const inputRef = useRef();
   const autocompleteRef = useRef();
 
-  // Load variables when collection changes
+  // Load variables when collection or selected environment changes
   useEffect(() => {
     loadVariables();
-  }, [selectedCollection]);
+  }, [selectedCollection, selectedEnvironment, hasManuallySelectedEnvironment]);
 
   const loadVariables = async () => {
     const vars = new Map();
@@ -47,9 +48,11 @@ export function VariableInput({
         collectionVars.forEach(v => vars.set(v.key, v.value));
       }
       
-      // Environment variables (if collection has environment)
-      if (selectedCollection?.environment_id) {
-        const envVars = await apiClient.getSecretsByEnvironment(selectedCollection.environment_id);
+      // Environment variables - use selectedEnvironment prop if provided, 
+      // otherwise fall back to collection's default environment only if user hasn't manually selected
+      const environmentId = selectedEnvironment?.id || (!hasManuallySelectedEnvironment ? selectedCollection?.environment_id : null);
+      if (environmentId) {
+        const envVars = await apiClient.getDecryptedEnvironmentSecrets(environmentId);
         envVars.forEach(v => vars.set(v.key, v.value));
       }
     } catch (error) {

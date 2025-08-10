@@ -30,12 +30,13 @@ db.version(1).stores({
 
 /**
  * Environment entity class definition
- * Represents an environment (dev, staging, prod, etc.) with its configuration
+ * Represents an environment (dev, staging, prod, etc.) with its configuration and encrypted secrets
  */
 db.environments.defineClass({
   id: String,
   name: String,
   description: String,
+  secrets: Array,
 });
 
 /**

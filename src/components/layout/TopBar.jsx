@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useMemo } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import LogoHorizontal from '../../assets/logo-horizontal-slingshot.svg';
+import { getLastSlingshotUrl, setLastSlingshotUrl, isValidSlingshotUrl } from '../../utils/slingshotNavigation';
 
 export function TopBar() {
   const [location, setLocation] = useLocation();
@@ -21,7 +22,7 @@ export function TopBar() {
   };
 
   // Load proxy settings from localStorage
-  useEffect(() => {
+  const loadProxySettings = () => {
     const savedSettings = localStorage.getItem('slingshot-settings');
     if (savedSettings) {
       try {
@@ -34,7 +35,44 @@ export function TopBar() {
         console.error('Failed to load proxy settings:', error);
       }
     }
-  }, [location]); // Re-check when location changes (e.g., when coming back from settings)
+  };
+
+  // Load proxy settings on component mount
+  useEffect(() => {
+    loadProxySettings();
+  }, []);
+
+  // Listen for localStorage changes to update proxy settings when user changes them in settings
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'slingshot-settings') {
+        loadProxySettings();
+      }
+    };
+
+    // Listen for storage events (cross-tab changes)
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  // Also reload settings when navigating away from settings page
+  // This handles same-tab changes that don't trigger storage events
+  useEffect(() => {
+    // Only reload if we're coming FROM settings page (not going TO it)
+    if (location !== '/settings') {
+      loadProxySettings();
+    }
+  }, [location]);
+
+  // Track route changes and store valid Slingshot URLs
+  useEffect(() => {
+    if (isValidSlingshotUrl(location)) {
+      setLastSlingshotUrl(location);
+    }
+  }, [location]);
 
   // Function to get banner text and styling
   const getProxyBanner = (isMobile = false) => {
@@ -82,14 +120,15 @@ export function TopBar() {
     </svg>
   );
 
-  const banner = getProxyBanner();
+  // Memoize banner calculation to prevent unnecessary re-renders
+  const banner = useMemo(() => getProxyBanner(), [proxyConfig]);
 
   return (
     <header class="h-[65px] bg-white/75 backdrop-blur-lg border-b border-gray-300 fixed top-0 left-0 w-full z-10 text-sm">
       <div class="flex items-center justify-between h-full px-4">
         {/* Logo */}
         <button
-          onClick={() => setLocation('/')}
+          onClick={() => setLocation(getLastSlingshotUrl())}
           class="flex items-center hover:opacity-80 transition-opacity hover:cursor-pointer"
         >
           <img
@@ -104,43 +143,59 @@ export function TopBar() {
           <a href="https://requestbite.com" class="hidden lg:flex text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors flex items-center">
             RequestBite
           </a>
-          <button
+          <a
+            href={getLastSlingshotUrl()}
             onClick={(e) => {
               e.preventDefault();
-              setLocation('/');
+              setLocation(getLastSlingshotUrl());
             }}
-            class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer ${isSlingshotActive()
+            class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isSlingshotActive()
               ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
           >
             Slingshot
-          </button>
-          <button
+          </a>
+          <a
+            href="/environments"
+            onClick={(e) => {
+              e.preventDefault();
+              setLocation('/environments');
+            }}
+            class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/environments')
+              ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+          >
+            Environments
+          </a>
+          <a
+            href="/collections"
             onClick={(e) => {
               e.preventDefault();
               setLocation('/collections');
             }}
-            class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer ${isActive('/collections')
+            class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/collections')
               ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
           >
             Collections
-          </button>
-          <button
+          </a>
+          <a
+            href="/settings"
             onClick={(e) => {
               e.preventDefault();
               setLocation('/settings');
             }}
-            class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer ${isActive('/settings')
+            class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/settings')
               ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
           >
             Settings
-          </button>
-          <a href="https://docs.requestbite.com" target="_blank" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors flex items-center">
+          </a>
+          <a href="https://docs.requestbite.com" target="_blank" class="hidden lg:flex text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors flex items-center">
             Docs
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -161,31 +216,34 @@ export function TopBar() {
           </a>
         </nav>
 
-        {/* Desktop Proxy Status Banner */}
-        <button
-          onClick={() => setLocation('/settings')}
-          class={`hidden sm:flex px-2 py-1 rounded-md text-xs transition-colors cursor-pointer items-center ${banner.bgColor} ${banner.textColor} ${banner.hoverColor}`}
-        >
-          <WaypointsIcon />
-          <span class="hidden xl:inline">{banner.textXl}</span>
-          <span class="xl:hidden">{proxyConfig.proxyType === 'custom' ? 'Custom proxy' : banner.text}</span>
-        </button>
-
-        {/* Mobile Hamburger Menu */}
-        <div class="block sm:hidden">
+        {/* Right Section: Proxy Banner + Mobile Menu */}
+        <div class="flex items-center space-x-3">
+          {/* Desktop Proxy Status Banner */}
           <button
-            onClick={() => setIsMobileMenuOpen(true)}
-            type="button"
-            class="cursor-pointer text-gray-600 hover:text-gray-900"
+            onClick={() => setLocation('/settings')}
+            class={`hidden md:flex px-2 py-1 rounded-md text-xs transition-colors cursor-pointer items-center ${banner.bgColor} ${banner.textColor} ${banner.hoverColor}`}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="currentColor" class="w-6 h-6">
-              <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
-                <path d="M7.94971 11.9497H39.9497" />
-                <path d="M7.94971 23.9497H39.9497" />
-                <path d="M7.94971 35.9497H39.9497" />
-              </g>
-            </svg>
+            <WaypointsIcon />
+            <span class="hidden xl:inline">{banner.textXl}</span>
+            <span class="xl:hidden">{proxyConfig.proxyType === 'custom' ? 'Custom proxy' : banner.text}</span>
           </button>
+
+          {/* Mobile Hamburger Menu */}
+          <div class="block lg:hidden">
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              type="button"
+              class="cursor-pointer text-gray-600 hover:text-gray-900"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="currentColor" class="w-6 h-6">
+                <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
+                  <path d="M7.94971 11.9497H39.9497" />
+                  <path d="M7.94971 23.9497H39.9497" />
+                  <path d="M7.94971 35.9497H39.9497" />
+                </g>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -202,7 +260,7 @@ export function TopBar() {
           <div class="fixed top-0 right-0 inset-y-0 h-screen w-[calc(100%-75px)] bg-white shadow-lg z-50 text-left overflow-y-auto">
             <div class="flex items-center justify-between border-b border-gray-300">
               <button
-                onClick={() => setLocation('/')}
+                onClick={() => setLocation(getLastSlingshotUrl())}
                 class="ml-3 mr-1.5 p-1.5 hover:opacity-80 transition-opacity"
               >
                 <span class="sr-only">RequestBite</span>
@@ -223,36 +281,61 @@ export function TopBar() {
             <div class="mt-6 flow-root text-sm bg-white">
               <div class="-my-6 divide-y divide-gray-500/10">
                 <div class="space-y-2 py-6">
-                  <button
-                    onClick={() => {
-                      setLocation('/');
+                  <a
+                    href="https://requestbite.com"
+                    class="block px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
+                  >
+                    <div>RequestBite</div>
+                    <span class="text-xs text-gray-500 mt-1">RequestBite website</span>
+                  </a>
+                  <a
+                    href={getLastSlingshotUrl()}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setLocation(getLastSlingshotUrl());
                       setIsMobileMenuOpen(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer"
+                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
                   >
                     <div>Slingshot</div>
                     <span class="text-xs text-gray-500 mt-1">Send HTTP requests</span>
-                  </button>
-                  <button
-                    onClick={() => {
+                  </a>
+                  <a
+                    href="/environments"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setLocation('/environments');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
+                  >
+                    <div>Environments</div>
+                    <span class="text-xs text-gray-500 mt-1">Manage encrypted environments</span>
+                  </a>
+                  <a
+                    href="/collections"
+                    onClick={(e) => {
+                      e.preventDefault();
                       setLocation('/collections');
                       setIsMobileMenuOpen(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer"
+                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
                   >
                     <div>Collections</div>
                     <span class="text-xs text-gray-500 mt-1">Manage request collections</span>
-                  </button>
-                  <button
-                    onClick={() => {
+                  </a>
+                  <a
+                    href="/settings"
+                    onClick={(e) => {
+                      e.preventDefault();
                       setLocation('/settings');
                       setIsMobileMenuOpen(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer"
+                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
                   >
                     <div>Settings</div>
                     <span class="text-xs text-gray-500 mt-1">Configure app settings</span>
-                  </button>
+                  </a>
                   <a
                     href="https://docs.requestbite.com"
                     target="_blank"

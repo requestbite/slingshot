@@ -2,7 +2,7 @@ import { useState } from 'preact/hooks';
 import { VariableInput } from '../../common/VariableInput';
 import { generateUUID } from '../../../utils/uuid.js';
 
-export function HeadersTab({ headers, onHeadersChange, onEnterKeyPress }) {
+export function HeadersTab({ headers, onHeadersChange, onEnterKeyPress, selectedEnvironment }) {
   const addHeader = () => {
     const newHeader = {
       id: generateUUID(),
@@ -58,7 +58,7 @@ export function HeadersTab({ headers, onHeadersChange, onEnterKeyPress }) {
             </div>
             <div class="col-span-5">
               <VariableInput
-                key={`header-key-${header.id}`}
+                key={`header-key-${header.id}-${selectedEnvironment?.id || 'none'}`}
                 value={header.key}
                 onChange={(value) => updateHeader(header.id, 'key', value)}
                 onKeyDown={onEnterKeyPress}
@@ -66,11 +66,12 @@ export function HeadersTab({ headers, onHeadersChange, onEnterKeyPress }) {
                 className={`w-full text-sm ${header.enabled ? '' : 'opacity-50'
                   }`}
                 disabled={!header.enabled}
+                selectedEnvironment={selectedEnvironment}
               />
             </div>
             <div class="col-span-5">
               <VariableInput
-                key={`header-value-${header.id}`}
+                key={`header-value-${header.id}-${selectedEnvironment?.id || 'none'}`}
                 value={header.value}
                 onChange={(value) => updateHeader(header.id, 'value', value)}
                 onKeyDown={onEnterKeyPress}
@@ -78,6 +79,7 @@ export function HeadersTab({ headers, onHeadersChange, onEnterKeyPress }) {
                 className={`w-full text-sm ${header.enabled ? '' : 'opacity-50'
                   }`}
                 disabled={!header.enabled}
+                selectedEnvironment={selectedEnvironment}
               />
             </div>
             <div class="col-span-1 flex justify-center">

@@ -7,6 +7,7 @@ import { ResponseDisplay } from './ResponseDisplay';
 import { CurlExportModal } from '../modals/CurlExportModal';
 import { CurlImportModal } from '../modals/CurlImportModal';
 import { SaveAsModal } from '../modals/SaveAsModal';
+import { CopyRequestModal } from '../modals/CopyRequestModal';
 import { VariableInput } from '../common/VariableInput';
 import { generateUUID } from '../../utils/uuid.js';
 import { Toast, useToast } from '../common/Toast';
@@ -23,8 +24,8 @@ const getTabNames = (hasActiveCollection) => ({
   ...(hasActiveCollection ? {} : { settings: 'Settings' })
 });
 
-export function RequestEditor({ request, onRequestChange }) {
-  const { selectedCollection } = useAppContext();
+export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
+  const { selectedCollection, currentEnvironment, hasManuallySelectedEnvironment } = useAppContext();
   const [activeTab, setActiveTab] = useState('params');
 
   // Get placeholder URL from environment variable
@@ -74,7 +75,8 @@ export function RequestEditor({ request, onRequestChange }) {
     timeout: 30,
     formData: [],
     urlEncodedData: [],
-    ...(request ? getEffectiveRequestData(request) : {})
+    ...(request ? getEffectiveRequestData(request) : {}),
+    ...(sharedRequestData || {})
   });
 
   // Response state
@@ -93,17 +95,15 @@ export function RequestEditor({ request, onRequestChange }) {
   const [showCurlModal, setShowCurlModal] = useState(false);
   const [showCurlImportModal, setShowCurlImportModal] = useState(false);
   const [showSaveAsModal, setShowSaveAsModal] = useState(false);
+  const [showCopyRequestModal, setShowCopyRequestModal] = useState(false);
 
   // Toast state
   const [isToastVisible, showToast, hideToast] = useToast();
 
   // Update parent when request data changes (but not during initial load or when editing existing requests)
   useEffect(() => {
-    console.log('👆 PARENT UPDATE EFFECT - onRequestChange exists:', !!onRequestChange);
-    console.log('👆 PARENT UPDATE EFFECT - request exists:', !!request);
     // Only call onRequestChange for new requests, not when editing existing ones
     if (onRequestChange && !request) {
-      console.log('👆 Calling onRequestChange with:', requestData);
       onRequestChange(requestData);
     }
   }, [requestData, onRequestChange]);
@@ -120,18 +120,14 @@ export function RequestEditor({ request, onRequestChange }) {
 
   // Update requestData when request prop changes
   useEffect(() => {
-    console.log('🔄 REQUEST CHANGE EFFECT - Request:', request?.id, request?.name);
     if (request) {
       // Set initial load flag to prevent URL parsing from triggering change detection
       isInitialLoadRef.current = true;
-      
+
       // Use draft data if available, otherwise use main data
       const dataToLoad = getEffectiveRequestData(request);
-      console.log('📥 Loading data for request:', dataToLoad);
       setRequestData(prev => {
-        console.log('📥 Previous requestData:', prev);
         const newData = { ...prev, ...dataToLoad };
-        console.log('📥 New requestData:', newData);
         return newData;
       });
 
@@ -140,20 +136,18 @@ export function RequestEditor({ request, onRequestChange }) {
         ...request,
         has_draft_edits: false // Force getting original data without drafts
       });
-      console.log('💾 Stored original data:', originalDataRef.current);
 
       // Set draft state based on request
       setHasUnsavedChanges(request.has_draft_edits || false);
       setIsDraftDirty(false);
-      
+
       // Clear the initial load flag after a delay to allow URL parsing to complete
       setTimeout(() => {
         isInitialLoadRef.current = false;
       }, 1000);
     } else {
-      console.log('🔄 No request - resetting to defaults');
       isInitialLoadRef.current = false;
-      
+
       // Reset to default values when no request is selected
       const defaultData = getEffectiveRequestData(null);
       setRequestData(prev => ({
@@ -167,6 +161,16 @@ export function RequestEditor({ request, onRequestChange }) {
     }
   }, [request]);
 
+  // Handle shared request data
+  useEffect(() => {
+    if (sharedRequestData && !request) {
+      setRequestData(prev => ({
+        ...prev,
+        ...sharedRequestData
+      }));
+    }
+  }, [sharedRequestData, request]);
+
   // Update the ref whenever requestData changes
   useEffect(() => {
     currentRequestDataRef.current = requestData;
@@ -174,28 +178,18 @@ export function RequestEditor({ request, onRequestChange }) {
 
   // Track changes for immediate UI updates and debounced saving
   useEffect(() => {
-    console.log('🔍 CHANGE TRACKING EFFECT');
-    console.log('🔍 Request ID:', request?.id);
-    console.log('🔍 Original data exists:', !!originalDataRef.current);
-    console.log('🔍 Current requestData:', requestData);
-    console.log('🔍 isDraftDirty:', isDraftDirty);
-    console.log('🔍 isInitialLoad:', isInitialLoadRef.current);
-
     // Skip change tracking during initial load to prevent false positives
     if (isInitialLoadRef.current) {
-      console.log('🔍 Skipping change tracking during initial load');
       return;
     }
 
     if (request && originalDataRef.current) {
       const hasChanges = hasDataChanged(originalDataRef.current, requestData);
-      console.log('🔍 Has changes:', hasChanges);
 
       // Immediately update the hasUnsavedChanges state for UI
       setHasUnsavedChanges(hasChanges);
 
       if (hasChanges && !isDraftDirty) {
-        console.log('🔍 Setting draft dirty and saving...');
         setIsDraftDirty(true);
         saveDraftChangesDebounced();
       } else if (!hasChanges && isDraftDirty) {
@@ -226,21 +220,16 @@ export function RequestEditor({ request, onRequestChange }) {
 
   // Debounced draft save
   const saveDraftChangesDebounced = () => {
-    console.log('💾 DEBOUNCED SAVE - Clearing existing timeout');
     if (draftSaveTimeoutRef.current) {
       clearTimeout(draftSaveTimeoutRef.current);
     }
 
-    console.log('💾 DEBOUNCED SAVE - Setting new timeout for request:', request?.id);
     draftSaveTimeoutRef.current = setTimeout(async () => {
-      console.log('💾 EXECUTING DRAFT SAVE for request:', request?.id);
       // Use the ref to get the latest state at save time
       const currentData = currentRequestDataRef.current;
-      console.log('💾 Saving requestData:', currentData);
       if (request?.id) {
         try {
           await apiClient.saveDraftChanges(request.id, currentData);
-          console.log('💾 Draft save completed successfully');
           setIsDraftDirty(false);
         } catch (error) {
           console.error('💾 Failed to save draft changes:', error);
@@ -282,11 +271,11 @@ export function RequestEditor({ request, onRequestChange }) {
           searchParams.forEach((value, key) => {
             // Try to preserve existing parameter data (ID, enabled state) but use new URL value
             const existingParam = (prev.queryParams || []).find(p => p.key === key);
-            queryParams.push({ 
-              id: existingParam?.id || generateUUID(), 
-              key, 
+            queryParams.push({
+              id: existingParam?.id || generateUUID(),
+              key,
               value: value, // Always use the value from URL
-              enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true 
+              enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true
             });
           });
         }
@@ -334,11 +323,8 @@ export function RequestEditor({ request, onRequestChange }) {
   };
 
   const updateRequestData = (updates) => {
-    console.log('📝 UPDATE REQUEST DATA:', updates);
-    console.log('📝 Previous data:', requestData);
     setRequestData(prev => {
       const newData = { ...prev, ...updates };
-      console.log('📝 New data after update:', newData);
       return newData;
     });
   };
@@ -409,9 +395,6 @@ export function RequestEditor({ request, onRequestChange }) {
   };
 
   const handleUrlChange = (url) => {
-    console.log('🖊️ URL CHANGE - New URL:', url);
-    console.log('🖊️ Current requestData before update:', requestData);
-
     // Only update the URL directly, don't parse parameters during typing
     // Parameter parsing will happen when the user finishes editing (see useEffect below)
     updateRequestData({ url });
@@ -444,11 +427,11 @@ export function RequestEditor({ request, onRequestChange }) {
         searchParams.forEach((value, key) => {
           // Try to preserve existing parameter data (ID, enabled state) but use new URL value
           const existingParam = (requestData.queryParams || []).find(p => p.key === key);
-          queryParams.push({ 
-            id: existingParam?.id || generateUUID(), 
-            key, 
+          queryParams.push({
+            id: existingParam?.id || generateUUID(),
+            key,
             value: value, // Always use the value from URL
-            enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true 
+            enabled: existingParam?.enabled !== undefined ? existingParam.enabled : true
           });
         });
       }
@@ -530,9 +513,11 @@ export function RequestEditor({ request, onRequestChange }) {
         collectionVars.forEach(v => variables.set(v.key, v.value));
       }
 
-      // Environment variables (if collection has environment)
-      if (selectedCollection?.environment_id) {
-        const envVars = await apiClient.getSecretsByEnvironment(selectedCollection.environment_id);
+      // Environment variables - use currentEnvironment if available, 
+      // otherwise fall back to collection's default environment only if user hasn't manually selected
+      const environmentId = currentEnvironment?.id || (!hasManuallySelectedEnvironment ? selectedCollection?.environment_id : null);
+      if (environmentId) {
+        const envVars = await apiClient.getDecryptedEnvironmentSecrets(environmentId);
         envVars.forEach(v => variables.set(v.key, v.value));
       }
     } catch (error) {
@@ -610,7 +595,7 @@ export function RequestEditor({ request, onRequestChange }) {
     try {
       // Update proxy URL to respect current settings before making the request
       requestSubmitter.updateProxyUrl(requestSubmitter.getCurrentProxyUrl());
-      
+
       const result = await requestSubmitter.submitRequest(processedRequestData);
       setResponse(result);
 
@@ -618,7 +603,6 @@ export function RequestEditor({ request, onRequestChange }) {
       if (request?.id) {
         try {
           await apiClient.saveRequestResponse(request.id, result);
-          console.log('Response saved to database');
         } catch (saveError) {
           console.error('Failed to save response to database:', saveError);
           // Don't fail the request if saving fails
@@ -744,19 +728,15 @@ export function RequestEditor({ request, onRequestChange }) {
                 disabled={!hasUnsavedChanges}
                 class={`cursor-pointer rounded-md px-2 py-1 text-xs focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${hasUnsavedChanges
                   ? 'bg-sky-100 hover:bg-sky-200 text-sky-700'
-                  : 'bg-gray-300 text-white'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   }`}
               >
                 Update
               </button>
               <button
                 onClick={() => setShowSaveAsModal(true)}
-                disabled={!selectedCollection}
-                title={selectedCollection ? 'Save the current request to collection' : 'Create or select a collection to save.'}
-                class={`cursor-pointer rounded-md px-2 py-1 text-xs focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${selectedCollection
-                  ? 'bg-sky-100 hover:bg-sky-200 text-sky-700'
-                  : 'bg-gray-300 text-white'
-                  }`}
+                title="Save the current request to a collection"
+                class="cursor-pointer rounded-md px-2 py-1 text-xs focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 bg-sky-100 hover:bg-sky-200 text-sky-700"
               >
                 Save as
               </button>
@@ -788,12 +768,14 @@ export function RequestEditor({ request, onRequestChange }) {
           {/* URL input */}
           <div class="flex-1 mr-2" style="min-width: 0;">
             <VariableInput
+              key={`url-${currentEnvironment?.id || 'none'}`}
               value={requestData.url}
               onChange={handleUrlChange}
               onKeyDown={handleEnterKeyPress}
               placeholder={placeholderUrl}
               className="w-full text-sm font-inter text-gray-900"
               style="min-height: 38px; line-height: 22px; width: 100%; box-sizing: border-box;"
+              selectedEnvironment={currentEnvironment}
             />
           </div>
 
@@ -869,6 +851,12 @@ export function RequestEditor({ request, onRequestChange }) {
             >
               Import cURL
             </button>
+            <button type="button"
+              onClick={() => setShowCopyRequestModal(true)}
+              class="cursor-pointer px-4 py-2 text-xs rounded-t-md font-medium text-sky-500 hover:text-sky-700 hover:bg-sky-50 focus:outline-none"
+            >
+              Copy request
+            </button>
           </div>
         </div>
 
@@ -881,6 +869,7 @@ export function RequestEditor({ request, onRequestChange }) {
               onQueryParamsChange={(params) => updateRequestData({ queryParams: params })}
               onPathParamsChange={(params) => updateRequestData({ pathParams: params })}
               onEnterKeyPress={handleEnterKeyPress}
+              selectedEnvironment={currentEnvironment}
             />
           )}
           {activeTab === 'headers' && (
@@ -888,6 +877,7 @@ export function RequestEditor({ request, onRequestChange }) {
               headers={requestData.headers}
               onHeadersChange={(headers) => updateRequestData({ headers })}
               onEnterKeyPress={handleEnterKeyPress}
+              selectedEnvironment={currentEnvironment}
             />
           )}
           {activeTab === 'body' && (
@@ -905,6 +895,7 @@ export function RequestEditor({ request, onRequestChange }) {
               onUrlEncodedDataChange={(urlEncodedData) => updateRequestData({ urlEncodedData })}
               onEnterKeyPress={handleEnterKeyPress}
               onSendRequest={handleSendRequest}
+              selectedEnvironment={currentEnvironment}
             />
           )}
           {activeTab === 'settings' && !selectedCollection && (
@@ -955,6 +946,15 @@ export function RequestEditor({ request, onRequestChange }) {
           console.log('Request saved successfully:', savedRequest);
           // Could potentially navigate to the saved request or show notification
         }}
+      />
+
+      {/* Copy Request Modal */}
+      <CopyRequestModal
+        isOpen={showCopyRequestModal}
+        onClose={() => setShowCopyRequestModal(false)}
+        requestData={requestData}
+        getAvailableVariables={getAvailableVariables}
+        replaceVariables={replaceVariables}
       />
 
       {/* Toast notification */}
