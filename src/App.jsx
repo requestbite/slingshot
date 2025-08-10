@@ -12,6 +12,7 @@ import { CollectionUpdatePage } from './pages/CollectionUpdatePage';
 import { EnvironmentsPage } from './pages/EnvironmentsPage';
 import { EnvironmentUpdatePage } from './pages/EnvironmentUpdatePage';
 import { SettingsPage } from './pages/SettingsPage';
+import { AuthCallback } from './components/auth/AuthCallback';
 import { URLImportModal } from './components/import/URLImportModal';
 import { AppEncryptionKeyModal } from './components/modals/AppEncryptionKeyModal';
 import { ClearEnvironmentsModal } from './components/modals/ClearEnvironmentsModal';
@@ -303,6 +304,9 @@ export function App() {
               <FullPageLayout>
                 <SettingsPage />
               </FullPageLayout>
+            </Route>
+            <Route path="/auth/callback">
+              <AuthCallback />
             </Route>
             <Route>
               <AppLayout>
