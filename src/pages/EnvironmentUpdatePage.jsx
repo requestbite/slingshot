@@ -3,6 +3,7 @@ import { useLocation, useRoute } from 'wouter-preact';
 import { DeleteEnvironmentModal } from '../components/modals/DeleteEnvironmentModal';
 import { EncryptionKeyModal } from '../components/modals/EncryptionKeyModal';
 import { Toast, useToast } from '../components/common/Toast';
+import { AuthSection } from '../components/auth/AuthSection';
 import { apiClient } from '../api';
 
 export function EnvironmentUpdatePage() {
@@ -35,7 +36,12 @@ export function EnvironmentUpdatePage() {
   const [hasSecretsChanges, setHasSecretsChanges] = useState(false);
 
   // Active section state - determine from URL
-  const [activeSection, setActiveSection] = useState(params.section === 'secrets' ? 'secrets' : 'general');
+  const getInitialSection = () => {
+    if (params.section === 'secrets') return 'secrets';
+    if (params.section === 'auth') return 'auth';
+    return 'general';
+  };
+  const [activeSection, setActiveSection] = useState(getInitialSection());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Modal states
@@ -62,7 +68,9 @@ export function EnvironmentUpdatePage() {
 
   // Update active section when URL changes
   useEffect(() => {
-    setActiveSection(params.section === 'secrets' ? 'secrets' : 'general');
+    const newSection = params.section === 'secrets' ? 'secrets' : 
+                      params.section === 'auth' ? 'auth' : 'general';
+    setActiveSection(newSection);
   }, [params.section]);
 
   const loadEnvironmentData = async (environmentId) => {
@@ -373,7 +381,9 @@ export function EnvironmentUpdatePage() {
   const handleSectionNavigation = (section, e) => {
     e.preventDefault();
     const basePath = `/environments/${params.uuid}`;
-    const newPath = section === 'secrets' ? `${basePath}/secrets` : basePath;
+    let newPath = basePath;
+    if (section === 'secrets') newPath = `${basePath}/secrets`;
+    else if (section === 'auth') newPath = `${basePath}/auth`;
     setLocation(newPath);
   };
 
@@ -466,6 +476,25 @@ export function EnvironmentUpdatePage() {
                               Secrets
                             </a>
                           </li>
+                          <li>
+                            <a
+                              href={`/environments/${params.uuid}/auth`}
+                              onClick={(e) => handleSectionNavigation('auth', e)}
+                              class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${
+                                activeSection === 'auth'
+                                  ? 'bg-sky-50 text-sky-500'
+                                  : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
+                              }`}
+                            >
+                              <svg class={`size-6 shrink-0 ${
+                                activeSection === 'auth' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
+                              }`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 12l2 2 4-4" />
+                                <path d="M21 12c.552 0 1-.448 1-1V8c0-.552-.448-1-1-1h-1V5c0-2.209-1.791-4-4-4H7C4.791 1 3 2.791 3 5v2H2c-.552 0-1 .448-1 1v3c0 .552.448 1 1 1h1v2c0 2.209 1.791 4 4 4h10c2.209 0 4-1.791 4-4v-2z" />
+                              </svg>
+                              Auth
+                            </a>
+                          </li>
                         </ul>
                       </li>
                     </ul>
@@ -531,6 +560,28 @@ export function EnvironmentUpdatePage() {
                                   <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M10 12a1 1 0 0 0-1 1v1a1 1 0 0 1-1 1 1 1 0 0 1 1 1v1a1 1 0 0 0 1 1" /><path d="M14 18a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1 1 1 0 0 1-1-1v-1a1 1 0 0 0-1-1" />
                                 </svg>
                                 Secrets
+                              </a>
+                            </li>
+                            <li>
+                              <a
+                                href={`/environments/${params.uuid}/auth`}
+                                onClick={(e) => {
+                                  handleSectionNavigation('auth', e);
+                                  setIsSidebarOpen(false);
+                                }}
+                                class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${
+                                  activeSection === 'auth'
+                                    ? 'bg-sky-50 text-sky-500'
+                                    : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
+                                }`}
+                              >
+                                <svg class={`size-6 shrink-0 ${
+                                  activeSection === 'auth' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
+                                }`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                  <path d="M9 12l2 2 4-4" />
+                                  <path d="M21 12c.552 0 1-.448 1-1V8c0-.552-.448-1-1-1h-1V5c0-2.209-1.791-4-4-4H7C4.791 1 3 2.791 3 5v2H2c-.552 0-1 .448-1 1v3c0 .552.448 1 1 1h1v2c0 2.209 1.791 4 4 4h10c2.209 0 4-1.791 4-4v-2z" />
+                                </svg>
+                                Auth
                               </a>
                             </li>
                           </ul>
@@ -737,6 +788,16 @@ export function EnvironmentUpdatePage() {
                         Cancel
                       </button>
                     </div>
+                  </div>
+                )}
+
+                {activeSection === 'auth' && (
+                  <div>
+                    <h2 class="text-base font-semibold text-gray-900">Authentication</h2>
+                    <p class="mt-1 text-sm text-gray-600 mb-6">Configure authentication for this environment.</p>
+
+                    {/* Auth Configuration Form */}
+                    <AuthSection environment={environment} onUpdate={loadEnvironmentData} />
                   </div>
                 )}
 

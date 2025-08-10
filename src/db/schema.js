@@ -37,6 +37,9 @@ db.environments.defineClass({
   name: String,
   description: String,
   secrets: Array,
+  auth: String, // 'oidc_pkce' or null/undefined for no auth
+  authConfig: Object, // Configuration for the selected auth method
+  authResponse: Object, // Authentication response (tokens, etc.)
 });
 
 /**

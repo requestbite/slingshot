@@ -284,6 +284,11 @@ export function App() {
                 <EnvironmentUpdatePage />
               </FullPageLayout>
             </Route>
+            <Route path="/environments/:uuid/auth">
+              <FullPageLayout>
+                <EnvironmentUpdatePage />
+              </FullPageLayout>
+            </Route>
             <Route path="/environments/:uuid">
               <FullPageLayout>
                 <EnvironmentUpdatePage />
