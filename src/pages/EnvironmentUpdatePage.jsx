@@ -36,7 +36,7 @@ export function EnvironmentUpdatePage() {
 
   // Active section state
   const [activeSection, setActiveSection] = useState('general');
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Modal states
   const [editSecretModal, setEditSecretModal] = useState(false);
@@ -393,26 +393,84 @@ export function EnvironmentUpdatePage() {
     <div class="h-full bg-gray-100 overflow-y-auto">
       <div class="min-h-full pt-[83px] pb-6">
         <div class="max-w-6xl mx-auto px-4">
-          <div class="flex gap-4">
-            {/* Sidebar */}
-            <div class="w-64 flex-shrink-0">
-              <div class="bg-white rounded-lg border border-gray-300">
-                {/* Hamburger button for mobile - only shown below md breakpoint */}
-                <div class="md:hidden flex justify-end px-4 py-2">
-                  <button onClick={() => setSidebarOpen(!sidebarOpen)} type="button" class="cursor-pointer">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="currentColor" class="w-5 h-5">
-                      <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
-                        <path d="M7.94971 11.9497H39.9497" />
-                        <path d="M7.94971 23.9497H39.9497" />
-                        <path d="M7.94971 35.9497H39.9497" />
-                      </g>
-                    </svg>
-                  </button>
-                </div>
+          
+          {/* Sidebar Toggle Button for Mobile - only show when sidebar is hidden */}
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            class={`fixed top-1/2 -left-1 transform -translate-y-1/2 z-50 bg-sky-100 hover:bg-sky-200 text-sky-700 p-2 rounded-r-lg shadow-lg cursor-pointer transition-all duration-200 hover:translate-x-1 ${
+              isSidebarOpen ? 'hidden' : 'block md:hidden'
+            }`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m6 17 5-5-5-5" />
+              <path d="m13 17 5-5-5-5" />
+            </svg>
+          </button>
 
-                <div class={`${sidebarOpen ? 'block' : 'hidden'} md:block`}>
-                  <div class="border-t border-gray-200 pt-2 md:border-t-0 md:pt-0"></div>
-                  <div class="flex grow flex-col gap-y-5 overflow-y-auto px-6 py-4">
+          <div class="flex gap-4">
+            {/* Desktop Sidebar */}
+            <div class="w-64 flex-shrink-0 hidden md:block">
+              <div class="bg-white rounded-lg border border-gray-300">
+                <div class="flex grow flex-col gap-y-5 overflow-y-auto px-6 py-4">
+                  <nav class="flex flex-1 flex-col">
+                    <ul role="list" class="flex flex-1 flex-col gap-y-7">
+                      <li>
+                        <div class="text-xs mb-2 text-gray-500">Environment</div>
+                        <ul role="list" class="-mx-2 space-y-1">
+                          <li>
+                            <button
+                              onClick={() => setActiveSection('general')}
+                              class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${
+                                activeSection === 'general'
+                                  ? 'bg-sky-50 text-sky-500'
+                                  : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
+                              }`}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" class={`size-6 shrink-0 ${
+                                activeSection === 'general' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
+                              }`} viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 1.25C6.063 1.25 1.25 6.063 1.25 12S6.063 22.75 12 22.75S22.75 17.937 22.75 12S17.937 1.25 12 1.25M2.75 12a9.25 9.25 0 1 1 16.282 6.01a4.84 4.84 0 0 0-1.17-2.034c-.782-.813-1.76-1.286-2.608-1.55c-.626-.195-1.216.03-1.604.293c-.36.242-.94.531-1.65.531s-1.29-.29-1.65-.531c-.388-.262-.978-.488-1.604-.293c-.849.264-1.826.737-2.608 1.55a4.84 4.84 0 0 0-1.17 2.033A9.2 9.2 0 0 1 2.75 12m3.513 7.256c.076-1.011.46-1.724.957-2.241c.553-.576 1.28-.941 1.972-1.157a.2.2 0 0 1 .103.003a.7.7 0 0 1 .216.101c.501.338 1.374.788 2.489.788s1.988-.45 2.489-.788a.7.7 0 0 1 .216-.1a.2.2 0 0 1 .103-.004c.692.216 1.419.581 1.972 1.157c.497.517.88 1.23.957 2.241A9.2 9.2 0 0 1 12 21.25a9.2 9.2 0 0 1-5.737-1.994M9.75 10c0-1.25.97-2.25 2.25-2.25s2.25 1 2.25 2.25s-.97 2.25-2.25 2.25s-2.25-1-2.25-2.25M12 6.25A3.72 3.72 0 0 0 8.25 10A3.72 3.72 0 0 0 12 13.75A3.72 3.72 0 0 0 15.75 10A3.72 3.72 0 0 0 12 6.25" />
+                              </svg>
+                              General
+                            </button>
+                          </li>
+                          <li>
+                            <button
+                              onClick={() => setActiveSection('secrets')}
+                              class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${
+                                activeSection === 'secrets'
+                                  ? 'bg-sky-50 text-sky-500'
+                                  : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
+                              }`}
+                            >
+                              <svg class={`size-6 shrink-0 ${
+                                activeSection === 'secrets' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
+                              }`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M10 12a1 1 0 0 0-1 1v1a1 1 0 0 1-1 1 1 1 0 0 1 1 1v1a1 1 0 0 0 1 1" /><path d="M14 18a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1 1 1 0 0 1-1-1v-1a1 1 0 0 0-1-1" />
+                              </svg>
+                              Secrets
+                            </button>
+                          </li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Sidebar */}
+            {isSidebarOpen && (
+              <>
+                {/* Full screen overlay covering topbar */}
+                <div
+                  class="fixed inset-0 bg-gray-500/75 z-[60] md:hidden"
+                  onClick={() => setIsSidebarOpen(false)}
+                />
+
+                {/* Mobile Sidebar - takes full screen minus 75px, covers topbar */}
+                <div class="fixed left-0 top-0 bottom-0 right-[75px] bg-white z-[70] md:hidden overflow-y-auto">
+                  <div class="p-6">
                     <nav class="flex flex-1 flex-col">
                       <ul role="list" class="flex flex-1 flex-col gap-y-7">
                         <li>
@@ -420,14 +478,19 @@ export function EnvironmentUpdatePage() {
                           <ul role="list" class="-mx-2 space-y-1">
                             <li>
                               <button
-                                onClick={() => setActiveSection('general')}
-                                class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${activeSection === 'general'
-                                  ? 'bg-sky-50 text-sky-500'
-                                  : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
-                                  }`}
+                                onClick={() => {
+                                  setActiveSection('general');
+                                  setIsSidebarOpen(false);
+                                }}
+                                class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${
+                                  activeSection === 'general'
+                                    ? 'bg-sky-50 text-sky-500'
+                                    : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
+                                }`}
                               >
-                                <svg xmlns="http://www.w3.org/2000/svg" class={`size-6 shrink-0 ${activeSection === 'general' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
-                                  }`} viewBox="0 0 24 24" fill="currentColor">
+                                <svg xmlns="http://www.w3.org/2000/svg" class={`size-6 shrink-0 ${
+                                  activeSection === 'general' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
+                                }`} viewBox="0 0 24 24" fill="currentColor">
                                   <path d="M12 1.25C6.063 1.25 1.25 6.063 1.25 12S6.063 22.75 12 22.75S22.75 17.937 22.75 12S17.937 1.25 12 1.25M2.75 12a9.25 9.25 0 1 1 16.282 6.01a4.84 4.84 0 0 0-1.17-2.034c-.782-.813-1.76-1.286-2.608-1.55c-.626-.195-1.216.03-1.604.293c-.36.242-.94.531-1.65.531s-1.29-.29-1.65-.531c-.388-.262-.978-.488-1.604-.293c-.849.264-1.826.737-2.608 1.55a4.84 4.84 0 0 0-1.17 2.033A9.2 9.2 0 0 1 2.75 12m3.513 7.256c.076-1.011.46-1.724.957-2.241c.553-.576 1.28-.941 1.972-1.157a.2.2 0 0 1 .103.003a.7.7 0 0 1 .216.101c.501.338 1.374.788 2.489.788s1.988-.45 2.489-.788a.7.7 0 0 1 .216-.1a.2.2 0 0 1 .103-.004c.692.216 1.419.581 1.972 1.157c.497.517.88 1.23.957 2.241A9.2 9.2 0 0 1 12 21.25a9.2 9.2 0 0 1-5.737-1.994M9.75 10c0-1.25.97-2.25 2.25-2.25s2.25 1 2.25 2.25s-.97 2.25-2.25 2.25s-2.25-1-2.25-2.25M12 6.25A3.72 3.72 0 0 0 8.25 10A3.72 3.72 0 0 0 12 13.75A3.72 3.72 0 0 0 15.75 10A3.72 3.72 0 0 0 12 6.25" />
                                 </svg>
                                 General
@@ -435,14 +498,19 @@ export function EnvironmentUpdatePage() {
                             </li>
                             <li>
                               <button
-                                onClick={() => setActiveSection('secrets')}
-                                class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${activeSection === 'secrets'
-                                  ? 'bg-sky-50 text-sky-500'
-                                  : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
-                                  }`}
+                                onClick={() => {
+                                  setActiveSection('secrets');
+                                  setIsSidebarOpen(false);
+                                }}
+                                class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${
+                                  activeSection === 'secrets'
+                                    ? 'bg-sky-50 text-sky-500'
+                                    : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
+                                }`}
                               >
-                                <svg class={`size-6 shrink-0 ${activeSection === 'secrets' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
-                                  }`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg class={`size-6 shrink-0 ${
+                                  activeSection === 'secrets' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
+                                }`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                   <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M10 12a1 1 0 0 0-1 1v1a1 1 0 0 1-1 1 1 1 0 0 1 1 1v1a1 1 0 0 0 1 1" /><path d="M14 18a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1 1 1 0 0 1-1-1v-1a1 1 0 0 0-1-1" />
                                 </svg>
                                 Secrets
@@ -454,8 +522,8 @@ export function EnvironmentUpdatePage() {
                     </nav>
                   </div>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
 
             {/* Content Area */}
             <div class="flex-1">
