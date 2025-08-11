@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'preact/hooks';
 import { UserManager } from 'oidc-client-ts';
 import { apiClient } from '../../api';
+import CodeMirror from '@uiw/react-codemirror';
+import { json } from '@codemirror/lang-json';
+import { dracula } from '@uiw/codemirror-theme-dracula';
+import { EditorView } from '@codemirror/view';
+import { bracketMatching } from '@codemirror/language';
 
 export function AuthSection({ environment, onUpdate }) {
   // Auth configuration state
@@ -8,6 +13,8 @@ export function AuthSection({ environment, onUpdate }) {
   const [authConfig, setAuthConfig] = useState({
     domain: environment?.authConfig?.domain || '',
     clientId: environment?.authConfig?.clientId || '',
+    clientSecret: environment?.authConfig?.clientSecret || '',
+    scopes: environment?.authConfig?.scopes || 'openid profile email',
     ...environment?.authConfig
   });
   const [authResponse, setAuthResponse] = useState(environment?.authResponse || null);
@@ -22,6 +29,8 @@ export function AuthSection({ environment, onUpdate }) {
       setAuthConfig({
         domain: environment?.authConfig?.domain || '',
         clientId: environment?.authConfig?.clientId || '',
+        clientSecret: environment?.authConfig?.clientSecret || '',
+        scopes: environment?.authConfig?.scopes || 'openid profile email',
         ...environment?.authConfig
       });
       setAuthResponse(environment.authResponse || null);
@@ -61,8 +70,8 @@ export function AuthSection({ environment, onUpdate }) {
   };
 
   const handleGetTokens = async () => {
-    if (!authConfig.domain || !authConfig.clientId) {
-      setError('Domain and Client ID are required');
+    if (!authConfig.domain || !authConfig.clientId || !authConfig.scopes) {
+      setError('Domain, Client ID, and Scopes are required');
       return;
     }
 
@@ -82,23 +91,27 @@ export function AuthSection({ environment, onUpdate }) {
         current_origin: window.location.origin
       });
 
-      // Create OIDC client configuration with PKCE enforcement
+      // Create OIDC client configuration optimized for Google OAuth2 with PKCE
       const oidcConfig = {
         authority,
         client_id: authConfig.clientId,
         redirect_uri: redirectUri,
         response_type: 'code',
-        scope: 'openid profile email',
-        post_logout_redirect_uri: window.location.origin,
-        // Force PKCE - don't send client_secret
+        scope: authConfig.scopes || 'openid profile email',
+        // PKCE configuration
         code_challenge_method: 'S256',
-        client_secret: '', // Explicitly set empty to avoid sending it
-        // Additional PKCE settings
+        // Include client_secret if provided (Google requires it even with PKCE)
+        ...(authConfig.clientSecret && { client_secret: authConfig.clientSecret }),
         automaticSilentRenew: false,
         loadUserInfo: true,
-        // Extra parameters to ensure PKCE usage
-        extraQueryParams: {},
-        extraTokenParams: {}
+        // Additional settings for better compatibility
+        filterProtocolClaims: true,
+        clockSkew: 300,
+        // Extra parameters for offline access and refresh tokens
+        extraQueryParams: {
+          access_type: 'offline',
+          prompt: 'consent'
+        }
       };
 
       const userManager = new UserManager(oidcConfig);
@@ -150,11 +163,11 @@ export function AuthSection({ environment, onUpdate }) {
       } else if (err.message && err.message.includes('unsupported_response_type')) {
         setError('Authentication failed: The authorization code flow is not supported by this provider. PKCE requires the authorization code flow to be enabled.');
       } else if (err.message && err.message.includes('NetworkError')) {
-        setError(`Authentication failed: Network error while contacting the OIDC provider. For Google OAuth2, ensure: 1) Your client is configured as a "Public" application type, 2) ${window.location.origin}/auth/callback is added to "Authorized redirect URIs", 3) ${window.location.origin} is added to "Authorized JavaScript origins". Check the console for detailed configuration info.`);
+        setError(`Authentication failed: Network error while contacting the OIDC provider. For Google OAuth2, ensure: 1) Your client is configured as a "Web application", 2) ${window.location.origin}/auth/callback is added to "Authorized redirect URIs", 3) ${window.location.origin} is added to "Authorized JavaScript origins". Check the console for detailed configuration info.`);
       } else if (err.message && (err.message.includes('CORS') || err.message.includes('cors'))) {
         setError(`Authentication failed: CORS error. Add ${window.location.origin} to your OAuth2 client's "Authorized JavaScript origins" in the Google Cloud Console.`);
       } else {
-        setError(`Authentication failed: ${err.message || 'Unknown error'}. For Google OAuth2 setup, check: 1) Application type is "Web application", 2) Redirect URI: ${window.location.origin}/auth/callback, 3) JavaScript origins: ${window.location.origin}`);
+        setError(`Authentication failed: ${err.message || 'Unknown error'}. For Google OAuth2 setup, check: 1) Application type is "Web application", 2) Redirect URI: ${window.location.origin}/auth/callback, 3) JavaScript origins: ${window.location.origin}. Note: Google requires a client secret even with PKCE.`);
       }
     } finally {
       setLoading(false);
@@ -162,8 +175,8 @@ export function AuthSection({ environment, onUpdate }) {
   };
 
   const handleSaveConfig = async () => {
-    if (authType !== 'none' && (!authConfig.domain || !authConfig.clientId)) {
-      setError('Domain and Client ID are required');
+    if (authType !== 'none' && (!authConfig.domain || !authConfig.clientId || !authConfig.scopes)) {
+      setError('Domain, Client ID, and Scopes are required');
       return;
     }
 
@@ -236,11 +249,45 @@ export function AuthSection({ environment, onUpdate }) {
             </p>
           </div>
 
+          <div>
+            <label for="oidc-client-secret" class="block text-sm font-medium text-gray-700">
+              Client Secret
+            </label>
+            <input
+              type="password"
+              id="oidc-client-secret"
+              value={authConfig.clientSecret || ''}
+              onInput={(e) => handleConfigChange('clientSecret', e.target.value)}
+              placeholder="Leave empty for PKCE-only (if supported)"
+              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              Google OAuth2 requires client secret even with PKCE. Other providers may not need this.
+            </p>
+          </div>
+
+          <div>
+            <label for="oidc-scopes" class="block text-sm font-medium text-gray-700">
+              Scopes <span class="text-red-500">*</span>
+            </label>
+            <textarea
+              id="oidc-scopes"
+              rows="3"
+              value={authConfig.scopes}
+              onInput={(e) => handleConfigChange('scopes', e.target.value)}
+              placeholder="openid profile email"
+              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              Space-separated list of OAuth2 scopes (e.g., "openid profile email offline_access")
+            </p>
+          </div>
+
           {/* Get Tokens Button */}
           <div class="flex items-center gap-3">
             <button
               onClick={handleGetTokens}
-              disabled={loading || !authConfig.domain || !authConfig.clientId}
+              disabled={loading || !authConfig.domain || !authConfig.clientId || !authConfig.scopes}
               class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 disabled:bg-gray-300 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
             >
               {loading ? 'Authenticating...' : 'Get Tokens'}
@@ -300,10 +347,54 @@ export function AuthSection({ environment, onUpdate }) {
       {authResponse && (
         <div class="space-y-4">
           <h3 class="text-base font-medium text-gray-900">Authentication Response</h3>
-          <div class="bg-gray-50 rounded-md p-4">
-            <pre class="text-xs text-gray-800 whitespace-pre-wrap overflow-auto max-h-96">
-              {JSON.stringify(authResponse, null, 2)}
-            </pre>
+          <div class="w-full">
+            <CodeMirror
+              value={JSON.stringify(authResponse, null, 2)}
+              extensions={[
+                bracketMatching(),
+                json(),
+                EditorView.theme({
+                  "&": {
+                    minHeight: "200px",
+                    maxWidth: "100%",
+                  },
+                  ".cm-content, .cm-gutter": {
+                    minHeight: "200px !important"
+                  },
+                  ".cm-scroller": {
+                    overflow: "auto",
+                    maxWidth: "100%",
+                  },
+                  ".cm-editor": {
+                    maxWidth: "100%",
+                  }
+                }),
+                EditorView.editable.of(false)
+              ]}
+              theme={dracula}
+              editable={false}
+              basicSetup={{
+                lineNumbers: true,
+                foldGutter: true,
+                dropCursor: false,
+                allowMultipleSelections: false,
+                indentOnInput: false,
+                bracketMatching: true,
+                closeBrackets: false,
+                autocompletion: false,
+                rectangularSelection: false,
+                searchKeymap: false,
+                highlightSelectionMatches: false
+              }}
+              style={{
+                border: '1px solid #44475a',
+                borderRadius: '0.375rem',
+                fontSize: '12px',
+                fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
+                maxWidth: '100%',
+                overflow: 'hidden'
+              }}
+            />
           </div>
         </div>
       )}
