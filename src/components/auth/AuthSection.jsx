@@ -347,7 +347,7 @@ export function AuthSection({ environment, onUpdate }) {
       {authResponse && (
         <div class="space-y-4">
           <h3 class="text-base font-medium text-gray-900">Authentication Response</h3>
-          <div class="w-full">
+          <div class="w-full max-w-full overflow-hidden">
             <CodeMirror
               value={JSON.stringify(authResponse, null, 2)}
               extensions={[
@@ -356,17 +356,21 @@ export function AuthSection({ environment, onUpdate }) {
                 EditorView.theme({
                   "&": {
                     minHeight: "200px",
+                    width: "100%",
                     maxWidth: "100%",
+                    boxSizing: "border-box"
                   },
                   ".cm-content, .cm-gutter": {
                     minHeight: "200px !important"
                   },
                   ".cm-scroller": {
                     overflow: "auto",
-                    maxWidth: "100%",
+                    width: "100%",
+                    maxWidth: "100%"
                   },
                   ".cm-editor": {
-                    maxWidth: "100%",
+                    width: "100%",
+                    maxWidth: "100%"
                   }
                 }),
                 EditorView.editable.of(false)
@@ -390,9 +394,7 @@ export function AuthSection({ environment, onUpdate }) {
                 border: '1px solid #44475a',
                 borderRadius: '0.375rem',
                 fontSize: '12px',
-                fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
-                maxWidth: '100%',
-                overflow: 'hidden'
+                fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
               }}
             />
           </div>

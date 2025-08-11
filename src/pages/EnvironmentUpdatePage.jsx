@@ -594,8 +594,8 @@ export function EnvironmentUpdatePage() {
             )}
 
             {/* Content Area */}
-            <div class="flex-1">
-              <div class="bg-white rounded-lg border border-gray-300 p-6">
+            <div class="flex-1 min-w-0 overflow-hidden">
+              <div class="bg-white rounded-lg border border-gray-300 p-6 w-full max-w-full overflow-hidden">
 
                 {activeSection === 'general' && (
                   <div>
