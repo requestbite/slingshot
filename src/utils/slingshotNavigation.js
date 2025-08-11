@@ -2,7 +2,7 @@ const STORAGE_KEY = 'last-slingshot-url';
 
 /**
  * Check if a URL matches the valid Slingshot route patterns
- * Valid patterns: /, /:collectionId, /:collectionId/:requestId
+ * Valid patterns: /, /:collectionId, /:collectionId/:requestId (where IDs are UUIDs)
  */
 export function isValidSlingshotUrl(url) {
   if (!url || typeof url !== 'string') return false;
@@ -10,19 +10,19 @@ export function isValidSlingshotUrl(url) {
   // Root path
   if (url === '/') return true;
   
-  // Collection or request paths (but not system paths like /collections, /environments, etc.)
+  // UUID pattern (8-4-4-4-12 characters)
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  
   const segments = url.split('/').filter(Boolean);
   
-  // Single segment: /:collectionId (but not /collections, /environments, /settings)
+  // Single segment: /:collectionId (must be UUID)
   if (segments.length === 1) {
-    const segment = segments[0];
-    return !['collections', 'environments', 'settings'].includes(segment);
+    return uuidPattern.test(segments[0]);
   }
   
-  // Two segments: /:collectionId/:requestId (but not /collections/:id, /environments/:id)
+  // Two segments: /:collectionId/:requestId (both must be UUIDs)
   if (segments.length === 2) {
-    const firstSegment = segments[0];
-    return !['collections', 'environments'].includes(firstSegment);
+    return uuidPattern.test(segments[0]) && uuidPattern.test(segments[1]);
   }
   
   return false;
