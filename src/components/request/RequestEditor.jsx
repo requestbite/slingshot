@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
+import { useLocation } from 'wouter-preact';
 import { ParamsTab } from './tabs/ParamsTab';
 import { HeadersTab } from './tabs/HeadersTab';
 import { BodyTab } from './tabs/BodyTab';
@@ -26,6 +27,7 @@ const getTabNames = (hasActiveCollection) => ({
 
 export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   const { selectedCollection, currentEnvironment, hasManuallySelectedEnvironment } = useAppContext();
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState('params');
 
   // Get placeholder URL from environment variable
@@ -857,6 +859,21 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
             >
               Copy request
             </button>
+
+            {/* OIDC PKCE Auth Banner */}
+            {currentEnvironment?.auth === 'oidc_pkce' && (
+              <a
+                href={`/environments/${currentEnvironment.id}/auth`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setLocation(`/environments/${currentEnvironment.id}/auth`);
+                }}
+                class="cursor-pointer px-2 rounded-t-md text-xs transition-colors flex items-center text-green-600 hover:text-green-800 hover:bg-green-50"
+                title="Click to view authentication settings"
+              >
+                Auth: OpenID Connect
+              </a>
+            )}
           </div>
         </div>
 
