@@ -15,6 +15,7 @@ import { Toast, useToast } from '../common/Toast';
 import { requestSubmitter } from '../../utils/requestSubmitter';
 import { apiClient } from '../../api';
 import { useAppContext } from '../../hooks/useAppContext';
+import { decryptSecret } from '../../utils/encryption';
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 
@@ -24,6 +25,19 @@ const getTabNames = (hasActiveCollection) => ({
   body: 'Body',
   ...(hasActiveCollection ? {} : { settings: 'Settings' })
 });
+
+// Helper function to decrypt auth response
+const decryptAuthResponse = async (encryptedResponse) => {
+  if (!encryptedResponse || !encryptedResponse.encrypted_value) return encryptedResponse;
+  
+  try {
+    const decryptedString = await decryptSecret(encryptedResponse.encrypted_value, encryptedResponse.iv);
+    return JSON.parse(decryptedString);
+  } catch (error) {
+    console.error('Failed to decrypt auth response:', error);
+    return null;
+  }
+};
 
 export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   const { selectedCollection, currentEnvironment, hasManuallySelectedEnvironment } = useAppContext();
@@ -560,17 +574,45 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       ? selectedCollection.timeout
       : requestData.timeout;
 
+    // Process headers with variable replacement
+    let processedHeaders = requestData.headers.map(h => ({
+      ...h,
+      key: replaceVariables(h.key, variables),
+      value: replaceVariables(h.value, variables)
+    }));
+
+    // Add Authorization header for OIDC PKCE environments with access tokens
+    if (currentEnvironment?.auth === 'oidc_pkce' && currentEnvironment?.authResponse) {
+      try {
+        // Decrypt the auth response to get the access token
+        const decryptedAuthResponse = await decryptAuthResponse(currentEnvironment.authResponse);
+        
+        if (decryptedAuthResponse?.access_token) {
+          // Remove any existing Authorization headers (case-insensitive)
+          processedHeaders = processedHeaders.filter(h => 
+            h.key.toLowerCase() !== 'authorization'
+          );
+          
+          // Add the Authorization header with Bearer token
+          processedHeaders.push({
+            id: generateUUID(),
+            key: 'Authorization',
+            value: `Bearer ${decryptedAuthResponse.access_token}`,
+            enabled: true
+          });
+        }
+      } catch (error) {
+        console.error('Failed to decrypt auth response for Authorization header:', error);
+      }
+    }
+
     // Replace variables in all request fields
     const processedRequestData = {
       ...requestData,
       followRedirects: effectiveFollowRedirects,
       timeout: effectiveTimeout,
       url: replaceVariables(effectiveUrl, variables),
-      headers: requestData.headers.map(h => ({
-        ...h,
-        key: replaceVariables(h.key, variables),
-        value: replaceVariables(h.value, variables)
-      })),
+      headers: processedHeaders,
       queryParams: requestData.queryParams.map(p => ({
         ...p,
         key: replaceVariables(p.key, variables),
