@@ -71,21 +71,50 @@ export function AuthSection({ environment, onUpdate }) {
     setSuccess('');
 
     try {
-      // Create OIDC client configuration
-      const oidcConfig = {
-        authority: authConfig.domain.startsWith('http') ? authConfig.domain : `https://${authConfig.domain}`,
+      // Determine the authority URL
+      const authority = authConfig.domain.startsWith('http') ? authConfig.domain : `https://${authConfig.domain}`;
+      const redirectUri = window.location.origin + '/auth/callback';
+      
+      console.log('OIDC Configuration Debug:', {
+        authority,
         client_id: authConfig.clientId,
-        redirect_uri: window.location.origin + '/auth/callback',
+        redirect_uri: redirectUri,
+        current_origin: window.location.origin
+      });
+
+      // Create OIDC client configuration with PKCE enforcement
+      const oidcConfig = {
+        authority,
+        client_id: authConfig.clientId,
+        redirect_uri: redirectUri,
         response_type: 'code',
         scope: 'openid profile email',
         post_logout_redirect_uri: window.location.origin,
-        // PKCE settings
+        // Force PKCE - don't send client_secret
         code_challenge_method: 'S256',
+        client_secret: '', // Explicitly set empty to avoid sending it
+        // Additional PKCE settings
         automaticSilentRenew: false,
-        loadUserInfo: true
+        loadUserInfo: true,
+        // Extra parameters to ensure PKCE usage
+        extraQueryParams: {},
+        extraTokenParams: {}
       };
 
       const userManager = new UserManager(oidcConfig);
+
+      // Check if PKCE is supported by the provider
+      try {
+        const metadata = await userManager.metadataService.getMetadata();
+        const supportedMethods = metadata.code_challenge_methods_supported;
+        
+        if (supportedMethods && !supportedMethods.includes('S256')) {
+          throw new Error('PKCE (S256) is not supported by this OIDC provider. Please use a provider that supports PKCE or configure a confidential client.');
+        }
+      } catch (metadataError) {
+        console.warn('Could not verify PKCE support from metadata:', metadataError);
+        // Continue anyway - some providers don't expose this in metadata
+      }
 
       // Start the OIDC flow
       const user = await userManager.signinPopup();
@@ -112,7 +141,21 @@ export function AuthSection({ environment, onUpdate }) {
       }
     } catch (err) {
       console.error('OIDC authentication error:', err);
-      setError(`Authentication failed: ${err.message || 'Unknown error'}`);
+      
+      // Handle specific PKCE-related errors
+      if (err.message && err.message.includes('client_secret')) {
+        setError('Authentication failed: This OIDC provider requires a client secret, but PKCE should not need one. Please check if the provider supports public clients with PKCE, or contact your OIDC administrator to configure the client as a public client.');
+      } else if (err.message && err.message.includes('invalid_client')) {
+        setError('Authentication failed: Invalid client configuration. Make sure your Client ID is correct and the client is configured as a public client (no client secret required) with PKCE support.');
+      } else if (err.message && err.message.includes('unsupported_response_type')) {
+        setError('Authentication failed: The authorization code flow is not supported by this provider. PKCE requires the authorization code flow to be enabled.');
+      } else if (err.message && err.message.includes('NetworkError')) {
+        setError(`Authentication failed: Network error while contacting the OIDC provider. For Google OAuth2, ensure: 1) Your client is configured as a "Public" application type, 2) ${window.location.origin}/auth/callback is added to "Authorized redirect URIs", 3) ${window.location.origin} is added to "Authorized JavaScript origins". Check the console for detailed configuration info.`);
+      } else if (err.message && (err.message.includes('CORS') || err.message.includes('cors'))) {
+        setError(`Authentication failed: CORS error. Add ${window.location.origin} to your OAuth2 client's "Authorized JavaScript origins" in the Google Cloud Console.`);
+      } else {
+        setError(`Authentication failed: ${err.message || 'Unknown error'}. For Google OAuth2 setup, check: 1) Application type is "Web application", 2) Redirect URI: ${window.location.origin}/auth/callback, 3) JavaScript origins: ${window.location.origin}`);
+      }
     } finally {
       setLoading(false);
     }
