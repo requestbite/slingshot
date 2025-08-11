@@ -5,6 +5,33 @@ import { EncryptionKeyModal } from '../components/modals/EncryptionKeyModal';
 import { Toast, useToast } from '../components/common/Toast';
 import { AuthSection } from '../components/auth/AuthSection';
 import { apiClient } from '../api';
+import { decryptSecret } from '../utils/encryption';
+
+// Helper function to decrypt auth configuration  
+const decryptAuthConfig = async (encryptedConfig) => {
+  if (!encryptedConfig || !encryptedConfig.encrypted_value) return null;
+  
+  try {
+    const decryptedString = await decryptSecret(encryptedConfig.encrypted_value, encryptedConfig.iv);
+    return JSON.parse(decryptedString);
+  } catch (error) {
+    console.error('Failed to decrypt auth config:', error);
+    return null;
+  }
+};
+
+// Helper function to decrypt auth response
+const decryptAuthResponse = async (encryptedResponse) => {
+  if (!encryptedResponse || !encryptedResponse.encrypted_value) return null;
+  
+  try {
+    const decryptedString = await decryptSecret(encryptedResponse.encrypted_value, encryptedResponse.iv);
+    return JSON.parse(decryptedString);
+  } catch (error) {
+    console.error('Failed to decrypt auth response:', error);
+    return null;
+  }
+};
 
 export function EnvironmentUpdatePage() {
   const [, setLocation] = useLocation();
@@ -86,10 +113,32 @@ export function EnvironmentUpdatePage() {
         return;
       }
 
-      setEnvironment(environmentData);
+      // Decrypt auth fields if they exist and are encrypted
+      let decryptedEnvironment = { ...environmentData };
+      
+      try {
+        if (environmentData.authConfig?.encrypted_value) {
+          const decryptedAuthConfig = await decryptAuthConfig(environmentData.authConfig);
+          if (decryptedAuthConfig) {
+            decryptedEnvironment.authConfig = decryptedAuthConfig;
+          }
+        }
+        
+        if (environmentData.authResponse?.encrypted_value) {
+          const decryptedAuthResponse = await decryptAuthResponse(environmentData.authResponse);
+          if (decryptedAuthResponse) {
+            decryptedEnvironment.authResponse = decryptedAuthResponse;
+          }
+        }
+      } catch (error) {
+        console.error('Failed to decrypt auth fields:', error);
+        // Continue with encrypted data if decryption fails
+      }
+
+      setEnvironment(decryptedEnvironment);
       setFormData({
-        name: environmentData.name,
-        description: environmentData.description || ''
+        name: decryptedEnvironment.name,
+        description: decryptedEnvironment.description || ''
       });
       setHasGeneralChanges(false);
 
@@ -126,17 +175,44 @@ export function EnvironmentUpdatePage() {
   };
 
   const handleEncryptionKeySuccess = async () => {
-    // Retry loading secrets after encryption key is set
+    // Retry loading secrets and auth fields after encryption key is set
     if (environment) {
       try {
+        // Reload secrets
         const secretsData = await apiClient.getDecryptedEnvironmentSecrets(environment.id);
         const sortedSecrets = secretsData.sort((a, b) => a.key.localeCompare(b.key));
         setOriginalSecrets(sortedSecrets);
         setPendingSecrets(sortedSecrets.map(s => ({ ...s, _status: 'existing' })));
         setHasSecretsChanges(false);
+        
+        // Reload and decrypt auth fields
+        const environmentData = await apiClient.getEnvironment(environment.id);
+        if (environmentData) {
+          let decryptedEnvironment = { ...environmentData };
+          
+          try {
+            if (environmentData.authConfig?.encrypted_value) {
+              const decryptedAuthConfig = await decryptAuthConfig(environmentData.authConfig);
+              if (decryptedAuthConfig) {
+                decryptedEnvironment.authConfig = decryptedAuthConfig;
+              }
+            }
+            
+            if (environmentData.authResponse?.encrypted_value) {
+              const decryptedAuthResponse = await decryptAuthResponse(environmentData.authResponse);
+              if (decryptedAuthResponse) {
+                decryptedEnvironment.authResponse = decryptedAuthResponse;
+              }
+            }
+          } catch (error) {
+            console.error('Failed to decrypt auth fields after key setup:', error);
+          }
+          
+          setEnvironment(decryptedEnvironment);
+        }
       } catch (error) {
-        console.error('Failed to load secrets after key setup:', error);
-        setToastMessage('Failed to load environment secrets');
+        console.error('Failed to load data after key setup:', error);
+        setToastMessage('Failed to load environment data');
         setToastType('error');
         showToast();
       }
