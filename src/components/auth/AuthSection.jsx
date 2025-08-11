@@ -1,11 +1,58 @@
 import { useState, useEffect } from 'preact/hooks';
 import { UserManager } from 'oidc-client-ts';
 import { apiClient } from '../../api';
+import { encryptSecret, decryptSecret } from '../../utils/encryption';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { dracula } from '@uiw/codemirror-theme-dracula';
 import { EditorView } from '@codemirror/view';
 import { bracketMatching } from '@codemirror/language';
+
+// Helper function to encrypt auth configuration
+const encryptAuthConfig = async (authConfig) => {
+  if (!authConfig) return null;
+  
+  const configString = JSON.stringify(authConfig);
+  const { encrypted_value, iv } = await encryptSecret(configString);
+  
+  return { encrypted_value, iv };
+};
+
+// Helper function to decrypt auth configuration  
+const decryptAuthConfig = async (encryptedConfig) => {
+  if (!encryptedConfig || !encryptedConfig.encrypted_value) return null;
+  
+  try {
+    const decryptedString = await decryptSecret(encryptedConfig.encrypted_value, encryptedConfig.iv);
+    return JSON.parse(decryptedString);
+  } catch (error) {
+    console.error('Failed to decrypt auth config:', error);
+    return null;
+  }
+};
+
+// Helper function to encrypt auth response
+const encryptAuthResponse = async (authResponse) => {
+  if (!authResponse) return null;
+  
+  const responseString = JSON.stringify(authResponse);
+  const { encrypted_value, iv } = await encryptSecret(responseString);
+  
+  return { encrypted_value, iv };
+};
+
+// Helper function to decrypt auth response
+const decryptAuthResponse = async (encryptedResponse) => {
+  if (!encryptedResponse || !encryptedResponse.encrypted_value) return null;
+  
+  try {
+    const decryptedString = await decryptSecret(encryptedResponse.encrypted_value, encryptedResponse.iv);
+    return JSON.parse(decryptedString);
+  } catch (error) {
+    console.error('Failed to decrypt auth response:', error);
+    return null;
+  }
+};
 
 export function AuthSection({ environment, onUpdate }) {
   // Auth configuration state
@@ -24,17 +71,47 @@ export function AuthSection({ environment, onUpdate }) {
 
   // Update local state when environment changes
   useEffect(() => {
-    if (environment) {
-      setAuthType(environment.auth || 'none');
-      setAuthConfig({
-        domain: environment?.authConfig?.domain || '',
-        clientId: environment?.authConfig?.clientId || '',
-        clientSecret: environment?.authConfig?.clientSecret || '',
-        scopes: environment?.authConfig?.scopes || 'openid profile email',
-        ...environment?.authConfig
-      });
-      setAuthResponse(environment.authResponse || null);
-    }
+    const loadAuthData = async () => {
+      if (environment) {
+        setAuthType(environment.auth || 'none');
+        
+        // Decrypt authConfig if it exists and is encrypted
+        let decryptedAuthConfig = null;
+        if (environment.authConfig) {
+          if (environment.authConfig.encrypted_value) {
+            // Config is encrypted, decrypt it
+            decryptedAuthConfig = await decryptAuthConfig(environment.authConfig);
+          } else {
+            // Config is not encrypted (legacy data), use as-is
+            decryptedAuthConfig = environment.authConfig;
+          }
+        }
+        
+        setAuthConfig({
+          domain: decryptedAuthConfig?.domain || '',
+          clientId: decryptedAuthConfig?.clientId || '',
+          clientSecret: decryptedAuthConfig?.clientSecret || '',
+          scopes: decryptedAuthConfig?.scopes || 'openid profile email',
+          ...decryptedAuthConfig
+        });
+        
+        // Decrypt authResponse if it exists and is encrypted
+        let decryptedAuthResponse = null;
+        if (environment.authResponse) {
+          if (environment.authResponse.encrypted_value) {
+            // Response is encrypted, decrypt it
+            decryptedAuthResponse = await decryptAuthResponse(environment.authResponse);
+          } else {
+            // Response is not encrypted (legacy data), use as-is
+            decryptedAuthResponse = environment.authResponse;
+          }
+        }
+        
+        setAuthResponse(decryptedAuthResponse);
+      }
+    };
+    
+    loadAuthData();
   }, [environment]);
 
   const handleAuthTypeChange = async (newAuthType) => {
@@ -54,18 +131,26 @@ export function AuthSection({ environment, onUpdate }) {
 
   const updateEnvironmentAuth = async (auth, config, response) => {
     try {
+      // Encrypt the config and response before saving
+      const encryptedConfig = config ? await encryptAuthConfig(config) : null;
+      const encryptedResponse = response ? await encryptAuthResponse(response) : null;
+      
       await apiClient.updateEnvironment(environment.id, {
         ...environment,
         auth,
-        authConfig: config,
-        authResponse: response
+        authConfig: encryptedConfig,
+        authResponse: encryptedResponse
       });
       if (onUpdate) {
         onUpdate(environment.id);
       }
     } catch (err) {
       console.error('Failed to update environment auth:', err);
-      setError('Failed to update authentication configuration');
+      if (err.message && err.message.includes('encryption key')) {
+        setError('Failed to update authentication: Encryption key required. Please provide your password.');
+      } else {
+        setError('Failed to update authentication configuration');
+      }
     }
   };
 
@@ -133,6 +218,11 @@ export function AuthSection({ environment, onUpdate }) {
       const user = await userManager.signinPopup();
 
       if (user && user.access_token) {
+        // Calculate access token expiration timestamp
+        const now = Date.now();
+        const expiresInMs = (user.expires_in || 3600) * 1000; // Default to 1 hour if not provided
+        const accessTokenExpires = new Date(now + expiresInMs).toISOString();
+
         const response = {
           access_token: user.access_token,
           refresh_token: user.refresh_token,
@@ -141,7 +231,8 @@ export function AuthSection({ environment, onUpdate }) {
           token_type: user.token_type,
           scope: user.scope,
           profile: user.profile,
-          expires_at: user.expires_at
+          expires_at: user.expires_at,
+          access_token_expires: accessTokenExpires
         };
 
         setAuthResponse(response);
