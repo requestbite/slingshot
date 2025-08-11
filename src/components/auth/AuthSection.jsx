@@ -11,17 +11,17 @@ import { bracketMatching } from '@codemirror/language';
 // Helper function to encrypt auth configuration
 const encryptAuthConfig = async (authConfig) => {
   if (!authConfig) return null;
-  
+
   const configString = JSON.stringify(authConfig);
   const { encrypted_value, iv } = await encryptSecret(configString);
-  
+
   return { encrypted_value, iv };
 };
 
 // Helper function to decrypt auth configuration  
 const decryptAuthConfig = async (encryptedConfig) => {
   if (!encryptedConfig || !encryptedConfig.encrypted_value) return null;
-  
+
   try {
     const decryptedString = await decryptSecret(encryptedConfig.encrypted_value, encryptedConfig.iv);
     return JSON.parse(decryptedString);
@@ -34,17 +34,17 @@ const decryptAuthConfig = async (encryptedConfig) => {
 // Helper function to encrypt auth response
 const encryptAuthResponse = async (authResponse) => {
   if (!authResponse) return null;
-  
+
   const responseString = JSON.stringify(authResponse);
   const { encrypted_value, iv } = await encryptSecret(responseString);
-  
+
   return { encrypted_value, iv };
 };
 
 // Helper function to decrypt auth response
 const decryptAuthResponse = async (encryptedResponse) => {
   if (!encryptedResponse || !encryptedResponse.encrypted_value) return null;
-  
+
   try {
     const decryptedString = await decryptSecret(encryptedResponse.encrypted_value, encryptedResponse.iv);
     return JSON.parse(decryptedString);
@@ -74,7 +74,7 @@ export function AuthSection({ environment, onUpdate }) {
     const loadAuthData = async () => {
       if (environment) {
         setAuthType(environment.auth || 'none');
-        
+
         // Decrypt authConfig if it exists and is encrypted
         let decryptedAuthConfig = null;
         if (environment.authConfig) {
@@ -86,7 +86,7 @@ export function AuthSection({ environment, onUpdate }) {
             decryptedAuthConfig = environment.authConfig;
           }
         }
-        
+
         setAuthConfig({
           domain: decryptedAuthConfig?.domain || '',
           clientId: decryptedAuthConfig?.clientId || '',
@@ -94,7 +94,7 @@ export function AuthSection({ environment, onUpdate }) {
           scopes: decryptedAuthConfig?.scopes || 'openid profile email',
           ...decryptedAuthConfig
         });
-        
+
         // Decrypt authResponse if it exists and is encrypted
         let decryptedAuthResponse = null;
         if (environment.authResponse) {
@@ -106,11 +106,11 @@ export function AuthSection({ environment, onUpdate }) {
             decryptedAuthResponse = environment.authResponse;
           }
         }
-        
+
         setAuthResponse(decryptedAuthResponse);
       }
     };
-    
+
     loadAuthData();
   }, [environment]);
 
@@ -118,7 +118,7 @@ export function AuthSection({ environment, onUpdate }) {
     setAuthType(newAuthType);
     setError('');
     setSuccess('');
-    
+
     if (newAuthType === 'none') {
       // Clear auth configuration
       await updateEnvironmentAuth(null, null, null);
@@ -134,7 +134,7 @@ export function AuthSection({ environment, onUpdate }) {
       // Encrypt the config and response before saving
       const encryptedConfig = config ? await encryptAuthConfig(config) : null;
       const encryptedResponse = response ? await encryptAuthResponse(response) : null;
-      
+
       await apiClient.updateEnvironment(environment.id, {
         ...environment,
         auth,
@@ -168,7 +168,7 @@ export function AuthSection({ environment, onUpdate }) {
       // Determine the authority URL
       const authority = authConfig.domain.startsWith('http') ? authConfig.domain : `https://${authConfig.domain}`;
       const redirectUri = window.location.origin + '/auth/callback';
-      
+
       console.log('OIDC Configuration Debug:', {
         authority,
         client_id: authConfig.clientId,
@@ -205,7 +205,7 @@ export function AuthSection({ environment, onUpdate }) {
       try {
         const metadata = await userManager.metadataService.getMetadata();
         const supportedMethods = metadata.code_challenge_methods_supported;
-        
+
         if (supportedMethods && !supportedMethods.includes('S256')) {
           throw new Error('PKCE (S256) is not supported by this OIDC provider. Please use a provider that supports PKCE or configure a confidential client.');
         }
@@ -245,7 +245,7 @@ export function AuthSection({ environment, onUpdate }) {
       }
     } catch (err) {
       console.error('OIDC authentication error:', err);
-      
+
       // Handle specific PKCE-related errors
       if (err.message && err.message.includes('client_secret')) {
         setError('Authentication failed: This OIDC provider requires a client secret, but PKCE should not need one. Please check if the provider supports public clients with PKCE, or contact your OIDC administrator to configure the client as a public client.');
@@ -276,6 +276,111 @@ export function AuthSection({ environment, onUpdate }) {
       setSuccess('Authentication configuration saved');
     } catch (err) {
       setError('Failed to save configuration');
+    }
+  };
+
+  const handleRefreshTokens = async () => {
+    if (!authResponse?.refresh_token) {
+      setError('No refresh token available');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Determine the authority URL
+      const authority = authConfig.domain.startsWith('http') ? authConfig.domain : `https://${authConfig.domain}`;
+
+      // Create UserManager to get OpenID Connect configuration
+      const oidcConfig = {
+        authority,
+        client_id: authConfig.clientId,
+        redirect_uri: window.location.origin + '/auth/callback',
+        response_type: 'code',
+        scope: authConfig.scopes || 'openid profile email',
+        code_challenge_method: 'S256',
+        ...(authConfig.clientSecret && { client_secret: authConfig.clientSecret }),
+        automaticSilentRenew: false,
+        loadUserInfo: false
+      };
+
+      const userManager = new UserManager(oidcConfig);
+
+      // Get the OpenID Connect metadata to find the token endpoint
+      const metadata = await userManager.metadataService.getMetadata();
+
+      if (!metadata.token_endpoint) {
+        throw new Error('Token endpoint not found in OpenID Connect configuration');
+      }
+
+      // Create form data for token refresh request
+      const formData = new URLSearchParams();
+      formData.append('grant_type', 'refresh_token');
+      formData.append('refresh_token', authResponse.refresh_token);
+      formData.append('client_id', authConfig.clientId);
+
+      // Include client secret if available
+      if (authConfig.clientSecret) {
+        formData.append('client_secret', authConfig.clientSecret);
+      }
+
+      const response = await fetch(metadata.token_endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error_description || errorData.error || `HTTP ${response.status}`);
+      }
+
+      const tokenData = await response.json();
+
+      if (tokenData.access_token) {
+        // Calculate new access token expiration timestamp
+        const now = Date.now();
+        const expiresInMs = (tokenData.expires_in || 3600) * 1000; // Default to 1 hour if not provided
+        const accessTokenExpires = new Date(now + expiresInMs).toISOString();
+
+        const updatedResponse = {
+          ...authResponse,
+          access_token: tokenData.access_token,
+          expires_in: tokenData.expires_in,
+          token_type: tokenData.token_type || authResponse.token_type,
+          scope: tokenData.scope || authResponse.scope,
+          access_token_expires: accessTokenExpires,
+          // Update refresh token if a new one was provided
+          ...(tokenData.refresh_token && { refresh_token: tokenData.refresh_token }),
+          // Update ID token if a new one was provided
+          ...(tokenData.id_token && { id_token: tokenData.id_token })
+        };
+
+        setAuthResponse(updatedResponse);
+        setSuccess('Tokens refreshed successfully!');
+
+        // Save updated tokens to environment
+        await updateEnvironmentAuth(authType, authConfig, updatedResponse);
+      } else {
+        setError('Token refresh failed: No access token received');
+      }
+    } catch (err) {
+      console.error('Token refresh error:', err);
+
+      // Handle specific errors
+      if (err.message && err.message.includes('Token endpoint not found')) {
+        setError('Token refresh failed: Unable to discover token endpoint from OpenID Connect configuration');
+      } else if (err.message && err.message.includes('NetworkError')) {
+        setError('Token refresh failed: Network error while contacting the OIDC provider');
+      } else {
+        setError(`Token refresh failed: ${err.message || 'Unknown error'}`);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -375,7 +480,16 @@ export function AuthSection({ environment, onUpdate }) {
           </div>
 
           {/* Get Tokens Button */}
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-3 flex-wrap">
+            <button
+              onClick={handleSaveConfig}
+              class="cursor-pointer rounded-md bg-gray-500 hover:bg-gray-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500"
+            >
+              Save Configuration
+            </button>
+
+            &middot;
+
             <button
               onClick={handleGetTokens}
               disabled={loading || !authConfig.domain || !authConfig.clientId || !authConfig.scopes}
@@ -384,12 +498,15 @@ export function AuthSection({ environment, onUpdate }) {
               {loading ? 'Authenticating...' : 'Get Tokens'}
             </button>
 
-            <button
-              onClick={handleSaveConfig}
-              class="cursor-pointer rounded-md bg-gray-500 hover:bg-gray-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500"
-            >
-              Save Configuration
-            </button>
+            {authResponse?.refresh_token && (
+              <button
+                onClick={handleRefreshTokens}
+                disabled={loading}
+                class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 disabled:bg-gray-300 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+              >
+                {loading ? 'Refreshing...' : 'Refresh Tokens'}
+              </button>
+            )}
 
             {authResponse && (
               <button
@@ -436,8 +553,9 @@ export function AuthSection({ environment, onUpdate }) {
 
       {/* Auth Response Display */}
       {authResponse && (
-        <div class="space-y-4">
+        <div class="">
           <h3 class="text-base font-medium text-gray-900">Authentication Response</h3>
+          <p class="mt-1 text-sm text-gray-600 mb-4">Any active access token will be used as Authoriation header in Slingshot if this environment is used.</p>
           <div class="w-full max-w-full overflow-hidden">
             <CodeMirror
               value={JSON.stringify(authResponse, null, 2)}
