@@ -27,6 +27,7 @@ export function VariableInput({
   
   const inputRef = useRef();
   const autocompleteRef = useRef();
+  const updateTimeoutRef = useRef();
 
   // Load variables when collection or selected environment changes
   useEffect(() => {
@@ -71,11 +72,22 @@ export function VariableInput({
     const parts = [];
     let match;
 
+    // Helper function to escape HTML and preserve spaces
+    const escapeAndPreserveSpaces = (str) => {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/\s/g, '&nbsp;'); // Preserve all whitespace
+    };
+
     while ((match = variableRegex.exec(text)) !== null) {
       // Add text before the variable
       if (match.index > lastIndex) {
         const beforeText = text.slice(lastIndex, match.index);
-        parts.push(beforeText);
+        parts.push(escapeAndPreserveSpaces(beforeText));
       }
 
       // Add the variable with highlighting
@@ -83,13 +95,13 @@ export function VariableInput({
       const isResolved = variables.has(variableName);
       const className = isResolved ? 'variable-resolved' : 'variable-unresolved';
       
-      parts.push(`<span class="${className}">${match[0]}</span>`);
+      parts.push(`<span class="${className}">${escapeAndPreserveSpaces(match[0])}</span>`);
       lastIndex = match.index + match[0].length;
     }
 
     // Add remaining text
     if (lastIndex < text.length) {
-      parts.push(text.slice(lastIndex));
+      parts.push(escapeAndPreserveSpaces(text.slice(lastIndex)));
     }
 
     return { __html: parts.join('') };
@@ -105,35 +117,33 @@ export function VariableInput({
     // Update the value
     onChange?.(newValue);
 
-    // Check for {{ pattern for autocomplete after a short delay to let DOM settle
-    setTimeout(() => {
-      const textBeforeCursor = newValue.slice(0, cursorPosition);
-      const variableMatch = textBeforeCursor.match(/\{\{([^}]*)$/);
+    // Check for {{ pattern for autocomplete immediately (no setTimeout needed)
+    const textBeforeCursor = newValue.slice(0, cursorPosition);
+    const variableMatch = textBeforeCursor.match(/\{\{([^}]*)$/);
 
-      if (variableMatch) {
-        const query = variableMatch[1];
-        const startPos = cursorPosition - query.length - 2; // -2 for {{
-        
-        setAutocompleteQuery(query);
-        setAutocompleteStart(startPos);
-        
-        // Filter variables based on query
-        const filtered = Array.from(variables.keys())
-          .filter(key => key.toLowerCase().includes(query.toLowerCase()))
-          .slice(0, 10); // Limit to 10 results
-        
-        setFilteredVariables(filtered);
-        setSelectedIndex(0);
-        
-        if (filtered.length > 0) {
-          setShowAutocomplete(true);
-        } else {
-          setShowAutocomplete(false);
-        }
+    if (variableMatch) {
+      const query = variableMatch[1];
+      const startPos = cursorPosition - query.length - 2; // -2 for {{
+      
+      setAutocompleteQuery(query);
+      setAutocompleteStart(startPos);
+      
+      // Filter variables based on query
+      const filtered = Array.from(variables.keys())
+        .filter(key => key.toLowerCase().includes(query.toLowerCase()))
+        .slice(0, 10); // Limit to 10 results
+      
+      setFilteredVariables(filtered);
+      setSelectedIndex(0);
+      
+      if (filtered.length > 0) {
+        setShowAutocomplete(true);
       } else {
         setShowAutocomplete(false);
       }
-    }, 0);
+    } else {
+      setShowAutocomplete(false);
+    }
   };
 
   // Get cursor position in contenteditable element
@@ -142,11 +152,16 @@ export function VariableInput({
     if (selection.rangeCount === 0) return 0;
     
     const range = selection.getRangeAt(0);
+    
+    // Create a range from the start of the element to the cursor
     const preCaretRange = range.cloneRange();
     preCaretRange.selectNodeContents(element);
     preCaretRange.setEnd(range.endContainer, range.endOffset);
     
-    return preCaretRange.toString().length;
+    // Get the text content before the cursor, converting &nbsp; back to spaces
+    const textBeforeCursor = preCaretRange.toString().replace(/\u00a0/g, ' ');
+    
+    return textBeforeCursor.length;
   };
 
 
@@ -216,7 +231,7 @@ export function VariableInput({
     let targetNode = null;
     let targetOffset = 0;
 
-    // Find the correct text node and offset
+    // Find the correct text node and offset, handling &nbsp; entities
     const walker = document.createTreeWalker(
       element,
       NodeFilter.SHOW_TEXT,
@@ -226,7 +241,10 @@ export function VariableInput({
 
     let node;
     while ((node = walker.nextNode())) {
-      const nodeLength = node.textContent.length;
+      // Convert &nbsp; back to regular spaces for length calculation
+      const nodeText = node.textContent.replace(/\u00a0/g, ' ');
+      const nodeLength = nodeText.length;
+      
       if (currentPosition + nodeLength >= position) {
         targetNode = node;
         targetOffset = position - currentPosition;
@@ -236,10 +254,21 @@ export function VariableInput({
     }
 
     if (targetNode) {
-      range.setStart(targetNode, targetOffset);
-      range.setEnd(targetNode, targetOffset);
-      selection.removeAllRanges();
-      selection.addRange(range);
+      // Ensure offset doesn't exceed node length
+      targetOffset = Math.min(targetOffset, targetNode.textContent.length);
+      
+      try {
+        range.setStart(targetNode, targetOffset);
+        range.setEnd(targetNode, targetOffset);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      } catch (error) {
+        // Fallback: position at the end of the element
+        range.selectNodeContents(element);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
     }
   };
 
@@ -266,25 +295,45 @@ export function VariableInput({
     const currentCursor = getCursorPosition(element);
     const currentText = element.textContent || '';
     
-    // Update DOM content if it differs from the prop value
+    // Clear any pending update
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+    }
+    
+    // Only update if content actually differs to avoid unnecessary DOM manipulation
     if (currentText !== value) {
       const highlighted = parseAndHighlight(value);
-      element.innerHTML = highlighted.__html;
-      // Restore cursor position, but set to end if value was externally changed (like restore)
-      setTimeout(() => {
-        setCursorPosition(element, Math.min(currentCursor, value.length));
-      }, 0);
+      
+      // Check if the highlighted HTML is actually different to avoid flicker
+      if (element.innerHTML !== highlighted.__html) {
+        element.innerHTML = highlighted.__html;
+        
+        // Use requestAnimationFrame for smoother cursor restoration
+        requestAnimationFrame(() => {
+          // For external changes (like restore), preserve cursor position if text length allows
+          const newCursorPosition = Math.min(currentCursor, value.length);
+          setCursorPosition(element, newCursorPosition);
+        });
+      }
     } else {
       // Content matches, but highlighting might need update (e.g., variables changed)
       const highlighted = parseAndHighlight(value);
       if (element.innerHTML !== highlighted.__html) {
         element.innerHTML = highlighted.__html;
-        // Restore cursor position
-        setTimeout(() => {
+        
+        // Use requestAnimationFrame for smoother cursor restoration
+        requestAnimationFrame(() => {
           setCursorPosition(element, currentCursor);
-        }, 0);
+        });
       }
     }
+    
+    // Cleanup function
+    return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+    };
   }, [value, variables, showAutocomplete]);
 
   // Set initial content
