@@ -606,7 +606,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       value: replaceVariables(h.value, variables)
     }));
 
-    // Add authentication headers based on environment auth type
+    // Add authentication headers based on environment auth type (only if not manually overridden)
     if (currentEnvironment?.auth && currentEnvironment.auth !== 'none') {
       try {
         if (currentEnvironment.auth === 'oidc_pkce' && currentEnvironment?.authResponse) {
@@ -614,58 +614,64 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
           const decryptedAuthResponse = await decryptAuthResponse(currentEnvironment.authResponse);
           
           if (decryptedAuthResponse?.access_token) {
-            // Remove any existing Authorization headers (case-insensitive)
-            processedHeaders = processedHeaders.filter(h => 
-              h.key.toLowerCase() !== 'authorization'
+            // Only add Authorization header if no manual Authorization header exists
+            const hasManualAuthHeader = processedHeaders.some(h => 
+              h.enabled && h.key.toLowerCase() === 'authorization'
             );
             
-            // Add the Authorization header with Bearer token
-            processedHeaders.push({
-              id: generateUUID(),
-              key: 'Authorization',
-              value: `Bearer ${decryptedAuthResponse.access_token}`,
-              enabled: true
-            });
+            if (!hasManualAuthHeader) {
+              // Add the Authorization header with Bearer token
+              processedHeaders.push({
+                id: generateUUID(),
+                key: 'Authorization',
+                value: `Bearer ${decryptedAuthResponse.access_token}`,
+                enabled: true
+              });
+            }
           }
         } else if (currentEnvironment.auth === 'basic_auth' && currentEnvironment?.authConfig) {
           // Basic Auth: Base64-encode username:password
           const decryptedAuthConfig = await decryptAuthConfig(currentEnvironment.authConfig);
           
           if (decryptedAuthConfig?.username || decryptedAuthConfig?.password) {
-            const username = decryptedAuthConfig.username || '';
-            const password = decryptedAuthConfig.password || '';
-            const credentials = btoa(`${username}:${password}`);
-            
-            // Remove any existing Authorization headers (case-insensitive)
-            processedHeaders = processedHeaders.filter(h => 
-              h.key.toLowerCase() !== 'authorization'
+            // Only add Authorization header if no manual Authorization header exists
+            const hasManualAuthHeader = processedHeaders.some(h => 
+              h.enabled && h.key.toLowerCase() === 'authorization'
             );
             
-            // Add the Authorization header with Basic auth
-            processedHeaders.push({
-              id: generateUUID(),
-              key: 'Authorization',
-              value: `Basic ${credentials}`,
-              enabled: true
-            });
+            if (!hasManualAuthHeader) {
+              const username = decryptedAuthConfig.username || '';
+              const password = decryptedAuthConfig.password || '';
+              const credentials = btoa(`${username}:${password}`);
+              
+              // Add the Authorization header with Basic auth
+              processedHeaders.push({
+                id: generateUUID(),
+                key: 'Authorization',
+                value: `Basic ${credentials}`,
+                enabled: true
+              });
+            }
           }
         } else if (currentEnvironment.auth === 'bearer_token' && currentEnvironment?.authConfig) {
           // Bearer Token: Use token from auth config
           const decryptedAuthConfig = await decryptAuthConfig(currentEnvironment.authConfig);
           
           if (decryptedAuthConfig?.token) {
-            // Remove any existing Authorization headers (case-insensitive)
-            processedHeaders = processedHeaders.filter(h => 
-              h.key.toLowerCase() !== 'authorization'
+            // Only add Authorization header if no manual Authorization header exists
+            const hasManualAuthHeader = processedHeaders.some(h => 
+              h.enabled && h.key.toLowerCase() === 'authorization'
             );
             
-            // Add the Authorization header with Bearer token
-            processedHeaders.push({
-              id: generateUUID(),
-              key: 'Authorization',
-              value: `Bearer ${decryptedAuthConfig.token}`,
-              enabled: true
-            });
+            if (!hasManualAuthHeader) {
+              // Add the Authorization header with Bearer token
+              processedHeaders.push({
+                id: generateUUID(),
+                key: 'Authorization',
+                value: `Bearer ${decryptedAuthConfig.token}`,
+                enabled: true
+              });
+            }
           }
         } else if (currentEnvironment.auth === 'api_key' && currentEnvironment?.authConfig) {
           // API Key: Add as header or query parameter
@@ -675,18 +681,20 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
             const addTo = decryptedAuthConfig.addTo || 'header';
             
             if (addTo === 'header') {
-              // Remove any existing headers with the same key (case-insensitive)
-              processedHeaders = processedHeaders.filter(h => 
-                h.key.toLowerCase() !== decryptedAuthConfig.key.toLowerCase()
+              // Only add API key header if no manual header with the same key exists
+              const hasManualHeader = processedHeaders.some(h => 
+                h.enabled && h.key.toLowerCase() === decryptedAuthConfig.key.toLowerCase()
               );
               
-              // Add the API key as a header
-              processedHeaders.push({
-                id: generateUUID(),
-                key: decryptedAuthConfig.key,
-                value: decryptedAuthConfig.value,
-                enabled: true
-              });
+              if (!hasManualHeader) {
+                // Add the API key as a header
+                processedHeaders.push({
+                  id: generateUUID(),
+                  key: decryptedAuthConfig.key,
+                  value: decryptedAuthConfig.value,
+                  enabled: true
+                });
+              }
             }
             // Note: Query parameter handling is done later in the URL processing
           }
@@ -703,24 +711,26 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       value: replaceVariables(p.value, variables)
     }));
 
-    // Add API key as query parameter if configured
+    // Add API key as query parameter if configured (only if not manually overridden)
     if (currentEnvironment?.auth === 'api_key' && currentEnvironment?.authConfig) {
       try {
         const decryptedAuthConfig = await decryptAuthConfig(currentEnvironment.authConfig);
         
         if (decryptedAuthConfig?.key && decryptedAuthConfig?.value && decryptedAuthConfig.addTo === 'query') {
-          // Remove any existing query params with the same key (case-insensitive)
-          processedQueryParams = processedQueryParams.filter(p => 
-            p.key.toLowerCase() !== decryptedAuthConfig.key.toLowerCase()
+          // Only add API key query param if no manual query param with the same key exists
+          const hasManualQueryParam = processedQueryParams.some(p => 
+            p.enabled && p.key.toLowerCase() === decryptedAuthConfig.key.toLowerCase()
           );
           
-          // Add the API key as a query parameter
-          processedQueryParams.push({
-            id: generateUUID(),
-            key: decryptedAuthConfig.key,
-            value: decryptedAuthConfig.value,
-            enabled: true
-          });
+          if (!hasManualQueryParam) {
+            // Add the API key as a query parameter
+            processedQueryParams.push({
+              id: generateUUID(),
+              key: decryptedAuthConfig.key,
+              value: decryptedAuthConfig.value,
+              enabled: true
+            });
+          }
         }
       } catch (error) {
         console.error('Failed to decrypt auth config for query params:', error);
