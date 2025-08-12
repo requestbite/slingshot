@@ -453,6 +453,66 @@ export function EnvironmentUpdatePage() {
     }
   };
 
+  // Comprehensive save function that saves all sections (general, secrets, and auth)
+  const saveAllData = async () => {
+    if (!formData.name.trim()) {
+      setToastMessage('Environment name is required');
+      setToastType('error');
+      showToast();
+      return false;
+    }
+
+    try {
+      // Update environment details (general)
+      await apiClient.updateEnvironment(environment.id, {
+        name: formData.name.trim(),
+        description: formData.description.trim()
+      });
+
+      // Process secret changes - collect all current secrets
+      if (requireEncryptionKey()) return false;
+
+      const currentSecrets = pendingSecrets
+        .filter(secret => secret._status !== 'deleted')
+        .map(secret => ({
+          key: secret.key,
+          value: secret.value
+        }));
+
+      // Update all secrets at once
+      await apiClient.updateEnvironmentSecrets(environment.id, currentSecrets);
+
+      return true;
+    } catch (error) {
+      console.error('Failed to save all data:', error);
+      setToastMessage('Failed to save environment data');
+      setToastType('error');
+      showToast();
+      return false;
+    }
+  };
+
+  // Auth section handlers
+  const handleAuthSave = async () => {
+    const success = await saveAllData();
+    if (success) {
+      setToastMessage('Environment updated successfully');
+      setToastType('success');
+      showToast();
+      setLocation('/environments');
+    }
+  };
+
+  const handleAuthCancel = () => {
+    if (hasChanges) {
+      if (confirm('You have unsaved changes. Are you sure you want to cancel?')) {
+        setLocation('/environments');
+      }
+    } else {
+      setLocation('/environments');
+    }
+  };
+
   // Navigation helper for section links
   const handleSectionNavigation = (section, e) => {
     e.preventDefault();
@@ -873,7 +933,12 @@ export function EnvironmentUpdatePage() {
                     <p class="mt-1 text-sm text-gray-600 mb-6">Configure authentication for this environment.</p>
 
                     {/* Auth Configuration Form */}
-                    <AuthSection environment={environment} onUpdate={loadEnvironmentData} />
+                    <AuthSection 
+                      environment={environment} 
+                      onUpdate={loadEnvironmentData}
+                      onSave={handleAuthSave}
+                      onCancel={handleAuthCancel}
+                    />
                   </div>
                 )}
 

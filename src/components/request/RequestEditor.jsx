@@ -39,6 +39,31 @@ const decryptAuthResponse = async (encryptedResponse) => {
   }
 };
 
+// Helper function to decrypt auth config
+const decryptAuthConfig = async (encryptedConfig) => {
+  if (!encryptedConfig || !encryptedConfig.encrypted_value) return encryptedConfig;
+  
+  try {
+    const decryptedString = await decryptSecret(encryptedConfig.encrypted_value, encryptedConfig.iv);
+    return JSON.parse(decryptedString);
+  } catch (error) {
+    console.error('Failed to decrypt auth config:', error);
+    return null;
+  }
+};
+
+// Get auth method display name
+const getAuthMethodDisplayName = (authField) => {
+  const authDisplayNames = {
+    'none': 'No auth',
+    'api_key': 'API Key',
+    'basic_auth': 'Basic Auth',
+    'bearer_token': 'Bearer Token',
+    'oidc_pkce': 'OpenID Connect'
+  };
+  return authDisplayNames[authField] || null;
+};
+
 export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   const { selectedCollection, currentEnvironment, hasManuallySelectedEnvironment } = useAppContext();
   const [, setLocation] = useLocation();
@@ -581,29 +606,144 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       value: replaceVariables(h.value, variables)
     }));
 
-    // Add Authorization header for OIDC PKCE environments with access tokens
-    if (currentEnvironment?.auth === 'oidc_pkce' && currentEnvironment?.authResponse) {
+    // Add authentication headers based on environment auth type
+    if (currentEnvironment?.auth && currentEnvironment.auth !== 'none') {
       try {
-        // Decrypt the auth response to get the access token
-        const decryptedAuthResponse = await decryptAuthResponse(currentEnvironment.authResponse);
+        if (currentEnvironment.auth === 'oidc_pkce' && currentEnvironment?.authResponse) {
+          // OIDC PKCE: Use access token from auth response
+          const decryptedAuthResponse = await decryptAuthResponse(currentEnvironment.authResponse);
+          
+          if (decryptedAuthResponse?.access_token) {
+            // Remove any existing Authorization headers (case-insensitive)
+            processedHeaders = processedHeaders.filter(h => 
+              h.key.toLowerCase() !== 'authorization'
+            );
+            
+            // Add the Authorization header with Bearer token
+            processedHeaders.push({
+              id: generateUUID(),
+              key: 'Authorization',
+              value: `Bearer ${decryptedAuthResponse.access_token}`,
+              enabled: true
+            });
+          }
+        } else if (currentEnvironment.auth === 'basic_auth' && currentEnvironment?.authConfig) {
+          // Basic Auth: Base64-encode username:password
+          const decryptedAuthConfig = await decryptAuthConfig(currentEnvironment.authConfig);
+          
+          if (decryptedAuthConfig?.username || decryptedAuthConfig?.password) {
+            const username = decryptedAuthConfig.username || '';
+            const password = decryptedAuthConfig.password || '';
+            const credentials = btoa(`${username}:${password}`);
+            
+            // Remove any existing Authorization headers (case-insensitive)
+            processedHeaders = processedHeaders.filter(h => 
+              h.key.toLowerCase() !== 'authorization'
+            );
+            
+            // Add the Authorization header with Basic auth
+            processedHeaders.push({
+              id: generateUUID(),
+              key: 'Authorization',
+              value: `Basic ${credentials}`,
+              enabled: true
+            });
+          }
+        } else if (currentEnvironment.auth === 'bearer_token' && currentEnvironment?.authConfig) {
+          // Bearer Token: Use token from auth config
+          const decryptedAuthConfig = await decryptAuthConfig(currentEnvironment.authConfig);
+          
+          if (decryptedAuthConfig?.token) {
+            // Remove any existing Authorization headers (case-insensitive)
+            processedHeaders = processedHeaders.filter(h => 
+              h.key.toLowerCase() !== 'authorization'
+            );
+            
+            // Add the Authorization header with Bearer token
+            processedHeaders.push({
+              id: generateUUID(),
+              key: 'Authorization',
+              value: `Bearer ${decryptedAuthConfig.token}`,
+              enabled: true
+            });
+          }
+        } else if (currentEnvironment.auth === 'api_key' && currentEnvironment?.authConfig) {
+          // API Key: Add as header or query parameter
+          const decryptedAuthConfig = await decryptAuthConfig(currentEnvironment.authConfig);
+          
+          if (decryptedAuthConfig?.key && decryptedAuthConfig?.value) {
+            const addTo = decryptedAuthConfig.addTo || 'header';
+            
+            if (addTo === 'header') {
+              // Remove any existing headers with the same key (case-insensitive)
+              processedHeaders = processedHeaders.filter(h => 
+                h.key.toLowerCase() !== decryptedAuthConfig.key.toLowerCase()
+              );
+              
+              // Add the API key as a header
+              processedHeaders.push({
+                id: generateUUID(),
+                key: decryptedAuthConfig.key,
+                value: decryptedAuthConfig.value,
+                enabled: true
+              });
+            }
+            // Note: Query parameter handling is done later in the URL processing
+          }
+        }
+      } catch (error) {
+        console.error('Failed to decrypt auth config for request:', error);
+      }
+    }
+
+    // Process query parameters (including API key if needed)
+    let processedQueryParams = requestData.queryParams.map(p => ({
+      ...p,
+      key: replaceVariables(p.key, variables),
+      value: replaceVariables(p.value, variables)
+    }));
+
+    // Add API key as query parameter if configured
+    if (currentEnvironment?.auth === 'api_key' && currentEnvironment?.authConfig) {
+      try {
+        const decryptedAuthConfig = await decryptAuthConfig(currentEnvironment.authConfig);
         
-        if (decryptedAuthResponse?.access_token) {
-          // Remove any existing Authorization headers (case-insensitive)
-          processedHeaders = processedHeaders.filter(h => 
-            h.key.toLowerCase() !== 'authorization'
+        if (decryptedAuthConfig?.key && decryptedAuthConfig?.value && decryptedAuthConfig.addTo === 'query') {
+          // Remove any existing query params with the same key (case-insensitive)
+          processedQueryParams = processedQueryParams.filter(p => 
+            p.key.toLowerCase() !== decryptedAuthConfig.key.toLowerCase()
           );
           
-          // Add the Authorization header with Bearer token
-          processedHeaders.push({
+          // Add the API key as a query parameter
+          processedQueryParams.push({
             id: generateUUID(),
-            key: 'Authorization',
-            value: `Bearer ${decryptedAuthResponse.access_token}`,
+            key: decryptedAuthConfig.key,
+            value: decryptedAuthConfig.value,
             enabled: true
           });
         }
       } catch (error) {
-        console.error('Failed to decrypt auth response for Authorization header:', error);
+        console.error('Failed to decrypt auth config for query params:', error);
       }
+    }
+
+    // Build complete URL with query parameters
+    let processedUrl = replaceVariables(effectiveUrl, variables);
+    
+    // Add query parameters to URL if any exist and are enabled
+    const enabledQueryParams = processedQueryParams.filter(p => p.enabled && p.key);
+    if (enabledQueryParams.length > 0) {
+      const url = new URL(processedUrl.startsWith('http') ? processedUrl : `http://${processedUrl}`);
+      
+      enabledQueryParams.forEach(param => {
+        if (param.value !== undefined && param.value !== null) {
+          url.searchParams.set(param.key, param.value);
+        } else {
+          url.searchParams.set(param.key, '');
+        }
+      });
+      
+      processedUrl = url.toString();
     }
 
     // Replace variables in all request fields
@@ -611,13 +751,9 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       ...requestData,
       followRedirects: effectiveFollowRedirects,
       timeout: effectiveTimeout,
-      url: replaceVariables(effectiveUrl, variables),
+      url: processedUrl,
       headers: processedHeaders,
-      queryParams: requestData.queryParams.map(p => ({
-        ...p,
-        key: replaceVariables(p.key, variables),
-        value: replaceVariables(p.value, variables)
-      })),
+      queryParams: processedQueryParams,
       pathParams: requestData.pathParams.map(p => ({
         ...p,
         key: replaceVariables(p.key, variables),
@@ -902,8 +1038,8 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
               Copy request
             </button>
 
-            {/* OIDC PKCE Auth Banner */}
-            {currentEnvironment?.auth === 'oidc_pkce' && (
+            {/* Auth Banner */}
+            {currentEnvironment?.auth && currentEnvironment.auth !== 'none' && getAuthMethodDisplayName(currentEnvironment.auth) && (
               <a
                 href={`/environments/${currentEnvironment.id}/auth`}
                 onClick={(e) => {
@@ -913,7 +1049,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
                 class="cursor-pointer px-2 rounded-t-md text-xs transition-colors flex items-center text-green-600 hover:text-green-800 hover:bg-green-50"
                 title="Click to view authentication settings"
               >
-                Auth: OpenID Connect
+                Auth: {getAuthMethodDisplayName(currentEnvironment.auth)}
               </a>
             )}
           </div>

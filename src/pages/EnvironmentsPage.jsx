@@ -8,6 +8,18 @@ import { useAppContext } from '../hooks/useAppContext';
 import { apiClient } from '../api';
 import { setupEncryptionKey, hasSessionKey, storeEncryptedReference } from '../utils/encryption';
 
+// Map auth field values to display names
+const getAuthMethodDisplayName = (authField) => {
+  const authDisplayNames = {
+    'none': 'No auth',
+    'api_key': 'API Key',
+    'basic_auth': 'Basic Auth',
+    'bearer_token': 'Bearer Token',
+    'oidc_pkce': 'OpenID Connect (PKCE)'
+  };
+  return authDisplayNames[authField] || 'No auth';
+};
+
 export function EnvironmentsPage() {
   const [, setLocation] = useLocation();
   const { loadCollections } = useAppContext();
@@ -53,14 +65,16 @@ export function EnvironmentsPage() {
             return {
               ...environment,
               collection_count: collectionCount,
-              secret_count: secretCount
+              secret_count: secretCount,
+              auth_method: getAuthMethodDisplayName(environment.auth)
             };
           } catch (error) {
             console.error(`Error loading counts for environment ${environment.id}:`, error);
             return {
               ...environment,
               collection_count: 0,
-              secret_count: 0
+              secret_count: 0,
+              auth_method: getAuthMethodDisplayName(environment.auth)
             };
           }
         })
@@ -310,6 +324,9 @@ export function EnvironmentsPage() {
                       <th scope="col" class="hidden sm:table-cell w-26 py-3.5 pl-6 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
                         <div class="truncate">Secrets</div>
                       </th>
+                      <th scope="col" class="hidden sm:table-cell w-26 py-3.5 pl-6 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
+                        <div class="truncate">Auth</div>
+                      </th>
                       <th scope="col" class="table-cell w-20 pl-3 pr-6 py-3.5 sm:pr-0 text-right text-sm font-semibold text-gray-900">
                         <div>Actions</div>
                       </th>
@@ -333,6 +350,11 @@ export function EnvironmentsPage() {
                         <td class="hidden sm:table-cell py-4 pl-6 pr-3 text-sm sm:pl-0">
                           <div class="truncate">
                             {environment.secret_count}
+                          </div>
+                        </td>
+                        <td class="hidden sm:table-cell py-4 pl-6 pr-3 text-sm sm:pl-0">
+                          <div class="truncate">
+                            {environment.auth_method}
                           </div>
                         </td>
                         <td class="table-cell py-4 pl-3 pr-6 text-right text-sm sm:pr-0">

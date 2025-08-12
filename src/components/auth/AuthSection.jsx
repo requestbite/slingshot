@@ -54,7 +54,7 @@ const decryptAuthResponse = async (encryptedResponse) => {
   }
 };
 
-export function AuthSection({ environment, onUpdate }) {
+export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
   // Auth configuration state
   const [authType, setAuthType] = useState(environment?.auth || 'none');
   const [authConfig, setAuthConfig] = useState({
@@ -122,6 +122,9 @@ export function AuthSection({ environment, onUpdate }) {
     if (newAuthType === 'none') {
       // Clear auth configuration
       await updateEnvironmentAuth(null, null, null);
+    } else if (newAuthType !== 'oidc_pkce') {
+      // Clear authResponse when switching away from OIDC PKCE
+      setAuthResponse(null);
     }
   };
 
@@ -266,16 +269,94 @@ export function AuthSection({ environment, onUpdate }) {
   };
 
   const handleSaveConfig = async () => {
-    if (authType !== 'none' && (!authConfig.domain || !authConfig.clientId || !authConfig.scopes)) {
+    if (authType === 'oidc_pkce' && (!authConfig.domain || !authConfig.clientId || !authConfig.scopes)) {
       setError('Domain, Client ID, and Scopes are required');
       return;
     }
+
 
     try {
       await updateEnvironmentAuth(authType === 'none' ? null : authType, authType === 'none' ? null : authConfig, authResponse);
       setSuccess('Authentication configuration saved');
     } catch (err) {
       setError('Failed to save configuration');
+    }
+  };
+
+  const handleBasicAuthSave = async () => {
+    try {
+      await updateEnvironmentAuth('basic_auth', authConfig, null);
+      setSuccess('Basic Auth configuration saved');
+      
+      // Use the comprehensive save function if provided
+      if (onSave) {
+        onSave();
+      }
+    } catch (err) {
+      setError('Failed to save Basic Auth configuration');
+    }
+  };
+
+  const handleBasicAuthCancel = () => {
+    if (onCancel) {
+      onCancel();
+    }
+  };
+
+  const handleBearerTokenSave = async () => {
+    if (!authConfig.token) {
+      setError('Token is required');
+      return;
+    }
+
+    try {
+      await updateEnvironmentAuth('bearer_token', authConfig, null);
+      setSuccess('Bearer Token configuration saved');
+      
+      // Use the comprehensive save function if provided
+      if (onSave) {
+        onSave();
+      }
+    } catch (err) {
+      setError('Failed to save Bearer Token configuration');
+    }
+  };
+
+  const handleBearerTokenCancel = () => {
+    if (onCancel) {
+      onCancel();
+    }
+  };
+
+  const handleApiKeySave = async () => {
+    if (!authConfig.key || !authConfig.value) {
+      setError('Key and Value are required');
+      return;
+    }
+
+    try {
+      // Ensure addTo has a default value
+      const configToSave = {
+        key: authConfig.key,
+        value: authConfig.value,
+        addTo: authConfig.addTo || 'header'
+      };
+
+      await updateEnvironmentAuth('api_key', configToSave, null);
+      setSuccess('API Key configuration saved');
+      
+      // Use the comprehensive save function if provided
+      if (onSave) {
+        onSave();
+      }
+    } catch (err) {
+      setError('Failed to save API Key configuration');
+    }
+  };
+
+  const handleApiKeyCancel = () => {
+    if (onCancel) {
+      onCancel();
     }
   };
 
@@ -404,9 +485,178 @@ export function AuthSection({ environment, onUpdate }) {
           class="block w-full rounded-md px-3 py-2 text-gray-900 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-sky-500 text-sm"
         >
           <option value="none">No auth</option>
+          <option value="api_key">API Key</option>
+          <option value="basic_auth">Basic Auth</option>
+          <option value="bearer_token">Bearer Token</option>
           <option value="oidc_pkce">OpenID Connect (PKCE)</option>
         </select>
       </div>
+
+      {/* API Key Configuration */}
+      {authType === 'api_key' && (
+        <div class="space-y-4">
+          <div>
+            <label for="api-key" class="block text-sm font-medium text-gray-700">
+              Key <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="api-key"
+              value={authConfig.key || ''}
+              onInput={(e) => handleConfigChange('key', e.target.value)}
+              placeholder="X-API-Key"
+              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              The name of the API key parameter (e.g., "X-API-Key", "api_key")
+            </p>
+          </div>
+
+          <div>
+            <label for="api-value" class="block text-sm font-medium text-gray-700">
+              Value <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="password"
+              id="api-value"
+              value={authConfig.value || ''}
+              onInput={(e) => handleConfigChange('value', e.target.value)}
+              placeholder="your-api-key-value"
+              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              The actual API key value
+            </p>
+          </div>
+
+          <div>
+            <label for="api-add-to" class="block text-sm font-medium text-gray-700">
+              Add to
+            </label>
+            <select
+              id="api-add-to"
+              value={authConfig.addTo || 'header'}
+              onChange={(e) => handleConfigChange('addTo', e.target.value)}
+              class="mt-1 block w-full rounded-md px-3 py-2 text-gray-900 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-sky-500 text-sm"
+            >
+              <option value="header">Header</option>
+              <option value="query">Query Params</option>
+            </select>
+            <p class="mt-1 text-xs text-gray-500">
+              Where to add the API key in the request
+            </p>
+          </div>
+
+          {/* Save and Cancel Buttons */}
+          <div class="flex items-center gap-3">
+            <button
+              onClick={handleApiKeySave}
+              class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+            >
+              Save
+            </button>
+            <button
+              onClick={handleApiKeyCancel}
+              class="cursor-pointer rounded-md bg-white hover:bg-gray-50 px-3 py-2 text-sm border border-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Basic Auth Configuration */}
+      {authType === 'basic_auth' && (
+        <div class="space-y-4">
+          <div>
+            <label for="basic-username" class="block text-sm font-medium text-gray-700">
+              Username
+            </label>
+            <input
+              type="text"
+              id="basic-username"
+              value={authConfig.username || ''}
+              onInput={(e) => handleConfigChange('username', e.target.value)}
+              placeholder="your-username"
+              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              The username for basic authentication
+            </p>
+          </div>
+
+          <div>
+            <label for="basic-password" class="block text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <input
+              type="password"
+              id="basic-password"
+              value={authConfig.password || ''}
+              onInput={(e) => handleConfigChange('password', e.target.value)}
+              placeholder="your-password"
+              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              The password for basic authentication
+            </p>
+          </div>
+
+          {/* Save and Cancel Buttons */}
+          <div class="flex items-center gap-3">
+            <button
+              onClick={handleBasicAuthSave}
+              class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+            >
+              Save
+            </button>
+            <button
+              onClick={handleBasicAuthCancel}
+              class="cursor-pointer rounded-md bg-white hover:bg-gray-50 px-3 py-2 text-sm border border-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bearer Token Configuration */}
+      {authType === 'bearer_token' && (
+        <div class="space-y-4">
+          <div>
+            <label for="bearer-token" class="block text-sm font-medium text-gray-700">
+              Token <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="password"
+              id="bearer-token"
+              value={authConfig.token || ''}
+              onInput={(e) => handleConfigChange('token', e.target.value)}
+              placeholder="your-bearer-token"
+              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              The bearer token for authentication
+            </p>
+          </div>
+
+          {/* Save and Cancel Buttons */}
+          <div class="flex items-center gap-3">
+            <button
+              onClick={handleBearerTokenSave}
+              class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+            >
+              Save
+            </button>
+            <button
+              onClick={handleBearerTokenCancel}
+              class="cursor-pointer rounded-md bg-white hover:bg-gray-50 px-3 py-2 text-sm border border-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* OIDC Configuration */}
       {authType === 'oidc_pkce' && (
