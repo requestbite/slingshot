@@ -298,7 +298,7 @@ export function EnvironmentsPage() {
             </div>
 
             {/* Content Section */}
-            <div class="p-0 pt-6 sm:p-6">
+            <div class="py-6 sm:px-6">
               {isLoading ? (
                 <div class="flex items-center justify-center p-8">
                   <div class="flex items-center space-x-3 text-gray-500">
