@@ -10,7 +10,7 @@ import { decryptSecret } from '../utils/encryption';
 // Helper function to decrypt auth configuration  
 const decryptAuthConfig = async (encryptedConfig) => {
   if (!encryptedConfig || !encryptedConfig.encrypted_value) return null;
-  
+
   try {
     const decryptedString = await decryptSecret(encryptedConfig.encrypted_value, encryptedConfig.iv);
     return JSON.parse(decryptedString);
@@ -23,7 +23,7 @@ const decryptAuthConfig = async (encryptedConfig) => {
 // Helper function to decrypt auth response
 const decryptAuthResponse = async (encryptedResponse) => {
   if (!encryptedResponse || !encryptedResponse.encrypted_value) return null;
-  
+
   try {
     const decryptedString = await decryptSecret(encryptedResponse.encrypted_value, encryptedResponse.iv);
     return JSON.parse(decryptedString);
@@ -95,8 +95,8 @@ export function EnvironmentUpdatePage() {
 
   // Update active section when URL changes
   useEffect(() => {
-    const newSection = params.section === 'secrets' ? 'secrets' : 
-                      params.section === 'auth' ? 'auth' : 'general';
+    const newSection = params.section === 'secrets' ? 'secrets' :
+      params.section === 'auth' ? 'auth' : 'general';
     setActiveSection(newSection);
   }, [params.section]);
 
@@ -115,7 +115,7 @@ export function EnvironmentUpdatePage() {
 
       // Decrypt auth fields if they exist and are encrypted
       let decryptedEnvironment = { ...environmentData };
-      
+
       try {
         if (environmentData.authConfig?.encrypted_value) {
           const decryptedAuthConfig = await decryptAuthConfig(environmentData.authConfig);
@@ -123,7 +123,7 @@ export function EnvironmentUpdatePage() {
             decryptedEnvironment.authConfig = decryptedAuthConfig;
           }
         }
-        
+
         if (environmentData.authResponse?.encrypted_value) {
           const decryptedAuthResponse = await decryptAuthResponse(environmentData.authResponse);
           if (decryptedAuthResponse) {
@@ -184,12 +184,12 @@ export function EnvironmentUpdatePage() {
         setOriginalSecrets(sortedSecrets);
         setPendingSecrets(sortedSecrets.map(s => ({ ...s, _status: 'existing' })));
         setHasSecretsChanges(false);
-        
+
         // Reload and decrypt auth fields
         const environmentData = await apiClient.getEnvironment(environment.id);
         if (environmentData) {
           let decryptedEnvironment = { ...environmentData };
-          
+
           try {
             if (environmentData.authConfig?.encrypted_value) {
               const decryptedAuthConfig = await decryptAuthConfig(environmentData.authConfig);
@@ -197,7 +197,7 @@ export function EnvironmentUpdatePage() {
                 decryptedEnvironment.authConfig = decryptedAuthConfig;
               }
             }
-            
+
             if (environmentData.authResponse?.encrypted_value) {
               const decryptedAuthResponse = await decryptAuthResponse(environmentData.authResponse);
               if (decryptedAuthResponse) {
@@ -207,7 +207,7 @@ export function EnvironmentUpdatePage() {
           } catch (error) {
             console.error('Failed to decrypt auth fields after key setup:', error);
           }
-          
+
           setEnvironment(decryptedEnvironment);
         }
       } catch (error) {
@@ -552,13 +552,12 @@ export function EnvironmentUpdatePage() {
     <div class="h-full bg-gray-100 overflow-y-auto">
       <div class="min-h-full pt-[83px] pb-6">
         <div class="max-w-6xl mx-auto px-4">
-          
+
           {/* Sidebar Toggle Button for Mobile - only show when sidebar is hidden */}
           <button
             onClick={() => setIsSidebarOpen(true)}
-            class={`fixed top-1/2 -left-1 transform -translate-y-1/2 z-50 bg-sky-100 hover:bg-sky-200 text-sky-700 p-2 rounded-r-lg shadow-lg cursor-pointer transition-all duration-200 hover:translate-x-1 ${
-              isSidebarOpen ? 'hidden' : 'block md:hidden'
-            }`}
+            class={`fixed top-1/2 -left-1 transform -translate-y-1/2 z-50 bg-sky-100 hover:bg-sky-200 text-sky-700 p-2 rounded-r-lg shadow-lg cursor-pointer transition-all duration-200 hover:translate-x-1 ${isSidebarOpen ? 'hidden' : 'block md:hidden'
+              }`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="m6 17 5-5-5-5" />
@@ -580,16 +579,14 @@ export function EnvironmentUpdatePage() {
                             <a
                               href={`/environments/${params.uuid}`}
                               onClick={(e) => handleSectionNavigation('general', e)}
-                              class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${
-                                activeSection === 'general'
-                                  ? 'bg-sky-50 text-sky-500'
-                                  : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
-                              }`}
+                              class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${activeSection === 'general'
+                                ? 'bg-sky-50 text-sky-500'
+                                : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
+                                }`}
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" class={`size-6 shrink-0 ${
-                                activeSection === 'general' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
-                              }`} viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 1.25C6.063 1.25 1.25 6.063 1.25 12S6.063 22.75 12 22.75S22.75 17.937 22.75 12S17.937 1.25 12 1.25M2.75 12a9.25 9.25 0 1 1 16.282 6.01a4.84 4.84 0 0 0-1.17-2.034c-.782-.813-1.76-1.286-2.608-1.55c-.626-.195-1.216.03-1.604.293c-.36.242-.94.531-1.65.531s-1.29-.29-1.65-.531c-.388-.262-.978-.488-1.604-.293c-.849.264-1.826.737-2.608 1.55a4.84 4.84 0 0 0-1.17 2.033A9.2 9.2 0 0 1 2.75 12m3.513 7.256c.076-1.011.46-1.724.957-2.241c.553-.576 1.28-.941 1.972-1.157a.2.2 0 0 1 .103.003a.7.7 0 0 1 .216.101c.501.338 1.374.788 2.489.788s1.988-.45 2.489-.788a.7.7 0 0 1 .216-.1a.2.2 0 0 1 .103-.004c.692.216 1.419.581 1.972 1.157c.497.517.88 1.23.957 2.241A9.2 9.2 0 0 1 12 21.25a9.2 9.2 0 0 1-5.737-1.994M9.75 10c0-1.25.97-2.25 2.25-2.25s2.25 1 2.25 2.25s-.97 2.25-2.25 2.25s-2.25-1-2.25-2.25M12 6.25A3.72 3.72 0 0 0 8.25 10A3.72 3.72 0 0 0 12 13.75A3.72 3.72 0 0 0 15.75 10A3.72 3.72 0 0 0 12 6.25" />
+                              <svg xmlns="http://www.w3.org/2000/svg" class={`size-6 shrink-0 ${activeSection === 'general' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
+                                }`} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" y1="12" x2="2" y2="12" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /><line x1="6" y1="16" x2="6.01" y2="16" /><line x1="10" y1="16" x2="10.01" y2="16" />
                               </svg>
                               General
                             </a>
@@ -598,16 +595,14 @@ export function EnvironmentUpdatePage() {
                             <a
                               href={`/environments/${params.uuid}/secrets`}
                               onClick={(e) => handleSectionNavigation('secrets', e)}
-                              class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${
-                                activeSection === 'secrets'
-                                  ? 'bg-sky-50 text-sky-500'
-                                  : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
-                              }`}
+                              class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${activeSection === 'secrets'
+                                ? 'bg-sky-50 text-sky-500'
+                                : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
+                                }`}
                             >
-                              <svg class={`size-6 shrink-0 ${
-                                activeSection === 'secrets' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
-                              }`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M10 12a1 1 0 0 0-1 1v1a1 1 0 0 1-1 1 1 1 0 0 1 1 1v1a1 1 0 0 0 1 1" /><path d="M14 18a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1 1 1 0 0 1-1-1v-1a1 1 0 0 0-1-1" />
+                              <svg class={`size-6 shrink-0 ${activeSection === 'secrets' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
+                                }`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><rect width="8" height="6" x="8" y="12" rx="1" /><path d="M10 12v-2a2 2 0 1 1 4 0v2" />
                               </svg>
                               Secrets
                             </a>
@@ -616,17 +611,14 @@ export function EnvironmentUpdatePage() {
                             <a
                               href={`/environments/${params.uuid}/auth`}
                               onClick={(e) => handleSectionNavigation('auth', e)}
-                              class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${
-                                activeSection === 'auth'
-                                  ? 'bg-sky-50 text-sky-500'
-                                  : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
-                              }`}
+                              class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${activeSection === 'auth'
+                                ? 'bg-sky-50 text-sky-500'
+                                : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
+                                }`}
                             >
-                              <svg class={`size-6 shrink-0 ${
-                                activeSection === 'auth' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
-                              }`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 12l2 2 4-4" />
-                                <path d="M21 12c.552 0 1-.448 1-1V8c0-.552-.448-1-1-1h-1V5c0-2.209-1.791-4-4-4H7C4.791 1 3 2.791 3 5v2H2c-.552 0-1 .448-1 1v3c0 .552.448 1 1 1h1v2c0 2.209 1.791 4 4 4h10c2.209 0 4-1.791 4-4v-2z" />
+                              <svg class={`size-6 shrink-0 ${activeSection === 'auth' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
+                                }`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4" /><path d="M14 13.12c0 2.38 0 6.38-1 8.88" /><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02" /><path d="M2 12a10 10 0 0 1 18-6" /><path d="M2 16h.01" /><path d="M21.8 16c.2-2 .131-5.354 0-6" /><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2" /><path d="M8.65 22c.21-.66.45-1.32.57-2" /><path d="M9 6.8a6 6 0 0 1 9 5.2v2" />
                               </svg>
                               Auth
                             </a>
@@ -663,16 +655,14 @@ export function EnvironmentUpdatePage() {
                                   handleSectionNavigation('general', e);
                                   setIsSidebarOpen(false);
                                 }}
-                                class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${
-                                  activeSection === 'general'
-                                    ? 'bg-sky-50 text-sky-500'
-                                    : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
-                                }`}
+                                class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${activeSection === 'general'
+                                  ? 'bg-sky-50 text-sky-500'
+                                  : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
+                                  }`}
                               >
-                                <svg xmlns="http://www.w3.org/2000/svg" class={`size-6 shrink-0 ${
-                                  activeSection === 'general' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
-                                }`} viewBox="0 0 24 24" fill="currentColor">
-                                  <path d="M12 1.25C6.063 1.25 1.25 6.063 1.25 12S6.063 22.75 12 22.75S22.75 17.937 22.75 12S17.937 1.25 12 1.25M2.75 12a9.25 9.25 0 1 1 16.282 6.01a4.84 4.84 0 0 0-1.17-2.034c-.782-.813-1.76-1.286-2.608-1.55c-.626-.195-1.216.03-1.604.293c-.36.242-.94.531-1.65.531s-1.29-.29-1.65-.531c-.388-.262-.978-.488-1.604-.293c-.849.264-1.826.737-2.608 1.55a4.84 4.84 0 0 0-1.17 2.033A9.2 9.2 0 0 1 2.75 12m3.513 7.256c.076-1.011.46-1.724.957-2.241c.553-.576 1.28-.941 1.972-1.157a.2.2 0 0 1 .103.003a.7.7 0 0 1 .216.101c.501.338 1.374.788 2.489.788s1.988-.45 2.489-.788a .7.7 0 0 1 .216-.1a.2.2 0 0 1 .103-.004c.692.216 1.419.581 1.972 1.157c.497.517.88 1.23.957 2.241A9.2 9.2 0 0 1 12 21.25a9.2 9.2 0 0 1-5.737-1.994M9.75 10c0-1.25.97-2.25 2.25-2.25s2.25 1 2.25 2.25s-.97 2.25-2.25 2.25s-2.25-1-2.25-2.25M12 6.25A3.72 3.72 0 0 0 8.25 10A3.72 3.72 0 0 0 12 13.75A3.72 3.72 0 0 0 15.75 10A3.72 3.72 0 0 0 12 6.25" />
+                                <svg xmlns="http://www.w3.org/2000/svg" class={`size-6 shrink-0 ${activeSection === 'general' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
+                                  }`} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                  <line x1="22" y1="12" x2="2" y2="12" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /><line x1="6" y1="16" x2="6.01" y2="16" /><line x1="10" y1="16" x2="10.01" y2="16" />
                                 </svg>
                                 General
                               </a>
@@ -684,16 +674,14 @@ export function EnvironmentUpdatePage() {
                                   handleSectionNavigation('secrets', e);
                                   setIsSidebarOpen(false);
                                 }}
-                                class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${
-                                  activeSection === 'secrets'
-                                    ? 'bg-sky-50 text-sky-500'
-                                    : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
-                                }`}
+                                class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${activeSection === 'secrets'
+                                  ? 'bg-sky-50 text-sky-500'
+                                  : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
+                                  }`}
                               >
-                                <svg class={`size-6 shrink-0 ${
-                                  activeSection === 'secrets' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
-                                }`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                  <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M10 12a1 1 0 0 0-1 1v1a1 1 0 0 1-1 1 1 1 0 0 1 1 1v1a1 1 0 0 0 1 1" /><path d="M14 18a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1 1 1 0 0 1-1-1v-1a1 1 0 0 0-1-1" />
+                                <svg class={`size-6 shrink-0 ${activeSection === 'secrets' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
+                                  }`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                  <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><rect width="8" height="6" x="8" y="11" rx="1" /><path d="m10 11V9a2 2 0 1 1 4 0v2" />
                                 </svg>
                                 Secrets
                               </a>
@@ -705,17 +693,14 @@ export function EnvironmentUpdatePage() {
                                   handleSectionNavigation('auth', e);
                                   setIsSidebarOpen(false);
                                 }}
-                                class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${
-                                  activeSection === 'auth'
-                                    ? 'bg-sky-50 text-sky-500'
-                                    : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
-                                }`}
+                                class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${activeSection === 'auth'
+                                  ? 'bg-sky-50 text-sky-500'
+                                  : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
+                                  }`}
                               >
-                                <svg class={`size-6 shrink-0 ${
-                                  activeSection === 'auth' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
-                                }`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                  <path d="M9 12l2 2 4-4" />
-                                  <path d="M21 12c.552 0 1-.448 1-1V8c0-.552-.448-1-1-1h-1V5c0-2.209-1.791-4-4-4H7C4.791 1 3 2.791 3 5v2H2c-.552 0-1 .448-1 1v3c0 .552.448 1 1 1h1v2c0 2.209 1.791 4 4 4h10c2.209 0 4-1.791 4-4v-2z" />
+                                <svg class={`size-6 shrink-0 ${activeSection === 'auth' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
+                                  }`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                  <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4" /><path d="M14 13.12c0 2.38 0 6.38-1 8.88" /><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02" /><path d="M6.08 21.02c.7-.44 1.78-.608 2.92-.608" /><path d="M7 12.48a3 3 0 0 1 1-2.36" /><path d="M10.26 17c.42.8.42 1.6 0 2.4" /><path d="M20.3 14.4A2 2 0 0 1 22 16.74" /><path d="M2 12C2 6.48 6.48 2 12 2s10 4.48 10 10c0 .57-.04 1.13-.12 1.66" /><path d="M2.46 16.52A7.18 7.18 0 0 0 4 22" /><path d="M5 19.5A2.5 2.5 0 0 1 7.5 17" /><path d="M8.8 13.6a1 1 0 1 1 1.4 1.4" />
                                 </svg>
                                 Auth
                               </a>
@@ -796,7 +781,7 @@ export function EnvironmentUpdatePage() {
                             type="button"
                             class="cursor-pointer rounded-md bg-red-600 hover:bg-red-500 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
                           >
-                            Delete Environment
+                            Delete
                           </button>
                         </div>
                       </div>
@@ -933,8 +918,8 @@ export function EnvironmentUpdatePage() {
                     <p class="mt-1 text-sm text-gray-600 mb-6">Configure authentication for this environment.</p>
 
                     {/* Auth Configuration Form */}
-                    <AuthSection 
-                      environment={environment} 
+                    <AuthSection
+                      environment={environment}
                       onUpdate={loadEnvironmentData}
                       onSave={handleAuthSave}
                       onCancel={handleAuthCancel}
