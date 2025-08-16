@@ -15,6 +15,7 @@ const getAuthMethodDisplayName = (authField) => {
     'api_key': 'API Key',
     'basic_auth': 'Basic Auth',
     'bearer_token': 'Bearer Token',
+    'oauth2_pkce': 'OAuth 2.0 (PKCE)',
     'oidc_pkce': 'OpenID Connect (PKCE)'
   };
   return authDisplayNames[authField] || 'No auth';

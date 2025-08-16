@@ -59,6 +59,7 @@ const getAuthMethodDisplayName = (authField) => {
     'api_key': 'API Key',
     'basic_auth': 'Basic Auth',
     'bearer_token': 'Bearer Token',
+    'oauth2_pkce': 'OAuth 2.0 (PKCE)',
     'oidc_pkce': 'OpenID Connect'
   };
   return authDisplayNames[authField] || null;
@@ -611,6 +612,26 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       try {
         if (currentEnvironment.auth === 'oidc_pkce' && currentEnvironment?.authResponse) {
           // OIDC PKCE: Use access token from auth response
+          const decryptedAuthResponse = await decryptAuthResponse(currentEnvironment.authResponse);
+          
+          if (decryptedAuthResponse?.access_token) {
+            // Only add Authorization header if no manual Authorization header exists
+            const hasManualAuthHeader = processedHeaders.some(h => 
+              h.enabled && h.key.toLowerCase() === 'authorization'
+            );
+            
+            if (!hasManualAuthHeader) {
+              // Add the Authorization header with Bearer token
+              processedHeaders.push({
+                id: generateUUID(),
+                key: 'Authorization',
+                value: `Bearer ${decryptedAuthResponse.access_token}`,
+                enabled: true
+              });
+            }
+          }
+        } else if (currentEnvironment.auth === 'oauth2_pkce' && currentEnvironment?.authResponse) {
+          // OAuth 2.0 PKCE: Use access token from auth response
           const decryptedAuthResponse = await decryptAuthResponse(currentEnvironment.authResponse);
           
           if (decryptedAuthResponse?.access_token) {

@@ -4,6 +4,37 @@ import { UserManager } from 'oidc-client-ts';
 export function AuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const error = urlParams.get('error');
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+
+      // Check if this is an OAuth 2.0 callback (has code parameter)
+      if (code || error) {
+        // This is an OAuth 2.0 PKCE callback
+        try {
+          if (window.opener) {
+            // Send the result back to the parent window
+            window.opener.postMessage({
+              type: 'oauth2_callback',
+              code: code,
+              state: state,
+              error: error
+            }, window.location.origin);
+          }
+          window.close();
+        } catch (postError) {
+          console.error('Failed to send OAuth 2.0 callback data to parent window:', postError);
+          try {
+            window.close();
+          } catch (closeError) {
+            console.error('Failed to close popup window:', closeError);
+          }
+        }
+        return;
+      }
+
+      // Otherwise, try to handle as OIDC callback
       try {
         // Create a temporary UserManager to handle the callback
         // We don't need the full config here, just enough to process the callback
