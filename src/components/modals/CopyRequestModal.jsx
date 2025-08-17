@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
 
-export function CopyRequestModal({ isOpen, onClose, requestData, getAvailableVariables, replaceVariables }) {
+export function CopyRequestModal({ isOpen, onClose, requestData, getAvailableVariables, replaceVariables, onCopySuccess }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const generateShareableUrl = async () => {
@@ -53,6 +53,11 @@ export function CopyRequestModal({ isOpen, onClose, requestData, getAvailableVar
       await navigator.clipboard.writeText(shareableUrl);
       
       onClose();
+      
+      // Notify parent component of successful copy
+      if (onCopySuccess) {
+        onCopySuccess();
+      }
     } catch (error) {
       console.error('Failed to generate shareable URL:', error);
       // Could add error state here if needed

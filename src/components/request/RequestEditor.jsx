@@ -142,6 +142,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
 
   // Toast state
   const [isToastVisible, showToast, hideToast] = useToast();
+  const [toastMessage, setToastMessage] = useState('Request updated!');
 
   // Update parent when request data changes (but not during initial load or when editing existing requests)
   useEffect(() => {
@@ -893,6 +894,12 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
     }
   };
 
+  // Handle copy request success
+  const handleCopyRequestSuccess = () => {
+    setToastMessage('Request copied.');
+    showToast();
+  };
+
   // Handle update (apply draft changes)
   const handleUpdate = async () => {
     if (!request?.id) return;
@@ -904,6 +911,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       setIsDraftDirty(false);
 
       // Show success toast
+      setToastMessage('Request updated!');
       showToast();
 
       // Trigger context refresh to update the request object
@@ -1182,11 +1190,12 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         requestData={requestData}
         getAvailableVariables={getAvailableVariables}
         replaceVariables={replaceVariables}
+        onCopySuccess={handleCopyRequestSuccess}
       />
 
       {/* Toast notification */}
       <Toast
-        message="Request updated!"
+        message={toastMessage}
         isVisible={isToastVisible}
         onClose={hideToast}
         type="success"
