@@ -60,6 +60,7 @@ const getAuthMethodDisplayName = (authField) => {
     'basic_auth': 'Basic Auth',
     'bearer_token': 'Bearer Token',
     'oauth2_pkce': 'OAuth 2.0 (PKCE)',
+    'oauth2_code': 'OAuth 2.0 (Code Flow)',
     'oidc_pkce': 'OpenID Connect'
   };
   return authDisplayNames[authField] || null;
@@ -630,8 +631,8 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
               });
             }
           }
-        } else if (currentEnvironment.auth === 'oauth2_pkce' && currentEnvironment?.authResponse) {
-          // OAuth 2.0 PKCE: Use access token from auth response
+        } else if ((currentEnvironment.auth === 'oauth2_pkce' || currentEnvironment.auth === 'oauth2_code') && currentEnvironment?.authResponse) {
+          // OAuth 2.0 (PKCE/Code Flow): Use access token from auth response
           const decryptedAuthResponse = await decryptAuthResponse(currentEnvironment.authResponse);
           
           if (decryptedAuthResponse?.access_token) {

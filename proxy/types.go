@@ -104,3 +104,41 @@ func (m *RequestMetrics) FormatSize() string {
 	}
 	return fmt.Sprintf("%d B", size)
 }
+
+// OAuth 2.0 types for code flow support
+
+// OAuthCodeRequest represents the request to exchange authorization code for tokens
+type OAuthCodeRequest struct {
+	AuthURL      string `json:"auth_url"`
+	TokenURL     string `json:"token_url"`
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+	RedirectURI  string `json:"redirect_uri"`
+	Scope        string `json:"scope"`
+	State        string `json:"state"`
+	Code         string `json:"code"`
+}
+
+// OAuthRefreshRequest represents the request to refresh access tokens
+type OAuthRefreshRequest struct {
+	TokenURL     string `json:"token_url"`
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+// OAuthTokenResponse represents the OAuth token response
+type OAuthTokenResponse struct {
+	Success      bool   `json:"success"`
+	AccessToken  string `json:"access_token,omitempty"`
+	RefreshToken string `json:"refresh_token,omitempty"`
+	TokenType    string `json:"token_type,omitempty"`
+	ExpiresIn    int    `json:"expires_in,omitempty"`
+	Scope        string `json:"scope,omitempty"`
+	
+	// Error fields (when success = false)
+	ErrorType        string `json:"error_type,omitempty"`
+	ErrorTitle       string `json:"error_title,omitempty"`
+	ErrorMessage     string `json:"error_message,omitempty"`
+	ErrorDescription string `json:"error_description,omitempty"`
+}

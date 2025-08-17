@@ -11,12 +11,16 @@ export function AuthCallback() {
 
       // Check if this is an OAuth 2.0 callback (has code parameter)
       if (code || error) {
-        // This is an OAuth 2.0 PKCE callback
+        // Determine callback type based on sessionStorage
+        const oauthType = sessionStorage.getItem('oauth_flow_type') || 'oauth2_pkce';
+        
         try {
           if (window.opener) {
-            // Send the result back to the parent window
+            // Send the result back to the parent window with appropriate callback type
+            const callbackType = oauthType === 'oauth2_code' ? 'oauth2_code_callback' : 'oauth2_callback';
+            
             window.opener.postMessage({
-              type: 'oauth2_callback',
+              type: callbackType,
               code: code,
               state: state,
               error: error

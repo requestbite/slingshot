@@ -16,18 +16,21 @@ import (
 
 // ProxyServer handles HTTP proxy requests
 type ProxyServer struct {
-	port       int
-	httpClient *HTTPClient
-	server     *http.Server
-	logger     *log.Logger
+	port        int
+	httpClient  *HTTPClient
+	oauthClient *OAuthClient
+	server      *http.Server
+	logger      *log.Logger
 }
 
 // NewProxyServer creates a new proxy server instance
 func NewProxyServer(port int) (*ProxyServer, error) {
+	logger := log.New(log.Writer(), "[PROXY] ", log.LstdFlags)
 	return &ProxyServer{
-		port:       port,
-		httpClient: NewHTTPClient(),
-		logger:     log.New(log.Writer(), "[PROXY] ", log.LstdFlags),
+		port:        port,
+		httpClient:  NewHTTPClient(),
+		oauthClient: NewOAuthClient(logger),
+		logger:      logger,
 	}, nil
 }
 
@@ -44,6 +47,10 @@ func (s *ProxyServer) Start() error {
 	// API endpoints
 	router.HandleFunc("/proxy/request", s.handleJSONRequest).Methods("POST", "OPTIONS")
 	router.HandleFunc("/proxy/form", s.handleFormRequest).Methods("POST", "OPTIONS")
+
+	// OAuth endpoints
+	router.HandleFunc("/oauth/token", s.handleOAuthTokenExchange).Methods("POST", "OPTIONS")
+	router.HandleFunc("/oauth/refresh", s.handleOAuthRefresh).Methods("POST", "OPTIONS")
 
 	// Health check endpoint
 	router.HandleFunc("/health", s.handleHealthCheck).Methods("GET", "OPTIONS")
@@ -302,5 +309,102 @@ func (s *ProxyServer) writeErrorResponse(w http.ResponseWriter, errorType, error
 	w.WriteHeader(http.StatusOK) // Keep 200 status for API consistency
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		s.logger.Printf("Failed to encode error response: %v", err)
+	}
+}
+
+// handleOAuthTokenExchange handles POST /oauth/token
+func (s *ProxyServer) handleOAuthTokenExchange(w http.ResponseWriter, r *http.Request) {
+	// Handle OPTIONS for CORS preflight
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	// Parse request body
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		s.writeOAuthErrorResponse(w, "invalid_request", "Failed to read request body", err.Error())
+		return
+	}
+
+	var req OAuthCodeRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		s.writeOAuthErrorResponse(w, "invalid_request", "Invalid JSON", fmt.Sprintf("Failed to parse JSON request: %v", err))
+		return
+	}
+
+	// Create context with timeout (30 seconds for OAuth operations)
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+
+	// Exchange code for tokens
+	response, err := s.oauthClient.ExchangeCodeForTokens(ctx, &req)
+	if err != nil {
+		s.logger.Printf("OAuth token exchange failed: %v", err)
+		s.writeOAuthErrorResponse(w, "server_error", "Token Exchange Failed", err.Error())
+		return
+	}
+
+	// Write response
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		s.logger.Printf("Failed to encode OAuth response: %v", err)
+	}
+}
+
+// handleOAuthRefresh handles POST /oauth/refresh
+func (s *ProxyServer) handleOAuthRefresh(w http.ResponseWriter, r *http.Request) {
+	// Handle OPTIONS for CORS preflight
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	// Parse request body
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		s.writeOAuthErrorResponse(w, "invalid_request", "Failed to read request body", err.Error())
+		return
+	}
+
+	var req OAuthRefreshRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		s.writeOAuthErrorResponse(w, "invalid_request", "Invalid JSON", fmt.Sprintf("Failed to parse JSON request: %v", err))
+		return
+	}
+
+	// Create context with timeout (30 seconds for OAuth operations)
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+
+	// Refresh tokens
+	response, err := s.oauthClient.RefreshAccessToken(ctx, &req)
+	if err != nil {
+		s.logger.Printf("OAuth token refresh failed: %v", err)
+		s.writeOAuthErrorResponse(w, "server_error", "Token Refresh Failed", err.Error())
+		return
+	}
+
+	// Write response
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		s.logger.Printf("Failed to encode OAuth response: %v", err)
+	}
+}
+
+// writeOAuthErrorResponse writes a standardized OAuth error response
+func (s *ProxyServer) writeOAuthErrorResponse(w http.ResponseWriter, errorType, errorTitle, errorMessage string) {
+	response := &OAuthTokenResponse{
+		Success:      false,
+		ErrorType:    errorType,
+		ErrorTitle:   errorTitle,
+		ErrorMessage: errorMessage,
+	}
+
+	w.WriteHeader(http.StatusOK) // Keep 200 status for API consistency
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		s.logger.Printf("Failed to encode OAuth error response: %v", err)
 	}
 }

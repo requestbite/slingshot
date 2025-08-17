@@ -7,6 +7,7 @@ import { json } from '@codemirror/lang-json';
 import { dracula } from '@uiw/codemirror-theme-dracula';
 import { EditorView } from '@codemirror/view';
 import { bracketMatching } from '@codemirror/language';
+import { Toast, useToast } from '../common/Toast';
 
 // Helper function to encrypt auth configuration
 const encryptAuthConfig = async (authConfig) => {
@@ -76,6 +77,10 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  
+  // Toast state
+  const [isToastVisible, showToast, hideToast] = useToast();
+  const [toastMessage, setToastMessage] = useState('');
 
   // Update local state when environment changes
   useEffect(() => {
@@ -138,13 +143,25 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
     if (newAuthType === 'none') {
       // Clear auth configuration
       await updateEnvironmentAuth(null, null, null);
-    } else if (newAuthType !== 'oidc_pkce' && newAuthType !== 'oauth2_pkce') {
-      // Clear authResponse when switching away from OIDC PKCE or OAuth 2.0 PKCE
+    } else if (newAuthType !== 'oidc_pkce' && newAuthType !== 'oauth2_pkce' && newAuthType !== 'oauth2_code') {
+      // Clear authResponse when switching away from OIDC PKCE, OAuth 2.0 PKCE, or OAuth 2.0 Code Flow
       setAuthResponse(null);
+    }
+
+    // Set default values for OAuth 2.0 flows if switching to them and redirect_uri is not already set
+    if ((newAuthType === 'oauth2_pkce' || newAuthType === 'oauth2_code') && !authConfig.redirect_uri) {
+      setAuthConfig(prev => ({
+        ...prev,
+        redirect_uri: `${window.location.origin}/auth/callback`
+      }));
     }
   };
 
   const handleConfigChange = (field, value) => {
+    // Trim whitespace from sensitive fields to prevent authentication issues
+    if (field === 'clientId' || field === 'clientSecret') {
+      value = value.trim();
+    }
     setAuthConfig(prev => ({ ...prev, [field]: value }));
   };
 
@@ -187,7 +204,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
     if (authConfig.code_challenge_method === 'plain') {
       return codeVerifier;
     }
-    
+
     const encoder = new TextEncoder();
     const data = encoder.encode(codeVerifier);
     const digest = await crypto.subtle.digest('SHA-256', data);
@@ -206,6 +223,8 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
     try {
       await updateEnvironmentAuth('oauth2_pkce', authConfig, authResponse);
       setSuccess('OAuth 2.0 PKCE configuration saved');
+      setToastMessage('Configuration saved');
+      showToast();
     } catch (err) {
       setError('Failed to save OAuth 2.0 PKCE configuration');
     }
@@ -241,6 +260,9 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
       authUrl.searchParams.set('code_challenge', codeChallenge);
       authUrl.searchParams.set('code_challenge_method', authConfig.code_challenge_method === 'plain' ? 'plain' : 'S256');
 
+      // Store flow type for callback handling
+      sessionStorage.setItem('oauth_flow_type', 'oauth2_pkce');
+
       // Open popup for authorization
       const popup = window.open(
         authUrl.toString(),
@@ -264,7 +286,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
       // Listen for messages from the popup
       const messageHandler = async (event) => {
         if (event.origin !== window.location.origin) return;
-        
+
         if (event.data.type === 'oauth2_callback') {
           clearInterval(pollTimer);
           popup.close();
@@ -381,7 +403,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
 
     try {
       const refreshUrl = authConfig.refresh_token_url || authConfig.token_url;
-      
+
       if (!refreshUrl) {
         throw new Error('No refresh token URL configured');
       }
@@ -438,6 +460,283 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
       }
     } catch (err) {
       console.error('OAuth 2.0 token refresh error:', err);
+      setError(`Token refresh failed: ${err.message || 'Unknown error'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // OAuth 2.0 Code Flow handler functions
+  const handleOAuth2CodeSaveConfig = async () => {
+    if (!authConfig.authorization_url || !authConfig.token_url || !authConfig.clientId || !authConfig.clientSecret || !authConfig.redirect_uri) {
+      setError('Authorization URL, Token URL, Client ID, Client Secret, and Redirect URI are required');
+      return;
+    }
+
+    try {
+      await updateEnvironmentAuth('oauth2_code', authConfig, authResponse);
+      setSuccess('OAuth 2.0 Code Flow configuration saved');
+      setToastMessage('Configuration saved');
+      showToast();
+    } catch (err) {
+      setError('Failed to save OAuth 2.0 Code Flow configuration');
+    }
+  };
+
+  const handleOAuth2CodeGetTokens = async () => {
+    if (!authConfig.authorization_url || !authConfig.token_url || !authConfig.clientId || !authConfig.clientSecret || !authConfig.redirect_uri) {
+      setError('Authorization URL, Token URL, Client ID, Client Secret, and Redirect URI are required');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Generate state parameter if not provided
+      const state = authConfig.state || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
+      // Store config for later use in callback
+      sessionStorage.setItem('oauth2_code_config', JSON.stringify({
+        ...authConfig,
+        state
+      }));
+
+      // Build authorization URL
+      const authUrl = new URL(authConfig.authorization_url);
+      authUrl.searchParams.set('response_type', 'code');
+      authUrl.searchParams.set('client_id', authConfig.clientId);
+      authUrl.searchParams.set('redirect_uri', authConfig.redirect_uri);
+      authUrl.searchParams.set('state', state);
+
+      if (authConfig.scope) {
+        authUrl.searchParams.set('scope', authConfig.scope);
+      }
+
+      // Store flow type for callback handling
+      sessionStorage.setItem('oauth_flow_type', 'oauth2_code');
+
+      // Open popup for authorization
+      const popup = window.open(
+        authUrl.toString(),
+        'oauth2_code_auth',
+        'width=500,height=600,scrollbars=yes,resizable=yes'
+      );
+
+      if (!popup) {
+        throw new Error('Failed to open popup window. Please allow popups for this site.');
+      }
+
+      // Listen for the popup to close or send a message
+      const pollTimer = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(pollTimer);
+          setLoading(false);
+          setError('Authorization cancelled by user');
+        }
+      }, 1000);
+
+      // Listen for messages from the popup
+      const messageHandler = async (event) => {
+        if (event.origin !== window.location.origin) return;
+
+        if (event.data.type === 'oauth2_code_callback') {
+          clearInterval(pollTimer);
+          popup.close();
+          window.removeEventListener('message', messageHandler);
+
+          const { code, state: returnedState, error } = event.data;
+
+          if (error) {
+            setLoading(false);
+            setError(`Authorization failed: ${error}`);
+            return;
+          }
+
+          if (!code) {
+            setLoading(false);
+            setError('No authorization code received');
+            return;
+          }
+
+          if (returnedState !== state) {
+            setLoading(false);
+            setError('State parameter mismatch - possible security issue');
+            return;
+          }
+
+          // Exchange code for tokens via proxy
+          try {
+            await exchangeCodeForTokensViaProxy(code);
+          } catch (tokenError) {
+            setLoading(false);
+            setError(`Token exchange failed: ${tokenError.message}`);
+          }
+        }
+      };
+
+      window.addEventListener('message', messageHandler);
+
+    } catch (err) {
+      console.error('OAuth 2.0 Code Flow authorization error:', err);
+      setError(`Authorization failed: ${err.message}`);
+      setLoading(false);
+    }
+  };
+
+  const exchangeCodeForTokensViaProxy = async (code) => {
+    try {
+      // Get the current proxy URL from settings
+      const getProxyUrl = () => {
+        try {
+          const savedSettings = localStorage.getItem('slingshot-settings');
+          if (savedSettings) {
+            const settings = JSON.parse(savedSettings);
+            if (settings.proxyType === 'custom' && settings.customProxyUrl) {
+              return settings.customProxyUrl;
+            }
+          }
+        } catch (error) {
+          console.warn('Failed to load proxy settings from localStorage:', error);
+        }
+        return import.meta.env.VITE_PROXY_HOST || 'http://localhost:8080';
+      };
+      
+      const proxyUrl = getProxyUrl();
+
+      const requestData = {
+        auth_url: authConfig.authorization_url,
+        token_url: authConfig.token_url,
+        client_id: authConfig.clientId,
+        client_secret: authConfig.clientSecret,
+        redirect_uri: authConfig.redirect_uri,
+        scope: authConfig.scope || '',
+        state: authConfig.state || '',
+        code: code
+      };
+
+      const response = await fetch(`${proxyUrl}/oauth/token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      const tokenData = await response.json();
+
+      if (!tokenData.success) {
+        throw new Error(tokenData.error_message || 'Token exchange failed');
+      }
+
+      if (tokenData.access_token) {
+        // Calculate access token expiration timestamp
+        const now = Date.now();
+        const expiresInMs = (tokenData.expires_in || 3600) * 1000; // Default to 1 hour if not provided
+        const accessTokenExpires = new Date(now + expiresInMs).toISOString();
+
+        const authResponseData = {
+          access_token: tokenData.access_token,
+          refresh_token: tokenData.refresh_token,
+          expires_in: tokenData.expires_in,
+          token_type: tokenData.token_type || 'Bearer',
+          scope: tokenData.scope,
+          access_token_expires: accessTokenExpires
+        };
+
+        setAuthResponse(authResponseData);
+        setSuccess('OAuth 2.0 authentication successful! Tokens received.');
+
+        // Save to environment
+        await updateEnvironmentAuth('oauth2_code', authConfig, authResponseData);
+      } else {
+        throw new Error('No access token received');
+      }
+    } finally {
+      setLoading(false);
+      // Clean up session storage
+      sessionStorage.removeItem('oauth2_code_config');
+    }
+  };
+
+  const handleOAuth2CodeRefreshTokens = async () => {
+    if (!authResponse?.refresh_token) {
+      setError('No refresh token available');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Get the current proxy URL from settings
+      const getProxyUrl = () => {
+        try {
+          const savedSettings = localStorage.getItem('slingshot-settings');
+          if (savedSettings) {
+            const settings = JSON.parse(savedSettings);
+            if (settings.proxyType === 'custom' && settings.customProxyUrl) {
+              return settings.customProxyUrl;
+            }
+          }
+        } catch (error) {
+          console.warn('Failed to load proxy settings from localStorage:', error);
+        }
+        return import.meta.env.VITE_PROXY_HOST || 'http://localhost:8080';
+      };
+      
+      const proxyUrl = getProxyUrl();
+
+      const requestData = {
+        token_url: authConfig.token_url,
+        client_id: authConfig.clientId,
+        client_secret: authConfig.clientSecret,
+        refresh_token: authResponse.refresh_token
+      };
+
+      const response = await fetch(`${proxyUrl}/oauth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      const tokenData = await response.json();
+
+      if (!tokenData.success) {
+        throw new Error(tokenData.error_message || 'Token refresh failed');
+      }
+
+      if (tokenData.access_token) {
+        // Calculate new access token expiration timestamp
+        const now = Date.now();
+        const expiresInMs = (tokenData.expires_in || 3600) * 1000; // Default to 1 hour if not provided
+        const accessTokenExpires = new Date(now + expiresInMs).toISOString();
+
+        const updatedResponse = {
+          ...authResponse,
+          access_token: tokenData.access_token,
+          expires_in: tokenData.expires_in,
+          token_type: tokenData.token_type || authResponse.token_type,
+          scope: tokenData.scope || authResponse.scope,
+          access_token_expires: accessTokenExpires,
+          // Update refresh token if a new one was provided
+          ...(tokenData.refresh_token && { refresh_token: tokenData.refresh_token })
+        };
+
+        setAuthResponse(updatedResponse);
+        setSuccess('OAuth 2.0 tokens refreshed successfully!');
+
+        // Save updated tokens to environment
+        await updateEnvironmentAuth('oauth2_code', authConfig, updatedResponse);
+      } else {
+        setError('Token refresh failed: No access token received');
+      }
+    } catch (err) {
+      console.error('OAuth 2.0 Code Flow token refresh error:', err);
       setError(`Token refresh failed: ${err.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
@@ -565,6 +864,8 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
     try {
       await updateEnvironmentAuth(authType === 'none' ? null : authType, authType === 'none' ? null : authConfig, authResponse);
       setSuccess('Authentication configuration saved');
+      setToastMessage('Configuration saved');
+      showToast();
     } catch (err) {
       setError('Failed to save configuration');
     }
@@ -574,7 +875,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
     try {
       await updateEnvironmentAuth('basic_auth', authConfig, null);
       setSuccess('Basic Auth configuration saved');
-      
+
       // Use the comprehensive save function if provided
       if (onSave) {
         onSave();
@@ -599,7 +900,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
     try {
       await updateEnvironmentAuth('bearer_token', authConfig, null);
       setSuccess('Bearer Token configuration saved');
-      
+
       // Use the comprehensive save function if provided
       if (onSave) {
         onSave();
@@ -631,7 +932,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
 
       await updateEnvironmentAuth('api_key', configToSave, null);
       setSuccess('API Key configuration saved');
-      
+
       // Use the comprehensive save function if provided
       if (onSave) {
         onSave();
@@ -776,6 +1077,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
           <option value="basic_auth">Basic Auth</option>
           <option value="bearer_token">Bearer Token</option>
           <option value="oauth2_pkce">OAuth 2.0 (PKCE)</option>
+          <option value="oauth2_code">OAuth 2.0 (Code Flow)</option>
           <option value="oidc_pkce">OpenID Connect (PKCE)</option>
         </select>
       </div>
@@ -958,7 +1260,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
               id="oauth2-auth-url"
               value={authConfig.authorization_url || ''}
               onInput={(e) => handleConfigChange('authorization_url', e.target.value)}
-              placeholder="https://accounts.google.com/o/oauth2/v2/auth"
+              placeholder="https://example.com/oauth2/auth"
               class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
             />
             <p class="mt-1 text-xs text-gray-500">
@@ -975,7 +1277,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
               id="oauth2-token-url"
               value={authConfig.token_url || ''}
               onInput={(e) => handleConfigChange('token_url', e.target.value)}
-              placeholder="https://oauth2.googleapis.com/token"
+              placeholder="https://example.com/oauth2/token"
               class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
             />
             <p class="mt-1 text-xs text-gray-500">
@@ -1043,7 +1345,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
               rows="2"
               value={authConfig.scope || ''}
               onInput={(e) => handleConfigChange('scope', e.target.value)}
-              placeholder="https://www.googleapis.com/auth/userinfo.email"
+              placeholder=""
               class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
             />
             <p class="mt-1 text-xs text-gray-500">
@@ -1095,7 +1397,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
               id="oauth2-refresh-url"
               value={authConfig.refresh_token_url || ''}
               onInput={(e) => handleConfigChange('refresh_token_url', e.target.value)}
-              placeholder="https://oauth2.googleapis.com/token (usually same as token URL)"
+              placeholder="https://example.com/oauth2/token (usually same as token URL)"
               class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
             />
             <p class="mt-1 text-xs text-gray-500">
@@ -1125,6 +1427,169 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
             {authResponse?.refresh_token && (
               <button
                 onClick={() => handleOAuth2RefreshTokens()}
+                disabled={loading}
+                class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 disabled:bg-gray-300 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+              >
+                {loading ? 'Refreshing...' : 'Refresh Tokens'}
+              </button>
+            )}
+
+            {authResponse && (
+              <button
+                onClick={clearTokens}
+                class="cursor-pointer rounded-md bg-red-500 hover:bg-red-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+              >
+                Clear Tokens
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* OAuth 2.0 Code Flow Configuration */}
+      {authType === 'oauth2_code' && (
+        <div class="space-y-4">
+          <div>
+            <label for="oauth2-code-auth-url" class="block text-sm font-medium text-gray-700">
+              Authorization URL <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="oauth2-code-auth-url"
+              value={authConfig.authorization_url || ''}
+              onInput={(e) => handleConfigChange('authorization_url', e.target.value)}
+              placeholder="https://example.com/oauth/authorize"
+              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              The authorization endpoint of the OAuth 2.0 provider
+            </p>
+          </div>
+
+          <div>
+            <label for="oauth2-code-token-url" class="block text-sm font-medium text-gray-700">
+              Token URL <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="oauth2-code-token-url"
+              value={authConfig.token_url || ''}
+              onInput={(e) => handleConfigChange('token_url', e.target.value)}
+              placeholder="https://example.com/oauth/access_token"
+              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              The token endpoint of the OAuth 2.0 provider
+            </p>
+          </div>
+
+          <div>
+            <label for="oauth2-code-client-id" class="block text-sm font-medium text-gray-700">
+              Client ID <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="oauth2-code-client-id"
+              value={authConfig.clientId || ''}
+              onInput={(e) => handleConfigChange('clientId', e.target.value)}
+              placeholder="your-oauth-app-client-id"
+              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              The client ID for your OAuth 2.0 application
+            </p>
+          </div>
+
+          <div>
+            <label for="oauth2-code-client-secret" class="block text-sm font-medium text-gray-700">
+              Client Secret <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="password"
+              id="oauth2-code-client-secret"
+              value={authConfig.clientSecret || ''}
+              onInput={(e) => handleConfigChange('clientSecret', e.target.value)}
+              placeholder="your-oauth-app-client-secret"
+              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              The client secret for your OAuth 2.0 application (required for server-side flow)
+            </p>
+          </div>
+
+          <div>
+            <label for="oauth2-code-redirect-uri" class="block text-sm font-medium text-gray-700">
+              Redirect URI <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="oauth2-code-redirect-uri"
+              value={authConfig.redirect_uri || `${window.location.origin}/auth/callback`}
+              onInput={(e) => handleConfigChange('redirect_uri', e.target.value)}
+              placeholder={`${window.location.origin}/auth/callback`}
+              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              The redirect URI configured in your OAuth 2.0 application
+            </p>
+          </div>
+
+          <div>
+            <label for="oauth2-code-scope" class="block text-sm font-medium text-gray-700">
+              Scope
+            </label>
+            <textarea
+              id="oauth2-code-scope"
+              rows="2"
+              value={authConfig.scope || ''}
+              onInput={(e) => handleConfigChange('scope', e.target.value)}
+              placeholder=""
+              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              Space-separated list of OAuth 2.0 scopes (optional)
+            </p>
+          </div>
+
+          <div>
+            <label for="oauth2-code-state" class="block text-sm font-medium text-gray-700">
+              State
+            </label>
+            <input
+              type="text"
+              id="oauth2-code-state"
+              value={authConfig.state || ''}
+              onInput={(e) => handleConfigChange('state', e.target.value)}
+              placeholder="random-state-value (optional)"
+              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              Optional state parameter for additional security
+            </p>
+          </div>
+
+          {/* Save Configuration and Get Tokens Buttons */}
+          <div class="flex items-center gap-3 flex-wrap">
+            <button
+              onClick={() => handleOAuth2CodeSaveConfig()}
+              class="cursor-pointer rounded-md bg-gray-500 hover:bg-gray-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500"
+            >
+              Save Configuration
+            </button>
+
+            &middot;
+
+            <button
+              onClick={() => handleOAuth2CodeGetTokens()}
+              disabled={loading || !authConfig.authorization_url || !authConfig.token_url || !authConfig.clientId || !authConfig.clientSecret || !authConfig.redirect_uri}
+              class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 disabled:bg-gray-300 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+            >
+              {loading ? 'Authenticating...' : 'Get Tokens'}
+            </button>
+
+            {authResponse?.refresh_token && (
+              <button
+                onClick={() => handleOAuth2CodeRefreshTokens()}
                 disabled={loading}
                 class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 disabled:bg-gray-300 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
               >
@@ -1345,6 +1810,14 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
           </div>
         </div>
       )}
+
+      {/* Toast Notification */}
+      <Toast
+        message={toastMessage}
+        isVisible={isToastVisible}
+        onClose={hideToast}
+        type="success"
+      />
     </div>
   );
 }
