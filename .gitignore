@@ -151,3 +151,4 @@ dist-ssr
 
 # Proxy binary
 proxy/proxy
+proxy/proxy-go

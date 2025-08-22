@@ -9,7 +9,7 @@ import (
 
 const (
 	DefaultPort = 8080
-	Version     = "0.1.0"
+	Version     = "0.2.1"
 )
 
 func main() {

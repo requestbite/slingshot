@@ -93,19 +93,13 @@ Standard form data in request body.
 
 ## Testing
 
-Run the timeout functionality test:
+Run the functionality tests:
 
 ```bash
-./test_timeout.sh
+./tests.sh
 ```
 
-This tests:
-
-1. Normal requests (should succeed)
-2. Timeout scenarios (should fail with timeout error)
-3. Redirect handling with `followRedirects: false` (should fail)
-4. Redirect handling with `followRedirects: true` (should succeed)
-5. The original failing case from the Lua implementation
+This tests the main functionality of the proxy.
 
 ## How to run the proxy
 
@@ -137,7 +131,8 @@ CLI version of proxy.
 
 ## Configuration
 
-Environment variables and configuration options can be added as needed. Currently supports:
+Environment variables and configuration options can be added as needed.
+Currently supports:
 
 - `-port`: Server port (default: 8080)
 - `-help`: Show help information
@@ -145,13 +140,14 @@ Environment variables and configuration options can be added as needed. Currentl
 
 ## Error Types
 
-The proxy returns standardized error responses matching the original Lua API:
+The proxy returns standardized error responses:
 
 - `url_validation_error`: Invalid URL format or scheme
 - `timeout`: Request exceeded specified timeout
 - `connection_error`: Network connection failed
 - `redirect_not_followed`: Redirect encountered but `followRedirects: false`
 - `request_format_error`: Invalid JSON or missing required fields
+- `loop_detected`: If proxy is called to call itself
 
 ## Monitoring
 

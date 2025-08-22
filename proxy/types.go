@@ -14,18 +14,19 @@ type ProxyRequest struct {
 	Timeout         int               `json:"timeout,omitempty"`
 	FollowRedirects *bool             `json:"followRedirects,omitempty"`
 	PathParams      map[string]string `json:"path_params,omitempty"`
+	PassThrough     bool              `json:"passThrough,omitempty"`
 }
 
 // FormProxyRequest represents form data request parameters
 type FormProxyRequest struct {
-	URL             string            `json:"url"`
-	Method          string            `json:"method"`
-	Timeout         int               `json:"timeout,omitempty"`
-	FollowRedirects *bool             `json:"followRedirects,omitempty"`
-	ContentType     string            `json:"contentType,omitempty"`
-	Headers         string            `json:"headers,omitempty"`
-	PathParams      string            `json:"path_params,omitempty"`
-	RawBody         []byte            `json:"-"` // For multipart data, exclude from JSON
+	URL             string `json:"url"`
+	Method          string `json:"method"`
+	Timeout         int    `json:"timeout,omitempty"`
+	FollowRedirects *bool  `json:"followRedirects,omitempty"`
+	ContentType     string `json:"contentType,omitempty"`
+	Headers         string `json:"headers,omitempty"`
+	PathParams      string `json:"path_params,omitempty"`
+	RawBody         []byte `json:"-"` // For multipart data, exclude from JSON
 }
 
 // ProxyResponse represents the response structure matching the Lua API
@@ -44,6 +45,10 @@ type ProxyResponse struct {
 	ErrorType    string `json:"error_type,omitempty"`
 	ErrorTitle   string `json:"error_title,omitempty"`
 	ErrorMessage string `json:"error_message,omitempty"`
+
+	// Internal fields for pass-through mode
+	RawResponseBody []byte `json:"-"`
+	PassThrough     bool   `json:"-"`
 }
 
 // ProxyError represents different types of proxy errors
@@ -75,6 +80,10 @@ var (
 		Type:  "redirect_not_followed",
 		Title: "Redirect Not Followed",
 	}
+	LoopDetectedError = &ProxyError{
+		Type:  "loop_detected",
+		Title: "Loop Detected",
+	}
 )
 
 // RequestMetrics holds timing and size information
@@ -103,42 +112,4 @@ func (m *RequestMetrics) FormatSize() string {
 		return fmt.Sprintf("%.2f KB", float64(size)/1024)
 	}
 	return fmt.Sprintf("%d B", size)
-}
-
-// OAuth 2.0 types for code flow support
-
-// OAuthCodeRequest represents the request to exchange authorization code for tokens
-type OAuthCodeRequest struct {
-	AuthURL      string `json:"auth_url"`
-	TokenURL     string `json:"token_url"`
-	ClientID     string `json:"client_id"`
-	ClientSecret string `json:"client_secret"`
-	RedirectURI  string `json:"redirect_uri"`
-	Scope        string `json:"scope"`
-	State        string `json:"state"`
-	Code         string `json:"code"`
-}
-
-// OAuthRefreshRequest represents the request to refresh access tokens
-type OAuthRefreshRequest struct {
-	TokenURL     string `json:"token_url"`
-	ClientID     string `json:"client_id"`
-	ClientSecret string `json:"client_secret"`
-	RefreshToken string `json:"refresh_token"`
-}
-
-// OAuthTokenResponse represents the OAuth token response
-type OAuthTokenResponse struct {
-	Success      bool   `json:"success"`
-	AccessToken  string `json:"access_token,omitempty"`
-	RefreshToken string `json:"refresh_token,omitempty"`
-	TokenType    string `json:"token_type,omitempty"`
-	ExpiresIn    int    `json:"expires_in,omitempty"`
-	Scope        string `json:"scope,omitempty"`
-	
-	// Error fields (when success = false)
-	ErrorType        string `json:"error_type,omitempty"`
-	ErrorTitle       string `json:"error_title,omitempty"`
-	ErrorMessage     string `json:"error_message,omitempty"`
-	ErrorDescription string `json:"error_description,omitempty"`
 }

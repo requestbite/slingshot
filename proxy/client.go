@@ -66,7 +66,7 @@ func (c *HTTPClient) ExecuteRequest(ctx context.Context, req *ProxyRequest) (*Pr
 
 	// Set default User-Agent if not provided
 	if httpReq.Header.Get("User-Agent") == "" {
-    httpReq.Header.Set("User-Agent", fmt.Sprintf("rb-slingshot/%s (https://requestbite.com/slingshot)", Version))
+		httpReq.Header.Set("User-Agent", fmt.Sprintf("rb-slingshot/%s (https://requestbite.com/slingshot)", Version))
 	}
 
 	// Set Content-Length for POST/PUT/PATCH requests with body
@@ -86,12 +86,12 @@ func (c *HTTPClient) ExecuteRequest(ctx context.Context, req *ProxyRequest) (*Pr
 		if ctx.Err() == context.DeadlineExceeded {
 			return c.createErrorResponse(TimeoutError, "The server took too long to respond.", metrics), nil
 		}
-		
+
 		// Check if this is a redirect error when redirects are disabled
 		if strings.Contains(err.Error(), "redirect") && !followRedirects {
 			return c.createErrorResponse(RedirectNotFollowedError, "Server attempted to redirect but followRedirects is disabled.", metrics), nil
 		}
-		
+
 		return c.createErrorResponse(ConnectionError, fmt.Sprintf("Failed to connect to server: %v", err), metrics), nil
 	}
 
@@ -100,8 +100,8 @@ func (c *HTTPClient) ExecuteRequest(ctx context.Context, req *ProxyRequest) (*Pr
 
 	// Check for redirects when follow_redirects is false
 	if !followRedirects && resp.StatusCode >= 300 && resp.StatusCode < 400 {
-		return c.createErrorResponse(RedirectNotFollowedError, 
-			fmt.Sprintf("Server returned %d redirect but following redirects is disabled. Please check your settings.", resp.StatusCode), 
+		return c.createErrorResponse(RedirectNotFollowedError,
+			fmt.Sprintf("Server returned %d redirect but following redirects is disabled. Please check your settings.", resp.StatusCode),
 			metrics), nil
 	}
 
@@ -114,7 +114,7 @@ func (c *HTTPClient) ExecuteRequest(ctx context.Context, req *ProxyRequest) (*Pr
 	metrics.ResponseSize = int64(len(body))
 
 	// Process response
-	return c.processResponse(resp, body, metrics), nil
+	return c.processResponse(resp, body, metrics, req.PassThrough), nil
 }
 
 // executeWithRedirects handles the request execution with manual redirect control
@@ -157,7 +157,7 @@ func (c *HTTPClient) validateURL(urlStr string) error {
 // parseHeaders converts header array to map
 func (c *HTTPClient) parseHeaders(headerArray []string) map[string]string {
 	headers := make(map[string]string)
-	
+
 	for _, headerStr := range headerArray {
 		// Parse "Key: Value" format
 		parts := strings.SplitN(headerStr, ":", 2)
@@ -169,12 +169,12 @@ func (c *HTTPClient) parseHeaders(headerArray []string) map[string]string {
 			}
 		}
 	}
-	
+
 	return headers
 }
 
 // processResponse converts HTTP response to ProxyResponse format
-func (c *HTTPClient) processResponse(resp *http.Response, body []byte, metrics *RequestMetrics) *ProxyResponse {
+func (c *HTTPClient) processResponse(resp *http.Response, body []byte, metrics *RequestMetrics, passThrough bool) *ProxyResponse {
 	// Convert headers to map
 	responseHeaders := make(map[string]string)
 	for key, values := range resp.Header {
@@ -185,13 +185,13 @@ func (c *HTTPClient) processResponse(resp *http.Response, body []byte, metrics *
 
 	contentType := resp.Header.Get("Content-Type")
 	isBinary := c.isBinaryContent(contentType)
-	
+
 	responseData := string(body)
 	if isBinary {
 		responseData = base64.StdEncoding.EncodeToString(body)
 	}
 
-	return &ProxyResponse{
+	response := &ProxyResponse{
 		Success:         true,
 		ResponseStatus:  resp.StatusCode,
 		ResponseHeaders: responseHeaders,
@@ -201,7 +201,15 @@ func (c *HTTPClient) processResponse(resp *http.Response, body []byte, metrics *
 		ContentType:     contentType,
 		IsBinary:        isBinary,
 		Cancelled:       false,
+		PassThrough:     passThrough,
 	}
+
+	// Store raw body for pass-through mode
+	if passThrough {
+		response.RawResponseBody = body
+	}
+
+	return response
 }
 
 // isBinaryContent determines if content is binary based on Content-Type
@@ -229,14 +237,14 @@ func (c *HTTPClient) isBinaryContent(contentType string) bool {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
 // createErrorResponse creates a standardized error response
 func (c *HTTPClient) createErrorResponse(errType *ProxyError, message string, metrics *RequestMetrics) *ProxyResponse {
 	metrics.EndTime = time.Now()
-	
+
 	return &ProxyResponse{
 		Success:      false,
 		ErrorType:    errType.Type,
@@ -258,14 +266,14 @@ func (c *HTTPClient) substitutePathParams(targetURL string, pathParams map[strin
 		// Remove leading colon from param name if present, then add it back
 		cleanParamName := strings.TrimPrefix(paramName, ":")
 		pattern := ":" + cleanParamName
-		
+
 		// URL encode the parameter value
 		encodedValue := url.QueryEscape(paramValue)
-		
+
 		// Replace all occurrences
 		resultURL = strings.ReplaceAll(resultURL, pattern, encodedValue)
 	}
-	
+
 	return resultURL
 }
 
@@ -278,6 +286,7 @@ func (c *HTTPClient) ExecuteFormRequest(ctx context.Context, queryParams *FormPr
 		URL:             queryParams.URL,
 		Timeout:         queryParams.Timeout,
 		FollowRedirects: queryParams.FollowRedirects,
+		PassThrough:     false, // Form requests don't support pass-through mode
 	}
 
 	// Parse headers if provided

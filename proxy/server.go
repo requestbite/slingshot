@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -16,21 +17,29 @@ import (
 
 // ProxyServer handles HTTP proxy requests
 type ProxyServer struct {
-	port        int
-	httpClient  *HTTPClient
-	oauthClient *OAuthClient
-	server      *http.Server
-	logger      *log.Logger
+	port             int
+	httpClient       *HTTPClient
+	server           *http.Server
+	logger           *log.Logger
+	blockedHostnames []string // Configurable list of hostnames to block (prevents loops)
 }
 
 // NewProxyServer creates a new proxy server instance
 func NewProxyServer(port int) (*ProxyServer, error) {
 	logger := log.New(log.Writer(), "[PROXY] ", log.LstdFlags)
+
+	// CONFIGURABLE: List of hostnames to block to prevent loops
+	// Add/remove hostnames as needed for your deployment
+	blockedHostnames := []string{
+		"p.requestbite.com",
+		"dev.p.requestbite.com",
+	}
+
 	return &ProxyServer{
-		port:        port,
-		httpClient:  NewHTTPClient(),
-		oauthClient: NewOAuthClient(logger),
-		logger:      logger,
+		port:             port,
+		httpClient:       NewHTTPClient(),
+		logger:           logger,
+		blockedHostnames: blockedHostnames,
 	}, nil
 }
 
@@ -40,17 +49,13 @@ func (s *ProxyServer) Start() error {
 
 	// CORS middleware
 	router.Use(s.corsMiddleware)
-	
+
 	// Request logging middleware
 	router.Use(s.loggingMiddleware)
 
 	// API endpoints
 	router.HandleFunc("/proxy/request", s.handleJSONRequest).Methods("POST", "OPTIONS")
 	router.HandleFunc("/proxy/form", s.handleFormRequest).Methods("POST", "OPTIONS")
-
-	// OAuth endpoints
-	router.HandleFunc("/oauth/token", s.handleOAuthTokenExchange).Methods("POST", "OPTIONS")
-	router.HandleFunc("/oauth/refresh", s.handleOAuthRefresh).Methods("POST", "OPTIONS")
 
 	// Health check endpoint
 	router.HandleFunc("/health", s.handleHealthCheck).Methods("GET", "OPTIONS")
@@ -69,6 +74,37 @@ func (s *ProxyServer) Stop(ctx context.Context) error {
 		return s.server.Shutdown(ctx)
 	}
 	return nil
+}
+
+// isLoopbackRequest checks if a request URL would create a loop back to this proxy
+func (s *ProxyServer) isLoopbackRequest(targetURL string) bool {
+	// Parse the target URL
+	parsedURL, err := url.Parse(targetURL)
+	if err != nil {
+		return false // Invalid URL, let validation handle it
+	}
+
+	// Allow /health endpoint on any hostname (required for proxy health checks)
+	if parsedURL.Path == "/health" {
+		return false
+	}
+
+	// Extract hostname (ignore port)
+	targetHost := parsedURL.Hostname()
+
+	// Check if target hostname is in our blocked list
+	return s.isBlockedHostname(targetHost)
+}
+
+// isBlockedHostname checks if a hostname is in the blocked list
+func (s *ProxyServer) isBlockedHostname(hostname string) bool {
+	// Check against the configurable blocked hostnames list
+	for _, blockedHost := range s.blockedHostnames {
+		if strings.EqualFold(hostname, blockedHost) {
+			return true
+		}
+	}
+	return false
 }
 
 // handleJSONRequest handles /proxy/request endpoint
@@ -115,6 +151,13 @@ func (s *ProxyServer) handleJSONRequest(w http.ResponseWriter, r *http.Request) 
 		req.URL = s.httpClient.substitutePathParams(req.URL, req.PathParams)
 	}
 
+	// Check for self-loop AFTER path parameter substitution
+	if s.isLoopbackRequest(req.URL) {
+		s.logger.Printf("BLOCKED loop request to: %s", req.URL)
+		s.writeLoopErrorResponse(w, "Request could create an infinite loop to this proxy server")
+		return
+	}
+
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(r.Context(), time.Duration(req.Timeout)*time.Second)
 	defer cancel()
@@ -130,7 +173,24 @@ func (s *ProxyServer) handleJSONRequest(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Write response
+	// Handle pass-through mode
+	if req.PassThrough && response.Success {
+		// Remove the application/json content-type that was set earlier
+		w.Header().Del("Content-Type")
+
+		// Set content-type header to match the proxied response
+		if response.ContentType != "" {
+			w.Header().Set("Content-Type", response.ContentType)
+		}
+
+		// Write raw response body directly
+		if _, err := w.Write(response.RawResponseBody); err != nil {
+			s.logger.Printf("Failed to write pass-through response: %v", err)
+		}
+		return
+	}
+
+	// Normal mode - write JSON response (Content-Type already set to application/json)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		s.logger.Printf("Failed to encode response: %v", err)
 	}
@@ -176,6 +236,13 @@ func (s *ProxyServer) handleFormRequest(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// Check for self-loop before processing
+	if s.isLoopbackRequest(formReq.URL) {
+		s.logger.Printf("BLOCKED loop request to: %s", formReq.URL)
+		s.writeLoopErrorResponse(w, "Request could create an infinite loop to this proxy server")
+		return
+	}
+
 	// Default method to POST
 	if formReq.Method == "" {
 		formReq.Method = "POST"
@@ -189,7 +256,7 @@ func (s *ProxyServer) handleFormRequest(w http.ResponseWriter, r *http.Request) 
 	// For multipart/form-data, pass the raw body directly to preserve structure
 	var formData map[string]string
 	var rawBody []byte
-	
+
 	if strings.Contains(r.Header.Get("Content-Type"), "multipart/form-data") {
 		// For multipart, read raw body to preserve boundaries and files
 		var err error
@@ -248,13 +315,13 @@ func (s *ProxyServer) handleHealthCheck(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	
+
 	healthResponse := map[string]interface{}{
 		"status":     "ok",
 		"version":    Version,
 		"user-agent": fmt.Sprintf("rb-slingshot/%s (https://requestbite.com/slingshot)", Version),
 	}
-	
+
 	json.NewEncoder(w).Encode(healthResponse)
 }
 
@@ -312,99 +379,18 @@ func (s *ProxyServer) writeErrorResponse(w http.ResponseWriter, errorType, error
 	}
 }
 
-// handleOAuthTokenExchange handles POST /oauth/token
-func (s *ProxyServer) handleOAuthTokenExchange(w http.ResponseWriter, r *http.Request) {
-	// Handle OPTIONS for CORS preflight
-	if r.Method == "OPTIONS" {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-
-	// Parse request body
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		s.writeOAuthErrorResponse(w, "invalid_request", "Failed to read request body", err.Error())
-		return
-	}
-
-	var req OAuthCodeRequest
-	if err := json.Unmarshal(body, &req); err != nil {
-		s.writeOAuthErrorResponse(w, "invalid_request", "Invalid JSON", fmt.Sprintf("Failed to parse JSON request: %v", err))
-		return
-	}
-
-	// Create context with timeout (30 seconds for OAuth operations)
-	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
-	defer cancel()
-
-	// Exchange code for tokens
-	response, err := s.oauthClient.ExchangeCodeForTokens(ctx, &req)
-	if err != nil {
-		s.logger.Printf("OAuth token exchange failed: %v", err)
-		s.writeOAuthErrorResponse(w, "server_error", "Token Exchange Failed", err.Error())
-		return
-	}
-
-	// Write response
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		s.logger.Printf("Failed to encode OAuth response: %v", err)
-	}
-}
-
-// handleOAuthRefresh handles POST /oauth/refresh
-func (s *ProxyServer) handleOAuthRefresh(w http.ResponseWriter, r *http.Request) {
-	// Handle OPTIONS for CORS preflight
-	if r.Method == "OPTIONS" {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-
-	// Parse request body
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		s.writeOAuthErrorResponse(w, "invalid_request", "Failed to read request body", err.Error())
-		return
-	}
-
-	var req OAuthRefreshRequest
-	if err := json.Unmarshal(body, &req); err != nil {
-		s.writeOAuthErrorResponse(w, "invalid_request", "Invalid JSON", fmt.Sprintf("Failed to parse JSON request: %v", err))
-		return
-	}
-
-	// Create context with timeout (30 seconds for OAuth operations)
-	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
-	defer cancel()
-
-	// Refresh tokens
-	response, err := s.oauthClient.RefreshAccessToken(ctx, &req)
-	if err != nil {
-		s.logger.Printf("OAuth token refresh failed: %v", err)
-		s.writeOAuthErrorResponse(w, "server_error", "Token Refresh Failed", err.Error())
-		return
-	}
-
-	// Write response
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		s.logger.Printf("Failed to encode OAuth response: %v", err)
-	}
-}
-
-// writeOAuthErrorResponse writes a standardized OAuth error response
-func (s *ProxyServer) writeOAuthErrorResponse(w http.ResponseWriter, errorType, errorTitle, errorMessage string) {
-	response := &OAuthTokenResponse{
+// writeLoopErrorResponse writes an error response for loop detection with HTTP 508 status
+func (s *ProxyServer) writeLoopErrorResponse(w http.ResponseWriter, errorMessage string) {
+	response := &ProxyResponse{
 		Success:      false,
-		ErrorType:    errorType,
-		ErrorTitle:   errorTitle,
+		ErrorType:    LoopDetectedError.Type,
+		ErrorTitle:   LoopDetectedError.Title,
 		ErrorMessage: errorMessage,
+		Cancelled:    false,
 	}
 
-	w.WriteHeader(http.StatusOK) // Keep 200 status for API consistency
+	w.WriteHeader(http.StatusLoopDetected) // HTTP 508 status for loops
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		s.logger.Printf("Failed to encode OAuth error response: %v", err)
+		s.logger.Printf("Failed to encode loop error response: %v", err)
 	}
 }
