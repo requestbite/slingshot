@@ -605,30 +605,42 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
       
       const proxyUrl = getProxyUrl();
 
-      const requestData = {
-        auth_url: authConfig.authorization_url,
-        token_url: authConfig.token_url,
-        client_id: authConfig.clientId,
-        client_secret: authConfig.clientSecret,
-        redirect_uri: authConfig.redirect_uri,
-        scope: authConfig.scope || '',
-        state: authConfig.state || '',
-        code: code
+      // Create form data for token exchange request
+      const formData = new URLSearchParams();
+      formData.append('grant_type', 'authorization_code');
+      formData.append('client_id', authConfig.clientId);
+      formData.append('client_secret', authConfig.clientSecret);
+      formData.append('code', code);
+      formData.append('redirect_uri', authConfig.redirect_uri);
+
+      if (authConfig.scope) {
+        formData.append('scope', authConfig.scope);
+      }
+
+      const requestPayload = {
+        method: 'POST',
+        url: authConfig.token_url,
+        headers: [
+          'Content-Type: application/x-www-form-urlencoded'
+        ],
+        body: formData.toString(),
+        timeout: 30,
+        passThrough: true
       };
 
-      const response = await fetch(`${proxyUrl}/oauth/token`, {
+      const response = await fetch(`${proxyUrl}/proxy/request`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestData)
+        body: JSON.stringify(requestPayload)
       });
 
-      const tokenData = await response.json();
-
-      if (!tokenData.success) {
-        throw new Error(tokenData.error_message || 'Token exchange failed');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
+
+      const tokenData = await response.json();
 
       if (tokenData.access_token) {
         // Calculate access token expiration timestamp
@@ -689,26 +701,37 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
       
       const proxyUrl = getProxyUrl();
 
-      const requestData = {
-        token_url: authConfig.token_url,
-        client_id: authConfig.clientId,
-        client_secret: authConfig.clientSecret,
-        refresh_token: authResponse.refresh_token
+      // Create form data for refresh token request
+      const formData = new URLSearchParams();
+      formData.append('grant_type', 'refresh_token');
+      formData.append('refresh_token', authResponse.refresh_token);
+      formData.append('client_id', authConfig.clientId);
+      formData.append('client_secret', authConfig.clientSecret);
+
+      const requestPayload = {
+        method: 'POST',
+        url: authConfig.token_url,
+        headers: [
+          'Content-Type: application/x-www-form-urlencoded'
+        ],
+        body: formData.toString(),
+        timeout: 30,
+        passThrough: true
       };
 
-      const response = await fetch(`${proxyUrl}/oauth/refresh`, {
+      const response = await fetch(`${proxyUrl}/proxy/request`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestData)
+        body: JSON.stringify(requestPayload)
       });
 
-      const tokenData = await response.json();
-
-      if (!tokenData.success) {
-        throw new Error(tokenData.error_message || 'Token refresh failed');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
+
+      const tokenData = await response.json();
 
       if (tokenData.access_token) {
         // Calculate new access token expiration timestamp
@@ -1081,6 +1104,19 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
           <option value="oidc_pkce">OpenID Connect (PKCE)</option>
         </select>
       </div>
+
+      {/* OAuth 2.0 Code Flow Notice */}
+      {authType === 'oauth2_code' && (
+        <div class="group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full bg-sky-50 text-sky-700 border border-sky-200">
+          <svg class="size-6 shrink-0 text-sky-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="m9 12 2 2 4-4"></path>
+          </svg>
+          <div class="text-sm">
+            Please note that some data, including your client secret, will pass through the proxy when exchanging the auth code for an access token.
+          </div>
+        </div>
+      )}
 
       {/* API Key Configuration */}
       {authType === 'api_key' && (
