@@ -79,7 +79,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  
+
   // Toast state
   const [isToastVisible, showToast, hideToast] = useToast();
   const [toastMessage, setToastMessage] = useState('');
@@ -646,7 +646,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
         }
         return import.meta.env.VITE_PROXY_HOST || 'http://localhost:8080';
       };
-      
+
       const proxyUrl = getProxyUrl();
 
       // Create form data for token exchange request
@@ -750,7 +750,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
         }
         return import.meta.env.VITE_PROXY_HOST || 'http://localhost:8080';
       };
-      
+
       const proxyUrl = getProxyUrl();
 
       // Create form data for refresh token request
@@ -1190,8 +1190,8 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
     }
 
     // Check for duplicate keys (excluding the current header)
-    const existingKey = authConfig.tokenHeaders.find(h => 
-      h.key === editingTokenHeader.key.trim() && 
+    const existingKey = authConfig.tokenHeaders.find(h =>
+      h.key === editingTokenHeader.key.trim() &&
       (h._tempId || h.key) !== editingTokenHeader._tempId
     );
     if (existingKey) {
@@ -1585,8 +1585,8 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
           </div>
 
           {/* Token Request Headers */}
-          <div class="border-t border-gray-200 pt-6">
-            <h3 class="text-base font-semibold text-gray-900 mb-4">Token Request</h3>
+          <div class="border-b border-gray-200 pb-2 mb-6">
+            <h3 class="text-sm font-medium text-gray-700 mb-1">Token Request</h3>
             <p class="text-sm text-gray-600 mb-4">Custom headers to include when making token requests.</p>
 
             {/* Add new token header form */}
@@ -1600,7 +1600,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
                     value={tokenHeaderForm.key}
                     onInput={(e) => setTokenHeaderForm({ ...tokenHeaderForm, key: e.target.value })}
                     class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
-                    placeholder="Authorization"
+                    placeholder="Accept"
                   />
                 </div>
                 <div>
@@ -1611,7 +1611,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
                     value={tokenHeaderForm.value}
                     onInput={(e) => setTokenHeaderForm({ ...tokenHeaderForm, value: e.target.value })}
                     class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
-                    placeholder="Bearer xyz123"
+                    placeholder="application/json"
                   />
                 </div>
                 <div class="flex items-end">
@@ -1639,7 +1639,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
 
             {/* Token Headers Table */}
             {authConfig.tokenHeaders && authConfig.tokenHeaders.length > 0 && (
-              <div class="overflow-hidden border border-gray-300 rounded-lg">
+              <div class="overflow-hidden border border-gray-300 rounded-lg mb-4">
                 <table class="min-w-full divide-y divide-gray-300">
                   <thead class="bg-gray-50">
                     <tr>
@@ -1656,7 +1656,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
                           {header.key}
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
-                          <span class="font-mono">{header.value}</span>
+                          {header.value}
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
                           {header.sendIn === 'header' ? 'Header' : 'Query Param'}
@@ -1856,8 +1856,8 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
           </div>
 
           {/* Token Request Headers */}
-          <div class="border-t border-gray-200 pt-6">
-            <h3 class="text-base font-semibold text-gray-900 mb-4">Token Request</h3>
+          <div class="border-b border-gray-200 pb-2 mb-6">
+            <h3 class="text-sm font-medium text-gray-700 mb-1">Token Request</h3>
             <p class="text-sm text-gray-600 mb-4">Custom headers to include when making token requests.</p>
 
             {/* Add new token header form */}
@@ -1910,7 +1910,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
 
             {/* Token Headers Table */}
             {authConfig.tokenHeaders && authConfig.tokenHeaders.length > 0 && (
-              <div class="overflow-hidden border border-gray-300 rounded-lg">
+              <div class="overflow-hidden border border-gray-300 rounded-lg mb-4">
                 <table class="min-w-full divide-y divide-gray-300">
                   <thead class="bg-gray-50">
                     <tr>
@@ -1927,7 +1927,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
                           {header.key}
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
-                          <span class="font-mono">{header.value}</span>
+                          {header.value}
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
                           {header.sendIn === 'header' ? 'Header' : 'Query Param'}
