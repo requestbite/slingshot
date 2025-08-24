@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { AddEnvironmentModal } from '../components/modals/AddEnvironmentModal';
 import { DeleteEnvironmentModal } from '../components/modals/DeleteEnvironmentModal';
+import { ExportEnvironmentsModal } from '../components/modals/ExportEnvironmentsModal';
 import { ContextMenu } from '../components/common/ContextMenu';
 import { Toast, useToast } from '../components/common/Toast';
 import { useAppContext } from '../hooks/useAppContext';
@@ -33,6 +34,9 @@ export function EnvironmentsPage() {
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [contextMenuTrigger, setContextMenuTrigger] = useState(null);
   const [contextMenuEnvironment, setContextMenuEnvironment] = useState(null);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [exportMenuTrigger, setExportMenuTrigger] = useState(null);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [isToastVisible, showToast, hideToast] = useToast();
   const [toastMessage, setToastMessage] = useState('');
 
@@ -120,6 +124,22 @@ export function EnvironmentsPage() {
     setContextMenuEnvironment(null);
   };
 
+  const handleExportMenuOpen = (e) => {
+    e.stopPropagation();
+    setExportMenuTrigger(e.currentTarget);
+    setExportMenuOpen(true);
+  };
+
+  const handleExportMenuClose = () => {
+    setExportMenuOpen(false);
+    setExportMenuTrigger(null);
+  };
+
+  const handleExportClick = () => {
+    setShowExportModal(true);
+    handleExportMenuClose();
+  };
+
   const handleDeleteSuccess = async () => {
     await loadEnvironmentsWithCounts();
     await loadCollections(); // Refresh collections since they may reference deleted environment
@@ -130,6 +150,11 @@ export function EnvironmentsPage() {
   const handleCreateSuccess = async (environment) => {
     await loadEnvironmentsWithCounts();
     setToastMessage('Environment created successfully');
+    showToast();
+  };
+
+  const handleExportSuccess = () => {
+    setToastMessage('Environments exported successfully');
     showToast();
   };
 
@@ -289,13 +314,30 @@ export function EnvironmentsPage() {
                 </p>
               </div>
               <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  type="button"
-                  class="cursor-pointer block rounded-md bg-sky-500 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-sky-400 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
-                >
-                  Add Environment
-                </button>
+                <div class="flex space-x-2">
+                  <button
+                    onClick={() => setShowAddModal(true)}
+                    type="button"
+                    class="cursor-pointer block rounded-md bg-sky-500 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-sky-400 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+                  >
+                    Add Environment
+                  </button>
+                  <button
+                    onClick={handleExportMenuOpen}
+                    type="button"
+                    class="cursor-pointer inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                    id="export-menu-button"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                  >
+                    <span class="sr-only">Open export options menu</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="1" />
+                      <circle cx="19" cy="12" r="1" />
+                      <circle cx="5" cy="12" r="1" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -414,6 +456,20 @@ export function EnvironmentsPage() {
         ]}
       />
 
+      {/* Export Context Menu */}
+      <ContextMenu
+        isOpen={exportMenuOpen}
+        onClose={handleExportMenuClose}
+        trigger={exportMenuTrigger}
+        width={120}
+        items={[
+          {
+            label: 'Export...',
+            onClick: handleExportClick
+          }
+        ]}
+      />
+
       {/* Add Environment Modal */}
       <AddEnvironmentModal
         isOpen={showAddModal}
@@ -427,6 +483,13 @@ export function EnvironmentsPage() {
         onClose={() => setShowDeleteModal(false)}
         environment={selectedEnvironment}
         onDelete={handleDeleteSuccess}
+      />
+
+      {/* Export Environments Modal */}
+      <ExportEnvironmentsModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        onExportSuccess={handleExportSuccess}
       />
     </div>
   );
