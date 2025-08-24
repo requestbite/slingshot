@@ -71,6 +71,8 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
     state: environment?.authConfig?.state || '',
     code_challenge_method: environment?.authConfig?.code_challenge_method || 'SHA-256',
     refresh_token_url: environment?.authConfig?.refresh_token_url || '',
+    // Token request headers
+    tokenHeaders: environment?.authConfig?.tokenHeaders || [],
     ...environment?.authConfig
   });
   const [authResponse, setAuthResponse] = useState(environment?.authResponse || null);
@@ -81,6 +83,22 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
   // Toast state
   const [isToastVisible, showToast, hideToast] = useToast();
   const [toastMessage, setToastMessage] = useState('');
+
+  // Token headers state
+  const [tokenHeaderForm, setTokenHeaderForm] = useState({
+    key: '',
+    value: '',
+    sendIn: 'header'
+  });
+  const [editingTokenHeader, setEditingTokenHeader] = useState({
+    _tempId: null,
+    key: '',
+    value: '',
+    sendIn: 'header'
+  });
+  const [editTokenHeaderModal, setEditTokenHeaderModal] = useState(false);
+  const [deleteTokenHeaderModal, setDeleteTokenHeaderModal] = useState(false);
+  const [tokenHeaderToDelete, setTokenHeaderToDelete] = useState(null);
 
   // Update local state when environment changes
   useEffect(() => {
@@ -113,6 +131,8 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
           state: decryptedAuthConfig?.state || '',
           code_challenge_method: decryptedAuthConfig?.code_challenge_method || 'SHA-256',
           refresh_token_url: decryptedAuthConfig?.refresh_token_url || '',
+          // Token request headers
+          tokenHeaders: decryptedAuthConfig?.tokenHeaders || [],
           ...decryptedAuthConfig
         });
 
@@ -345,11 +365,23 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
         formData.append('client_secret', authConfig.clientSecret);
       }
 
+      // Build headers including custom token headers
+      const headers = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      };
+
+      // Add custom token headers
+      if (authConfig.tokenHeaders) {
+        authConfig.tokenHeaders.forEach(header => {
+          if (header.sendIn === 'header') {
+            headers[header.key] = header.value;
+          }
+        });
+      }
+
       const response = await fetch(authConfig.token_url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        headers,
         body: formData
       });
 
@@ -418,11 +450,23 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
         formData.append('client_secret', authConfig.clientSecret);
       }
 
+      // Build headers including custom token headers
+      const headers = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      };
+
+      // Add custom token headers
+      if (authConfig.tokenHeaders) {
+        authConfig.tokenHeaders.forEach(header => {
+          if (header.sendIn === 'header') {
+            headers[header.key] = header.value;
+          }
+        });
+      }
+
       const response = await fetch(refreshUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        headers,
         body: formData
       });
 
@@ -617,12 +661,20 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
         formData.append('scope', authConfig.scope);
       }
 
+      // Build headers including custom token headers
+      const headers = ['Content-Type: application/x-www-form-urlencoded'];
+      if (authConfig.tokenHeaders) {
+        authConfig.tokenHeaders.forEach(header => {
+          if (header.sendIn === 'header') {
+            headers.push(`${header.key}: ${header.value}`);
+          }
+        });
+      }
+
       const requestPayload = {
         method: 'POST',
         url: authConfig.token_url,
-        headers: [
-          'Content-Type: application/x-www-form-urlencoded'
-        ],
+        headers,
         body: formData.toString(),
         timeout: 30,
         passThrough: true
@@ -708,12 +760,20 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
       formData.append('client_id', authConfig.clientId);
       formData.append('client_secret', authConfig.clientSecret);
 
+      // Build headers including custom token headers
+      const headers = ['Content-Type: application/x-www-form-urlencoded'];
+      if (authConfig.tokenHeaders) {
+        authConfig.tokenHeaders.forEach(header => {
+          if (header.sendIn === 'header') {
+            headers.push(`${header.key}: ${header.value}`);
+          }
+        });
+      }
+
       const requestPayload = {
         method: 'POST',
         url: authConfig.token_url,
-        headers: [
-          'Content-Type: application/x-www-form-urlencoded'
-        ],
+        headers,
         body: formData.toString(),
         timeout: 30,
         passThrough: true
@@ -1082,6 +1142,89 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
     setSuccess('Tokens cleared');
   };
 
+  // Token header management functions
+  const handleAddTokenHeader = (e) => {
+    e.preventDefault();
+
+    if (!tokenHeaderForm.key.trim() || !tokenHeaderForm.value.trim()) {
+      setError('Both key and value are required');
+      return;
+    }
+
+    // Check for duplicate keys
+    const existingKey = authConfig.tokenHeaders.find(h => h.key === tokenHeaderForm.key.trim());
+    if (existingKey) {
+      setError('A token header with this key already exists');
+      return;
+    }
+
+    const newHeader = {
+      key: tokenHeaderForm.key.trim(),
+      value: tokenHeaderForm.value.trim(),
+      sendIn: tokenHeaderForm.sendIn,
+      _tempId: `temp_${Date.now()}`
+    };
+
+    const updatedHeaders = [...authConfig.tokenHeaders, newHeader].sort((a, b) => a.key.localeCompare(b.key));
+    setAuthConfig(prev => ({ ...prev, tokenHeaders: updatedHeaders }));
+    setTokenHeaderForm({ key: '', value: '', sendIn: 'header' });
+    setError('');
+  };
+
+  const handleEditTokenHeader = (header) => {
+    setEditingTokenHeader({
+      _tempId: header._tempId || header.key,
+      key: header.key,
+      value: header.value,
+      sendIn: header.sendIn || 'header'
+    });
+    setEditTokenHeaderModal(true);
+  };
+
+  const handleUpdateTokenHeader = (e) => {
+    e.preventDefault();
+
+    if (!editingTokenHeader.key.trim() || !editingTokenHeader.value.trim()) {
+      setError('Both key and value are required');
+      return;
+    }
+
+    // Check for duplicate keys (excluding the current header)
+    const existingKey = authConfig.tokenHeaders.find(h => 
+      h.key === editingTokenHeader.key.trim() && 
+      (h._tempId || h.key) !== editingTokenHeader._tempId
+    );
+    if (existingKey) {
+      setError('A token header with this key already exists');
+      return;
+    }
+
+    const updatedHeaders = authConfig.tokenHeaders.map(h => {
+      if ((h._tempId || h.key) === editingTokenHeader._tempId) {
+        return {
+          ...h,
+          key: editingTokenHeader.key.trim(),
+          value: editingTokenHeader.value.trim(),
+          sendIn: editingTokenHeader.sendIn
+        };
+      }
+      return h;
+    });
+
+    setAuthConfig(prev => ({ ...prev, tokenHeaders: updatedHeaders.sort((a, b) => a.key.localeCompare(b.key)) }));
+    setEditTokenHeaderModal(false);
+    setError('');
+  };
+
+  const handleDeleteTokenHeader = () => {
+    if (!tokenHeaderToDelete) return;
+
+    const updatedHeaders = authConfig.tokenHeaders.filter(h => (h._tempId || h.key) !== tokenHeaderToDelete);
+    setAuthConfig(prev => ({ ...prev, tokenHeaders: updatedHeaders }));
+    setDeleteTokenHeaderModal(false);
+    setTokenHeaderToDelete(null);
+  };
+
   return (
     <div class="space-y-6">
       {/* Auth Type Selection */}
@@ -1441,6 +1584,114 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
             </p>
           </div>
 
+          {/* Token Request Headers */}
+          <div class="border-t border-gray-200 pt-6">
+            <h3 class="text-base font-semibold text-gray-900 mb-4">Token Request</h3>
+            <p class="text-sm text-gray-600 mb-4">Custom headers to include when making token requests.</p>
+
+            {/* Add new token header form */}
+            <form onSubmit={handleAddTokenHeader} class="mb-4">
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div>
+                  <label for="oauth2-token-header-key" class="block text-sm font-medium text-gray-700">Key</label>
+                  <input
+                    type="text"
+                    id="oauth2-token-header-key"
+                    value={tokenHeaderForm.key}
+                    onInput={(e) => setTokenHeaderForm({ ...tokenHeaderForm, key: e.target.value })}
+                    class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+                    placeholder="Authorization"
+                  />
+                </div>
+                <div>
+                  <label for="oauth2-token-header-value" class="block text-sm font-medium text-gray-700">Value</label>
+                  <input
+                    type="text"
+                    id="oauth2-token-header-value"
+                    value={tokenHeaderForm.value}
+                    onInput={(e) => setTokenHeaderForm({ ...tokenHeaderForm, value: e.target.value })}
+                    class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+                    placeholder="Bearer xyz123"
+                  />
+                </div>
+                <div class="flex items-end">
+                  <div class="flex-1">
+                    <label for="oauth2-token-header-send-in" class="block text-sm font-medium text-gray-700">Send in</label>
+                    <select
+                      id="oauth2-token-header-send-in"
+                      value={tokenHeaderForm.sendIn}
+                      onChange={(e) => setTokenHeaderForm({ ...tokenHeaderForm, sendIn: e.target.value })}
+                      class="mt-1 block w-full rounded-l-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-sky-500 text-sm"
+                    >
+                      <option value="header">Header</option>
+                    </select>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={!tokenHeaderForm.key || !tokenHeaderForm.value}
+                    class="rounded-r-md bg-sky-500 hover:bg-sky-400 disabled:bg-gray-300 px-3 py-1.5 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            {/* Token Headers Table */}
+            {authConfig.tokenHeaders && authConfig.tokenHeaders.length > 0 && (
+              <div class="overflow-hidden border border-gray-300 rounded-lg">
+                <table class="min-w-full divide-y divide-gray-300">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Key</th>
+                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Value</th>
+                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Send in</th>
+                      <th class="relative py-3.5 pl-3 pr-4 sm:pr-6 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200 bg-white">
+                    {authConfig.tokenHeaders.map((header) => (
+                      <tr key={header._tempId || header.key}>
+                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                          {header.key}
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                          <span class="font-mono">{header.value}</span>
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                          {header.sendIn === 'header' ? 'Header' : 'Query Param'}
+                        </td>
+                        <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-2">
+                          <button
+                            type="button"
+                            onClick={() => handleEditTokenHeader(header)}
+                            class="px-2 py-1 bg-sky-100 hover:bg-sky-200 text-sky-700 text-sm font-medium rounded-md cursor-pointer inline-block"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTokenHeaderToDelete(header._tempId || header.key);
+                              setDeleteTokenHeaderModal(true);
+                            }}
+                            class="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium rounded-md cursor-pointer inline-block"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
           {/* Save Configuration and Get Tokens Buttons */}
           <div class="flex items-center gap-3 flex-wrap">
             <button
@@ -1602,6 +1853,114 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
             <p class="mt-1 text-xs text-gray-500">
               Optional state parameter for additional security
             </p>
+          </div>
+
+          {/* Token Request Headers */}
+          <div class="border-t border-gray-200 pt-6">
+            <h3 class="text-base font-semibold text-gray-900 mb-4">Token Request</h3>
+            <p class="text-sm text-gray-600 mb-4">Custom headers to include when making token requests.</p>
+
+            {/* Add new token header form */}
+            <form onSubmit={handleAddTokenHeader} class="mb-4">
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div>
+                  <label for="oauth2-code-token-header-key" class="block text-sm font-medium text-gray-700">Key</label>
+                  <input
+                    type="text"
+                    id="oauth2-code-token-header-key"
+                    value={tokenHeaderForm.key}
+                    onInput={(e) => setTokenHeaderForm({ ...tokenHeaderForm, key: e.target.value })}
+                    class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+                    placeholder="Authorization"
+                  />
+                </div>
+                <div>
+                  <label for="oauth2-code-token-header-value" class="block text-sm font-medium text-gray-700">Value</label>
+                  <input
+                    type="text"
+                    id="oauth2-code-token-header-value"
+                    value={tokenHeaderForm.value}
+                    onInput={(e) => setTokenHeaderForm({ ...tokenHeaderForm, value: e.target.value })}
+                    class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+                    placeholder="Bearer xyz123"
+                  />
+                </div>
+                <div class="flex items-end">
+                  <div class="flex-1">
+                    <label for="oauth2-code-token-header-send-in" class="block text-sm font-medium text-gray-700">Send in</label>
+                    <select
+                      id="oauth2-code-token-header-send-in"
+                      value={tokenHeaderForm.sendIn}
+                      onChange={(e) => setTokenHeaderForm({ ...tokenHeaderForm, sendIn: e.target.value })}
+                      class="mt-1 block w-full rounded-l-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-sky-500 text-sm"
+                    >
+                      <option value="header">Header</option>
+                    </select>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={!tokenHeaderForm.key || !tokenHeaderForm.value}
+                    class="rounded-r-md bg-sky-500 hover:bg-sky-400 disabled:bg-gray-300 px-3 py-1.5 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            {/* Token Headers Table */}
+            {authConfig.tokenHeaders && authConfig.tokenHeaders.length > 0 && (
+              <div class="overflow-hidden border border-gray-300 rounded-lg">
+                <table class="min-w-full divide-y divide-gray-300">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Key</th>
+                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Value</th>
+                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Send in</th>
+                      <th class="relative py-3.5 pl-3 pr-4 sm:pr-6 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200 bg-white">
+                    {authConfig.tokenHeaders.map((header) => (
+                      <tr key={header._tempId || header.key}>
+                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                          {header.key}
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                          <span class="font-mono">{header.value}</span>
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                          {header.sendIn === 'header' ? 'Header' : 'Query Param'}
+                        </td>
+                        <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-2">
+                          <button
+                            type="button"
+                            onClick={() => handleEditTokenHeader(header)}
+                            class="px-2 py-1 bg-sky-100 hover:bg-sky-200 text-sky-700 text-sm font-medium rounded-md cursor-pointer inline-block"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTokenHeaderToDelete(header._tempId || header.key);
+                              setDeleteTokenHeaderModal(true);
+                            }}
+                            class="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium rounded-md cursor-pointer inline-block"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           {/* Save Configuration and Get Tokens Buttons */}
@@ -1843,6 +2202,141 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
                 fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
               }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Edit Token Header Modal */}
+      {editTokenHeaderModal && (
+        <div class="fixed inset-0 bg-gray-500/75 transition-opacity z-50">
+          <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
+              <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 w-full sm:max-w-lg sm:p-6">
+                <form onSubmit={handleUpdateTokenHeader}>
+                  <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
+                    <button
+                      onClick={() => setEditTokenHeaderModal(false)}
+                      type="button"
+                      class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 cursor-pointer"
+                    >
+                      <span class="sr-only">Close</span>
+                      <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div class="mt-0 sm:text-left">
+                    <h3 class="text-base font-semibold text-gray-900">Edit Token Header</h3>
+                    <div class="mt-2">
+                      <p class="text-sm text-gray-500">Update your token request header.</p>
+                    </div>
+                    <div class="mt-6 space-y-4">
+                      <div>
+                        <label for="edit_token_header_key" class="block text-sm font-medium text-gray-700">Key</label>
+                        <input
+                          type="text"
+                          id="edit_token_header_key"
+                          value={editingTokenHeader.key}
+                          onInput={(e) => setEditingTokenHeader({ ...editingTokenHeader, key: e.target.value })}
+                          class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label for="edit_token_header_value" class="block text-sm font-medium text-gray-700">Value</label>
+                        <input
+                          type="text"
+                          id="edit_token_header_value"
+                          value={editingTokenHeader.value}
+                          onInput={(e) => setEditingTokenHeader({ ...editingTokenHeader, value: e.target.value })}
+                          class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label for="edit_token_header_send_in" class="block text-sm font-medium text-gray-700">Send in</label>
+                        <select
+                          id="edit_token_header_send_in"
+                          value={editingTokenHeader.sendIn}
+                          onChange={(e) => setEditingTokenHeader({ ...editingTokenHeader, sendIn: e.target.value })}
+                          class="mt-1 block w-full rounded-md px-3 py-2 text-gray-900 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-sky-500 text-sm"
+                        >
+                          <option value="header">Header</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mt-8 flex justify-end">
+                    <button
+                      onClick={() => setEditTokenHeaderModal(false)}
+                      type="button"
+                      class="mr-3 inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      class="inline-flex justify-center rounded-md bg-sky-500 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 cursor-pointer"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Token Header Modal */}
+      {deleteTokenHeaderModal && (
+        <div class="fixed inset-0 bg-gray-500/75 transition-opacity z-50">
+          <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
+              <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
+                  <button
+                    onClick={() => setDeleteTokenHeaderModal(false)}
+                    type="button"
+                    class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 cursor-pointer"
+                  >
+                    <span class="sr-only">Close</span>
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div class="sm:flex sm:items-start">
+                  <div class="mx-auto flex w-12 h-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:w-10 sm:h-10">
+                    <svg class="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                    </svg>
+                  </div>
+                  <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                    <h3 class="text-base font-semibold text-gray-900">Delete Token Header</h3>
+                    <div class="mt-2">
+                      <p class="text-sm text-gray-500">
+                        Are you sure you want to delete this token header? This action cannot be undone.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                  <button
+                    onClick={handleDeleteTokenHeader}
+                    type="button"
+                    class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-500 sm:ml-3 sm:w-auto cursor-pointer"
+                  >
+                    Delete Header
+                  </button>
+                  <button
+                    onClick={() => setDeleteTokenHeaderModal(false)}
+                    type="button"
+                    class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
