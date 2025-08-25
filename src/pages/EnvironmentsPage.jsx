@@ -3,6 +3,7 @@ import { useLocation } from 'wouter-preact';
 import { AddEnvironmentModal } from '../components/modals/AddEnvironmentModal';
 import { DeleteEnvironmentModal } from '../components/modals/DeleteEnvironmentModal';
 import { ExportEnvironmentsModal } from '../components/modals/ExportEnvironmentsModal';
+import { ImportEnvironmentsModal } from '../components/modals/ImportEnvironmentsModal';
 import { ContextMenu } from '../components/common/ContextMenu';
 import { Toast, useToast } from '../components/common/Toast';
 import { useAppContext } from '../hooks/useAppContext';
@@ -37,6 +38,7 @@ export function EnvironmentsPage() {
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [exportMenuTrigger, setExportMenuTrigger] = useState(null);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [isToastVisible, showToast, hideToast] = useToast();
   const [toastMessage, setToastMessage] = useState('');
 
@@ -140,6 +142,11 @@ export function EnvironmentsPage() {
     handleExportMenuClose();
   };
 
+  const handleImportClick = () => {
+    setShowImportModal(true);
+    handleExportMenuClose();
+  };
+
   const handleDeleteSuccess = async () => {
     await loadEnvironmentsWithCounts();
     await loadCollections(); // Refresh collections since they may reference deleted environment
@@ -156,6 +163,12 @@ export function EnvironmentsPage() {
   const handleExportSuccess = () => {
     setToastMessage('Environments exported successfully');
     showToast();
+  };
+
+  const handleImportSuccess = () => {
+    setToastMessage('Environments imported successfully');
+    showToast();
+    loadEnvironmentsWithCounts(); // Refresh the list
   };
 
   const showNotification = (message) => {
@@ -466,6 +479,10 @@ export function EnvironmentsPage() {
           {
             label: 'Export...',
             onClick: handleExportClick
+          },
+          {
+            label: 'Import...',
+            onClick: handleImportClick
           }
         ]}
       />
@@ -490,6 +507,13 @@ export function EnvironmentsPage() {
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
         onExportSuccess={handleExportSuccess}
+      />
+
+      {/* Import Environments Modal */}
+      <ImportEnvironmentsModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onSuccess={handleImportSuccess}
       />
     </div>
   );
