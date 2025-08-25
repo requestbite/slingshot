@@ -475,6 +475,7 @@ export function EnvironmentsPage() {
         onClose={handleExportMenuClose}
         trigger={exportMenuTrigger}
         width={120}
+        position="below"
         items={[
           {
             label: 'Export...',
