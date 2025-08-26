@@ -9,14 +9,15 @@ import { Toast, useToast } from '../common/Toast';
 
 export function URLImportModal({ isOpen, importUrl, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
-    name: ''
+    name: '',
+    url: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const nameInputRef = useRef();
   const [, setLocation] = useLocation();
   const { addCollection, selectCollection } = useAppContext();
-  
+
   // Toast state
   const [isToastVisible, showToast, hideToast] = useToast();
   const [toastMessage, setToastMessage] = useState('');
@@ -25,7 +26,7 @@ export function URLImportModal({ isOpen, importUrl, onClose, onSuccess }) {
   // Initialize form data when modal opens and auto-focus name input
   useEffect(() => {
     if (isOpen) {
-      setFormData({ name: '' });
+      setFormData({ name: '', url: importUrl || '' });
       setErrors({});
 
       // Auto-focus on name input
@@ -50,10 +51,17 @@ export function URLImportModal({ isOpen, importUrl, onClose, onSuccess }) {
     }
   };
 
+  const handleUrlChange = (e) => {
+    setFormData({ ...formData, url: e.target.value });
+    if (errors.url) {
+      setErrors({ ...errors, url: '' });
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!importUrl) {
+    if (!formData.url.trim()) {
       showErrorToast('No import URL provided');
       return;
     }
@@ -63,21 +71,21 @@ export function URLImportModal({ isOpen, importUrl, onClose, onSuccess }) {
 
     try {
       // Fetch content from URL
-      const { content } = await fetchFromURL(importUrl);
-      
+      const { content } = await fetchFromURL(formData.url.trim());
+
       // Detect content format
       const format = detectContentFormat(content);
-      
+
       if (format === 'unknown') {
         showErrorToast('Unable to detect file format. Please ensure the URL points to a valid OpenAPI specification or Postman collection.');
         return;
       }
 
       // Extract default name if user didn't provide one
-      const collectionName = formData.name.trim() || extractDefaultName(content, format, importUrl);
+      const collectionName = formData.name.trim() || extractDefaultName(content, format, formData.url.trim());
 
       let processedData;
-      
+
       // Process based on detected format
       if (format === 'openapi') {
         processedData = await processOpenAPISpec(content, collectionName);
@@ -151,7 +159,7 @@ export function URLImportModal({ isOpen, importUrl, onClose, onSuccess }) {
   };
 
   const resetForm = () => {
-    setFormData({ name: '' });
+    setFormData({ name: '', url: '' });
     setErrors({});
   };
 
@@ -185,13 +193,13 @@ export function URLImportModal({ isOpen, importUrl, onClose, onSuccess }) {
     if (isOpen) {
       // Use keyup to fire after input blur completes
       document.addEventListener('keyup', handleEscape, true);
-      
+
       // Also add direct listeners to input fields to catch escape before blur
       const inputs = document.querySelectorAll('input, select, textarea');
       inputs.forEach(input => {
         input.addEventListener('keydown', handleInputEscape, true);
       });
-      
+
       return () => {
         document.removeEventListener('keyup', handleEscape, true);
         inputs.forEach(input => {
@@ -231,7 +239,7 @@ export function URLImportModal({ isOpen, importUrl, onClose, onSuccess }) {
                 <form onSubmit={handleSubmit}>
                   <div class="text-center mt-0 sm:text-left">
                     <h3 class="text-base font-semibold text-gray-900">Import</h3>
-                    <div class="mt-2 text-sm text-gray-500">Do you want to import the linked API spec or collection?</div>
+                    <div class="mt-2 text-sm text-gray-500">Import an OpenAPI spec of Postman collection via a URL.</div>
 
                     <div class="mt-6">
                       <label for="import-collection-name" class="block text-left text-sm font-medium text-gray-700 mb-1">Name</label>
@@ -250,12 +258,22 @@ export function URLImportModal({ isOpen, importUrl, onClose, onSuccess }) {
                       </p>
                     </div>
 
-                    {importUrl && (
-                      <div class="mt-4 p-3 bg-gray-50 rounded-md">
-                        <div class="text-xs font-medium text-gray-700 mb-1">Import URL:</div>
-                        <div class="text-xs text-gray-600 break-all">{importUrl}</div>
-                      </div>
-                    )}
+                    <div class="mt-3">
+                      <label for="import-collection-url" class="block text-left text-sm font-medium text-gray-700 mb-1">Import URL</label>
+                      <input
+                        type="url"
+                        id="import-collection-url"
+                        placeholder="https://example.com/api-spec.yaml"
+                        class="block w-full rounded-md px-3 py-1.5 text-gray-900 outline -outline-offset-1 focus:outline-2 outline-gray-300 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-sky-500 text-sm/6 mb-1"
+                        value={formData.url}
+                        onChange={handleUrlChange}
+                        disabled={isLoading}
+                      />
+                      <p class="text-xs text-gray-500 mb-3">
+                        URL to import OpenAPI specification or Postman collection from.
+                      </p>
+                    </div>
+
 
                     {errors.general && (
                       <div class="mt-2 text-sm text-red-600 bg-red-100 p-2 rounded-md">

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { OpenAPIImportModal } from '../import/OpenAPIImportModal';
 import { PostmanImportModal } from '../import/PostmanImportModal';
+import { URLImportModal } from '../import/URLImportModal';
 import { AddFolderModal } from '../modals/AddFolderModal';
 import { AddCollectionModal } from '../modals/AddCollectionModal';
 import { ExportPostmanModal } from '../modals/ExportPostmanModal';
@@ -15,6 +16,7 @@ import { setLastSlingshotUrl } from '../../utils/slingshotNavigation';
 export function SideBar({ onClose: _onClose }) {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showPostmanImportModal, setShowPostmanImportModal] = useState(false);
+  const [showURLImportModal, setShowURLImportModal] = useState(false);
   const [showAddFolderModal, setShowAddFolderModal] = useState(false);
   const [showAddCollectionModal, setShowAddCollectionModal] = useState(false);
   const [showExportPostmanModal, setShowExportPostmanModal] = useState(false);
@@ -456,6 +458,16 @@ export function SideBar({ onClose: _onClose }) {
         }}
       />
 
+      {/* URL Import Modal */}
+      <URLImportModal
+        isOpen={showURLImportModal}
+        importUrl=""
+        onClose={() => setShowURLImportModal(false)}
+        onSuccess={(collection) => {
+          console.log('URL imported successfully:', collection);
+        }}
+      />
+
       {/* Import Context Menu */}
       <ContextMenu
         isOpen={showImportContextMenu}
@@ -465,7 +477,21 @@ export function SideBar({ onClose: _onClose }) {
         position="below"
         items={[
           {
-            label: 'OpenAPI spec',
+            label: 'Link...',
+            onClick: () => {
+              setShowURLImportModal(true);
+              setShowImportContextMenu(false);
+            },
+            icon: (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-symlink-icon lucide-file-symlink">
+                <path d="m10 18 3-3-3-3" />
+                <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                <path d="M4 11V4a2 2 0 0 1 2-2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h7" />
+              </svg>
+            )
+          },
+          {
+            label: 'OpenAPI spec...',
             onClick: () => {
               setShowImportModal(true);
               setShowImportContextMenu(false);
@@ -481,7 +507,7 @@ export function SideBar({ onClose: _onClose }) {
             )
           },
           {
-            label: 'Postman collection',
+            label: 'Postman collection...',
             onClick: () => {
               setShowPostmanImportModal(true);
               setShowImportContextMenu(false);
