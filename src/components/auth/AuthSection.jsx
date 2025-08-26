@@ -864,12 +864,17 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
         // Additional settings for better compatibility
         filterProtocolClaims: true,
         clockSkew: 300,
+        // Popup settings
+        popupWindowFeatures: 'width=500,height=600,scrollbars=yes,resizable=yes',
+        popupWindowTarget: '_blank',
         // Extra parameters for offline access and refresh tokens
         extraQueryParams: {
           access_type: 'offline',
           prompt: 'consent'
         }
       };
+      
+      console.log('OIDC UserManager configuration:', oidcConfig);
 
       const userManager = new UserManager(oidcConfig);
 
@@ -886,6 +891,9 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
         // Continue anyway - some providers don't expose this in metadata
       }
 
+      // Store flow type for callback handling
+      sessionStorage.setItem('oauth_flow_type', 'oidc_pkce');
+      
       // Start the OIDC flow
       const user = await userManager.signinPopup();
 
@@ -934,6 +942,8 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
       }
     } finally {
       setLoading(false);
+      // Clean up session storage
+      sessionStorage.removeItem('oauth_flow_type');
     }
   };
 

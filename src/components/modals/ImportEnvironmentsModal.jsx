@@ -100,6 +100,36 @@ export function ImportEnvironmentsModal({ isOpen, onClose, onSuccess }) {
     }
   };
 
+  const encryptSecretsArray = async (secrets) => {
+    if (!secrets || !Array.isArray(secrets)) return secrets;
+    
+    const encryptedSecrets = await Promise.all(
+      secrets.map(async (secret) => {
+        // If secret is already encrypted (has encrypted_value), return as-is
+        if (secret.encrypted_value) return secret;
+        
+        // If secret has plain text value, encrypt it
+        if (secret.key && secret.value) {
+          try {
+            const { encrypted_value, iv } = await encryptSecret(secret.value);
+            return {
+              key: secret.key,
+              encrypted_value,
+              iv
+            };
+          } catch (error) {
+            console.error('Failed to encrypt secret:', error);
+            throw new Error(`Failed to encrypt secret "${secret.key}"`);
+          }
+        }
+        
+        return secret;
+      })
+    );
+    
+    return encryptedSecrets;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -141,6 +171,11 @@ export function ImportEnvironmentsModal({ isOpen, onClose, onSuccess }) {
           // Encrypt authResponse if it exists and is not already encrypted
           if (importEnv.authResponse && !importEnv.authResponse.encrypted_value) {
             processedEnv.authResponse = await encryptAuthData(importEnv.authResponse);
+          }
+
+          // Encrypt secrets if they exist
+          if (importEnv.secrets) {
+            processedEnv.secrets = await encryptSecretsArray(importEnv.secrets);
           }
 
           return processedEnv;

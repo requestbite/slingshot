@@ -9,15 +9,15 @@ export function AuthCallback() {
       const code = urlParams.get('code');
       const state = urlParams.get('state');
 
-      // Check if this is an OAuth 2.0 callback (has code parameter)
-      if (code || error) {
+      // Check if this is an OAuth 2.0 callback (has code parameter) but NOT OIDC PKCE
+      const flowType = sessionStorage.getItem('oauth_flow_type') || 'oauth2_pkce';
+      if ((code || error) && flowType !== 'oidc_pkce') {
         // Determine callback type based on sessionStorage
-        const oauthType = sessionStorage.getItem('oauth_flow_type') || 'oauth2_pkce';
         
         try {
           if (window.opener) {
             // Send the result back to the parent window with appropriate callback type
-            const callbackType = oauthType === 'oauth2_code' ? 'oauth2_code_callback' : 'oauth2_callback';
+            const callbackType = flowType === 'oauth2_code' ? 'oauth2_code_callback' : 'oauth2_callback';
             
             window.opener.postMessage({
               type: callbackType,
@@ -51,6 +51,9 @@ export function AuthCallback() {
 
         // Process the callback and get the user
         const user = await userManager.signinPopupCallback();
+        
+        // Clean up session storage
+        sessionStorage.removeItem('oauth_flow_type');
         
         // The popup will be closed automatically by the oidc-client-ts library
         // and the result will be passed back to the parent window

@@ -29,6 +29,29 @@ export function ExportEnvironmentsModal({ isOpen, onClose, onExportSuccess }) {
     }
   };
 
+  // Helper function to decrypt secrets array
+  const decryptSecretsArray = async (encryptedSecrets) => {
+    if (!encryptedSecrets || !Array.isArray(encryptedSecrets)) return encryptedSecrets;
+    
+    const decryptedSecrets = await Promise.all(
+      encryptedSecrets.map(async (secret) => {
+        if (!secret || !secret.encrypted_value) return secret;
+        try {
+          const decryptedValue = await decryptSecret(secret.encrypted_value, secret.iv);
+          return {
+            key: secret.key,
+            value: decryptedValue
+          };
+        } catch (error) {
+          console.error('Failed to decrypt secret:', error);
+          return secret;
+        }
+      })
+    );
+    
+    return decryptedSecrets;
+  };
+
   const handleExport = async () => {
     setIsLoading(true);
 
@@ -56,6 +79,12 @@ export function ExportEnvironmentsModal({ isOpen, onClose, onExportSuccess }) {
               if (decryptedAuthResponse) {
                 decryptedEnvironment.authResponse = decryptedAuthResponse;
               }
+            }
+
+            // Decrypt secrets array if it exists
+            if (environment.secrets) {
+              const decryptedSecrets = await decryptSecretsArray(environment.secrets);
+              decryptedEnvironment.secrets = decryptedSecrets;
             }
           } catch (error) {
             console.error(`Failed to decrypt auth fields for environment ${environment.id}:`, error);
