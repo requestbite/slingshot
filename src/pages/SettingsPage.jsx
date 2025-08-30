@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { Toast, useToast } from '../components/common/Toast';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 export function SettingsPage() {
+  usePageTitle('Settings');
   const [, setLocation] = useLocation();
   const [isToastVisible, showToast, hideToast] = useToast();
   const [toastMessage, setToastMessage] = useState('');

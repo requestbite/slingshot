@@ -2,6 +2,7 @@ import { useState, useEffect } from 'preact/hooks';
 import { useRoute } from 'wouter-preact';
 import { RequestEditor } from '../components/request/RequestEditor';
 import { useAppContext } from '../hooks/useAppContext';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { apiClient } from '../api';
 
 export function RequestPage() {
@@ -10,6 +11,9 @@ export function RequestPage() {
   const [request, setRequest] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Set page title based on request name
+  usePageTitle(request?.name || 'Slingshot');
 
   useEffect(() => {
     if (params?.requestId) {
@@ -21,15 +25,15 @@ export function RequestPage() {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const requestData = await apiClient.getRequest(requestId);
       setRequest(requestData);
-      
+
       // Update context if needed
       if (!selectedRequest || selectedRequest.id !== requestId) {
         selectRequest(requestData);
       }
-      
+
     } catch (err) {
       console.error('Failed to load request:', err);
       setError('Failed to load request');

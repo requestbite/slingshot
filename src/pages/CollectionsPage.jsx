@@ -5,9 +5,11 @@ import { DeleteCollectionModal } from '../components/modals/DeleteCollectionModa
 import { ContextMenu } from '../components/common/ContextMenu';
 import { Toast, useToast } from '../components/common/Toast';
 import { useAppContext } from '../hooks/useAppContext';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { apiClient } from '../api';
 
 export function CollectionsPage() {
+  usePageTitle('Collections');
   const [, setLocation] = useLocation();
   const { collections, loadCollections, selectCollection } = useAppContext();
   const [collectionsWithCounts, setCollectionsWithCounts] = useState([]);

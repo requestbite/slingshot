@@ -7,6 +7,7 @@ import { ImportEnvironmentsModal } from '../components/modals/ImportEnvironments
 import { ContextMenu } from '../components/common/ContextMenu';
 import { Toast, useToast } from '../components/common/Toast';
 import { useAppContext } from '../hooks/useAppContext';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { apiClient } from '../api';
 import { setupEncryptionKey, hasSessionKey, storeEncryptedReference } from '../utils/encryption';
 
@@ -25,6 +26,7 @@ const getAuthMethodDisplayName = (authField) => {
 };
 
 export function EnvironmentsPage() {
+  usePageTitle('Environments');
   const [, setLocation] = useLocation();
   const { loadCollections } = useAppContext();
   const [environmentsWithCounts, setEnvironmentsWithCounts] = useState([]);
