@@ -24,7 +24,7 @@ export function VariableInput({
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [autocompleteQuery, setAutocompleteQuery] = useState('');
   const [autocompleteStart, setAutocompleteStart] = useState(-1);
-  
+
   const inputRef = useRef();
   const autocompleteRef = useRef();
   const updateTimeoutRef = useRef();
@@ -36,19 +36,19 @@ export function VariableInput({
 
   const loadVariables = async () => {
     const vars = new Map();
-    
+
     try {
       // Collection variables (inline)
       if (selectedCollection?.variables) {
         selectedCollection.variables.forEach(v => vars.set(v.key, v.value));
       }
-      
+
       // Database collection variables
       if (selectedCollection?.id) {
         const collectionVars = await apiClient.getSecretsByCollection(selectedCollection.id);
         collectionVars.forEach(v => vars.set(v.key, v.value));
       }
-      
+
       // Environment variables - use selectedEnvironment prop if provided, 
       // otherwise fall back to collection's default environment only if user hasn't manually selected
       const environmentId = selectedEnvironment?.id || (!hasManuallySelectedEnvironment ? selectedCollection?.environment_id : null);
@@ -59,14 +59,14 @@ export function VariableInput({
     } catch (error) {
       console.error('Failed to load variables:', error);
     }
-    
+
     setVariables(vars);
   };
 
   // Parse and highlight variables in the text
   const parseAndHighlight = useCallback((text) => {
     if (!text) return { __html: '' };
-    
+
     const variableRegex = /\{\{([^}]*)\}\}/g;
     let lastIndex = 0;
     const parts = [];
@@ -94,7 +94,7 @@ export function VariableInput({
       const variableName = match[1];
       const isResolved = variables.has(variableName);
       const className = isResolved ? 'variable-resolved' : 'variable-unresolved';
-      
+
       parts.push(`<span class="${className}">${escapeAndPreserveSpaces(match[0])}</span>`);
       lastIndex = match.index + match[0].length;
     }
@@ -110,10 +110,10 @@ export function VariableInput({
   // Handle input changes
   const handleInput = (e) => {
     const newValue = e.target.textContent || '';
-    
+
     // Store cursor position before onChange (which triggers re-render)
     const cursorPosition = getCursorPosition(e.target);
-    
+
     // Update the value
     onChange?.(newValue);
 
@@ -124,18 +124,18 @@ export function VariableInput({
     if (variableMatch) {
       const query = variableMatch[1];
       const startPos = cursorPosition - query.length - 2; // -2 for {{
-      
+
       setAutocompleteQuery(query);
       setAutocompleteStart(startPos);
-      
+
       // Filter variables based on query
       const filtered = Array.from(variables.keys())
         .filter(key => key.toLowerCase().includes(query.toLowerCase()))
         .slice(0, 10); // Limit to 10 results
-      
+
       setFilteredVariables(filtered);
       setSelectedIndex(0);
-      
+
       if (filtered.length > 0) {
         setShowAutocomplete(true);
       } else {
@@ -150,17 +150,17 @@ export function VariableInput({
   const getCursorPosition = (element) => {
     const selection = window.getSelection();
     if (selection.rangeCount === 0) return 0;
-    
+
     const range = selection.getRangeAt(0);
-    
+
     // Create a range from the start of the element to the cursor
     const preCaretRange = range.cloneRange();
     preCaretRange.selectNodeContents(element);
     preCaretRange.setEnd(range.endContainer, range.endOffset);
-    
+
     // Get the text content before the cursor, converting &nbsp; back to spaces
     const textBeforeCursor = preCaretRange.toString().replace(/\u00a0/g, ' ');
-    
+
     return textBeforeCursor.length;
   };
 
@@ -171,13 +171,13 @@ export function VariableInput({
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
-          setSelectedIndex(prev => 
+          setSelectedIndex(prev =>
             prev < filteredVariables.length - 1 ? prev + 1 : 0
           );
           break;
         case 'ArrowUp':
           e.preventDefault();
-          setSelectedIndex(prev => 
+          setSelectedIndex(prev =>
             prev > 0 ? prev - 1 : filteredVariables.length - 1
           );
           break;
@@ -193,32 +193,32 @@ export function VariableInput({
           break;
       }
     }
-    
+
     onKeyDown?.(e);
   };
 
   // Insert selected variable
   const insertVariable = (variableName) => {
     if (!variableName || !inputRef.current) return;
-    
+
     const element = inputRef.current;
     const currentText = element.textContent || '';
-    
+
     // Replace the partial {{ with the complete variable
     const beforeInsert = currentText.slice(0, autocompleteStart);
     const afterInsert = currentText.slice(getCursorPosition(element));
     const newText = beforeInsert + `{{${variableName}}}` + afterInsert;
-    
+
     // Update DOM content directly to avoid re-render issues
     element.textContent = newText;
-    
+
     // Update the content and trigger change
     onChange?.(newText);
-    
+
     // Set cursor position after the inserted variable (at the very end)
     const newCursorPos = beforeInsert.length + variableName.length + 4; // +4 for {{}}
     setCursorPosition(element, newCursorPos);
-    
+
     setShowAutocomplete(false);
   };
 
@@ -226,7 +226,7 @@ export function VariableInput({
   const setCursorPosition = (element, position) => {
     const range = document.createRange();
     const selection = window.getSelection();
-    
+
     let currentPosition = 0;
     let targetNode = null;
     let targetOffset = 0;
@@ -244,7 +244,7 @@ export function VariableInput({
       // Convert &nbsp; back to regular spaces for length calculation
       const nodeText = node.textContent.replace(/\u00a0/g, ' ');
       const nodeLength = nodeText.length;
-      
+
       if (currentPosition + nodeLength >= position) {
         targetNode = node;
         targetOffset = position - currentPosition;
@@ -256,7 +256,7 @@ export function VariableInput({
     if (targetNode) {
       // Ensure offset doesn't exceed node length
       targetOffset = Math.min(targetOffset, targetNode.textContent.length);
-      
+
       try {
         range.setStart(targetNode, targetOffset);
         range.setEnd(targetNode, targetOffset);
@@ -275,10 +275,10 @@ export function VariableInput({
   // Handle clicking outside to close autocomplete
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (showAutocomplete && 
-          autocompleteRef.current && 
-          !autocompleteRef.current.contains(e.target) &&
-          !inputRef.current.contains(e.target)) {
+      if (showAutocomplete &&
+        autocompleteRef.current &&
+        !autocompleteRef.current.contains(e.target) &&
+        !inputRef.current.contains(e.target)) {
         setShowAutocomplete(false);
       }
     };
@@ -290,24 +290,24 @@ export function VariableInput({
   // Update highlighting without affecting cursor position
   useEffect(() => {
     if (!inputRef.current || showAutocomplete) return;
-    
+
     const element = inputRef.current;
     const currentCursor = getCursorPosition(element);
     const currentText = element.textContent || '';
-    
+
     // Clear any pending update
     if (updateTimeoutRef.current) {
       clearTimeout(updateTimeoutRef.current);
     }
-    
+
     // Only update if content actually differs to avoid unnecessary DOM manipulation
     if (currentText !== value) {
       const highlighted = parseAndHighlight(value);
-      
+
       // Check if the highlighted HTML is actually different to avoid flicker
       if (element.innerHTML !== highlighted.__html) {
         element.innerHTML = highlighted.__html;
-        
+
         // Use requestAnimationFrame for smoother cursor restoration
         requestAnimationFrame(() => {
           // For external changes (like restore), preserve cursor position if text length allows
@@ -320,14 +320,14 @@ export function VariableInput({
       const highlighted = parseAndHighlight(value);
       if (element.innerHTML !== highlighted.__html) {
         element.innerHTML = highlighted.__html;
-        
+
         // Use requestAnimationFrame for smoother cursor restoration
         requestAnimationFrame(() => {
           setCursorPosition(element, currentCursor);
         });
       }
     }
-    
+
     // Cleanup function
     return () => {
       if (updateTimeoutRef.current) {
@@ -355,7 +355,7 @@ export function VariableInput({
         suppressContentEditableWarning={true}
         {...props}
       />
-      
+
       {showAutocomplete && filteredVariables.length > 0 && (
         <div
           ref={autocompleteRef}
@@ -370,11 +370,10 @@ export function VariableInput({
           {filteredVariables.map((variableName, index) => (
             <div
               key={variableName}
-              class={`px-3 py-2 cursor-pointer text-sm ${
-                index === selectedIndex 
-                  ? 'bg-sky-100 text-sky-900' 
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
+              class={`px-3 py-2 cursor-pointer text-sm ${index === selectedIndex
+                ? 'bg-sky-100 text-sky-900'
+                : 'text-gray-700 hover:bg-gray-100'
+                }`}
               onClick={() => insertVariable(variableName)}
             >
               <div class="flex items-center">
@@ -390,7 +389,7 @@ export function VariableInput({
           ))}
         </div>
       )}
-      
+
       <style jsx>{`
         .variable-input {
           min-height: 38px;
@@ -406,7 +405,6 @@ export function VariableInput({
           transition: border-color 0.15s ease-in-out;
           overflow: hidden;
           white-space: nowrap;
-          text-overflow: ellipsis;
         }
         
         .variable-input:focus {

@@ -778,51 +778,51 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
                 </div>
               )}
             </div>
-
-            {/* Response Headers Collapsible Section */}
-            {processedHeaders && processedHeaders.length > 0 && (
-              <div id="response-headers-section">
-                <div class="max-w-full overflow-auto" style={{ display: showHeaders ? 'block' : 'none' }}>
-                  <table class="border-collapse text-xs w-full mb-2 mt-4 table-fixed">
-                    <thead>
-                      <tr>
-                        <th class="py-1 border-b border-slate-200 text-left font-mono font-bold">Name</th>
-                        <th class="py-1 border-b border-slate-200 text-left font-mono font-bold">Value</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {processedHeaders.map((header, index) => (
-                        <tr key={index}>
-                          <td class="border-b border-slate-100 py-1 pr-3 font-mono whitespace-nowrap overflow-hidden text-ellipsis truncate">
-                            {header.isClickable ? (
-                              <a
-                                href={header.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="text-sky-500 hover:text-sky-700 inline-flex items-center"
-                              >
-                                {header.name}
-                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline relative -top-0.5 ml-1" stroke="currentColor">
-                                  <path d="M15 3h6v6"></path>
-                                  <path d="M10 14 21 3"></path>
-                                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                                </svg>
-                              </a>
-                            ) : (
-                              header.name
-                            )}
-                          </td>
-                          <td class="border-b border-slate-100 py-1 font-mono text-indigo-600 whitespace-nowrap overflow-hidden text-ellipsis truncate">
-                            {header.value}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
           </div>
+
+          {/* Response Headers Collapsible Section */}
+          {processedHeaders && processedHeaders.length > 0 && (
+            <div id="response-headers-section" class="mb-4">
+              <div class="max-w-full overflow-auto" style={{ display: showHeaders ? 'block' : 'none' }}>
+                <table class="border-collapse text-xs w-full table-fixed">
+                  <thead>
+                    <tr>
+                      <th class="py-1 border-b border-slate-200 text-left font-mono font-bold">Name</th>
+                      <th class="py-1 border-b border-slate-200 text-left font-mono font-bold">Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {processedHeaders.map((header, index) => (
+                      <tr key={index}>
+                        <td class="border-b border-slate-100 py-1 pr-3 font-mono whitespace-nowrap overflow-hidden text-ellipsis truncate">
+                          {header.isClickable ? (
+                            <a
+                              href={header.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="text-sky-500 hover:text-sky-700 inline-flex items-center"
+                            >
+                              {header.name}
+                              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline relative -top-0.5 ml-1" stroke="currentColor">
+                                <path d="M15 3h6v6"></path>
+                                <path d="M10 14 21 3"></path>
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                              </svg>
+                            </a>
+                          ) : (
+                            header.name
+                          )}
+                        </td>
+                        <td class="border-b border-slate-100 py-1 font-mono text-indigo-600 whitespace-nowrap overflow-hidden text-ellipsis truncate">
+                          {header.value}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {/* Response Body */}
           <div>
