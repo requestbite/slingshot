@@ -1,5 +1,4 @@
-import { useState } from 'preact/hooks';
-import { VariableInput } from '../../common/VariableInput';
+import { useState } from 'preact/hooks'; import { VariableInput } from '../../common/VariableInput';
 
 export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPathParamsChange, onEnterKeyPress, selectedEnvironment }) {
   const handlePathParamChange = (id, field, value) => {
