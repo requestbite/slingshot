@@ -29,7 +29,7 @@ const getTabNames = (hasActiveCollection) => ({
 // Helper function to decrypt auth response
 const decryptAuthResponse = async (encryptedResponse) => {
   if (!encryptedResponse || !encryptedResponse.encrypted_value) return encryptedResponse;
-  
+
   try {
     const decryptedString = await decryptSecret(encryptedResponse.encrypted_value, encryptedResponse.iv);
     return JSON.parse(decryptedString);
@@ -42,7 +42,7 @@ const decryptAuthResponse = async (encryptedResponse) => {
 // Helper function to decrypt auth config
 const decryptAuthConfig = async (encryptedConfig) => {
   if (!encryptedConfig || !encryptedConfig.encrypted_value) return encryptedConfig;
-  
+
   try {
     const decryptedString = await decryptSecret(encryptedConfig.encrypted_value, encryptedConfig.iv);
     return JSON.parse(decryptedString);
@@ -615,13 +615,13 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         if (currentEnvironment.auth === 'oidc_pkce' && currentEnvironment?.authResponse) {
           // OIDC PKCE: Use access token from auth response
           const decryptedAuthResponse = await decryptAuthResponse(currentEnvironment.authResponse);
-          
+
           if (decryptedAuthResponse?.access_token) {
             // Only add Authorization header if no manual Authorization header exists
-            const hasManualAuthHeader = processedHeaders.some(h => 
+            const hasManualAuthHeader = processedHeaders.some(h =>
               h.enabled && h.key.toLowerCase() === 'authorization'
             );
-            
+
             if (!hasManualAuthHeader) {
               // Add the Authorization header with Bearer token
               processedHeaders.push({
@@ -635,13 +635,13 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         } else if ((currentEnvironment.auth === 'oauth2_pkce' || currentEnvironment.auth === 'oauth2_code') && currentEnvironment?.authResponse) {
           // OAuth 2.0 (PKCE/Code Flow): Use access token from auth response
           const decryptedAuthResponse = await decryptAuthResponse(currentEnvironment.authResponse);
-          
+
           if (decryptedAuthResponse?.access_token) {
             // Only add Authorization header if no manual Authorization header exists
-            const hasManualAuthHeader = processedHeaders.some(h => 
+            const hasManualAuthHeader = processedHeaders.some(h =>
               h.enabled && h.key.toLowerCase() === 'authorization'
             );
-            
+
             if (!hasManualAuthHeader) {
               // Add the Authorization header with Bearer token
               processedHeaders.push({
@@ -655,18 +655,18 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         } else if (currentEnvironment.auth === 'basic_auth' && currentEnvironment?.authConfig) {
           // Basic Auth: Base64-encode username:password
           const decryptedAuthConfig = await decryptAuthConfig(currentEnvironment.authConfig);
-          
+
           if (decryptedAuthConfig?.username || decryptedAuthConfig?.password) {
             // Only add Authorization header if no manual Authorization header exists
-            const hasManualAuthHeader = processedHeaders.some(h => 
+            const hasManualAuthHeader = processedHeaders.some(h =>
               h.enabled && h.key.toLowerCase() === 'authorization'
             );
-            
+
             if (!hasManualAuthHeader) {
               const username = decryptedAuthConfig.username || '';
               const password = decryptedAuthConfig.password || '';
               const credentials = btoa(`${username}:${password}`);
-              
+
               // Add the Authorization header with Basic auth
               processedHeaders.push({
                 id: generateUUID(),
@@ -679,13 +679,13 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         } else if (currentEnvironment.auth === 'bearer_token' && currentEnvironment?.authConfig) {
           // Bearer Token: Use token from auth config
           const decryptedAuthConfig = await decryptAuthConfig(currentEnvironment.authConfig);
-          
+
           if (decryptedAuthConfig?.token) {
             // Only add Authorization header if no manual Authorization header exists
-            const hasManualAuthHeader = processedHeaders.some(h => 
+            const hasManualAuthHeader = processedHeaders.some(h =>
               h.enabled && h.key.toLowerCase() === 'authorization'
             );
-            
+
             if (!hasManualAuthHeader) {
               // Add the Authorization header with Bearer token
               processedHeaders.push({
@@ -699,16 +699,16 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         } else if (currentEnvironment.auth === 'api_key' && currentEnvironment?.authConfig) {
           // API Key: Add as header or query parameter
           const decryptedAuthConfig = await decryptAuthConfig(currentEnvironment.authConfig);
-          
+
           if (decryptedAuthConfig?.key && decryptedAuthConfig?.value) {
             const addTo = decryptedAuthConfig.addTo || 'header';
-            
+
             if (addTo === 'header') {
               // Only add API key header if no manual header with the same key exists
-              const hasManualHeader = processedHeaders.some(h => 
+              const hasManualHeader = processedHeaders.some(h =>
                 h.enabled && h.key.toLowerCase() === decryptedAuthConfig.key.toLowerCase()
               );
-              
+
               if (!hasManualHeader) {
                 // Add the API key as a header
                 processedHeaders.push({
@@ -738,13 +738,13 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
     if (currentEnvironment?.auth === 'api_key' && currentEnvironment?.authConfig) {
       try {
         const decryptedAuthConfig = await decryptAuthConfig(currentEnvironment.authConfig);
-        
+
         if (decryptedAuthConfig?.key && decryptedAuthConfig?.value && decryptedAuthConfig.addTo === 'query') {
           // Only add API key query param if no manual query param with the same key exists
-          const hasManualQueryParam = processedQueryParams.some(p => 
+          const hasManualQueryParam = processedQueryParams.some(p =>
             p.enabled && p.key.toLowerCase() === decryptedAuthConfig.key.toLowerCase()
           );
-          
+
           if (!hasManualQueryParam) {
             // Add the API key as a query parameter
             processedQueryParams.push({
@@ -762,22 +762,24 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
 
     // Build complete URL with query parameters
     let processedUrl = replaceVariables(effectiveUrl, variables);
-    
-    // Add query parameters to URL if any exist and are enabled
+
+    // Create URL object and clear existing query parameters, then add only enabled ones
+    const url = new URL(processedUrl.startsWith('http') ? processedUrl : `http://${processedUrl}`);
+
+    // Clear all existing query parameters first
+    url.search = '';
+
+    // Add only enabled query parameters
     const enabledQueryParams = processedQueryParams.filter(p => p.enabled && p.key);
-    if (enabledQueryParams.length > 0) {
-      const url = new URL(processedUrl.startsWith('http') ? processedUrl : `http://${processedUrl}`);
-      
-      enabledQueryParams.forEach(param => {
-        if (param.value !== undefined && param.value !== null) {
-          url.searchParams.set(param.key, param.value);
-        } else {
-          url.searchParams.set(param.key, '');
-        }
-      });
-      
-      processedUrl = url.toString();
-    }
+    enabledQueryParams.forEach(param => {
+      if (param.value !== undefined && param.value !== null) {
+        url.searchParams.set(param.key, param.value);
+      } else {
+        url.searchParams.set(param.key, '');
+      }
+    });
+
+    processedUrl = url.toString();
 
     // Replace variables in all request fields
     const processedRequestData = {

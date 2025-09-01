@@ -16,6 +16,13 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
     onPathParamsChange(updatedParams);
   };
 
+  const toggleQueryParamEnabled = (id) => {
+    const updatedParams = queryParams.map(param =>
+      param.id === id ? { ...param, enabled: !param.enabled } : param
+    );
+    onQueryParamsChange(updatedParams);
+  };
+
   return (
     <>
       {/* Path Parameters Section */}
@@ -25,7 +32,7 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
             Path parameters are parsed from URL.
           </div>
         </div>
-        
+
         <div class="space-y-2">
           {pathParams.length === 0 ? (
             <div>No path parameters found.</div>
@@ -56,9 +63,8 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
                     onChange={(value) => handlePathParamChange(param.id, 'value', value)}
                     onKeyDown={onEnterKeyPress}
                     placeholder="Enter value"
-                    className={`w-full text-sm ${
-                      param.enabled ? '' : 'opacity-50'
-                    }`}
+                    className={`w-full text-sm ${param.enabled ? '' : 'opacity-50'
+                      }`}
                     disabled={!param.enabled}
                     selectedEnvironment={selectedEnvironment}
                   />
@@ -82,12 +88,21 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
             <div>No query parameters found.</div>
           ) : (
             queryParams.map((param) => (
-              <div key={param.id} class="grid grid-cols-11 gap-2 items-center">
+              <div key={param.id} class="grid grid-cols-12 gap-2 items-center">
+                <div class="col-span-1 flex justify-center">
+                  <input
+                    type="checkbox"
+                    checked={param.enabled}
+                    onChange={() => toggleQueryParamEnabled(param.id)}
+                    class="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500"
+                  />
+                </div>
                 <div class="col-span-5">
                   <input
                     type="text"
                     value={param.key}
-                    class="w-full px-2 py-1 text-sm border border-gray-300 rounded bg-gray-50 text-gray-500"
+                    class={`w-full px-2 py-1 text-sm border border-gray-300 rounded bg-gray-50 text-gray-500 ${param.enabled ? '' : 'opacity-50'
+                      }`}
                     disabled
                     title="Query parameters are automatically parsed from URL"
                   />
@@ -96,7 +111,8 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
                   <input
                     type="text"
                     value={param.value}
-                    class="w-full px-2 py-1 text-sm border border-gray-300 rounded bg-gray-50 text-gray-500"
+                    class={`w-full px-2 py-1 text-sm border border-gray-300 rounded bg-gray-50 text-gray-500 ${param.enabled ? '' : 'opacity-50'
+                      }`}
                     disabled
                     title="Query parameters are automatically parsed from URL"
                   />
