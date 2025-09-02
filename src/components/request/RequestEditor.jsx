@@ -926,7 +926,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   };
 
   return (
-    <>
+    <div class="h-full flex flex-col">
       {/* URL Input and HTTP Method Selection Bar */}
       <div class="p-4">
         <div class="mb-2 overflow-x-auto scrollbar-hide">
@@ -1148,8 +1148,8 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       </div>
 
       {/* Response Section */}
-      <div class="p-4 border-t border-gray-200">
-        <div id="response-content-container">
+      <div class="p-4 border-t border-gray-200 flex-grow flex flex-col">
+        <div id="response-content-container" class="flex flex-col h-full">
           <ResponseDisplay
             response={response}
             isLoading={isSubmitting}
@@ -1202,6 +1202,6 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         onClose={hideToast}
         type="success"
       />
-    </>
+    </div>
   );
 }

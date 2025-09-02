@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { WelcomeMessage } from '../common/WelcomeMessage';
 import { Toast, useToast } from '../common/Toast';
 import CodeMirror from '@uiw/react-codemirror';
@@ -382,21 +382,25 @@ const HtmlPreview = ({ response }) => {
 
   return (
     <div
-      class="rounded-md outline-gray-300"
+      class="rounded-md outline-gray-300 flex-grow"
       style={{
         border: '1px solid #d1d5db',
-        minHeight: '200px',
         padding: '3px',
-        backgroundColor: 'white'
+        backgroundColor: 'white',
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        minHeight: '200px'
       }}
     >
       <iframe
         srcdoc={response.responseData}
         style={{
           width: '100%',
-          height: '200px',
+          height: '100%',
           border: 'none',
-          borderRadius: '0.375rem'
+          borderRadius: '0.375rem',
+          flex: '1 1 auto'
         }}
         sandbox="allow-same-origin allow-scripts allow-forms"
         onError={() => setIframeError(true)}
@@ -414,15 +418,16 @@ const HtmlTabs = ({ activeTab, onTabChange }) => {
 
   return (
     <div class="mb-4">
-      <div class="flex border-b border-gray-200">
+      <div class="flex">
         {tabs.map(tab => (
           <button
             key={tab.id}
+            type="button"
             onClick={() => onTabChange(tab.id)}
-            class={`px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
+            class={`px-4 py-2 text-xs rounded-t-md font-medium focus:outline-none cursor-pointer ${
               activeTab === tab.id
-                ? 'border-blue-500 text-blue-600 bg-blue-50'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'text-sky-600 bg-sky-50 border-b-2 border-sky-600'
+                : 'text-gray-600 hover:text-sky-600 hover:bg-gray-100'
             }`}
           >
             {tab.label}
@@ -776,9 +781,9 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
   };
 
   return (
-    <div id="response-section">
-      <div id="response-container">
-        <div id="response-details-wrapper">
+    <div id="response-section" class="flex flex-col h-full">
+      <div id="response-container" class="flex flex-col h-full">
+        <div id="response-details-wrapper" class="flex flex-col h-full">
 
           {/* Response Metadata */}
           <div class="mb-4 overflow-x-auto scrollbar-hide" style="-ms-overflow-style: none; scrollbar-width: none;">
@@ -909,8 +914,8 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
           )}
 
           {/* Response Body */}
-          <div>
-            <div class="response-container">
+          <div class="flex-grow flex flex-col">
+            <div class="response-container flex-grow flex flex-col">
               {/* No response body message */}
               {!response.responseData && !response.binaryData && (
                 <div class="rounded-md bg-gray-50 p-4 mb-4 text-sm text-gray-600 font-medium">
@@ -973,7 +978,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
                   if (isHtmlContentType(contentType)) {
                     // Show HTML preview with tabs
                     return (
-                      <div>
+                      <div class="flex flex-col flex-grow">
                         <HtmlTabs
                           activeTab={activeHtmlTab}
                           onTabChange={setActiveHtmlTab}
