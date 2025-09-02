@@ -356,6 +356,83 @@ const downloadBinaryContent = (response) => {
   setTimeout(() => URL.revokeObjectURL(url), 100);
 };
 
+// Component for displaying HTML content in an iframe
+const HtmlPreview = ({ response }) => {
+  const [iframeError, setIframeError] = useState(false);
+
+  if (iframeError || !response.responseData) {
+    return (
+      <div
+        class="rounded-md p-4 text-center text-gray-600"
+        style={{
+          border: '1px solid #44475a',
+          backgroundColor: '#282a36',
+          minHeight: '200px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <div class="text-white">
+          Failed to load HTML preview
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      class="rounded-md outline-gray-300"
+      style={{
+        border: '1px solid #d1d5db',
+        minHeight: '200px',
+        padding: '3px',
+        backgroundColor: 'white'
+      }}
+    >
+      <iframe
+        srcdoc={response.responseData}
+        style={{
+          width: '100%',
+          height: '200px',
+          border: 'none',
+          borderRadius: '0.375rem'
+        }}
+        sandbox="allow-same-origin allow-scripts allow-forms"
+        onError={() => setIframeError(true)}
+      />
+    </div>
+  );
+};
+
+// Component for HTML tab navigation
+const HtmlTabs = ({ activeTab, onTabChange }) => {
+  const tabs = [
+    { id: 'preview', label: 'Preview' },
+    { id: 'code', label: 'Code' }
+  ];
+
+  return (
+    <div class="mb-4">
+      <div class="flex border-b border-gray-200">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => onTabChange(tab.id)}
+            class={`px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
+              activeTab === tab.id
+                ? 'border-blue-500 text-blue-600 bg-blue-50'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // Component for displaying images with CodeMirror-style frame
 const ImageDisplay = ({ response }) => {
   const [imageError, setImageError] = useState(false);
@@ -450,6 +527,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
     }
   });
   const [activeTab, setActiveTab] = useState('body');
+  const [activeHtmlTab, setActiveHtmlTab] = useState('preview');
   const [isToastVisible, showToast, hideToast] = useToast();
 
   // Save headers visibility preference to localStorage whenever it changes
@@ -615,6 +693,12 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
     const trimmed = content.trim();
     return (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
       (trimmed.startsWith('[') && trimmed.endsWith(']'));
+  };
+
+  // Helper function to detect if content type is HTML
+  const isHtmlContentType = (contentType) => {
+    if (!contentType) return false;
+    return contentType.toLowerCase().includes('text/html');
   };
 
   // Helper function to prettify JSON content
@@ -885,34 +969,76 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
                     </div>
                   );
                 } else if (response.responseData) {
-                  // Show text content with CodeMirror
-                  return (
-                    <CodeMirror
-                      value={processResponseContent(response)}
-                      extensions={getResponseCodeMirrorExtensions(response)}
-                      theme={dracula}
-                      editable={false}
-                      basicSetup={{
-                        lineNumbers: true,
-                        foldGutter: true,
-                        dropCursor: false,
-                        allowMultipleSelections: false,
-                        indentOnInput: false,
-                        bracketMatching: true,
-                        closeBrackets: false,
-                        autocompletion: false,
-                        rectangularSelection: false,
-                        searchKeymap: false,
-                        highlightSelectionMatches: false
-                      }}
-                      style={{
-                        border: '1px solid #44475a',
-                        borderRadius: '0.375rem',
-                        fontSize: '12px',
-                        fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
-                      }}
-                    />
-                  );
+                  // Check if content type is HTML
+                  if (isHtmlContentType(contentType)) {
+                    // Show HTML preview with tabs
+                    return (
+                      <div>
+                        <HtmlTabs
+                          activeTab={activeHtmlTab}
+                          onTabChange={setActiveHtmlTab}
+                        />
+                        {activeHtmlTab === 'preview' ? (
+                          <HtmlPreview response={response} />
+                        ) : (
+                          <CodeMirror
+                            value={processResponseContent(response)}
+                            extensions={getResponseCodeMirrorExtensions(response)}
+                            theme={dracula}
+                            editable={false}
+                            basicSetup={{
+                              lineNumbers: true,
+                              foldGutter: true,
+                              dropCursor: false,
+                              allowMultipleSelections: false,
+                              indentOnInput: false,
+                              bracketMatching: true,
+                              closeBrackets: false,
+                              autocompletion: false,
+                              rectangularSelection: false,
+                              searchKeymap: false,
+                              highlightSelectionMatches: false
+                            }}
+                            style={{
+                              border: '1px solid #44475a',
+                              borderRadius: '0.375rem',
+                              fontSize: '12px',
+                              fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+                            }}
+                          />
+                        )}
+                      </div>
+                    );
+                  } else {
+                    // Show text content with CodeMirror (existing behavior)
+                    return (
+                      <CodeMirror
+                        value={processResponseContent(response)}
+                        extensions={getResponseCodeMirrorExtensions(response)}
+                        theme={dracula}
+                        editable={false}
+                        basicSetup={{
+                          lineNumbers: true,
+                          foldGutter: true,
+                          dropCursor: false,
+                          allowMultipleSelections: false,
+                          indentOnInput: false,
+                          bracketMatching: true,
+                          closeBrackets: false,
+                          autocompletion: false,
+                          rectangularSelection: false,
+                          searchKeymap: false,
+                          highlightSelectionMatches: false
+                        }}
+                        style={{
+                          border: '1px solid #44475a',
+                          borderRadius: '0.375rem',
+                          fontSize: '12px',
+                          fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+                        }}
+                      />
+                    );
+                  }
                 }
 
                 return null;
