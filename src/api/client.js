@@ -683,10 +683,10 @@ export class SlingshotApiClient {
 
   /**
    * Checks if encryption key is required for environment secrets
-   * @returns {boolean} True if encryption key is needed
+   * @returns {Promise<boolean>} True if encryption key is needed
    */
-  requiresEncryptionKey() {
-    return !hasSessionKey();
+  async requiresEncryptionKey() {
+    return !(await hasSessionKey());
   }
 
   /**

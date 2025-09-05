@@ -57,7 +57,7 @@ export function SideBar({ onClose: _onClose }) {
 
   const loadEnvironments = async () => {
     // Only load environments if encryption key is available
-    if (!hasSessionKey()) {
+    if (!(await hasSessionKey())) {
       setEnvironments([]);
       return;
     }

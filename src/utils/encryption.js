@@ -1,7 +1,10 @@
 /**
  * @fileoverview Encryption utilities for RequestBite Slingshot
  * Provides WebCrypto-based encryption/decryption for environment secrets
+ * Supports SharedWorker for cross-tab key sharing with sessionStorage fallback
  */
+
+import { encryptionWorkerManager } from './encryptionWorkerManager.js';
 
 const SESSION_KEY_NAME = 'requestbite_encryption_key';
 const ENCRYPTION_ALGORITHM = 'AES-GCM';
@@ -139,14 +142,30 @@ export async function importKeyFromBase64(base64Key) {
 }
 
 /**
- * Stores the encryption key in session storage
+ * Stores the encryption key (sessionStorage first, then sync to SharedWorker)
  * @param {CryptoKey} key - Key to store
  * @returns {Promise<void>}
  */
 export async function storeSessionKey(key) {
   try {
     const base64Key = await exportKeyToBase64(key);
+    
+    // Always store in sessionStorage first (source of truth)
     sessionStorage.setItem(SESSION_KEY_NAME, base64Key);
+    console.log('[Encryption] Key stored in sessionStorage');
+    
+    // Try to sync to SharedWorker if available
+    if (encryptionWorkerManager.getSupported() && encryptionWorkerManager.getInitialized()) {
+      try {
+        const success = await encryptionWorkerManager.storeKey(base64Key);
+        if (success) {
+          console.log('[Encryption] Key synced to SharedWorker');
+        }
+      } catch (error) {
+        console.warn('[Encryption] Failed to sync key to SharedWorker:', error.message);
+        // Don't throw, sessionStorage storage was successful
+      }
+    }
   } catch (error) {
     console.error('Failed to store session key:', error);
     throw new Error('Failed to store encryption key');
@@ -154,37 +173,106 @@ export async function storeSessionKey(key) {
 }
 
 /**
- * Retrieves the encryption key from session storage
+ * Retrieves the encryption key (SharedWorker first, sessionStorage fallback)
  * @returns {Promise<CryptoKey|null>} Stored key or null if not found
  */
 export async function getSessionKey() {
   try {
-    const base64Key = sessionStorage.getItem(SESSION_KEY_NAME);
+    let base64Key = null;
+    
+    // Try SharedWorker first, but only if it's supported and initialized
+    if (encryptionWorkerManager.getSupported() && encryptionWorkerManager.getInitialized()) {
+      try {
+        base64Key = await encryptionWorkerManager.retrieveKey();
+        if (base64Key) {
+          console.log('[Encryption] Key retrieved from SharedWorker');
+          return await importKeyFromBase64(base64Key);
+        }
+      } catch (error) {
+        console.warn('[Encryption] Failed to retrieve key from SharedWorker, falling back to sessionStorage:', error.message);
+      }
+    }
+    
+    // Always check sessionStorage as fallback
+    base64Key = sessionStorage.getItem(SESSION_KEY_NAME);
     if (!base64Key) {
+      console.log('[Encryption] No key found in sessionStorage');
       return null;
     }
+    
+    console.log('[Encryption] Key retrieved from sessionStorage');
+    
+    // If we have a key in sessionStorage but SharedWorker is available, sync it
+    if (encryptionWorkerManager.getSupported() && encryptionWorkerManager.getInitialized()) {
+      try {
+        const hasWorkerKey = await encryptionWorkerManager.hasKey();
+        if (!hasWorkerKey) {
+          console.log('[Encryption] Syncing sessionStorage key to SharedWorker');
+          await encryptionWorkerManager.storeKey(base64Key);
+        }
+      } catch (error) {
+        console.warn('[Encryption] Failed to sync key to SharedWorker:', error.message);
+      }
+    }
+    
     return await importKeyFromBase64(base64Key);
   } catch (error) {
     console.error('Failed to retrieve session key:', error);
     // Clear invalid key
-    clearSessionKey();
+    await clearSessionKey();
     return null;
   }
 }
 
 /**
- * Clears the encryption key from session storage
+ * Clears the encryption key (SharedWorker and sessionStorage)
  */
-export function clearSessionKey() {
+export async function clearSessionKey() {
+  // Clear from SharedWorker if available
+  if (encryptionWorkerManager.getSupported() && encryptionWorkerManager.getInitialized()) {
+    try {
+      await encryptionWorkerManager.clearKey();
+      console.log('[Encryption] Key cleared from SharedWorker');
+    } catch (error) {
+      console.error('Failed to clear key from SharedWorker:', error);
+    }
+  }
+  
+  // Always clear from sessionStorage
   sessionStorage.removeItem(SESSION_KEY_NAME);
+  console.log('[Encryption] Key cleared from sessionStorage');
 }
 
 /**
- * Checks if an encryption key exists in session storage
- * @returns {boolean} True if key exists
+ * Checks if an encryption key exists (sessionStorage first, then SharedWorker)
+ * @returns {Promise<boolean>} True if key exists
  */
-export function hasSessionKey() {
-  return sessionStorage.getItem(SESSION_KEY_NAME) !== null;
+export async function hasSessionKey() {
+  // Check sessionStorage first (most reliable)
+  const hasSessionStorageKey = sessionStorage.getItem(SESSION_KEY_NAME) !== null;
+  if (hasSessionStorageKey) {
+    return true;
+  }
+  
+  // Check SharedWorker as backup
+  if (encryptionWorkerManager.getSupported() && encryptionWorkerManager.getInitialized()) {
+    try {
+      const hasWorkerKey = await encryptionWorkerManager.hasKey();
+      if (hasWorkerKey) {
+        console.log('[Encryption] Key found in SharedWorker but not sessionStorage, syncing back');
+        // If worker has key but sessionStorage doesn't, sync it back
+        const workerKey = await encryptionWorkerManager.retrieveKey();
+        if (workerKey) {
+          sessionStorage.setItem(SESSION_KEY_NAME, workerKey);
+          return true;
+        }
+      }
+    } catch (error) {
+      console.warn('[Encryption] Failed to check key in SharedWorker:', error.message);
+    }
+  }
+  
+  return false;
 }
 
 /**

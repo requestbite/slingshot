@@ -19,6 +19,7 @@ import { ClearEnvironmentsModal } from './components/modals/ClearEnvironmentsMod
 import { apiClient } from './api';
 import { hasSessionKey } from './utils/encryption';
 import { generateUUID } from './utils/uuid.js';
+import { encryptionWorkerManager } from './utils/encryptionWorkerManager.js';
 
 export function App() {
   const [urlImportModal, setUrlImportModal] = useState({
@@ -41,10 +42,42 @@ export function App() {
 
   const checkEnvironmentsAndInitialize = async () => {
     try {
+      // Initialize SharedWorker for cross-tab encryption key sharing
+      try {
+        // Set a shorter timeout for initialization to avoid blocking app startup
+        const initPromise = encryptionWorkerManager.initialize();
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Worker initialization timeout')), 2000);
+        });
+        
+        const workerInitialized = await Promise.race([initPromise, timeoutPromise]);
+        
+        if (workerInitialized) {
+          console.log('[App] SharedWorker initialized for cross-tab encryption key sharing');
+          
+          // Listen for key events from other tabs
+          encryptionWorkerManager.addEventListener('KEY_STORED', () => {
+            console.log('[App] Encryption key shared from another tab');
+          });
+          
+          encryptionWorkerManager.addEventListener('KEY_CLEARED', () => {
+            console.log('[App] Encryption key cleared from another tab');
+          });
+          
+          encryptionWorkerManager.addEventListener('INACTIVITY_TIMEOUT', () => {
+            console.log('[App] Encryption key cleared due to inactivity');
+          });
+        } else {
+          console.log('[App] SharedWorker not available, falling back to sessionStorage');
+        }
+      } catch (error) {
+        console.warn('[App] SharedWorker initialization failed, continuing with sessionStorage fallback:', error.message);
+      }
+
       // Check if we have environments
       const environments = await apiClient.getAllEnvironments();
 
-      if (environments.length > 0 && !hasSessionKey()) {
+      if (environments.length > 0 && !(await hasSessionKey())) {
         // Count total secrets across all environments
         let totalSecrets = 0;
         for (const environment of environments) {

@@ -152,7 +152,7 @@ export function EnvironmentUpdatePage() {
       } catch (error) {
         console.error('Failed to load secrets (encryption key needed):', error);
         // Show encryption key modal if needed
-        if (apiClient.requiresEncryptionKey()) {
+        if (await apiClient.requiresEncryptionKey()) {
           setEncryptionKeyModal(true);
         } else {
           setToastMessage('Failed to decrypt environment secrets');
@@ -219,8 +219,8 @@ export function EnvironmentUpdatePage() {
     }
   };
 
-  const requireEncryptionKey = () => {
-    if (apiClient.requiresEncryptionKey()) {
+  const requireEncryptionKey = async () => {
+    if (await apiClient.requiresEncryptionKey()) {
       setEncryptionKeyModal(true);
       return true;
     }
@@ -245,7 +245,7 @@ export function EnvironmentUpdatePage() {
       });
 
       // Process secret changes - collect all current secrets
-      if (requireEncryptionKey()) return;
+      if (await requireEncryptionKey()) return;
 
       const currentSecrets = pendingSecrets
         .filter(secret => secret._status !== 'deleted')
@@ -408,7 +408,7 @@ export function EnvironmentUpdatePage() {
   const handleSecretsSave = async (e) => {
     e.preventDefault();
 
-    if (requireEncryptionKey()) return;
+    if (await requireEncryptionKey()) return;
 
     try {
       const currentSecrets = pendingSecrets
@@ -470,7 +470,7 @@ export function EnvironmentUpdatePage() {
       });
 
       // Process secret changes - collect all current secrets
-      if (requireEncryptionKey()) return false;
+      if (await requireEncryptionKey()) return false;
 
       const currentSecrets = pendingSecrets
         .filter(secret => secret._status !== 'deleted')

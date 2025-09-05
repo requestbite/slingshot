@@ -48,6 +48,7 @@ export function EnvironmentsPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasEncryptionKey, setHasEncryptionKey] = useState(false);
   const [error, setError] = useState(null);
   const passwordInputRef = useRef();
 
@@ -213,6 +214,9 @@ export function EnvironmentsPage() {
       // Store encrypted reference for password verification
       await storeEncryptedReference(password, salt);
 
+      // Update state to reflect that we now have an encryption key
+      setHasEncryptionKey(true);
+
       setToastMessage('Encryption key setup successfully');
       showToast();
 
@@ -227,17 +231,26 @@ export function EnvironmentsPage() {
     }
   };
 
+  // Check for encryption key availability
+  useEffect(() => {
+    const checkEncryptionKey = async () => {
+      const keyAvailable = await hasSessionKey();
+      setHasEncryptionKey(keyAvailable);
+    };
+    checkEncryptionKey();
+  }, []);
+
   // Auto-focus on password input when no encryption key is available
   useEffect(() => {
-    if (!isLoading && !hasSessionKey() && passwordInputRef.current) {
+    if (!isLoading && !hasEncryptionKey && passwordInputRef.current) {
       setTimeout(() => {
         passwordInputRef.current.focus();
       }, 100);
     }
-  }, [isLoading]);
+  }, [isLoading, hasEncryptionKey]);
 
   // Show encryption key setup form if no session key exists
-  if (!isLoading && !hasSessionKey()) {
+  if (!isLoading && !hasEncryptionKey) {
     return (
       <div class="h-full bg-gray-100 overflow-y-auto">
         <div class="min-h-full pt-[83px] pb-6 flex items-center justify-center">

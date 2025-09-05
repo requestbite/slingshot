@@ -18,4 +18,15 @@ export default defineConfig({
 			}
 		}
 	],
+	worker: {
+		format: 'es'
+	},
+	build: {
+		rollupOptions: {
+			// Ensure SharedWorker is treated as a separate chunk
+			input: {
+				main: 'index.html',
+			}
+		}
+	}
 });
