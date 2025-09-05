@@ -137,6 +137,21 @@ export function parseCurlCommand(curlCommand) {
           }
           break;
 
+        case '--url':
+          if (i + 1 < tokens.length) {
+            requestData.url = tokens[i + 1];
+            
+            // Parse query parameters from URL
+            const queryParams = parseQueryParams(tokens[i + 1]);
+            if (queryParams.length > 0) {
+              requestData.queryParams = queryParams;
+            }
+            i += 2;
+          } else {
+            throw new Error('Missing value for --url option');
+          }
+          break;
+
         case '-L':
         case '--location':
           requestData.followRedirects = true;
