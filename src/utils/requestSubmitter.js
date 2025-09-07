@@ -342,9 +342,9 @@ export class RequestSubmitter {
     pathParams?.forEach(param => {
       if (param.enabled && param.key) {
         const pattern = `:${param.key}`;
-        // Replace with value if provided, otherwise with empty string if enabled
-        const replacement = param.value || '';
-        processedUrl = processedUrl.replace(new RegExp(pattern, 'g'), encodeURIComponent(replacement));
+        // Replace with value if provided, otherwise keep the original :param pattern
+        const replacement = param.value ? encodeURIComponent(param.value) : pattern;
+        processedUrl = processedUrl.replace(new RegExp(pattern, 'g'), replacement);
       }
     });
     
