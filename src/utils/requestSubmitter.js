@@ -65,7 +65,18 @@ export class RequestSubmitter {
         proxyResponse = await this.submitJsonRequest(requestData);
       }
       
-      // Process proxy response
+      // Process proxy response (skip for passThrough mode which is already processed)
+      if (requestData.passThrough && proxyResponse.success && 'responseData' in proxyResponse) {
+        // PassThrough response is already in final format, just add timing
+        const endTime = performance.now();
+        return {
+          ...proxyResponse,
+          responseTime: this.formatResponseTime(endTime - startTime),
+          rawResponseTime: endTime - startTime,
+          receivedAt: new Date().toISOString()
+        };
+      }
+      
       return this.processProxyResponse(proxyResponse, startTime);
       
     } catch (error) {
@@ -101,6 +112,11 @@ export class RequestSubmitter {
       timeout: requestData.timeout || 30,
       followRedirects: requestData.followRedirects !== false
     };
+
+    // Add passThrough parameter if specified
+    if (requestData.passThrough) {
+      proxyRequest.passThrough = requestData.passThrough;
+    }
 
     // Add body for applicable methods
     if (!['GET', 'HEAD', 'OPTIONS'].includes(requestData.method)) {
@@ -139,6 +155,23 @@ export class RequestSubmitter {
 
     if (!response.ok) {
       throw new Error(`Proxy request failed: ${response.status} ${response.statusText}`);
+    }
+
+    // Handle passThrough mode - proxy returns raw content, not JSON
+    if (requestData.passThrough) {
+      const rawContent = await response.text();
+      const contentType = response.headers.get('content-type') || '';
+      
+      // Create a response object that mimics the normal proxy response format
+      // but with the raw content as responseData
+      return {
+        success: true,
+        responseData: rawContent,
+        responseHeaders: Object.fromEntries(response.headers.entries()),
+        rawHeaders: Object.fromEntries(response.headers.entries()),
+        responseStatus: response.status,
+        cancelled: false
+      };
     }
 
     return await response.json();

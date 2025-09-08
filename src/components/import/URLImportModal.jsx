@@ -113,32 +113,75 @@ export function URLImportModal({ isOpen, importUrl, onClose, onSuccess }) {
       // Create folders and requests
       const folderMap = new Map();
 
-      // Create folders first
-      for (const folderName of processedData.folders || []) {
-        const folder = await apiClient.createFolder({
-          name: folderName,
-          collection_id: collection.id
-        });
-        folderMap.set(folderName, folder.id);
-      }
+      if (format === 'postman') {
+        // Use hierarchical folder creation for Postman collections (same as PostmanImportModal)
+        const createFoldersRecursively = async (parentId = null) => {
+          const foldersAtLevel = processedData.folders.filter(f => f.parent_folder_id === parentId);
 
-      // Create requests
-      for (const requestData of processedData.requests || []) {
-        const folderId = requestData.folderName ? folderMap.get(requestData.folderName) : null;
+          for (const folderData of foldersAtLevel) {
+            const folder = await apiClient.createFolder({
+              name: folderData.name,
+              collection_id: collection.id,
+              parent_folder_id: folderData.parent_folder_id ? folderMap.get(folderData.parent_folder_id) : null,
+              description: folderData.description || ''
+            });
+            folderMap.set(folderData.id, folder.id);
 
-        await apiClient.createRequest({
-          collection_id: collection.id,
-          folder_id: folderId,
-          name: requestData.name,
-          method: requestData.method,
-          url: requestData.url,
-          headers: requestData.headers || [],
-          params: requestData.params || [],
-          path_params: requestData.pathParams || [],
-          request_type: requestData.requestType || 'none',
-          content_type: requestData.contentType || 'json',
-          body: requestData.body || ''
-        });
+            // Create child folders
+            await createFoldersRecursively(folderData.id);
+          }
+        };
+
+        await createFoldersRecursively();
+
+        // Create requests with folderId lookup
+        for (const requestData of processedData.requests) {
+          const folderId = requestData.folderId ? folderMap.get(requestData.folderId) : null;
+
+          await apiClient.createRequest({
+            collection_id: collection.id,
+            folder_id: folderId,
+            name: requestData.name,
+            method: requestData.method,
+            url: requestData.url,
+            headers: requestData.headers || [],
+            params: requestData.params || [],
+            path_params: requestData.pathParams || [],
+            request_type: requestData.requestType || 'none',
+            content_type: requestData.contentType || 'json',
+            body: requestData.body || '',
+            form_data: requestData.formData || [],
+            url_encoded_data: requestData.urlEncodedData || []
+          });
+        }
+      } else {
+        // Use simple folder creation for OpenAPI specs (same as OpenAPIImportModal)
+        for (const folderName of processedData.folders) {
+          const folder = await apiClient.createFolder({
+            name: folderName,
+            collection_id: collection.id
+          });
+          folderMap.set(folderName, folder.id);
+        }
+
+        // Create requests with folderName lookup
+        for (const requestData of processedData.requests) {
+          const folderId = requestData.folderName ? folderMap.get(requestData.folderName) : null;
+
+          await apiClient.createRequest({
+            collection_id: collection.id,
+            folder_id: folderId,
+            name: requestData.name,
+            method: requestData.method,
+            url: requestData.url,
+            headers: requestData.headers || [],
+            params: requestData.params || [],
+            path_params: requestData.pathParams || [],
+            request_type: requestData.requestType || 'none',
+            content_type: requestData.contentType || 'json',
+            body: requestData.body || ''
+          });
+        }
       }
 
       // Success - add to context, navigate to collection, and notify parent

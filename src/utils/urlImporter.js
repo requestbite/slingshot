@@ -1,10 +1,12 @@
 /**
  * @fileoverview URL-based import utility
- * Fetches and processes API specifications or collections from URLs
+ * Fetches and processes API specifications or collections from URLs via proxy
  */
 
+import { requestSubmitter } from './requestSubmitter.js';
+
 /**
- * Fetches content from a URL with error handling
+ * Fetches content from a URL with error handling using the proxy server
  * @param {string} url - URL to fetch from
  * @returns {Promise<{content: string, contentType: string}>} Fetched content and detected type
  */
@@ -17,25 +19,50 @@ export async function fetchFromURL(url) {
   }
 
   try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json, application/x-yaml, text/yaml, text/plain, */*'
-      }
-    });
+    // Update proxy URL to respect current settings
+    requestSubmitter.updateProxyUrl(requestSubmitter.getCurrentProxyUrl());
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error('File not found at the specified URL');
-      } else if (response.status === 403) {
-        throw new Error('Access denied to the specified URL');
+    // Create proxy request with passThrough mode to get raw content
+    const proxyRequest = {
+      method: 'GET',
+      url: url,
+      headers: [
+        'Accept: application/json, application/x-yaml, text/yaml, text/plain, */*'
+      ],
+      timeout: 60, // 60 seconds timeout for import operations
+      followRedirects: true,
+      passThrough: true // This makes the proxy return raw content instead of JSON wrapper
+    };
+
+    const response = await requestSubmitter.submitRequest(proxyRequest);
+
+    // Debug logging - temporary
+    console.log('URLImporter: Raw response from proxy:', response);
+    console.log('URLImporter: response.responseData length:', response.responseData?.length);
+    console.log('URLImporter: response.responseData preview:', response.responseData?.substring(0, 100));
+
+    // Handle proxy errors
+    if (!response.success) {
+      if (response.errorType === 'timeout') {
+        throw new Error('Request timed out. The URL may be slow to respond.');
+      } else if (response.errorType === 'connection_error') {
+        throw new Error('Unable to connect to the URL. Please check the URL and try again.');
+      } else if (response.errorType === 'url_validation_error') {
+        throw new Error('Invalid URL format');
+      } else if (response.cancelled) {
+        throw new Error('Request was cancelled');
       } else {
-        throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+        // For other errors, use the error message from proxy or provide generic message
+        throw new Error(response.errorMessage || 'Failed to fetch content from URL');
       }
     }
 
+    // In passThrough mode, the response is the raw content, not JSON
+    // The content should be available as responseData
+    const content = response.responseData || '';
+    const contentType = response.rawHeaders?.['content-type'] || '';
+
     // Check content type to detect binary files
-    const contentType = response.headers.get('content-type') || '';
     if (contentType.includes('application/octet-stream') || 
         contentType.includes('application/pdf') ||
         contentType.includes('image/') ||
@@ -43,8 +70,6 @@ export async function fetchFromURL(url) {
         contentType.includes('audio/')) {
       throw new Error('Binary files are not supported');
     }
-
-    const content = await response.text();
 
     // Check if content is empty
     if (!content.trim()) {
@@ -63,11 +88,19 @@ export async function fetchFromURL(url) {
     };
 
   } catch (error) {
-    if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      // This usually indicates CORS or network issues
-      throw new Error('Unable to access the URL. This may be due to CORS restrictions or network issues.');
+    // If it's already one of our custom errors, re-throw as is
+    if (error.message.includes('Binary files are not supported') ||
+        error.message.includes('file appears to be empty') ||
+        error.message.includes('File size must be less than') ||
+        error.message.includes('Request timed out') ||
+        error.message.includes('Unable to connect') ||
+        error.message.includes('Invalid URL format') ||
+        error.message.includes('Request was cancelled')) {
+      throw error;
     }
-    throw error;
+
+    // For unexpected errors, provide a generic message
+    throw new Error('Unable to fetch content from URL. Please check the URL and try again.');
   }
 }
 
