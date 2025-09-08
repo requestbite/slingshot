@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
 import { apiClient } from '../../api';
-import { Portal } from '../common/Portal';
 
 export function DeleteFolderModal({ isOpen, onClose, folder, onDelete }) {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -19,7 +18,7 @@ export function DeleteFolderModal({ isOpen, onClose, folder, onDelete }) {
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
       document.body.style.paddingRight = `${scrollbarWidth}px`;
-      
+
       document.addEventListener('keydown', handleEscape);
       return () => {
         document.removeEventListener('keydown', handleEscape);
@@ -32,17 +31,17 @@ export function DeleteFolderModal({ isOpen, onClose, folder, onDelete }) {
 
   const handleDelete = async () => {
     if (!folder) return;
-    
+
     setIsDeleting(true);
     setError(null);
-    
+
     try {
       await apiClient.deleteFolder(folder.id);
-      
+
       if (onDelete) {
         onDelete(folder);
       }
-      
+
       onClose();
     } catch (error) {
       console.error('Failed to delete folder:', error);
@@ -59,22 +58,21 @@ export function DeleteFolderModal({ isOpen, onClose, folder, onDelete }) {
     }
   };
 
-  if (!isOpen || !folder) return null;
+  if (!isOpen) return null;
 
   return (
-    <Portal>
-      <div class="relative z-[80]" role="dialog" aria-modal="true" style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 9999,
-        WebkitBackfaceVisibility: 'hidden',
-        backfaceVisibility: 'hidden',
-        WebkitTransform: 'translate3d(0,0,0)',
-        transform: 'translate3d(0,0,0)'
-      }}>
+    <div class="relative z-[80]" role="dialog" aria-modal="true" style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 9999,
+      WebkitBackfaceVisibility: 'hidden',
+      backfaceVisibility: 'hidden',
+      WebkitTransform: 'translate3d(0,0,0)',
+      transform: 'translate3d(0,0,0)'
+    }}>
       <div class="fixed inset-0 bg-gray-500/75 transition-opacity" aria-hidden="true" style={{
         position: 'fixed',
         top: 0,
@@ -93,7 +91,7 @@ export function DeleteFolderModal({ isOpen, onClose, folder, onDelete }) {
         WebkitOverflowScrolling: 'touch'
       }}>
         <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
-          <div 
+          <div
             class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
@@ -110,7 +108,7 @@ export function DeleteFolderModal({ isOpen, onClose, folder, onDelete }) {
                 </svg>
               </button>
             </div>
-            
+
             <form onSubmit={(e) => { e.preventDefault(); handleDelete(); }}>
               <div class="sm:flex sm:items-start">
                 <div class="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:size-10">
@@ -120,7 +118,7 @@ export function DeleteFolderModal({ isOpen, onClose, folder, onDelete }) {
                 </div>
                 <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
                   <h3 class="text-base font-semibold text-gray-900">
-                    Delete folder: {folder.name}
+                    Delete folder: {folder?.name || 'Unknown'}
                   </h3>
                   <div class="mt-2">
                     <p class="text-sm text-gray-500">This will delete the folder, including any requests and subfolders. Do you wish to continue?</p>
@@ -163,7 +161,6 @@ export function DeleteFolderModal({ isOpen, onClose, folder, onDelete }) {
           </div>
         </div>
       </div>
-      </div>
-    </Portal>
+    </div>
   );
 }
