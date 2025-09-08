@@ -28,7 +28,12 @@ export function WelcomeMessage() {
       </div>
       <div class="w-px h-4 bg-gray-300"></div>
       <div class="bg-gray-50 px-2 py-1 text-gray-500 text-sm rounded-md border border-gray-200">
-        <a href="?import=https://docs.requestbite.com/assets/curl-apps.json" class="text-gray-400 underline">Import</a> some fun HTTP requests to explore.
+        <button 
+          onClick={() => window.openUrlImportModal?.('https://docs.requestbite.com/assets/curl-apps.json')} 
+          class="text-gray-400 underline bg-transparent border-none p-0 cursor-pointer hover:text-gray-500"
+        >
+          Import
+        </button> some fun HTTP requests to explore.
       </div>
       <div class="mt-4 flex items-center justify-center w-8 h-8 mx-auto text-white bg-gradient-to-b from-orange-300 to-orange-400 hover:from-orange-400 hover:to-orange-500 font-bold rounded-full outline-1 outline-orange-300 border-2">
         3

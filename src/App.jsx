@@ -187,6 +187,21 @@ export function App() {
     handleCloseUrlImport();
   };
 
+  const handleOpenUrlImport = (importUrl = '') => {
+    setUrlImportModal({
+      isOpen: true,
+      importUrl
+    });
+  };
+
+  // Make the import function globally available for the welcome message
+  useEffect(() => {
+    window.openUrlImportModal = handleOpenUrlImport;
+    return () => {
+      delete window.openUrlImportModal;
+    };
+  }, []);
+
   const handleEncryptionKeySuccess = () => {
     setEncryptionKeyModal({
       isOpen: false,
