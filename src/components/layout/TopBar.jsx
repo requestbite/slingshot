@@ -127,8 +127,12 @@ export function TopBar() {
     <header class="h-[65px] bg-white/75 backdrop-blur-lg border-b border-gray-300 fixed top-0 left-0 w-full z-10 text-sm">
       <div class="flex items-center justify-between h-full px-4">
         {/* Logo */}
-        <button
-          onClick={() => setLocation(getLastSlingshotUrl())}
+        <a
+          href="/"
+          onClick={(e) => {
+            e.preventDefault();
+            setLocation('/');
+          }}
           class="flex items-center hover:opacity-80 transition-opacity hover:cursor-pointer"
         >
           <img
@@ -136,7 +140,7 @@ export function TopBar() {
             alt="RequestBite"
             class="h-8 w-auto"
           />
-        </button>
+        </a>
 
         {/* Desktop Navigation */}
         <nav class="hidden sm:flex items-center space-x-1">
