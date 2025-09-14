@@ -1,8 +1,8 @@
 export function WelcomeMessage() {
   return (
     <div class="text-center py-8 flex flex-col items-center justify-center">
-      <div class="mx-auto w-36 mb-4">
-        <img src="/images/rabbit-slinging-v1.webp" alt="Slingshot Rabbit" class="w-full h-auto" />
+      <div class="mx-auto w-32 mb-4">
+        <img src="/images/rabbit-icon.webp" alt="Slingshot Rabbit" class="w-full h-auto" />
       </div>
 
       <p class="text-xl font-semibold text-gray-700 mb-1">Slingshot</p>
@@ -28,8 +28,8 @@ export function WelcomeMessage() {
       </div>
       <div class="w-px h-4 bg-gray-300"></div>
       <div class="bg-gray-50 px-2 py-1 text-gray-500 text-sm rounded-md border border-gray-200">
-        <button 
-          onClick={() => window.openUrlImportModal?.('https://docs.requestbite.com/assets/curl-apps.json')} 
+        <button
+          onClick={() => window.openUrlImportModal?.('https://docs.requestbite.com/assets/curl-apps.json')}
           class="text-gray-400 underline bg-transparent border-none p-0 cursor-pointer hover:text-gray-500"
         >
           Import
