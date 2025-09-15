@@ -4,3 +4,25 @@
 body {
   font-family: 'Inter', system-ui, sans-serif;
 }
+
+/* Custom class for docs sidebar visibility at exact 1450px breakpoint */
+.docs-sidebar-responsive {
+  display: none;
+}
+
+@media (min-width: 1450px) {
+  .docs-sidebar-responsive {
+    display: block;
+  }
+}
+
+/* Custom class for docs sidebar toggle button visibility */
+.docs-toggle-responsive {
+  display: block;
+}
+
+@media (min-width: 1450px) {
+  .docs-toggle-responsive {
+    display: none;
+  }
+}
