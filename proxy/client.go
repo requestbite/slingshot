@@ -4,8 +4,10 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -115,6 +117,139 @@ func (c *HTTPClient) ExecuteRequest(ctx context.Context, req *ProxyRequest) (*Pr
 
 	// Process response
 	return c.processResponse(resp, body, metrics, req.PassThrough), nil
+}
+
+// ExecuteStreamingRequest handles streaming SSE requests
+// Returns a channel for receiving the initial metadata response and an error channel
+func (c *HTTPClient) ExecuteStreamingRequest(ctx context.Context, req *ProxyRequest, responseWriter http.ResponseWriter) error {
+	metrics := &RequestMetrics{
+		StartTime: time.Now(),
+	}
+
+	// Validate URL
+	if err := c.validateURL(req.URL); err != nil {
+		errorResp := c.createStreamingErrorResponse(URLValidationError, err.Error(), metrics)
+		return c.writeStreamingErrorResponse(responseWriter, errorResp)
+	}
+
+	// Parse headers
+	headers := c.parseHeaders(req.Headers)
+
+	// Create HTTP request
+	httpReq, err := http.NewRequestWithContext(ctx, req.Method, req.URL, strings.NewReader(req.Body))
+	if err != nil {
+		errorResp := c.createStreamingErrorResponse(URLValidationError, fmt.Sprintf("Failed to create request: %v", err), metrics)
+		return c.writeStreamingErrorResponse(responseWriter, errorResp)
+	}
+
+	// Set headers
+	for key, value := range headers {
+		httpReq.Header.Set(key, value)
+	}
+
+	// Set default User-Agent if not provided
+	if httpReq.Header.Get("User-Agent") == "" {
+		httpReq.Header.Set("User-Agent", fmt.Sprintf("rb-slingshot/%s (https://requestbite.com/slingshot)", Version))
+	}
+
+	// Set Content-Length for POST/PUT/PATCH requests with body
+	if req.Body != "" && (req.Method == "POST" || req.Method == "PUT" || req.Method == "PATCH") {
+		httpReq.Header.Set("Content-Length", fmt.Sprintf("%d", len(req.Body)))
+	}
+
+	// Handle redirects based on followRedirects setting
+	followRedirects := true // default
+	if req.FollowRedirects != nil {
+		followRedirects = *req.FollowRedirects
+	}
+
+	// Execute request with potential redirect handling
+	resp, err := c.executeWithRedirects(ctx, httpReq, followRedirects, metrics)
+	if err != nil {
+		var errorResp *StreamingResponse
+		if ctx.Err() == context.DeadlineExceeded {
+			errorResp = c.createStreamingErrorResponse(TimeoutError, "The server took too long to respond.", metrics)
+		} else if strings.Contains(err.Error(), "redirect") && !followRedirects {
+			errorResp = c.createStreamingErrorResponse(RedirectNotFollowedError, "Server attempted to redirect but followRedirects is disabled.", metrics)
+		} else {
+			errorResp = c.createStreamingErrorResponse(ConnectionError, fmt.Sprintf("Failed to connect to server: %v", err), metrics)
+		}
+		return c.writeStreamingErrorResponse(responseWriter, errorResp)
+	}
+
+	defer resp.Body.Close()
+
+	// Check for redirects when follow_redirects is false
+	if !followRedirects && resp.StatusCode >= 300 && resp.StatusCode < 400 {
+		errorResp := c.createStreamingErrorResponse(RedirectNotFollowedError,
+			fmt.Sprintf("Server returned %d redirect but following redirects is disabled. Please check your settings.", resp.StatusCode),
+			metrics)
+		return c.writeStreamingErrorResponse(responseWriter, errorResp)
+	}
+
+	// Check if this is actually an SSE response
+	if !c.isSSEResponse(resp) {
+		log.Printf("[SSE-DEBUG] Not an SSE response, falling back to standard processing")
+		// If it's not SSE, fall back to regular processing
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			errorResp := c.createStreamingErrorResponse(ConnectionError, fmt.Sprintf("Failed to read response: %v", err), metrics)
+			return c.writeStreamingErrorResponse(responseWriter, errorResp)
+		}
+		metrics.ResponseSize = int64(len(body))
+
+		// Write the standard response instead of streaming
+		standardResp := c.processResponse(resp, body, metrics, false)
+		responseWriter.Header().Set("Content-Type", "application/json")
+		return json.NewEncoder(responseWriter).Encode(standardResp)
+	}
+
+	log.Printf("[SSE-DEBUG] Confirmed SSE response, starting streaming")
+
+	// This is an SSE response - prepare for streaming
+	streamingResp := c.createStreamingResponse(resp)
+
+	// Set response headers for streaming (mixed content: JSON metadata + SSE data)
+	responseWriter.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	responseWriter.Header().Set("Transfer-Encoding", "chunked")
+	responseWriter.Header().Set("Cache-Control", "no-cache")
+	responseWriter.Header().Set("Connection", "keep-alive")
+
+	// Serialize metadata to JSON (single line, no newlines)
+	metadataBytes, err := json.Marshal(streamingResp)
+	if err != nil {
+		return fmt.Errorf("failed to serialize streaming metadata: %v", err)
+	}
+
+	log.Printf("[SSE-DEBUG] Writing metadata: %s", string(metadataBytes))
+
+	// Write metadata as first line
+	if _, err := responseWriter.Write(metadataBytes); err != nil {
+		return fmt.Errorf("failed to write streaming metadata: %v", err)
+	}
+
+	// Write separator newline
+	if _, err := responseWriter.Write([]byte("\n")); err != nil {
+		return fmt.Errorf("failed to write metadata separator: %v", err)
+	}
+
+	// Flush the metadata + separator immediately
+	if flusher, ok := responseWriter.(http.Flusher); ok {
+		flusher.Flush()
+		log.Printf("[SSE-DEBUG] Flushed metadata to client")
+	}
+
+	log.Printf("[SSE-DEBUG] Starting SSE data stream")
+
+	// Now stream the SSE data directly from the source
+	_, err = io.Copy(responseWriter, resp.Body)
+	if err != nil {
+		log.Printf("[SSE-DEBUG] Error during SSE streaming: %v", err)
+		return fmt.Errorf("failed to stream response: %v", err)
+	}
+
+	log.Printf("[SSE-DEBUG] SSE streaming completed")
+	return nil
 }
 
 // executeWithRedirects handles the request execution with manual redirect control
@@ -241,6 +376,42 @@ func (c *HTTPClient) isBinaryContent(contentType string) bool {
 	return false
 }
 
+// isSSEResponse determines if the response is a Server-Sent Events stream
+// SSE streams should have Content-Type: text/event-stream and typically Transfer-Encoding: chunked
+func (c *HTTPClient) isSSEResponse(resp *http.Response) bool {
+	// Debug: Log all response headers
+	log.Printf("[SSE-DEBUG] Response status: %d", resp.StatusCode)
+	log.Printf("[SSE-DEBUG] Response headers:")
+	for key, values := range resp.Header {
+		log.Printf("[SSE-DEBUG]   %s: %v", key, values)
+	}
+
+	// Check for text/event-stream content type (primary indicator)
+	contentType := strings.ToLower(resp.Header.Get("Content-Type"))
+	hasEventStream := strings.Contains(contentType, "text/event-stream")
+	log.Printf("[SSE-DEBUG] Content-Type: %s, hasEventStream: %v", contentType, hasEventStream)
+
+	if !hasEventStream {
+		log.Printf("[SSE-DEBUG] Not SSE - no text/event-stream content type")
+		return false
+	}
+
+	// Check for streaming indicators
+	transferEncoding := strings.ToLower(resp.Header.Get("Transfer-Encoding"))
+	hasChunked := strings.Contains(transferEncoding, "chunked")
+	log.Printf("[SSE-DEBUG] Transfer-Encoding: %s, hasChunked: %v", transferEncoding, hasChunked)
+
+	contentLength := resp.Header.Get("Content-Length")
+	noContentLength := contentLength == ""
+	log.Printf("[SSE-DEBUG] Content-Length: %s, noContentLength: %v", contentLength, noContentLength)
+
+	// For SSE, we expect either chunked encoding OR no content-length (indicating streaming)
+	isSSE := hasChunked || noContentLength
+	log.Printf("[SSE-DEBUG] Final SSE determination: %v (hasChunked: %v OR noContentLength: %v)", isSSE, hasChunked, noContentLength)
+
+	return isSSE
+}
+
 // createErrorResponse creates a standardized error response
 func (c *HTTPClient) createErrorResponse(errType *ProxyError, message string, metrics *RequestMetrics) *ProxyResponse {
 	metrics.EndTime = time.Now()
@@ -322,4 +493,46 @@ func (c *HTTPClient) ExecuteFormRequest(ctx context.Context, queryParams *FormPr
 	}
 
 	return c.ExecuteRequest(ctx, req)
+}
+
+// createStreamingResponse creates a StreamingResponse from HTTP response
+func (c *HTTPClient) createStreamingResponse(resp *http.Response) *StreamingResponse {
+	// Convert headers to map
+	responseHeaders := make(map[string]string)
+	for key, values := range resp.Header {
+		if len(values) > 0 {
+			responseHeaders[strings.ToLower(key)] = values[0]
+		}
+	}
+
+	contentType := resp.Header.Get("Content-Type")
+	isBinary := c.isBinaryContent(contentType)
+
+	return &StreamingResponse{
+		Success:         true,
+		ResponseStatus:  resp.StatusCode,
+		ResponseHeaders: responseHeaders,
+		ContentType:     contentType,
+		IsBinary:        isBinary,
+		Cancelled:       false,
+	}
+}
+
+// createStreamingErrorResponse creates a StreamingResponse for errors
+func (c *HTTPClient) createStreamingErrorResponse(errType *ProxyError, message string, metrics *RequestMetrics) *StreamingResponse {
+	metrics.EndTime = time.Now()
+
+	return &StreamingResponse{
+		Success:      false,
+		ErrorType:    errType.Type,
+		ErrorTitle:   errType.Title,
+		ErrorMessage: message,
+		Cancelled:    false,
+	}
+}
+
+// writeStreamingErrorResponse writes a streaming error response
+func (c *HTTPClient) writeStreamingErrorResponse(w http.ResponseWriter, resp *StreamingResponse) error {
+	w.Header().Set("Content-Type", "application/json")
+	return json.NewEncoder(w).Encode(resp)
 }

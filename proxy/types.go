@@ -15,6 +15,7 @@ type ProxyRequest struct {
 	FollowRedirects *bool             `json:"followRedirects,omitempty"`
 	PathParams      map[string]string `json:"path_params,omitempty"`
 	PassThrough     bool              `json:"passThrough,omitempty"`
+	Streaming       bool              `json:"streaming,omitempty"`
 }
 
 // FormProxyRequest represents form data request parameters
@@ -49,6 +50,22 @@ type ProxyResponse struct {
 	// Internal fields for pass-through mode
 	RawResponseBody []byte `json:"-"`
 	PassThrough     bool   `json:"-"`
+}
+
+// StreamingResponse represents the initial metadata response for streaming requests
+// This excludes response_data, response_size, and response_time which are not available during streaming
+type StreamingResponse struct {
+	Success         bool              `json:"success"`
+	ResponseStatus  int               `json:"response_status,omitempty"`
+	ResponseHeaders map[string]string `json:"response_headers,omitempty"`
+	ContentType     string            `json:"content_type,omitempty"`
+	IsBinary        bool              `json:"is_binary,omitempty"`
+	Cancelled       bool              `json:"cancelled,omitempty"`
+
+	// Error fields (when success = false)
+	ErrorType    string `json:"error_type,omitempty"`
+	ErrorTitle   string `json:"error_title,omitempty"`
+	ErrorMessage string `json:"error_message,omitempty"`
 }
 
 // ProxyError represents different types of proxy errors
