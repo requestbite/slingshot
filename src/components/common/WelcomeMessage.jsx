@@ -17,8 +17,7 @@ export function WelcomeMessage() {
         </a>
       </p>
       <div class="mt-6 flex items-center justify-center w-8 h-8 mx-auto text-white bg-gradient-to-b from-orange-300 to-orange-400 hover:from-orange-400 hover:to-orange-500 font-bold rounded-full outline-1 outline-orange-300 border-2">
-        1
-      </div>
+        1 </div>
       <div class="w-px h-4 bg-gray-300"></div>
       <div class="bg-gray-50 px-2 py-1 text-gray-500 text-sm rounded-md border border-gray-200">
         Hit Send to make a request.
