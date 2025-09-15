@@ -362,15 +362,23 @@ export function App() {
               <AuthCallback />
             </Route>
             <Route>
-              <AppLayout>
-                <Switch>
-                  <Route path="/">
-                    <HomePage sharedRequestData={sharedRequestData} />
-                  </Route>
-                  <Route path="/:collectionId" component={CollectionPage} />
-                  <Route path="/:collectionId/:requestId" component={RequestPage} />
-                </Switch>
-              </AppLayout>
+              <Switch>
+                <Route path="/:collectionId/:requestId">
+                  <AppLayout showDocsSidebar={true}>
+                    <RequestPage />
+                  </AppLayout>
+                </Route>
+                <Route>
+                  <AppLayout>
+                    <Switch>
+                      <Route path="/">
+                        <HomePage sharedRequestData={sharedRequestData} />
+                      </Route>
+                      <Route path="/:collectionId" component={CollectionPage} />
+                    </Switch>
+                  </AppLayout>
+                </Route>
+              </Switch>
             </Route>
           </Switch>
         </Suspense>
