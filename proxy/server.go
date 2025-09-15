@@ -171,8 +171,13 @@ func (s *ProxyServer) handleJSONRequest(w http.ResponseWriter, r *http.Request) 
 		// Execute the streaming request
 		if err := s.httpClient.ExecuteStreamingRequest(ctx, &req, w); err != nil {
 			s.logger.Printf("Streaming request failed: %v", err)
-			// If streaming fails, try to write an error response if headers haven't been sent
-			s.writeErrorResponse(w, "unknown_error", "Streaming Request Failed", err.Error())
+			// Check for specific error types
+			if strings.Contains(err.Error(), "streaming timeout") {
+				s.writeErrorResponse(w, StreamingTimeoutError.Type, StreamingTimeoutError.Title, err.Error())
+			} else {
+				// If streaming fails, try to write an error response if headers haven't been sent
+				s.writeErrorResponse(w, "unknown_error", "Streaming Request Failed", err.Error())
+			}
 		}
 		return
 	}

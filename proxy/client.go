@@ -196,6 +196,9 @@ func (c *HTTPClient) ExecuteStreamingRequest(ctx context.Context, req *ProxyRequ
 			errorResp := c.createStreamingErrorResponse(ConnectionError, fmt.Sprintf("Failed to read response: %v", err), metrics)
 			return c.writeStreamingErrorResponse(responseWriter, errorResp)
 		}
+
+		// Complete the metrics timing
+		metrics.EndTime = time.Now()
 		metrics.ResponseSize = int64(len(body))
 
 		// Write the standard response instead of streaming
@@ -244,6 +247,10 @@ func (c *HTTPClient) ExecuteStreamingRequest(ctx context.Context, req *ProxyRequ
 	// Stream the SSE data with immediate flushing (no buffering)
 	if err := c.streamResponseWithFlush(responseWriter, resp.Body); err != nil {
 		log.Printf("[SSE-DEBUG] Error during SSE streaming: %v", err)
+		// Check if this is a timeout error and provide specific error message
+		if strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "context canceled") {
+			return fmt.Errorf("streaming timeout: %v", err)
+		}
 		return fmt.Errorf("failed to stream response: %v", err)
 	}
 

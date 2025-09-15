@@ -101,6 +101,10 @@ var (
 		Type:  "loop_detected",
 		Title: "Loop Detected",
 	}
+	StreamingTimeoutError = &ProxyError{
+		Type:  "request_timeout",
+		Title: "Streaming Request Timeout",
+	}
 )
 
 // RequestMetrics holds timing and size information
