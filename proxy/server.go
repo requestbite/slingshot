@@ -375,6 +375,13 @@ func (w *responseWriter) WriteHeader(statusCode int) {
 	w.ResponseWriter.WriteHeader(statusCode)
 }
 
+// Flush implements http.Flusher interface for streaming support
+func (w *responseWriter) Flush() {
+	if flusher, ok := w.ResponseWriter.(http.Flusher); ok {
+		flusher.Flush()
+	}
+}
+
 // writeErrorResponse writes a standardized error response
 func (s *ProxyServer) writeErrorResponse(w http.ResponseWriter, errorType, errorTitle, errorMessage string) {
 	response := &ProxyResponse{

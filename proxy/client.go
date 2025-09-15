@@ -241,9 +241,8 @@ func (c *HTTPClient) ExecuteStreamingRequest(ctx context.Context, req *ProxyRequ
 
 	log.Printf("[SSE-DEBUG] Starting SSE data stream")
 
-	// Now stream the SSE data directly from the source
-	_, err = io.Copy(responseWriter, resp.Body)
-	if err != nil {
+	// Stream the SSE data with immediate flushing (no buffering)
+	if err := c.streamResponseWithFlush(responseWriter, resp.Body); err != nil {
 		log.Printf("[SSE-DEBUG] Error during SSE streaming: %v", err)
 		return fmt.Errorf("failed to stream response: %v", err)
 	}
@@ -535,4 +534,45 @@ func (c *HTTPClient) createStreamingErrorResponse(errType *ProxyError, message s
 func (c *HTTPClient) writeStreamingErrorResponse(w http.ResponseWriter, resp *StreamingResponse) error {
 	w.Header().Set("Content-Type", "application/json")
 	return json.NewEncoder(w).Encode(resp)
+}
+
+// streamResponseWithFlush streams data from source to destination with immediate flushing
+// This ensures SSE events are sent to the client as soon as they arrive from the source
+func (c *HTTPClient) streamResponseWithFlush(w http.ResponseWriter, source io.Reader) error {
+	flusher, canFlush := w.(http.Flusher)
+	if !canFlush {
+		log.Printf("[SSE-DEBUG] Warning: ResponseWriter doesn't support flushing")
+		// Fallback to regular copy if flushing not supported
+		_, err := io.Copy(w, source)
+		return err
+	}
+
+	// Buffer for reading data in small chunks
+	buffer := make([]byte, 1024)
+
+	for {
+		// Read a chunk of data
+		n, err := source.Read(buffer)
+		if n > 0 {
+			// Write the chunk immediately
+			if _, writeErr := w.Write(buffer[:n]); writeErr != nil {
+				log.Printf("[SSE-DEBUG] Write error: %v", writeErr)
+				return writeErr
+			}
+
+			// Flush immediately to ensure data reaches client
+			flusher.Flush()
+			log.Printf("[SSE-DEBUG] Flushed %d bytes to client", n)
+		}
+
+		// Handle read errors
+		if err != nil {
+			if err == io.EOF {
+				log.Printf("[SSE-DEBUG] Reached end of stream")
+				return nil // Normal end of stream
+			}
+			log.Printf("[SSE-DEBUG] Read error: %v", err)
+			return err
+		}
+	}
 }
