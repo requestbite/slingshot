@@ -125,6 +125,9 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   // Response state
   const [response, setResponse] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamedContent, setStreamedContent] = useState('');
+  const [streamingMetadata, setStreamingMetadata] = useState(null);
 
   // Draft state
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -590,6 +593,9 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
 
     setIsSubmitting(true);
     setResponse(null);
+    setIsStreaming(false);
+    setStreamedContent('');
+    setStreamingMetadata(null);
 
     // Get all available variables for replacement
     const variables = await getAvailableVariables();
@@ -811,8 +817,43 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       // Update proxy URL to respect current settings before making the request
       requestSubmitter.updateProxyUrl(requestSubmitter.getCurrentProxyUrl());
 
+      // Set up streaming callbacks for real-time updates
+      requestSubmitter.setStreamingCallbacks(
+        (metadata) => {
+          // Handle streaming metadata
+          setIsStreaming(true);
+          setStreamingMetadata(metadata);
+          setResponse({
+            ...metadata,
+            responseTime: 'N/A',
+            responseSize: 'N/A',
+            isStreaming: true,
+            streamedContent: ''
+          });
+        },
+        (newData) => {
+          // Handle new streaming data
+          setStreamedContent(prev => prev + newData);
+        }
+      );
+
       const result = await requestSubmitter.submitRequest(processedRequestData);
-      setResponse(result);
+
+      // Handle the final result
+      if (result.isStreaming && result.streamingComplete) {
+        // Streaming completed - update final response
+        setIsStreaming(false);
+        setResponse(prev => ({
+          ...prev,
+          responseTime: result.receivedAt ? '0.00 ms' : 'N/A', // Use actual timing if available
+          responseSize: `${result.totalDataReceived || streamedContent.length} B`,
+          isStreamingComplete: true,
+          finalStreamedContent: result.streamedContent || streamedContent
+        }));
+      } else {
+        // Normal non-streaming response
+        setResponse(result);
+      }
 
       // Save response to IndexedDB if we have a request ID
       if (request?.id) {
@@ -846,6 +887,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       }
     } finally {
       setIsSubmitting(false);
+      setIsStreaming(false);
     }
   };
 
@@ -853,6 +895,9 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   const handleCancelRequest = () => {
     requestSubmitter.cancelRequest();
     setIsSubmitting(false);
+    setIsStreaming(false);
+    setStreamedContent('');
+    setStreamingMetadata(null);
   };
 
   // Handle curl import
@@ -1155,6 +1200,9 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
             isLoading={isSubmitting}
             onCancel={handleCancelRequest}
             collection={selectedCollection}
+            isStreaming={isStreaming}
+            streamedContent={streamedContent}
+            streamingMetadata={streamingMetadata}
           />
         </div>
       </div>

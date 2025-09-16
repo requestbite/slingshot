@@ -522,7 +522,7 @@ const ImageDisplay = ({ response }) => {
   );
 };
 
-export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
+export function ResponseDisplay({ response, isLoading, onCancel, collection, isStreaming, streamedContent, streamingMetadata }) {
   // Initialize headers visibility from localStorage, defaulting to false (closed)
   const [showHeaders, setShowHeaders] = useState(() => {
     try {
@@ -533,6 +533,9 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
     }
   });
   const [activeTab, setActiveTab] = useState('body');
+
+  // Ref for CodeMirror editor to handle streaming updates
+  const editorRef = useRef(null);
   const [activeHtmlTab, setActiveHtmlTab] = useState('preview');
   const [isToastVisible, showToast, hideToast] = useToast();
 
@@ -544,6 +547,33 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
       // Ignore localStorage errors (e.g., private browsing mode)
     }
   }, [showHeaders]);
+
+  // Handle real-time streaming updates to CodeMirror
+  useEffect(() => {
+    if (isStreaming && streamedContent && editorRef.current) {
+      const editor = editorRef.current;
+
+      // Get the current editor view
+      const view = editor.view;
+      if (view) {
+        // Set the entire content (streamedContent accumulates all data)
+        const transaction = view.state.update({
+          changes: {
+            from: 0,
+            to: view.state.doc.length,
+            insert: streamedContent
+          }
+        });
+        view.dispatch(transaction);
+
+        // Auto-scroll to bottom to show new content
+        const scrollEffect = EditorView.scrollIntoView(view.state.doc.length, { y: 'end' });
+        view.dispatch({
+          effects: [scrollEffect]
+        });
+      }
+    }
+  }, [isStreaming, streamedContent]);
 
   if (isLoading) {
     return (
@@ -749,6 +779,11 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
 
   // Helper function to ensure UTF-8 encoding for response content
   const processResponseContent = (response) => {
+    // Handle streaming response content
+    if (response.isStreamingComplete && response.finalStreamedContent) {
+      return response.finalStreamedContent;
+    }
+
     if (!response.responseData) return '';
 
     // Ensure UTF-8 encoding by default
@@ -827,6 +862,18 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
                     {response.responseSize}
                   </span>
                 </div>
+                {isStreaming && (
+                  <div class="flex items-center space-x-2 whitespace-nowrap">
+                    <span class="text-sm font-medium text-gray-700">Status:</span>
+                    <span class="px-2 py-1 text-sm bg-green-50 text-green-700 rounded-md whitespace-nowrap flex items-center">
+                      <svg class="animate-spin -ml-1 mr-2 h-3 w-3 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Streaming... ({streamedContent ? streamedContent.length : 0} chars)
+                    </span>
+                  </div>
+                )}
                 <div class="flex items-center space-x-2 whitespace-nowrap">
                   <button
                     onClick={() => setShowHeaders(!showHeaders)}
@@ -852,10 +899,10 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
               </div>
 
               {/* Copy Response Button */}
-              {response.responseData && (
+              {(response.responseData || streamedContent || response.finalStreamedContent) && (
                 <div class="flex items-center">
                   <button
-                    onClick={() => copyToClipboard(processResponseContent(response))}
+                    onClick={() => copyToClipboard(isStreaming ? streamedContent : processResponseContent(response))}
                     class="inline-flex items-center text-sky-500 hover:text-sky-700 cursor-pointer"
                   >
                     <span class="inline-block w-4 h-4 mr-1">
@@ -918,7 +965,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
           <div class="flex-grow flex flex-col">
             <div class="response-container flex-grow flex flex-col">
               {/* No response body message */}
-              {!response.responseData && !response.binaryData && (
+              {!response.responseData && !response.binaryData && !streamedContent && !response.finalStreamedContent && (
                 <div class="rounded-md bg-gray-50 p-4 mb-4 text-sm text-gray-600 font-medium">
                   No response body received.
                 </div>
@@ -974,7 +1021,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
                       </div>
                     </div>
                   );
-                } else if (response.responseData) {
+                } else if (response.responseData || streamedContent || response.finalStreamedContent) {
                   // Check if content type is HTML
                   if (isHtmlContentType(contentType)) {
                     // Show HTML preview with tabs
@@ -988,7 +1035,8 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
                           <HtmlPreview response={response} />
                         ) : (
                           <CodeMirror
-                            value={processResponseContent(response)}
+                            ref={editorRef}
+                            value={isStreaming ? streamedContent : processResponseContent(response)}
                             extensions={getResponseCodeMirrorExtensions(response)}
                             theme={dracula}
                             editable={false}
@@ -1019,7 +1067,8 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection }) {
                     // Show text content with CodeMirror (existing behavior)
                     return (
                       <CodeMirror
-                        value={processResponseContent(response)}
+                        ref={editorRef}
+                        value={isStreaming ? streamedContent : processResponseContent(response)}
                         extensions={getResponseCodeMirrorExtensions(response)}
                         theme={dracula}
                         editable={false}

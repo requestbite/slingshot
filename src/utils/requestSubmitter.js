@@ -7,6 +7,8 @@ export class RequestSubmitter {
   constructor(proxyUrl = import.meta.env.VITE_PROXY_HOST || 'http://localhost:8080') {
     this.proxyUrl = proxyUrl;
     this.abortController = null;
+    this.onStreamMetadata = null;
+    this.onStreamData = null;
   }
 
   /**
@@ -14,6 +16,14 @@ export class RequestSubmitter {
    */
   updateProxyUrl(newProxyUrl) {
     this.proxyUrl = newProxyUrl;
+  }
+
+  /**
+   * Set streaming callbacks for real-time updates
+   */
+  setStreamingCallbacks(onMetadata, onData) {
+    this.onStreamMetadata = onMetadata;
+    this.onStreamData = onData;
   }
 
   /**
@@ -110,7 +120,8 @@ export class RequestSubmitter {
       url: this.processUrl(requestData.url, requestData.pathParams),
       headers: this.formatHeadersForProxy(requestData.headers),
       timeout: requestData.timeout || 30,
-      followRedirects: requestData.followRedirects !== false
+      followRedirects: requestData.followRedirects !== false,
+      streaming: true // Always enable streaming for SSE auto-detection
     };
 
     // Add passThrough parameter if specified
@@ -161,7 +172,7 @@ export class RequestSubmitter {
     if (requestData.passThrough) {
       const rawContent = await response.text();
       const contentType = response.headers.get('content-type') || '';
-      
+
       // Create a response object that mimics the normal proxy response format
       // but with the raw content as responseData
       return {
@@ -174,7 +185,90 @@ export class RequestSubmitter {
       };
     }
 
+    // Check if this is a streaming response by looking for Transfer-Encoding: chunked
+    // Streaming SSE responses will have chunked encoding, normal JSON responses won't
+    const transferEncoding = response.headers.get('transfer-encoding') || '';
+    if (transferEncoding.includes('chunked') && response.body && response.body.getReader) {
+      return this.handleStreamingResponse(response);
+    }
+
+    // Normal JSON response - parse it directly
     return await response.json();
+  }
+
+  /**
+   * Handle streaming response with ReadableStream processing
+   */
+  async handleStreamingResponse(response) {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    let buffer = '';
+    let metadataReceived = false;
+    let metadata = null;
+    let streamedContent = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        if (!metadataReceived) {
+          // Look for JSON metadata at start (should be first line)
+          const lines = buffer.split('\n');
+          if (lines.length > 1) {
+            const jsonLine = lines[0];
+            try {
+              metadata = JSON.parse(jsonLine);
+              metadataReceived = true;
+
+              // Remove processed JSON line from buffer
+              buffer = lines.slice(1).join('\n');
+
+              // Check if this is actually a streaming response
+              if (metadata.success && !('response_data' in metadata) && !('responseData' in metadata)) {
+                // This is streaming metadata, notify component
+                if (this.onStreamMetadata) {
+                  this.onStreamMetadata(metadata);
+                }
+              } else {
+                // This is a normal response, return it directly
+                return metadata;
+              }
+            } catch (e) {
+              // Not valid JSON yet, continue reading
+            }
+          }
+        } else {
+          // We have metadata, now streaming SSE data
+          const newContent = buffer;
+          buffer = '';
+          streamedContent += newContent;
+
+          // Notify component of new streaming data
+          if (this.onStreamData) {
+            this.onStreamData(newContent);
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+
+    // Streaming completed, return final result
+    const endTime = performance.now();
+    return {
+      success: true,
+      isStreaming: true,
+      streamingComplete: true,
+      metadata: metadata,
+      streamedContent: streamedContent,
+      totalDataReceived: streamedContent.length,
+      receivedAt: new Date().toISOString()
+    };
   }
 
   /**
