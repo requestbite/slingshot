@@ -7,520 +7,22 @@ import { xml } from '@codemirror/lang-xml';
 import { dracula } from '@uiw/codemirror-theme-dracula';
 import { EditorView } from '@codemirror/view';
 import { bracketMatching } from '@codemirror/language';
-import { ansiColors, cleanAnsiText } from '../codemirror/ansiExtension.js';
-
-// Map of response headers to their URL-friendly names
-const RESPONSE_HEADER_SLUGS = {
-  // Standard response headers
-  'Accept-Ranges': 'accept-ranges',
-  'Access-Control-Allow-Origin': 'access-control-allow-origin',
-  'Age': 'age',
-  'Allow': 'allow',
-  'Cache-Control': 'cache-control',
-  'Connection': 'connection',
-  'Content-Disposition': 'content-disposition',
-  'Content-Encoding': 'content-encoding',
-  'Content-Language': 'content-language',
-  'Content-Length': 'content-length',
-  'Content-Location': 'content-location',
-  'Content-Range': 'content-range',
-  'Content-Type': 'content-type',
-  'Date': 'date',
-  'ETag': 'etag',
-  'Expires': 'expires',
-  'Last-Modified': 'last-modified',
-  'Location': 'location',
-  'Pragma': 'pragma',
-  'Proxy-Authenticate': 'proxy-authenticate',
-  'Refresh': 'refresh',
-  'Retry-After': 'retry-after',
-  'Server': 'server',
-  'Set-Cookie': 'set-cookie',
-  'Strict-Transport-Security': 'strict-transport-security',
-  'Transfer-Encoding': 'transfer-encoding',
-  'Vary': 'vary',
-  'Via': 'via',
-  'WWW-Authenticate': 'www-authenticate',
-  'X-Content-Type-Options': 'x-content-type-options',
-  'X-Frame-Options': 'x-frame-options',
-  'X-XSS-Protection': 'x-xss-protection'
-};
-
-// Map of status codes to their URL-friendly names
-const STATUS_CODE_SLUGS = {
-  // 1xx - Informational
-  100: '100-continue',
-  101: '101-switching-protocols',
-  102: '102-processing',
-  103: '103-early-hints',
-  // 2xx - Success
-  200: '200-ok',
-  201: '201-created',
-  202: '202-accepted',
-  203: '203-non-authoritative-information',
-  204: '204-no-content',
-  205: '205-reset-content',
-  206: '206-partial-content',
-  207: '207-multi-status',
-  208: '208-already-reported',
-  226: '226-im-used',
-  // 3xx - Redirection
-  300: '300-multiple-choices',
-  301: '301-moved-permanently',
-  302: '302-found',
-  303: '303-see-other',
-  304: '304-not-modified',
-  305: '305-use-proxy',
-  307: '307-temporary-redirect',
-  308: '308-permanent-redirect',
-  // 4xx - Client Errors
-  400: '400-bad-request',
-  401: '401-unauthorized',
-  402: '402-payment-required',
-  403: '403-forbidden',
-  404: '404-not-found',
-  405: '405-method-not-allowed',
-  406: '406-not-acceptable',
-  407: '407-proxy-authentication-required',
-  408: '408-request-timeout',
-  409: '409-conflict',
-  410: '410-gone',
-  411: '411-length-required',
-  412: '412-precondition-failed',
-  413: '413-payload-too-large',
-  414: '414-uri-too-long',
-  415: '415-unsupported-media-type',
-  416: '416-range-not-satisfiable',
-  417: '417-expectation-failed',
-  418: '418-im-a-teapot',
-  421: '421-misdirected-request',
-  422: '422-unprocessable-entity',
-  423: '423-locked',
-  424: '424-failed-dependency',
-  425: '425-too-early',
-  426: '426-upgrade-required',
-  428: '428-precondition-required',
-  429: '429-too-many-requests',
-  431: '431-request-header-fields-too-large',
-  451: '451-unavailable-for-legal-reasons',
-  // 5xx - Server Errors
-  500: '500-internal-server-error',
-  501: '501-not-implemented',
-  502: '502-bad-gateway',
-  503: '503-service-unavailable',
-  504: '504-gateway-timeout',
-  505: '505-http-version-not-supported',
-  506: '506-variant-also-negotiates',
-  507: '507-insufficient-storage',
-  508: '508-loop-detected',
-  510: '510-not-extended',
-  511: '511-network-authentication-required'
-};
-
-// Convert header names to camel case
-const convertToCamelCase = (headerName) => {
-  // Special case handling for common headers
-  const commonHeaders = {
-    'content-type': 'Content-Type',
-    'content-length': 'Content-Length',
-    'user-agent': 'User-Agent',
-    'accept-encoding': 'Accept-Encoding',
-    'accept-language': 'Accept-Language',
-    'cache-control': 'Cache-Control',
-    'set-cookie': 'Set-Cookie',
-    'www-authenticate': 'WWW-Authenticate',
-    'x-forwarded-for': 'X-Forwarded-For',
-    'x-requested-with': 'X-Requested-With',
-    'x-csrf-token': 'X-CSRF-Token',
-    'authorization': 'Authorization',
-    'etag': 'ETag'
-  };
-
-  // Check if it's a common header with standard casing
-  const lowerHeader = headerName.toLowerCase();
-  if (commonHeaders[lowerHeader]) {
-    return commonHeaders[lowerHeader];
-  }
-
-  // Otherwise, convert to camel case
-  const parts = headerName.split('-');
-  const formattedParts = [];
-
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i];
-    if (!part) {
-      formattedParts.push('');
-      continue;
-    }
-
-    // Special case for abbreviations, like 'X-RQ-API'
-    if (part.length <= 2) {
-      formattedParts.push(part.toUpperCase());
-    } else {
-      // Capitalize first letter of each part
-      formattedParts.push(part.charAt(0).toUpperCase() + part.slice(1).toLowerCase());
-    }
-  }
-
-  return formattedParts.join('-');
-};
-
-// Process status code to make documented ones clickable
-const processStatusCode = (statusCode, statusText) => {
-  if (statusCode === null || statusCode === undefined) {
-    return { text: "N/A", isClickable: false };
-  }
-
-  // Parse the status code as an integer if it's a string
-  let statusInt;
-  try {
-    statusInt = parseInt(String(statusCode));
-  } catch (error) {
-    // If it's not a valid integer, return as plain text
-    return { text: `${statusCode} ${statusText || ''}`.trim(), isClickable: false };
-  }
-
-  // Check if we have documentation for this status code
-  const statusSlug = STATUS_CODE_SLUGS[statusInt];
-  const displayText = `${statusInt} ${statusText || ''}`.trim();
-
-  if (statusSlug) {
-    return {
-      text: displayText,
-      isClickable: true,
-      url: `https://docs.requestbite.com/http/status-codes/${statusSlug}/`
-    };
-  } else {
-    return { text: displayText, isClickable: false };
-  }
-};
-
-// Process response headers to make documented ones clickable
-const processResponseHeaders = (responseHeaders) => {
-  if (!responseHeaders) {
-    return [];
-  }
-
-  const processedHeaders = [];
-
-  responseHeaders.forEach((header) => {
-    // Convert to proper camel case
-    const formattedKey = convertToCamelCase(header.name);
-
-    // Check if we have documentation for this header
-    const headerSlug = RESPONSE_HEADER_SLUGS[formattedKey];
-
-    if (headerSlug) {
-      // Create clickable link data
-      processedHeaders.push({
-        name: formattedKey,
-        value: header.value,
-        isClickable: true,
-        url: `https://docs.requestbite.com/http/response-headers/${headerSlug}/`
-      });
-    } else {
-      // No documentation for this header, just display as text
-      processedHeaders.push({
-        name: formattedKey,
-        value: header.value,
-        isClickable: false
-      });
-    }
-  });
-
-  return processedHeaders;
-};
-
-// Supported image MIME types
-const SUPPORTED_IMAGE_TYPES = [
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'image/avif',
-  'image/svg+xml'
-];
-
-// Helper function to check if content type is a supported image
-const isSupportedImageType = (contentType) => {
-  if (!contentType) return false;
-  const lowerType = contentType.toLowerCase().split(';')[0].trim();
-  return SUPPORTED_IMAGE_TYPES.includes(lowerType);
-};
-
-// Helper function to extract filename from Content-Disposition header
-const extractFilename = (headers) => {
-  if (!headers || !Array.isArray(headers)) return null;
-
-  const contentDisposition = headers.find(h =>
-    h.name && h.name.toLowerCase() === 'content-disposition'
-  );
-
-  if (!contentDisposition) return null;
-
-  // Parse Content-Disposition header for filename
-  // Examples: 
-  // - attachment; filename="image.png"
-  // - attachment; filename*=UTF-8''image.png  
-  // - inline; filename=data.json
-  const value = contentDisposition.value;
-
-  // Try filename="..." first
-  let match = value.match(/filename\s*=\s*"([^"]+)"/i);
-  if (match) return match[1];
-
-  // Try filename=... (unquoted)
-  match = value.match(/filename\s*=\s*([^;,\s]+)/i);
-  if (match) return match[1];
-
-  // Try filename*=UTF-8''... (RFC 5987)
-  match = value.match(/filename\*\s*=\s*UTF-8''([^;,\s]+)/i);
-  if (match) return decodeURIComponent(match[1]);
-
-  return null;
-};
-
-// Helper function to get download filename
-const getDownloadFilename = (response) => {
-  // First try to get filename from Content-Disposition header
-  const filename = extractFilename(response.headers);
-  if (filename) return filename;
-
-  // Fall back to generic name based on content type
-  const contentTypeHeader = response.headers?.find(h =>
-    h.name && h.name.toLowerCase() === 'content-type'
-  );
-
-  if (contentTypeHeader && isSupportedImageType(contentTypeHeader.value)) {
-    // For images, use appropriate extension
-    const contentType = contentTypeHeader.value.toLowerCase().split(';')[0].trim();
-    const extension = contentType.replace('image/', '');
-    return `image.${extension === 'jpeg' ? 'jpg' : extension}`;
-  }
-
-  // Default for any other binary content
-  return 'binary.dat';
-};
-
-// Helper function to create download blob and trigger download
-const downloadBinaryContent = (response) => {
-  if (!response.binaryData && !response.responseData) return;
-
-  let data;
-  let mimeType = 'application/octet-stream';
-
-  // Get content type from headers
-  const contentTypeHeader = response.headers?.find(h =>
-    h.name && h.name.toLowerCase() === 'content-type'
-  );
-  if (contentTypeHeader) {
-    mimeType = contentTypeHeader.value.split(';')[0].trim();
-  }
-
-  // Handle binary data (base64 encoded)
-  if (response.binaryData) {
-    try {
-      // Convert base64 to binary
-      const binaryString = atob(response.binaryData);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      data = bytes;
-    } catch (error) {
-      console.error('Failed to decode binary data:', error);
-      return;
-    }
-  } else if (response.responseData) {
-    // Handle text data
-    data = new TextEncoder().encode(response.responseData);
-  } else {
-    return;
-  }
-
-  // Create blob and download
-  const blob = new Blob([data], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const filename = getDownloadFilename(response);
-
-  // Create temporary download link
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-
-  // Clean up the URL
-  setTimeout(() => URL.revokeObjectURL(url), 100);
-};
-
-// Component for displaying HTML content in an iframe
-const HtmlPreview = ({ response }) => {
-  const [iframeError, setIframeError] = useState(false);
-
-  if (iframeError || !response.responseData) {
-    return (
-      <div
-        class="rounded-md p-4 text-center text-gray-600"
-        style={{
-          border: '1px solid #44475a',
-          backgroundColor: '#282a36',
-          minHeight: '200px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}
-      >
-        <div class="text-white">
-          Failed to load HTML preview
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      class="rounded-md outline-gray-300 flex-grow"
-      style={{
-        border: '1px solid #d1d5db',
-        padding: '3px',
-        backgroundColor: 'white',
-        display: 'flex',
-        flexDirection: 'column',
-        flex: 1,
-        minHeight: '200px'
-      }}
-    >
-      <iframe
-        srcdoc={response.responseData}
-        style={{
-          width: '100%',
-          height: '100%',
-          border: 'none',
-          borderRadius: '0.375rem',
-          flex: '1 1 auto'
-        }}
-        sandbox="allow-same-origin allow-scripts allow-forms"
-        onError={() => setIframeError(true)}
-      />
-    </div>
-  );
-};
-
-// Component for HTML tab navigation
-const HtmlTabs = ({ activeTab, onTabChange }) => {
-  const tabs = [
-    { id: 'preview', label: 'Preview' },
-    { id: 'code', label: 'Code' }
-  ];
-
-  return (
-    <div class="mb-4">
-      <div class="border-b border-gray-200 px-4 overflow-x-auto scrollbar-hide -mx-4">
-        <div class="flex space-x-2 flex-nowrap min-w-max">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => onTabChange(tab.id)}
-              class={`px-4 py-2 text-xs rounded-t-md font-medium focus:outline-none cursor-pointer ${activeTab === tab.id
-                ? 'text-sky-600 bg-sky-50 border-b-2 border-sky-600'
-                : 'text-gray-600 hover:text-sky-600 hover:bg-gray-100'
-                }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Component for displaying images with CodeMirror-style frame
-const ImageDisplay = ({ response }) => {
-  const [imageError, setImageError] = useState(false);
-  const [imageUrl, setImageUrl] = useState(null);
-
-  // Create image URL from binary data
-  useEffect(() => {
-    if (!response.binaryData) {
-      setImageError(true);
-      return;
-    }
-
-    try {
-      // Get content type
-      const contentTypeHeader = response.headers?.find(h =>
-        h.name && h.name.toLowerCase() === 'content-type'
-      );
-      const mimeType = contentTypeHeader?.value.split(';')[0].trim() || 'image/png';
-
-      // Convert base64 to blob
-      const binaryString = atob(response.binaryData);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-
-      const blob = new Blob([bytes], { type: mimeType });
-      const url = URL.createObjectURL(blob);
-      setImageUrl(url);
-
-      // Cleanup function
-      return () => {
-        if (url) URL.revokeObjectURL(url);
-      };
-    } catch (error) {
-      console.error('Failed to create image URL:', error);
-      setImageError(true);
-    }
-  }, [response.binaryData, response.headers]);
-
-  if (imageError || !imageUrl) {
-    return (
-      <div
-        class="rounded-md p-4 text-center text-gray-600"
-        style={{
-          border: '1px solid #44475a',
-          backgroundColor: '#282a36',
-          minHeight: '200px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}
-      >
-        <div class="text-white">
-          Failed to load image
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      class="rounded-md p-4 text-center"
-      style={{
-        border: '1px solid #44475a',
-        backgroundColor: '#282a36',
-        minHeight: '200px'
-      }}
-    >
-      <img
-        src={imageUrl}
-        alt="Response content"
-        onError={() => setImageError(true)}
-        style={{
-          maxWidth: '100%',
-          height: 'auto',
-          borderRadius: '4px'
-        }}
-      />
-    </div>
-  );
-};
+import { ansiColors } from '../codemirror/ansiExtension.js';
+import { HtmlTabs } from './HtmlTabs';
+import { HtmlPreview } from './HtmlPreview';
+import { ImageDisplay } from './ImageDisplay';
+import {
+  processStatusCode,
+  processResponseHeaders,
+  isSupportedImageType,
+  downloadBinaryContent,
+  getDownloadFilename,
+  isJsonContent,
+  isHtmlContentType,
+  processResponseContent,
+  getOriginalResponseContent,
+  getStatusColor
+} from './ResponseDisplayUtils';
 
 export function ResponseDisplay({ response, isLoading, onCancel, collection, isStreaming, streamedContent, streamingMetadata }) {
   // Initialize headers visibility from localStorage, defaulting to false (closed)
@@ -548,24 +50,12 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
     }
   }, [showHeaders]);
 
-  // Handle real-time streaming updates to CodeMirror
+  // Auto-scroll to bottom when streaming content updates
   useEffect(() => {
     if (isStreaming && streamedContent && editorRef.current) {
       const editor = editorRef.current;
-
-      // Get the current editor view
       const view = editor.view;
-      if (view) {
-        // Set the entire content (streamedContent accumulates all data)
-        const transaction = view.state.update({
-          changes: {
-            from: 0,
-            to: view.state.doc.length,
-            insert: streamedContent
-          }
-        });
-        view.dispatch(transaction);
-
+      if (view && view.state.doc.length > 0) {
         // Auto-scroll to bottom to show new content
         const scrollEffect = EditorView.scrollIntoView(view.state.doc.length, { y: 'end' });
         view.dispatch({
@@ -602,7 +92,8 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
 
   // Check if we have any response data (status, responseData, etc.)
   // If not, show welcome message even if response object exists
-  if (!response.status && !response.responseData && !response.cancelled && response.success !== false) {
+  // BUT: Don't show welcome message if we're in streaming mode
+  if (!response.status && !response.responseData && !response.cancelled && response.success !== false && !isStreaming && !streamedContent) {
     return (
       <div class="px-6">
         <WelcomeMessage />
@@ -664,12 +155,6 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
     );
   }
 
-  const getStatusColor = (status) => {
-    if (status >= 200 && status < 300) return 'bg-green-100 text-green-800';
-    if (status >= 300 && status < 400) return 'bg-yellow-100 text-yellow-800';
-    return 'bg-red-100 text-red-800';
-  };
-
   // Process the status code and headers for the current response
   const processedStatus = response ? processStatusCode(response.status, response.statusText) : null;
   const processedHeaders = response ? processResponseHeaders(response.headers) : [];
@@ -721,99 +206,6 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
     }
 
     return baseExtensions;
-  };
-
-  // Helper function to detect if content is JSON
-  const isJsonContent = (content) => {
-    if (!content || typeof content !== 'string') return false;
-    const trimmed = content.trim();
-    return (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
-      (trimmed.startsWith('[') && trimmed.endsWith(']'));
-  };
-
-  // Helper function to detect if content type is HTML
-  const isHtmlContentType = (contentType) => {
-    if (!contentType) return false;
-    return contentType.toLowerCase().includes('text/html');
-  };
-
-  // Helper function to prettify JSON content
-  const prettifyJsonContent = (content, contentType) => {
-    if (!content) return content;
-
-    // Check if content type indicates JSON or if content looks like JSON
-    const isJson = contentType.includes('application/json') || isJsonContent(content);
-
-    if (isJson) {
-      try {
-        const parsed = JSON.parse(content);
-        return JSON.stringify(parsed, null, 2);
-      } catch (error) {
-        // If parsing fails, return original content
-        return content;
-      }
-    }
-
-    return content;
-  };
-
-  // Helper function to get original response content (with ANSI sequences)
-  const getOriginalResponseContent = (response) => {
-    if (!response.responseData) return '';
-
-    let content = response.responseData;
-
-    // Handle potential encoding issues
-    if (typeof content === 'string') {
-      try {
-        // Try to decode if it's been improperly encoded
-        content = decodeURIComponent(escape(content));
-      } catch (error) {
-        // If decoding fails, use original content
-        content = response.responseData;
-      }
-    }
-
-    return content;
-  };
-
-  // Helper function to ensure UTF-8 encoding for response content
-  const processResponseContent = (response) => {
-    // Handle streaming response content
-    if (response.isStreamingComplete && response.finalStreamedContent) {
-      return response.finalStreamedContent;
-    }
-
-    if (!response.responseData) return '';
-
-    // Ensure UTF-8 encoding by default
-    let content = response.responseData;
-
-    // Handle potential encoding issues
-    if (typeof content === 'string') {
-      try {
-        // Try to decode if it's been improperly encoded
-        content = decodeURIComponent(escape(content));
-      } catch (error) {
-        // If decoding fails, use original content
-        content = response.responseData;
-      }
-    }
-
-    // Get content type for prettification
-    const contentTypeHeader = response.headers?.find(h =>
-      h.name.toLowerCase() === 'content-type'
-    );
-    const contentType = contentTypeHeader?.value || '';
-
-    // For text/plain with ANSI parsing enabled, clean the content for CodeMirror
-    // but let the ANSI extension handle the styling
-    if (contentType.includes('text/plain') && collection?.parse_ansi_colors !== false) {
-      return cleanAnsiText(content);
-    }
-
-    // Prettify JSON content
-    return prettifyJsonContent(content, contentType);
   };
 
   return (
@@ -902,7 +294,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
               {(response.responseData || streamedContent || response.finalStreamedContent) && (
                 <div class="flex items-center">
                   <button
-                    onClick={() => copyToClipboard(isStreaming ? streamedContent : processResponseContent(response))}
+                    onClick={() => copyToClipboard(isStreaming ? streamedContent : processResponseContent(response, collection))}
                     class="inline-flex items-center text-sky-500 hover:text-sky-700 cursor-pointer"
                   >
                     <span class="inline-block w-4 h-4 mr-1">
@@ -965,7 +357,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
           <div class="flex-grow flex flex-col">
             <div class="response-container flex-grow flex flex-col">
               {/* No response body message */}
-              {!response.responseData && !response.binaryData && !streamedContent && !response.finalStreamedContent && (
+              {!response.responseData && !response.binaryData && !streamedContent && !response.finalStreamedContent && !isStreaming && (
                 <div class="rounded-md bg-gray-50 p-4 mb-4 text-sm text-gray-600 font-medium">
                   No response body received.
                 </div>
@@ -1021,7 +413,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
                       </div>
                     </div>
                   );
-                } else if (response.responseData || streamedContent || response.finalStreamedContent) {
+                } else if (response.responseData || streamedContent || response.finalStreamedContent || isStreaming) {
                   // Check if content type is HTML
                   if (isHtmlContentType(contentType)) {
                     // Show HTML preview with tabs
@@ -1036,7 +428,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
                         ) : (
                           <CodeMirror
                             ref={editorRef}
-                            value={isStreaming ? streamedContent : processResponseContent(response)}
+                            value={isStreaming ? (streamedContent || '') : processResponseContent(response, collection)}
                             extensions={getResponseCodeMirrorExtensions(response)}
                             theme={dracula}
                             editable={false}
@@ -1068,7 +460,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
                     return (
                       <CodeMirror
                         ref={editorRef}
-                        value={isStreaming ? streamedContent : processResponseContent(response)}
+                        value={isStreaming ? (streamedContent || '') : processResponseContent(response, collection)}
                         extensions={getResponseCodeMirrorExtensions(response)}
                         theme={dracula}
                         editable={false}
