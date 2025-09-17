@@ -846,15 +846,14 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         (newData) => {
           console.log('📦 Received data callback:', newData ? `${newData.length} chars` : 'completion signal');
           if (newData === null) {
-            // Streaming completed
+            // Streaming completed - only set completion flag, don't override SSE response properties
             setIsStreaming(false);
             setStreamedContent(prev => {
               setResponse(prevResponse => ({
                 ...prevResponse,
                 isStreamingComplete: true,
-                finalStreamedContent: prev,
-                responseSize: `${prev.length} B`,
-                responseTime: 'Streaming completed'
+                finalStreamedContent: prev
+                // Don't override responseSize, responseTime, status, or headers for SSE
               }));
               return prev;
             });
@@ -930,9 +929,10 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
     requestSubmitter.cancelRequest();
     setIsSubmitting(false);
     setIsStreaming(false);
-    setStreamedContent('');
-    setStreamedChunks([]);
-    setStreamingMetadata(null);
+    // Keep streaming content and metadata to preserve the StreamingDisplay
+    // setStreamedContent('');
+    // setStreamedChunks([]);
+    // setStreamingMetadata(null);
   };
 
   // Handle curl import

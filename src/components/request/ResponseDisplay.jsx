@@ -157,9 +157,38 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
     );
   }
 
+  // Helper function to get proper status text like non-SSE requests
+  const getStatusText = (status) => {
+    const statusTexts = {
+      200: 'OK', 201: 'Created', 204: 'No Content',
+      400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found',
+      500: 'Internal Server Error', 502: 'Bad Gateway', 503: 'Service Unavailable'
+    };
+    return statusTexts[status] || 'Unknown';
+  };
+
   // Process the status code and headers for the current response
-  const processedStatus = response ? processStatusCode(response.status, response.statusText) : null;
-  const processedHeaders = response ? processResponseHeaders(response.headers) : [];
+  // For SSE streaming, use streamingMetadata if available and preserve it
+  let effectiveResponse = response;
+  if ((isStreaming || streamingMetadata) && streamingMetadata) {
+    const status = streamingMetadata.response_status || response?.status;
+    effectiveResponse = {
+      ...response,
+      status: status,
+      statusText: getStatusText(status), // Use proper status text
+      headers: streamingMetadata.response_headers ? Object.entries(streamingMetadata.response_headers).map(([key, value]) => ({
+        name: key.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join('-'),
+        value: value,
+        isClickable: ['content-type', 'cache-control', 'authorization'].includes(key.toLowerCase())
+      })) : (response?.headers || []),
+      // For SSE, always show N/A for time and size (no updates when streaming completes)
+      responseTime: 'N/A',
+      responseSize: 'N/A'
+    };
+  }
+
+  const processedStatus = effectiveResponse ? processStatusCode(effectiveResponse.status, effectiveResponse.statusText) : null;
+  const processedHeaders = effectiveResponse ? processResponseHeaders(effectiveResponse.headers) : [];
 
   const copyToClipboard = async (text) => {
     try {
@@ -224,7 +253,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
               <div class="flex items-center space-x-4 flex-nowrap">
                 <div class="flex items-center space-x-2 whitespace-nowrap">
                   <span class="text-sm font-medium text-gray-700">Status:</span>
-                  <span class={`px-2 py-1 text-sm rounded-md ${getStatusColor(response.status)}`}>
+                  <span class={`px-2 py-1 text-sm rounded-md ${getStatusColor(effectiveResponse.status)}`}>
                     {processedStatus?.isClickable ? (
                       <a
                         href={processedStatus.url}
@@ -240,31 +269,33 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
                         </svg>
                       </a>
                     ) : (
-                      processedStatus?.text || `${response.status} ${response.statusText || ''}`
+                      processedStatus?.text || `${effectiveResponse.status} ${effectiveResponse.statusText || ''}`
                     )}
                   </span>
                 </div>
                 <div class="flex items-center space-x-2 whitespace-nowrap">
                   <span class="text-sm font-medium text-gray-700">Time:</span>
                   <span class="px-2 py-1 text-sm bg-blue-50 text-blue-700 rounded-md whitespace-nowrap">
-                    {response.responseTime}
+                    {effectiveResponse.responseTime}
                   </span>
                 </div>
                 <div class="flex items-center space-x-2 whitespace-nowrap">
                   <span class="text-sm font-medium text-gray-700">Size:</span>
                   <span class="px-2 py-1 text-sm bg-amber-50 text-amber-700 rounded-md whitespace-nowrap">
-                    {response.responseSize}
+                    {effectiveResponse.responseSize}
                   </span>
                 </div>
-                {isStreaming && (
+                {(isStreaming || streamingMetadata) && (
                   <div class="flex items-center space-x-2 whitespace-nowrap">
-                    <span class="text-sm font-medium text-gray-700">Status:</span>
-                    <span class="px-2 py-1 text-sm bg-green-50 text-green-700 rounded-md whitespace-nowrap flex items-center">
-                      <svg class="animate-spin -ml-1 mr-2 h-3 w-3 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Streaming... ({streamedContent ? streamedContent.length : 0} chars)
+                    <span class="text-sm font-medium text-gray-700">Stream:</span>
+                    <span class={`px-2 py-1 text-sm rounded-md whitespace-nowrap flex items-center ${isStreaming ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-700'}`}>
+                      {isStreaming && (
+                        <svg class="animate-spin -ml-1 mr-2 h-3 w-3 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      )}
+                      {isStreaming ? `Streaming... (${streamedContent ? streamedContent.length : 0} chars)` : `Completed (${streamedContent ? streamedContent.length : streamedChunks?.length || 0} chunks)`}
                     </span>
                   </div>
                 )}
@@ -284,9 +315,9 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
                     Headers&nbsp;
                     <span class="text-gray-500 font-normal ml-1">({processedHeaders.length})</span>
                   </button>
-                  {response.saved && response.receivedAt && (
+                  {effectiveResponse.saved && effectiveResponse.receivedAt && (
                     <span class="text-xs text-gray-400 font-normal whitespace-nowrap mr-4">
-                      Cached response from {new Date(response.receivedAt).toLocaleString()}
+                      Cached response from {new Date(effectiveResponse.receivedAt).toLocaleString()}
                     </span>
                   )}
                 </div>
@@ -384,35 +415,20 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
 
               {/* Handle different content types */}
               {(() => {
-                // DEBUG: Log all streaming-related state
-                console.log('🔍 ResponseDisplay DEBUG - Full state:', {
-                  isStreaming,
-                  hasStreamingMetadata: !!streamingMetadata,
-                  streamingMetadata,
-                  streamedChunksLength: streamedChunks?.length || 0,
-                  responseHeaders: response?.headers,
-                  responseRawHeaders: response?.rawHeaders
-                });
-
-                // PRIORITY: Check for SSE streaming first before any other content type logic
-                if (isStreaming && streamingMetadata && streamingMetadata.content_type) {
-                  console.log('🔍 SSE Priority Check - streamingMetadata.content_type:', streamingMetadata.content_type);
-                  console.log('🔍 SSE Priority Check - isSSEContentType result:', isSSEContentType(streamingMetadata.content_type));
-
+                // PRIORITY: Check for SSE streaming first (both during and after streaming)
+                // Use streamingMetadata presence to detect SSE responses, not just isStreaming
+                if (streamingMetadata && streamingMetadata.content_type) {
                   if (isSSEContentType(streamingMetadata.content_type)) {
-                    console.log('✅ SSE Detected! Using StreamingDisplay');
                     return <StreamingDisplay streamedChunks={streamedChunks || []} isStreaming={isStreaming} />;
                   }
                 }
 
-                // Alternative check: Look for SSE content type in response headers
-                if (isStreaming && streamingMetadata) {
+                // Alternative check: Look for SSE content type in response headers (during and after streaming)
+                if (streamingMetadata) {
                   const responseHeaders = streamingMetadata.response_headers || response?.rawHeaders || {};
                   const contentTypeFromHeaders = responseHeaders['content-type'] || responseHeaders['Content-Type'];
-                  console.log('🔍 Alternative SSE Check - contentTypeFromHeaders:', contentTypeFromHeaders);
 
                   if (contentTypeFromHeaders && isSSEContentType(contentTypeFromHeaders)) {
-                    console.log('✅ SSE Detected via headers! Using StreamingDisplay');
                     return <StreamingDisplay streamedChunks={streamedChunks || []} isStreaming={isStreaming} />;
                   }
                 }
@@ -427,14 +443,6 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
                 const metadataContentType = isStreaming && streamingMetadata && streamingMetadata.content_type;
                 const contentType = metadataContentType || contentTypeHeader?.value || rawContentType || '';
 
-                // Debug logging for SSE detection
-                if (isStreaming) {
-                  console.log('🔍 SSE Debug - isStreaming:', isStreaming);
-                  console.log('🔍 SSE Debug - streamingMetadata:', streamingMetadata);
-                  console.log('🔍 SSE Debug - metadataContentType:', metadataContentType);
-                  console.log('🔍 SSE Debug - contentType:', contentType);
-                  console.log('🔍 SSE Debug - isSSEContentType(contentType):', isSSEContentType(contentType));
-                }
 
                 if (response.binaryData && isSupportedImageType(contentType)) {
                   // Show image
@@ -462,9 +470,9 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
                     </div>
                   );
                 } else if (response.responseData || streamedContent || response.finalStreamedContent || isStreaming) {
-                  // Check if content type is SSE (Server-Sent Events)
-                  if (isSSEContentType(contentType) && isStreaming) {
-                    // Show streaming display for SSE content
+                  // Check if content type is SSE (Server-Sent Events) - both during and after streaming
+                  if (isSSEContentType(contentType) && (isStreaming || streamingMetadata)) {
+                    // Show streaming display for SSE content (keep it even after streaming completes)
                     return <StreamingDisplay streamedChunks={streamedChunks || []} isStreaming={isStreaming} />;
                   } else if (isHtmlContentType(contentType)) {
                     // Show HTML preview with tabs
