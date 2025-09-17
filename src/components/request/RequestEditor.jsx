@@ -818,8 +818,10 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       requestSubmitter.updateProxyUrl(requestSubmitter.getCurrentProxyUrl());
 
       // Set up streaming callbacks for real-time updates
+      console.log('🔧 Setting up streaming callbacks');
       requestSubmitter.setStreamingCallbacks(
         (metadata) => {
+          console.log('📥 Received metadata callback:', metadata);
           // Handle streaming metadata
           setIsStreaming(true);
           setStreamingMetadata(metadata);
@@ -832,8 +834,24 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
           });
         },
         (newData) => {
-          // Handle new streaming data
-          setStreamedContent(prev => prev + newData);
+          console.log('📦 Received data callback:', newData ? `${newData.length} chars` : 'completion signal');
+          if (newData === null) {
+            // Streaming completed
+            setIsStreaming(false);
+            setStreamedContent(prev => {
+              setResponse(prevResponse => ({
+                ...prevResponse,
+                isStreamingComplete: true,
+                finalStreamedContent: prev,
+                responseSize: `${prev.length} B`,
+                responseTime: 'Streaming completed'
+              }));
+              return prev;
+            });
+          } else {
+            // Handle new streaming data
+            setStreamedContent(prev => prev + newData);
+          }
         }
       );
 

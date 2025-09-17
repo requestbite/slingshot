@@ -185,14 +185,27 @@ export class RequestSubmitter {
       };
     }
 
-    // Check if this is a streaming response by looking for Transfer-Encoding: chunked
-    // Streaming SSE responses will have chunked encoding, normal JSON responses won't
+    // Check if this is a streaming response by looking for our custom header
+    // Browser strips Transfer-Encoding headers, so we use X-Slingshot-Streaming instead
+    const isStreaming = response.headers.get('x-slingshot-streaming') === 'true';
     const transferEncoding = response.headers.get('transfer-encoding') || '';
-    if (transferEncoding.includes('chunked') && response.body && response.body.getReader) {
+    console.log('🔍 Response analysis:', {
+      transferEncoding,
+      hasBody: !!response.body,
+      hasReader: response.body && response.body.getReader,
+      contentType: response.headers.get('content-type'),
+      isChunked: transferEncoding.includes('chunked'),
+      customStreamingHeader: response.headers.get('x-slingshot-streaming'),
+      isStreaming
+    });
+
+    if (isStreaming && response.body && response.body.getReader) {
+      console.log('🚀 Detected streaming response, starting handleStreamingResponse');
       return this.handleStreamingResponse(response);
     }
 
     // Normal JSON response - parse it directly
+    console.log('📄 Detected normal JSON response');
     return await response.json();
   }
 
@@ -200,6 +213,7 @@ export class RequestSubmitter {
    * Handle streaming response with ReadableStream processing
    */
   async handleStreamingResponse(response) {
+    console.log('📡 Starting handleStreamingResponse');
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
 
@@ -207,6 +221,7 @@ export class RequestSubmitter {
     let metadataReceived = false;
     let metadata = null;
     let streamedContent = '';
+    let readerOwnershipTransferred = false;
 
     try {
       while (true) {
@@ -230,11 +245,38 @@ export class RequestSubmitter {
 
               // Check if this is actually a streaming response
               if (metadata.success && !('response_data' in metadata) && !('responseData' in metadata)) {
+                console.log('✅ Detected streaming metadata:', metadata);
                 // This is streaming metadata, notify component
                 if (this.onStreamMetadata) {
+                  console.log('📢 Calling onStreamMetadata callback');
                   this.onStreamMetadata(metadata);
+                } else {
+                  console.log('⚠️ No onStreamMetadata callback set!');
                 }
+
+                // Start background streaming and return immediately
+                console.log('🔄 Starting background streaming');
+
+                // Transfer ownership of the reader to background streaming
+                // We don't release the lock here since the background function will handle it
+                readerOwnershipTransferred = true;
+                this.continueStreamingInBackground(reader, decoder, buffer, streamedContent);
+
+                // Return streaming response immediately to exit loading state
+                const streamingResponse = {
+                  success: true,
+                  isStreaming: true,
+                  streamingStarted: true,
+                  metadata: metadata,
+                  receivedAt: new Date().toISOString()
+                };
+                console.log('🎯 Returning streaming response immediately:', streamingResponse);
+
+                // Important: Don't release the reader here - it's now owned by background streaming
+                // We return early, so the finally block shouldn't run
+                return streamingResponse;
               } else {
+                console.log('📄 Normal response detected, returning directly:', metadata);
                 // This is a normal response, return it directly
                 return metadata;
               }
@@ -255,7 +297,14 @@ export class RequestSubmitter {
         }
       }
     } finally {
-      reader.releaseLock();
+      // Only release the lock if we still own the reader
+      if (!readerOwnershipTransferred) {
+        try {
+          reader.releaseLock();
+        } catch (e) {
+          console.log('Reader lock already released or unavailable');
+        }
+      }
     }
 
     // Streaming completed, return final result
@@ -269,6 +318,48 @@ export class RequestSubmitter {
       totalDataReceived: streamedContent.length,
       receivedAt: new Date().toISOString()
     };
+  }
+
+  /**
+   * Continue streaming in the background after initial response
+   */
+  async continueStreamingInBackground(reader, decoder, initialBuffer, initialStreamedContent) {
+    let buffer = initialBuffer;
+    let streamedContent = initialStreamedContent;
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // Stream all new content
+        const newContent = buffer;
+        buffer = '';
+        streamedContent += newContent;
+
+        // Notify component of new streaming data
+        if (this.onStreamData) {
+          console.log('📤 Sending streaming data to callback:', newContent.length, 'chars');
+          this.onStreamData(newContent);
+        }
+      }
+    } catch (error) {
+      console.error('Background streaming error:', error);
+    } finally {
+      try {
+        reader.releaseLock();
+      } catch (e) {
+        // Reader might already be released
+      }
+    }
+
+    // Notify completion
+    if (this.onStreamData) {
+      this.onStreamData(null); // null indicates streaming completed
+    }
   }
 
   /**

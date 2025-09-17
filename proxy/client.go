@@ -217,6 +217,7 @@ func (c *HTTPClient) ExecuteStreamingRequest(ctx context.Context, req *ProxyRequ
 	responseWriter.Header().Set("Transfer-Encoding", "chunked")
 	responseWriter.Header().Set("Cache-Control", "no-cache")
 	responseWriter.Header().Set("Connection", "keep-alive")
+	responseWriter.Header().Set("X-Slingshot-Streaming", "true") // Custom header for browser detection
 
 	// Serialize metadata to JSON (single line, no newlines)
 	metadataBytes, err := json.Marshal(streamingResp)
