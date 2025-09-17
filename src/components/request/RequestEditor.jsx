@@ -127,6 +127,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamedContent, setStreamedContent] = useState('');
+  const [streamedChunks, setStreamedChunks] = useState([]);
   const [streamingMetadata, setStreamingMetadata] = useState(null);
 
   // Draft state
@@ -595,6 +596,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
     setResponse(null);
     setIsStreaming(false);
     setStreamedContent('');
+    setStreamedChunks([]);
     setStreamingMetadata(null);
 
     // Get all available variables for replacement
@@ -822,15 +824,23 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       requestSubmitter.setStreamingCallbacks(
         (metadata) => {
           console.log('📥 Received metadata callback:', metadata);
-          // Handle streaming metadata
+          // Handle streaming metadata - immediately show ResponseDisplay with headers
           setIsStreaming(true);
           setStreamingMetadata(metadata);
           setResponse({
-            ...metadata,
+            success: true,
+            status: metadata.response_status || metadata.status,
+            statusText: metadata.response_status_text || metadata.statusText,
+            headers: metadata.response_headers ? Object.entries(metadata.response_headers).map(([key, value]) => ({
+              name: key.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join('-'),
+              value: value,
+              isClickable: ['content-type', 'cache-control', 'authorization'].includes(key.toLowerCase())
+            })) : [],
             responseTime: 'N/A',
             responseSize: 'N/A',
             isStreaming: true,
-            streamedContent: ''
+            streamedContent: '',
+            rawHeaders: metadata.response_headers || {}
           });
         },
         (newData) => {
@@ -849,8 +859,9 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
               return prev;
             });
           } else {
-            // Handle new streaming data
+            // Handle new streaming data - add as individual chunks and update content
             setStreamedContent(prev => prev + newData);
+            setStreamedChunks(prev => [...prev, newData]);
           }
         }
       );
@@ -868,6 +879,10 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
           isStreamingComplete: true,
           finalStreamedContent: result.streamedContent || streamedContent
         }));
+      } else if (result.isStreaming && result.streamingStarted) {
+        // Streaming just started - keep isStreaming true, don't reset it
+        console.log('🚀 Streaming started, keeping isStreaming=true');
+        // Don't call setResponse here, the metadata callback already handled it
       } else {
         // Normal non-streaming response
         setResponse(result);
@@ -905,7 +920,8 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       }
     } finally {
       setIsSubmitting(false);
-      setIsStreaming(false);
+      // Only reset isStreaming if we don't have an active stream
+      // (Active streams will be reset by the completion callback or cancellation)
     }
   };
 
@@ -915,6 +931,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
     setIsSubmitting(false);
     setIsStreaming(false);
     setStreamedContent('');
+    setStreamedChunks([]);
     setStreamingMetadata(null);
   };
 
@@ -1220,6 +1237,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
             collection={selectedCollection}
             isStreaming={isStreaming}
             streamedContent={streamedContent}
+            streamedChunks={streamedChunks}
             streamingMetadata={streamingMetadata}
           />
         </div>

@@ -361,6 +361,12 @@ export const isHtmlContentType = (contentType) => {
   return contentType.toLowerCase().includes('text/html');
 };
 
+// Helper function to detect if content type is Server-Sent Events
+export const isSSEContentType = (contentType) => {
+  if (!contentType) return false;
+  return contentType.toLowerCase().includes('text/event-stream');
+};
+
 // Helper function to prettify JSON content
 export const prettifyJsonContent = (content, contentType) => {
   if (!content) return content;

@@ -11,6 +11,7 @@ import { ansiColors } from '../codemirror/ansiExtension.js';
 import { HtmlTabs } from './HtmlTabs';
 import { HtmlPreview } from './HtmlPreview';
 import { ImageDisplay } from './ImageDisplay';
+import { StreamingDisplay } from './StreamingDisplay';
 import {
   processStatusCode,
   processResponseHeaders,
@@ -19,12 +20,13 @@ import {
   getDownloadFilename,
   isJsonContent,
   isHtmlContentType,
+  isSSEContentType,
   processResponseContent,
   getOriginalResponseContent,
   getStatusColor
 } from './ResponseDisplayUtils';
 
-export function ResponseDisplay({ response, isLoading, onCancel, collection, isStreaming, streamedContent, streamingMetadata }) {
+export function ResponseDisplay({ response, isLoading, onCancel, collection, isStreaming, streamedContent, streamedChunks, streamingMetadata }) {
   // Initialize headers visibility from localStorage, defaulting to false (closed)
   const [showHeaders, setShowHeaders] = useState(() => {
     try {
@@ -382,11 +384,57 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
 
               {/* Handle different content types */}
               {(() => {
+                // DEBUG: Log all streaming-related state
+                console.log('🔍 ResponseDisplay DEBUG - Full state:', {
+                  isStreaming,
+                  hasStreamingMetadata: !!streamingMetadata,
+                  streamingMetadata,
+                  streamedChunksLength: streamedChunks?.length || 0,
+                  responseHeaders: response?.headers,
+                  responseRawHeaders: response?.rawHeaders
+                });
+
+                // PRIORITY: Check for SSE streaming first before any other content type logic
+                if (isStreaming && streamingMetadata && streamingMetadata.content_type) {
+                  console.log('🔍 SSE Priority Check - streamingMetadata.content_type:', streamingMetadata.content_type);
+                  console.log('🔍 SSE Priority Check - isSSEContentType result:', isSSEContentType(streamingMetadata.content_type));
+
+                  if (isSSEContentType(streamingMetadata.content_type)) {
+                    console.log('✅ SSE Detected! Using StreamingDisplay');
+                    return <StreamingDisplay streamedChunks={streamedChunks || []} isStreaming={isStreaming} />;
+                  }
+                }
+
+                // Alternative check: Look for SSE content type in response headers
+                if (isStreaming && streamingMetadata) {
+                  const responseHeaders = streamingMetadata.response_headers || response?.rawHeaders || {};
+                  const contentTypeFromHeaders = responseHeaders['content-type'] || responseHeaders['Content-Type'];
+                  console.log('🔍 Alternative SSE Check - contentTypeFromHeaders:', contentTypeFromHeaders);
+
+                  if (contentTypeFromHeaders && isSSEContentType(contentTypeFromHeaders)) {
+                    console.log('✅ SSE Detected via headers! Using StreamingDisplay');
+                    return <StreamingDisplay streamedChunks={streamedChunks || []} isStreaming={isStreaming} />;
+                  }
+                }
+
                 // Check if it's a supported image
                 const contentTypeHeader = response.headers?.find(h =>
                   h.name && h.name.toLowerCase() === 'content-type'
                 );
-                const contentType = contentTypeHeader?.value || '';
+                // Also check rawHeaders for content-type (fallback for streaming responses)
+                const rawContentType = response.rawHeaders && response.rawHeaders['content-type'];
+                // For streaming responses, prioritize the metadata content_type
+                const metadataContentType = isStreaming && streamingMetadata && streamingMetadata.content_type;
+                const contentType = metadataContentType || contentTypeHeader?.value || rawContentType || '';
+
+                // Debug logging for SSE detection
+                if (isStreaming) {
+                  console.log('🔍 SSE Debug - isStreaming:', isStreaming);
+                  console.log('🔍 SSE Debug - streamingMetadata:', streamingMetadata);
+                  console.log('🔍 SSE Debug - metadataContentType:', metadataContentType);
+                  console.log('🔍 SSE Debug - contentType:', contentType);
+                  console.log('🔍 SSE Debug - isSSEContentType(contentType):', isSSEContentType(contentType));
+                }
 
                 if (response.binaryData && isSupportedImageType(contentType)) {
                   // Show image
@@ -414,8 +462,11 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
                     </div>
                   );
                 } else if (response.responseData || streamedContent || response.finalStreamedContent || isStreaming) {
-                  // Check if content type is HTML
-                  if (isHtmlContentType(contentType)) {
+                  // Check if content type is SSE (Server-Sent Events)
+                  if (isSSEContentType(contentType) && isStreaming) {
+                    // Show streaming display for SSE content
+                    return <StreamingDisplay streamedChunks={streamedChunks || []} isStreaming={isStreaming} />;
+                  } else if (isHtmlContentType(contentType)) {
                     // Show HTML preview with tabs
                     return (
                       <div class="flex flex-col flex-grow">
