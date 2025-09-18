@@ -432,29 +432,39 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
 
               {/* Handle different content types */}
               {(() => {
-                // HIGHEST PRIORITY: Check for cached SSE responses from IndexedDB
-                if (response?.response_type === 'SSE') {
-                  // Parse stored streaming chunks and metadata
+                // HIGHEST PRIORITY: Check for cached SSE responses from IndexedDB by Content-Type header
+                const contentTypeFromHeaders = response?.rawHeaders &&
+                  (response.rawHeaders['content-type'] || response.rawHeaders['Content-Type']);
+                console.log('🔍 Checking content type from headers:', contentTypeFromHeaders);
+
+                if (contentTypeFromHeaders && isSSEContentType(contentTypeFromHeaders)) {
+                  console.log('✅ Found cached SSE response from headers, loading StreamingDisplay');
+
+                  // For cached SSE responses, try to parse stored chunks, or split response data
                   let chunks = [];
-                  let metadata = null;
 
                   try {
-                    chunks = response.streaming_chunks ? JSON.parse(response.streaming_chunks) : [];
-                    metadata = response.streaming_metadata ? JSON.parse(response.streaming_metadata) : null;
+                    // First try to get stored chunks if available
+                    if (response.streaming_chunks) {
+                      chunks = JSON.parse(response.streaming_chunks);
+                    } else if (response.responseData) {
+                      // Fallback: split response data by double newlines (SSE format)
+                      chunks = response.responseData.split('\n\n').filter(chunk => chunk.trim());
+                    }
+                    console.log('📦 Parsed SSE data:', { chunksCount: chunks.length });
                   } catch (error) {
                     console.error('Failed to parse stored SSE data:', error);
-                    chunks = [];
-                    metadata = null;
+                    chunks = response.responseData ? [response.responseData] : [];
                   }
 
-                  return <StreamingDisplay streamedChunks={chunks} isStreaming={false} />;
+                  return <StreamingDisplay streamedChunks={chunks} isStreaming={false} onCancel={onCancel} response={response} />;
                 }
 
                 // PRIORITY: Check for SSE streaming first (both during and after streaming)
                 // Use streamingMetadata presence to detect SSE responses, not just isStreaming
                 if (streamingMetadata && streamingMetadata.content_type) {
                   if (isSSEContentType(streamingMetadata.content_type)) {
-                    return <StreamingDisplay streamedChunks={streamedChunks || []} isStreaming={isStreaming} />;
+                    return <StreamingDisplay streamedChunks={streamedChunks || []} isStreaming={isStreaming} onCancel={onCancel} response={response} />;
                   }
                 }
 
@@ -464,7 +474,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
                   const contentTypeFromHeaders = responseHeaders['content-type'] || responseHeaders['Content-Type'];
 
                   if (contentTypeFromHeaders && isSSEContentType(contentTypeFromHeaders)) {
-                    return <StreamingDisplay streamedChunks={streamedChunks || []} isStreaming={isStreaming} />;
+                    return <StreamingDisplay streamedChunks={streamedChunks || []} isStreaming={isStreaming} onCancel={onCancel} response={response} />;
                   }
                 }
 
@@ -508,7 +518,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
                   // Check if content type is SSE (Server-Sent Events) - both during and after streaming
                   if (isSSEContentType(contentType) && (isStreaming || streamingMetadata)) {
                     // Show streaming display for SSE content (keep it even after streaming completes)
-                    return <StreamingDisplay streamedChunks={streamedChunks || []} isStreaming={isStreaming} />;
+                    return <StreamingDisplay streamedChunks={streamedChunks || []} isStreaming={isStreaming} onCancel={onCancel} response={response} />;
                   } else if (isHtmlContentType(contentType)) {
                     // Show HTML preview with tabs
                     return (
