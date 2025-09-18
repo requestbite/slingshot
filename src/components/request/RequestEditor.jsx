@@ -585,6 +585,26 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
     });
   };
 
+  // Helper function to check if a data chunk is a timeout response
+  const checkForTimeoutResponse = (data) => {
+    if (!data || typeof data !== 'string') return null;
+
+    try {
+      const trimmed = data.trim();
+      // Check if it looks like JSON
+      if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+        const parsed = JSON.parse(trimmed);
+        // Check for timeout response pattern
+        if (parsed.success === false && parsed.error_type === 'request_timeout') {
+          return 'Request timeout reached. Closing connection.\n';
+        }
+      }
+    } catch (error) {
+      // Not valid JSON, continue normally
+    }
+    return null;
+  };
+
   // Handle request submission
   const handleSendRequest = async () => {
     if (isSubmitting) return;
@@ -858,9 +878,19 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
               return prev;
             });
           } else {
-            // Handle new streaming data - add as individual chunks and update content
-            setStreamedContent(prev => prev + newData);
-            setStreamedChunks(prev => [...prev, newData]);
+            // Check if this chunk is a timeout JSON response
+            const timeoutMessage = checkForTimeoutResponse(newData);
+            if (timeoutMessage) {
+              // Replace timeout JSON with user-friendly message
+              setStreamedContent(prev => prev + timeoutMessage);
+              setStreamedChunks(prev => [...prev, timeoutMessage]);
+              // Mark streaming as completed since it's a timeout
+              setIsStreaming(false);
+            } else {
+              // Handle normal streaming data - add as individual chunks and update content
+              setStreamedContent(prev => prev + newData);
+              setStreamedChunks(prev => [...prev, newData]);
+            }
           }
         }
       );

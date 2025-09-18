@@ -257,10 +257,19 @@ export class RequestSubmitter {
                 // Start background streaming and return immediately
                 console.log('🔄 Starting background streaming');
 
+                // Send any initial buffer content immediately
+                if (buffer.length > 0) {
+                  console.log('📤 Sending initial buffer content:', buffer.length, 'chars');
+                  if (this.onStreamData) {
+                    this.onStreamData(buffer);
+                  }
+                  streamedContent += buffer;
+                }
+
                 // Transfer ownership of the reader to background streaming
                 // We don't release the lock here since the background function will handle it
                 readerOwnershipTransferred = true;
-                this.continueStreamingInBackground(reader, decoder, buffer, streamedContent);
+                this.continueStreamingInBackground(reader, decoder, '', streamedContent);
 
                 // Return streaming response immediately to exit loading state
                 const streamingResponse = {
