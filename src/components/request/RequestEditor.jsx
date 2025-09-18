@@ -130,6 +130,9 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   const [streamedChunks, setStreamedChunks] = useState([]);
   const [streamingMetadata, setStreamingMetadata] = useState(null);
 
+  // Use ref to preserve metadata across streaming lifecycle
+  const streamingMetadataRef = useRef(null);
+
   // Draft state
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isDraftDirty, setIsDraftDirty] = useState(false);
@@ -605,6 +608,46 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
     return null;
   };
 
+  // Save SSE response to IndexedDB
+  const saveSSEResponseToIndexedDB = async (requestId, sseData) => {
+    console.log('🔄 saveSSEResponseToIndexedDB called with:', { requestId, sseData });
+    try {
+      const { streamingMetadata, streamedContent, streamedChunks } = sseData;
+      console.log('📝 Parsed SSE data:', { streamingMetadata, streamedContent: streamedContent?.length, streamedChunks: streamedChunks?.length });
+
+      // Create SSE response object that matches the expected format
+      const sseResponse = {
+        responseData: streamedContent,
+        rawHeaders: streamingMetadata?.response_headers || streamingMetadata?.headers || {},
+        status: streamingMetadata?.response_status || streamingMetadata?.status || null,
+        statusText: streamingMetadata?.response_status_text || streamingMetadata?.status_text || null,
+        responseTime: 'N/A', // SSE doesn't have traditional response time
+        responseSize: 'N/A', // SSE doesn't have traditional response size
+        rawResponseTime: null,
+        rawResponseSize: null,
+        isBinary: false,
+        binaryData: null,
+        cancelled: false,
+        success: true,
+        errorType: null,
+        errorTitle: null,
+        errorMessage: null,
+        receivedAt: new Date().toISOString(),
+        // Mark this as an SSE response for proper rendering
+        response_type: 'SSE',
+        // Store streaming-specific data
+        streaming_chunks: streamedChunks,
+        streaming_metadata: streamingMetadata
+      };
+
+      console.log('💾 About to save SSE response:', sseResponse);
+      await apiClient.saveRequestResponse(requestId, sseResponse);
+      console.log('✅ SSE response saved to IndexedDB successfully');
+    } catch (error) {
+      console.error('Failed to save SSE response to IndexedDB:', error);
+    }
+  };
+
   // Handle request submission
   const handleSendRequest = async () => {
     if (isSubmitting) return;
@@ -618,6 +661,8 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
     setStreamedContent('');
     setStreamedChunks([]);
     setStreamingMetadata(null);
+    // Reset metadata ref for clean state
+    streamingMetadataRef.current = null;
 
     // Get all available variables for replacement
     const variables = await getAvailableVariables();
@@ -847,6 +892,8 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
           // Handle streaming metadata - immediately show ResponseDisplay with headers
           setIsStreaming(true);
           setStreamingMetadata(metadata);
+          // Store metadata in ref to preserve it across streaming lifecycle
+          streamingMetadataRef.current = metadata;
           setResponse({
             success: true,
             status: metadata.response_status || metadata.status,
@@ -866,15 +913,39 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         (newData) => {
           console.log('📦 Received data callback:', newData ? `${newData.length} chars` : 'completion signal');
           if (newData === null) {
-            // Streaming completed - only set completion flag, don't override SSE response properties
-            setIsStreaming(false);
+            // Streaming completed - capture current state and save to IndexedDB
             setStreamedContent(prev => {
-              setResponse(prevResponse => ({
-                ...prevResponse,
+              setStreamedChunks(currentChunks => {
+                console.log('🔄 Streaming completed, saving SSE response with:', {
+                  requestId: request?.id,
+                  hasMetadata: !!streamingMetadataRef.current,
+                  contentLength: prev?.length,
+                  chunksCount: currentChunks?.length
+                });
+
+                // Save SSE response to IndexedDB when streaming completes
+                if (request?.id && streamingMetadataRef.current) {
+                  saveSSEResponseToIndexedDB(request.id, {
+                    streamingMetadata: streamingMetadataRef.current,
+                    streamedContent: prev,
+                    streamedChunks: currentChunks
+                  });
+                }
+
+                return currentChunks;
+              });
+
+              const finalResponse = {
                 isStreamingComplete: true,
                 finalStreamedContent: prev
-                // Don't override responseSize, responseTime, status, or headers for SSE
+              };
+
+              setResponse(prevResponse => ({
+                ...prevResponse,
+                ...finalResponse
               }));
+
+              setIsStreaming(false);
               return prev;
             });
           } else {
@@ -882,8 +953,31 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
             const timeoutMessage = checkForTimeoutResponse(newData);
             if (timeoutMessage) {
               // Replace timeout JSON with user-friendly message
-              setStreamedContent(prev => prev + timeoutMessage);
-              setStreamedChunks(prev => [...prev, timeoutMessage]);
+              setStreamedContent(prev => {
+                const finalContent = prev + timeoutMessage;
+                setStreamedChunks(currentChunks => {
+                  const finalChunks = [...currentChunks, timeoutMessage];
+
+                  console.log('⏰ Timeout detected, saving SSE response with:', {
+                    requestId: request?.id,
+                    hasMetadata: !!streamingMetadataRef.current,
+                    contentLength: finalContent?.length,
+                    chunksCount: finalChunks?.length
+                  });
+
+                  // Save SSE response to IndexedDB when timing out
+                  if (request?.id && streamingMetadataRef.current) {
+                    saveSSEResponseToIndexedDB(request.id, {
+                      streamingMetadata: streamingMetadataRef.current,
+                      streamedContent: finalContent,
+                      streamedChunks: finalChunks
+                    });
+                  }
+
+                  return finalChunks;
+                });
+                return finalContent;
+              });
               // Mark streaming as completed since it's a timeout
               setIsStreaming(false);
             } else {
@@ -956,6 +1050,16 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
 
   // Handle request cancellation
   const handleCancelRequest = () => {
+    // Save SSE response before canceling if we have streaming data
+    if (request?.id && streamingMetadataRef.current && (streamedContent || streamedChunks.length > 0)) {
+      console.log('🛑 Cancellation detected, saving SSE response before cleanup');
+      saveSSEResponseToIndexedDB(request.id, {
+        streamingMetadata: streamingMetadataRef.current,
+        streamedContent,
+        streamedChunks
+      });
+    }
+
     requestSubmitter.cancelRequest();
     setIsSubmitting(false);
     setIsStreaming(false);

@@ -28,6 +28,20 @@ db.version(1).stores({
   variables: '++id, environment_id, collection_id, key, value',
 });
 
+// Version 2: Add SSE streaming fields to requests table
+db.version(2).stores({
+  /** Environment table with indexes on id, name, description */
+  environments: '++id, name, description',
+  /** Collection table with indexes on id, name, description, environment_id */
+  collections: '++id, name, description, environment_id',
+  /** Folder table with indexes on id, collection_id, parent_folder_id, name */
+  folders: '++id, collection_id, parent_folder_id, name',
+  /** Request table with indexes on id, collection_id, folder_id, name, method, url */
+  requests: '++id, collection_id, folder_id, name, method, url',
+  /** Variable table with indexes on id, environment_id, collection_id, key, value */
+  variables: '++id, environment_id, collection_id, key, value',
+});
+
 /**
  * Environment entity class definition
  * Represents an environment (dev, staging, prod, etc.) with its configuration and encrypted secrets
@@ -105,6 +119,9 @@ db.requests.defineClass({
   response_error_title: String,
   response_error_message: String,
   response_received_at: Date,
+  // SSE streaming fields
+  streaming_chunks: String, // JSON array of streaming chunks
+  streaming_metadata: String, // JSON object of streaming metadata
   // Draft fields for request editing
   has_draft_edits: Boolean,
   draft_method: String,

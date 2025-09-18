@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { WelcomeMessage } from '../common/WelcomeMessage';
 import { Toast, useToast } from '../common/Toast';
 import CodeMirror from '@uiw/react-codemirror';
+import { requestSubmitter } from '../../utils/requestSubmitter';
 import { json } from '@codemirror/lang-json';
 import { xml } from '@codemirror/lang-xml';
 import { dracula } from '@uiw/codemirror-theme-dracula';
@@ -157,25 +158,41 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
     );
   }
 
-  // Helper function to get proper status text like non-SSE requests
-  const getStatusText = (status) => {
-    const statusTexts = {
-      200: 'OK', 201: 'Created', 204: 'No Content',
-      400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found',
-      500: 'Internal Server Error', 502: 'Bad Gateway', 503: 'Service Unavailable'
-    };
-    return statusTexts[status] || 'Unknown';
-  };
 
   // Process the status code and headers for the current response
   // For SSE streaming, use streamingMetadata if available and preserve it
   let effectiveResponse = response;
-  if ((isStreaming || streamingMetadata) && streamingMetadata) {
+
+  // Handle cached SSE responses from IndexedDB
+  if (response?.response_type === 'SSE') {
+    let storedMetadata = null;
+    try {
+      storedMetadata = response.streaming_metadata ? JSON.parse(response.streaming_metadata) : null;
+    } catch (error) {
+      console.error('Failed to parse stored SSE metadata:', error);
+    }
+
+    if (storedMetadata) {
+      const status = storedMetadata.response_status || response?.response_status;
+      effectiveResponse = {
+        ...response,
+        status: status,
+        statusText: requestSubmitter.getStatusText(status),
+        headers: storedMetadata.response_headers ? Object.entries(storedMetadata.response_headers).map(([key, value]) => ({
+          name: key.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join('-'),
+          value: value,
+          isClickable: ['content-type', 'cache-control', 'authorization'].includes(key.toLowerCase())
+        })) : (response?.headers || []),
+        responseTime: 'N/A',
+        responseSize: 'N/A'
+      };
+    }
+  } else if ((isStreaming || streamingMetadata) && streamingMetadata) {
     const status = streamingMetadata.response_status || response?.status;
     effectiveResponse = {
       ...response,
       status: status,
-      statusText: getStatusText(status), // Use proper status text
+      statusText: requestSubmitter.getStatusText(status), // Use proper status text
       headers: streamingMetadata.response_headers ? Object.entries(streamingMetadata.response_headers).map(([key, value]) => ({
         name: key.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join('-'),
         value: value,
@@ -415,6 +432,24 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
 
               {/* Handle different content types */}
               {(() => {
+                // HIGHEST PRIORITY: Check for cached SSE responses from IndexedDB
+                if (response?.response_type === 'SSE') {
+                  // Parse stored streaming chunks and metadata
+                  let chunks = [];
+                  let metadata = null;
+
+                  try {
+                    chunks = response.streaming_chunks ? JSON.parse(response.streaming_chunks) : [];
+                    metadata = response.streaming_metadata ? JSON.parse(response.streaming_metadata) : null;
+                  } catch (error) {
+                    console.error('Failed to parse stored SSE data:', error);
+                    chunks = [];
+                    metadata = null;
+                  }
+
+                  return <StreamingDisplay streamedChunks={chunks} isStreaming={false} />;
+                }
+
                 // PRIORITY: Check for SSE streaming first (both during and after streaming)
                 // Use streamingMetadata presence to detect SSE responses, not just isStreaming
                 if (streamingMetadata && streamingMetadata.content_type) {

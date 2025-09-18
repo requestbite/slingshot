@@ -436,14 +436,18 @@ export class SlingshotApiClient {
    * @returns {Promise<import('../types/index.js').Request>} Updated request
    */
   async saveRequestResponse(id, responseData) {
+    console.log('🔍 saveRequestResponse called with:', { id, responseData: Object.keys(responseData) });
     const request = await db.requests.get(id);
     if (!request) {
+      console.error('❌ Request not found with ID:', id);
       throw new Error('Request not found');
     }
+    console.log('✅ Found request:', request.name);
 
     const updatedData = {
       // Response data fields
       response_data: responseData.responseData || null,
+      response_type: responseData.response_type || null,
       response_headers: responseData.rawHeaders || {},
       response_status: responseData.status || null,
       response_status_text: responseData.statusText || null,
@@ -461,8 +465,18 @@ export class SlingshotApiClient {
       response_received_at: new Date(responseData.receivedAt || new Date())
     };
 
+    // Add SSE-specific fields if this is a streaming response
+    if (responseData.response_type === 'SSE') {
+      updatedData.streaming_chunks = JSON.stringify(responseData.streaming_chunks || []);
+      updatedData.streaming_metadata = JSON.stringify(responseData.streaming_metadata || {});
+    }
+
+    console.log('💾 About to update database with:', Object.keys(updatedData));
     await db.requests.update(id, updatedData);
-    return await db.requests.get(id);
+    console.log('✅ Database update completed');
+    const updatedRequest = await db.requests.get(id);
+    console.log('📤 Updated request response_type:', updatedRequest?.response_type);
+    return updatedRequest;
   }
 
   /**
