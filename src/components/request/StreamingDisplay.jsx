@@ -1,5 +1,81 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 
+// Extract JSON from SSE formatted chunk
+function extractJSONFromSSE(text) {
+  if (!text || typeof text !== 'string') return null;
+
+  // Handle SSE format: "data: {...}" or "data:{...}"
+  const dataMatch = text.match(/^data:\s*(.+)$/);
+  if (dataMatch) {
+    return dataMatch[1].trim();
+  }
+
+  // Return original text if not SSE format
+  return text.trim();
+}
+
+// Utility function to check if text contains valid JSON
+function isValidJSON(text) {
+  const jsonPart = extractJSONFromSSE(text);
+  if (!jsonPart) return false;
+
+  // Quick check - JSON part must start with { or [
+  if (!jsonPart.startsWith('{') && !jsonPart.startsWith('[')) return false;
+
+  try {
+    JSON.parse(jsonPart);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Lightweight JSON syntax highlighting
+function highlightJSON(text) {
+  // Check if this is SSE format
+  const dataMatch = text.match(/^(data:\s*)(.+)$/);
+
+  let jsonPart, prefix = '';
+  if (dataMatch) {
+    prefix = dataMatch[1];
+    jsonPart = dataMatch[2];
+  } else {
+    jsonPart = text;
+  }
+
+  // Escape HTML first
+  let highlighted = jsonPart
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // More precise highlighting to avoid conflicts
+  // 1. First highlight complete key-value pairs with string values
+  highlighted = highlighted.replace(
+    /"([^"]+)"\s*:\s*"([^"]*)"/g,
+    '<span style="color: #66d9ef">"$1"</span><span style="color: #ffffff">:</span><span style="color: #eaf389">"$2"</span>'
+  );
+
+  // 2. Then highlight remaining keys (for non-string values)
+  highlighted = highlighted.replace(
+    /"([^"]+)"\s*:/g,
+    '<span style="color: #66d9ef">"$1"</span><span style="color: #ffffff">:</span>'
+  );
+
+  // 3. Finally highlight structural characters that aren't already in spans
+  highlighted = highlighted.replace(
+    /([{}\[\],])(?![^<]*>)/g,
+    '<span style="color: #ffffff">$1</span>'
+  );
+
+  // If SSE format, add the prefix back with white color
+  if (prefix) {
+    highlighted = `<span style="color: #ffffff">${prefix}</span>${highlighted}`;
+  }
+
+  return highlighted;
+}
+
 export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, response }) {
   const containerRef = useRef(null);
   const [wasCancelled, setWasCancelled] = useState(false);
@@ -107,14 +183,21 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
           </div>
         )}
 
-        {streamedChunks.map((chunk, index) => (
-          <div
-            key={index}
-            class={`streaming-chunk mb-0.5 pb-0.5 ${index < streamedChunks.length - 1 ? 'border-b border-gray-600' : ''}`}
-          >
-            {chunk}
-          </div>
-        ))}
+        {streamedChunks.map((chunk, index) => {
+          const isJSON = isValidJSON(chunk);
+          return (
+            <div
+              key={index}
+              class={`streaming-chunk mb-0.5 pb-0.5 ${index < streamedChunks.length - 1 ? 'border-b border-gray-600' : ''}`}
+            >
+              {isJSON ? (
+                <div dangerouslySetInnerHTML={{ __html: highlightJSON(chunk) }} />
+              ) : (
+                chunk
+              )}
+            </div>
+          );
+        })}
 
         {(wasCancelled || response?.cancelled) && !isStreaming && (
           <div class="streaming-chunk mb-0.5 pb-0.5 text-red-400 italic">
