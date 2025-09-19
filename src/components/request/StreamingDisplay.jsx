@@ -5,7 +5,8 @@ function extractJSONFromSSE(text) {
   if (!text || typeof text !== 'string') return null;
 
   // Handle SSE format: "data: {...}" or "data:{...}"
-  const dataMatch = text.match(/^data:\s*(.+)$/);
+  // Also handle multiline SSE data
+  const dataMatch = text.match(/^data:\s*(.+)$/m);
   if (dataMatch) {
     return dataMatch[1].trim();
   }
@@ -16,14 +17,17 @@ function extractJSONFromSSE(text) {
 
 // Utility function to check if text contains valid JSON
 function isValidJSON(text) {
+  if (!text || typeof text !== 'string') return false;
+
   const jsonPart = extractJSONFromSSE(text);
   if (!jsonPart) return false;
 
   // Quick check - JSON part must start with { or [
-  if (!jsonPart.startsWith('{') && !jsonPart.startsWith('[')) return false;
+  const trimmed = jsonPart.trim();
+  if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) return false;
 
   try {
-    JSON.parse(jsonPart);
+    JSON.parse(trimmed);
     return true;
   } catch {
     return false;
@@ -32,8 +36,10 @@ function isValidJSON(text) {
 
 // Lightweight JSON syntax highlighting
 function highlightJSON(text) {
+  if (!text || typeof text !== 'string') return text;
+
   // Check if this is SSE format
-  const dataMatch = text.match(/^(data:\s*)(.+)$/);
+  const dataMatch = text.match(/^(data:\s*)(.+)$/m);
 
   let jsonPart, prefix = '';
   if (dataMatch) {
@@ -185,10 +191,18 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
 
         {streamedChunks.map((chunk, index) => {
           const isJSON = isValidJSON(chunk);
+          // Debug logging for JSON detection during streaming
+          if (isStreaming && chunk && chunk.trim()) {
+            console.log(`[StreamingDisplay] Chunk ${index}:`, {
+              chunk: chunk.substring(0, 100) + (chunk.length > 100 ? '...' : ''),
+              isJSON,
+              isStreaming
+            });
+          }
           return (
             <div
               key={index}
-              class={`streaming-chunk mb-0.5 pb-0.5 ${index < streamedChunks.length - 1 ? 'border-b border-gray-600' : ''}`}
+              class={`streaming-chunk ${index < streamedChunks.length - 1 ? 'mb-1 pb-1 border-b border-gray-600' : 'mb-0'}`}
             >
               {isJSON ? (
                 <div dangerouslySetInnerHTML={{ __html: highlightJSON(chunk) }} />
