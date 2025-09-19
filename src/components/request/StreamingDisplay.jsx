@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { Toast, useToast } from '../common/Toast';
 
 // Extract JSON from SSE formatted chunk
 function extractJSONFromSSE(text) {
@@ -87,6 +88,7 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
   const [wasCancelled, setWasCancelled] = useState(false);
   const [autoScroll, setAutoScroll] = useState(true);
   const [showNoScrollButton, setShowNoScrollButton] = useState(false);
+  const [isToastVisible, showToast, hideToast] = useToast();
 
   // Debug effect to track streaming state
   useEffect(() => {
@@ -111,6 +113,18 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
   const handleNoScroll = () => {
     setAutoScroll(false);
     setShowNoScrollButton(false);
+  };
+
+  // Copy chunk data to clipboard
+  const copyChunkToClipboard = async (chunk) => {
+    try {
+      // Extract only the data part (without "data:" prefix)
+      const dataOnly = extractJSONFromSSE(chunk) || chunk;
+      await navigator.clipboard.writeText(dataOnly);
+      showToast();
+    } catch (error) {
+      console.error('Failed to copy chunk to clipboard:', error);
+    }
   };
 
   // Auto-scroll when new chunks arrive during streaming
@@ -181,11 +195,15 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
     <div class="relative">
       <div
         ref={containerRef}
-        class="streaming-display-container bg-gray-700 text-white font-mono text-xs rounded-md border border-gray-600 p-4 min-h-[200px] max-h-[400px] overflow-y-auto whitespace-pre-wrap break-words"
+        class="streaming-display-container bg-gray-700 text-white font-mono text-xs rounded-md border border-gray-600 min-h-[200px] max-h-[400px] overflow-y-auto whitespace-pre-wrap break-words"
+        style="padding: 16px 16px 16px 8px"
       >
         {streamedChunks.length === 0 && isStreaming && (
-          <div class="text-gray-400 italic">
-            Waiting for streaming data...
+          <div class="flex items-start">
+            <div class="flex-shrink-0 w-6 mr-2"></div>
+            <div class="flex-1 text-gray-400 italic">
+              Waiting for streaming data...
+            </div>
           </div>
         )}
 
@@ -202,26 +220,48 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
           return (
             <div
               key={index}
-              class={`streaming-chunk ${index < streamedChunks.length - 1 ? 'mb-1 pb-1 border-b border-gray-600' : 'mb-0'}`}
+              class={`streaming-chunk flex items-start group ${index < streamedChunks.length - 1 ? 'mb-1 pb-1 border-b border-gray-600' : 'mb-0'}`}
             >
-              {isJSON ? (
-                <div dangerouslySetInnerHTML={{ __html: highlightJSON(chunk) }} />
-              ) : (
-                chunk
-              )}
+              {/* Copy button gutter */}
+              <div class="flex-shrink-0 w-6 mr-2 flex justify-center">
+                <button
+                  onClick={() => copyChunkToClipboard(chunk)}
+                  class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-gray-400 hover:text-white cursor-pointer p-0.5 rounded"
+                  title="Copy chunk data"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3 h-3">
+                    <path d="M20 2H10c-1.103 0-2 .897-2 2v4H4c-1.103 0-2 .897-2 2v10c0 1.103.897 2 2 2h10c1.103 0 2-.897 2-2v-4h4c1.103 0 2-.897 2-2V4c0-1.103-.897-2-2-2zM4 20V10h10l.002 10H4zm16-6h-4v-4c0-1.103-.897-2-2-2h-4V4h10v10z"></path>
+                  </svg>
+                </button>
+              </div>
+
+              {/* Chunk content */}
+              <div class="flex-1 min-w-0">
+                {isJSON ? (
+                  <div dangerouslySetInnerHTML={{ __html: highlightJSON(chunk) }} />
+                ) : (
+                  chunk
+                )}
+              </div>
             </div>
           );
         })}
 
         {(wasCancelled || response?.cancelled) && !isStreaming && (
-          <div class="streaming-chunk mb-0.5 pb-0.5 text-red-400 italic">
-            Request cancelled by user.
+          <div class="streaming-chunk flex items-start mb-0.5 pb-0.5">
+            <div class="flex-shrink-0 w-6 mr-2"></div>
+            <div class="flex-1 text-red-400 italic">
+              Request cancelled by user.
+            </div>
           </div>
         )}
 
         {isStreaming && !wasCancelled && (
-          <div class="text-green-400 italic">
-            ● Streaming...
+          <div class="flex items-start">
+            <div class="flex-shrink-0 w-6 mr-2"></div>
+            <div class="flex-1 text-green-400 italic">
+              ● Streaming...
+            </div>
           </div>
         )}
       </div>
@@ -250,6 +290,14 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
           )}
         </div>
       )}
+
+      {/* Toast notification */}
+      <Toast
+        message="Chunk copied to clipboard!"
+        isVisible={isToastVisible}
+        onClose={hideToast}
+        type="success"
+      />
     </div>
   );
 }
