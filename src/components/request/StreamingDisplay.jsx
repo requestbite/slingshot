@@ -90,6 +90,7 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
   const [showNoScrollButton, setShowNoScrollButton] = useState(false);
   const [isToastVisible, showToast, hideToast] = useToast();
   const [prettifiedChunks, setPrettifiedChunks] = useState(new Set());
+  const lastScrollTimeRef = useRef(0);
 
 
   // Handle cancel button click
@@ -166,51 +167,81 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
 
     const container = containerRef.current;
 
-    // Always scroll the container to bottom to show new content
-    container.scrollTop = container.scrollHeight;
+    // Scroll to bottom smoothly but efficiently during streaming
+    const scrollToBottom = () => {
+      const now = Date.now();
+      const timeSinceLastScroll = now - lastScrollTimeRef.current;
 
-    // Check if the container extends below the viewport after scrolling
-    setTimeout(() => {
-      if (containerRef.current) {
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const isContainerBelowFold = containerRect.bottom > window.innerHeight;
+      // Only use instant scrolling for very rapid updates (< 50ms apart)
+      // For normal streaming (1 second intervals), always use smooth scrolling
+      const shouldUseSmooth = timeSinceLastScroll > 50;
 
-        if (isContainerBelowFold) {
-          // Show the "No scroll" button and auto-scroll the window
-          setShowNoScrollButton(true);
-
-          // Scroll the window to keep the container bottom in view
-          window.scrollTo({
-            top: document.documentElement.scrollHeight,
-            behavior: 'smooth'
-          });
-        }
+      // Scroll the container smoothly
+      if (shouldUseSmooth) {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth'
+        });
+        lastScrollTimeRef.current = now;
+      } else {
+        // For extremely rapid updates, use instant scroll to keep up
+        container.scrollTop = container.scrollHeight;
       }
-    }, 50); // Small delay to let DOM update
+
+      // Then check if we need to scroll the window to keep everything visible
+      requestAnimationFrame(() => {
+        if (containerRef.current) {
+          const containerRect = containerRef.current.getBoundingClientRect();
+          const isContainerBelowFold = containerRect.bottom > window.innerHeight;
+
+          if (isContainerBelowFold) {
+            // Show the "No scroll" button
+            setShowNoScrollButton(true);
+
+            // Scroll window to bottom smoothly
+            window.scrollTo({
+              top: document.documentElement.scrollHeight,
+              behavior: shouldUseSmooth ? 'smooth' : 'instant'
+            });
+          }
+        }
+      });
+    };
+
+    scrollToBottom();
   }, [streamedChunks, isStreaming, autoScroll]);
 
   // Handle manual scrolling - if user scrolls up significantly, disable auto-scroll
   useEffect(() => {
     if (!isStreaming) return;
 
+    let scrollTimeout;
+
     const handleContainerScroll = () => {
       const container = containerRef.current;
       if (!container) return;
 
-      const scrollFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-      if (scrollFromBottom > 100 && autoScroll) {
-        setAutoScroll(false);
-        setShowNoScrollButton(false);
-      }
+      // Debounce scroll detection to avoid conflicts with rapid auto-scrolling
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const scrollFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+        if (scrollFromBottom > 100 && autoScroll) {
+          setAutoScroll(false);
+          setShowNoScrollButton(false);
+        }
+      }, 150); // Debounce manual scroll detection
     };
 
     const handleWindowScroll = () => {
       // If user manually scrolls the window up significantly, disable auto-scroll
-      const scrollFromBottom = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
-      if (scrollFromBottom > 200 && autoScroll) {
-        setAutoScroll(false);
-        setShowNoScrollButton(false);
-      }
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const scrollFromBottom = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
+        if (scrollFromBottom > 200 && autoScroll) {
+          setAutoScroll(false);
+          setShowNoScrollButton(false);
+        }
+      }, 150); // Debounce manual scroll detection
     };
 
     const container = containerRef.current;
@@ -218,6 +249,7 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
       container.addEventListener('scroll', handleContainerScroll);
       window.addEventListener('scroll', handleWindowScroll);
       return () => {
+        clearTimeout(scrollTimeout);
         container.removeEventListener('scroll', handleContainerScroll);
         window.removeEventListener('scroll', handleWindowScroll);
       };
