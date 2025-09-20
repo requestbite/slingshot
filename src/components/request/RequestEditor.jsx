@@ -610,10 +610,8 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
 
   // Save SSE response to IndexedDB
   const saveSSEResponseToIndexedDB = async (requestId, sseData) => {
-    console.log('🔄 saveSSEResponseToIndexedDB called with:', { requestId, sseData });
     try {
       const { streamingMetadata, streamedContent, streamedChunks } = sseData;
-      console.log('📝 Parsed SSE data:', { streamingMetadata, streamedContent: streamedContent?.length, streamedChunks: streamedChunks?.length });
 
       // Create SSE response object that matches the expected format
       const sseResponse = {
@@ -640,9 +638,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         streaming_metadata: streamingMetadata
       };
 
-      console.log('💾 About to save SSE response:', sseResponse);
       await apiClient.saveRequestResponse(requestId, sseResponse);
-      console.log('✅ SSE response saved to IndexedDB successfully');
     } catch (error) {
       console.error('Failed to save SSE response to IndexedDB:', error);
     }
@@ -885,10 +881,8 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       requestSubmitter.updateProxyUrl(requestSubmitter.getCurrentProxyUrl());
 
       // Set up streaming callbacks for real-time updates
-      console.log('🔧 Setting up streaming callbacks');
       requestSubmitter.setStreamingCallbacks(
         (metadata) => {
-          console.log('📥 Received metadata callback:', metadata);
           // Handle streaming metadata - immediately show ResponseDisplay with headers
           setIsStreaming(true);
           setStreamingMetadata(metadata);
@@ -911,17 +905,10 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
           });
         },
         (newData) => {
-          console.log('📦 Received data callback:', newData ? `${newData.length} chars` : 'completion signal');
           if (newData === null) {
             // Streaming completed - capture current state and save to IndexedDB
             setStreamedContent(prev => {
               setStreamedChunks(currentChunks => {
-                console.log('🔄 Streaming completed, saving SSE response with:', {
-                  requestId: request?.id,
-                  hasMetadata: !!streamingMetadataRef.current,
-                  contentLength: prev?.length,
-                  chunksCount: currentChunks?.length
-                });
 
                 // Save SSE response to IndexedDB when streaming completes
                 if (request?.id && streamingMetadataRef.current) {
@@ -958,12 +945,6 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
                 setStreamedChunks(currentChunks => {
                   const finalChunks = [...currentChunks, timeoutMessage];
 
-                  console.log('⏰ Timeout detected, saving SSE response with:', {
-                    requestId: request?.id,
-                    hasMetadata: !!streamingMetadataRef.current,
-                    contentLength: finalContent?.length,
-                    chunksCount: finalChunks?.length
-                  });
 
                   // Save SSE response to IndexedDB when timing out
                   if (request?.id && streamingMetadataRef.current) {
@@ -1004,7 +985,6 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         }));
       } else if (result.isStreaming && result.streamingStarted) {
         // Streaming just started - keep isStreaming true, don't reset it
-        console.log('🚀 Streaming started, keeping isStreaming=true');
         // Don't call setResponse here, the metadata callback already handled it
       } else {
         // Normal non-streaming response
@@ -1052,7 +1032,6 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   const handleCancelRequest = () => {
     // Save SSE response before canceling if we have streaming data
     if (request?.id && streamingMetadataRef.current && (streamedContent || streamedChunks.length > 0)) {
-      console.log('🛑 Cancellation detected, saving SSE response before cleanup');
       saveSSEResponseToIndexedDB(request.id, {
         streamingMetadata: streamingMetadataRef.current,
         streamedContent,
@@ -1398,7 +1377,6 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         requestData={requestData}
         collection={selectedCollection}
         onSuccess={(savedRequest) => {
-          console.log('Request saved successfully:', savedRequest);
           // Could potentially navigate to the saved request or show notification
         }}
       />

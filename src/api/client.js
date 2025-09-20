@@ -436,13 +436,10 @@ export class SlingshotApiClient {
    * @returns {Promise<import('../types/index.js').Request>} Updated request
    */
   async saveRequestResponse(id, responseData) {
-    console.log('🔍 saveRequestResponse called with:', { id, responseData: Object.keys(responseData) });
     const request = await db.requests.get(id);
     if (!request) {
-      console.error('❌ Request not found with ID:', id);
       throw new Error('Request not found');
     }
-    console.log('✅ Found request:', request.name);
 
     const updatedData = {
       // Response data fields
@@ -471,11 +468,8 @@ export class SlingshotApiClient {
       updatedData.streaming_metadata = JSON.stringify(responseData.streaming_metadata || {});
     }
 
-    console.log('💾 About to update database with:', Object.keys(updatedData));
     await db.requests.update(id, updatedData);
-    console.log('✅ Database update completed');
     const updatedRequest = await db.requests.get(id);
-    console.log('📤 Updated request response_type:', updatedRequest?.response_type);
     return updatedRequest;
   }
 

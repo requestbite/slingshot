@@ -435,10 +435,8 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
                 // HIGHEST PRIORITY: Check for cached SSE responses from IndexedDB by Content-Type header
                 const contentTypeFromHeaders = response?.rawHeaders &&
                   (response.rawHeaders['content-type'] || response.rawHeaders['Content-Type']);
-                console.log('🔍 Checking content type from headers:', contentTypeFromHeaders);
 
                 if (contentTypeFromHeaders && isSSEContentType(contentTypeFromHeaders)) {
-                  console.log('✅ Found cached SSE response from headers, loading StreamingDisplay');
 
                   // For cached SSE responses, try to parse stored chunks, or split response data
                   let chunks = [];
@@ -451,7 +449,6 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
                       // Fallback: split response data by double newlines (SSE format)
                       chunks = response.responseData.split('\n\n').filter(chunk => chunk.trim());
                     }
-                    console.log('📦 Parsed SSE data:', { chunksCount: chunks.length });
                   } catch (error) {
                     console.error('Failed to parse stored SSE data:', error);
                     chunks = response.responseData ? [response.responseData] : [];

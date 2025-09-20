@@ -90,16 +90,6 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
   const [showNoScrollButton, setShowNoScrollButton] = useState(false);
   const [isToastVisible, showToast, hideToast] = useToast();
 
-  // Debug effect to track streaming state
-  useEffect(() => {
-    console.log('[StreamingDisplay] State update:', {
-      isStreaming,
-      autoScroll,
-      chunksCount: streamedChunks.length,
-      showNoScrollButton,
-      hasContainer: !!containerRef.current
-    });
-  }, [isStreaming, autoScroll, streamedChunks.length, showNoScrollButton]);
 
   // Handle cancel button click
   const handleCancel = () => {
@@ -209,14 +199,6 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
 
         {streamedChunks.map((chunk, index) => {
           const isJSON = isValidJSON(chunk);
-          // Debug logging for JSON detection during streaming
-          if (isStreaming && chunk && chunk.trim()) {
-            console.log(`[StreamingDisplay] Chunk ${index}:`, {
-              chunk: chunk.substring(0, 100) + (chunk.length > 100 ? '...' : ''),
-              isJSON,
-              isStreaming
-            });
-          }
           return (
             <div
               key={index}

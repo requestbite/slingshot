@@ -189,23 +189,12 @@ export class RequestSubmitter {
     // Browser strips Transfer-Encoding headers, so we use X-Slingshot-Streaming instead
     const isStreaming = response.headers.get('x-slingshot-streaming') === 'true';
     const transferEncoding = response.headers.get('transfer-encoding') || '';
-    console.log('🔍 Response analysis:', {
-      transferEncoding,
-      hasBody: !!response.body,
-      hasReader: response.body && response.body.getReader,
-      contentType: response.headers.get('content-type'),
-      isChunked: transferEncoding.includes('chunked'),
-      customStreamingHeader: response.headers.get('x-slingshot-streaming'),
-      isStreaming
-    });
 
     if (isStreaming && response.body && response.body.getReader) {
-      console.log('🚀 Detected streaming response, starting handleStreamingResponse');
       return this.handleStreamingResponse(response);
     }
 
     // Normal JSON response - parse it directly
-    console.log('📄 Detected normal JSON response');
     return await response.json();
   }
 
@@ -213,7 +202,6 @@ export class RequestSubmitter {
    * Handle streaming response with ReadableStream processing
    */
   async handleStreamingResponse(response) {
-    console.log('📡 Starting handleStreamingResponse');
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
 
@@ -245,21 +233,16 @@ export class RequestSubmitter {
 
               // Check if this is actually a streaming response
               if (metadata.success && !('response_data' in metadata) && !('responseData' in metadata)) {
-                console.log('✅ Detected streaming metadata:', metadata);
                 // This is streaming metadata, notify component
                 if (this.onStreamMetadata) {
-                  console.log('📢 Calling onStreamMetadata callback');
                   this.onStreamMetadata(metadata);
                 } else {
-                  console.log('⚠️ No onStreamMetadata callback set!');
                 }
 
                 // Start background streaming and return immediately
-                console.log('🔄 Starting background streaming');
 
                 // Send any initial buffer content immediately
                 if (buffer.length > 0) {
-                  console.log('📤 Sending initial buffer content:', buffer.length, 'chars');
                   if (this.onStreamData) {
                     this.onStreamData(buffer);
                   }
@@ -279,13 +262,11 @@ export class RequestSubmitter {
                   metadata: metadata,
                   receivedAt: new Date().toISOString()
                 };
-                console.log('🎯 Returning streaming response immediately:', streamingResponse);
 
                 // Important: Don't release the reader here - it's now owned by background streaming
                 // We return early, so the finally block shouldn't run
                 return streamingResponse;
               } else {
-                console.log('📄 Normal response detected, returning directly:', metadata);
                 // This is a normal response, return it directly
                 return metadata;
               }
@@ -311,7 +292,6 @@ export class RequestSubmitter {
         try {
           reader.releaseLock();
         } catch (e) {
-          console.log('Reader lock already released or unavailable');
         }
       }
     }
@@ -351,7 +331,6 @@ export class RequestSubmitter {
 
         // Notify component of new streaming data
         if (this.onStreamData) {
-          console.log('📤 Sending streaming data to callback:', newContent.length, 'chars');
           this.onStreamData(newContent);
         }
       }
