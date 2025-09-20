@@ -132,6 +132,13 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
 
   // Use ref to preserve metadata across streaming lifecycle
   const streamingMetadataRef = useRef(null);
+  // Use ref to prevent race conditions when updating chunks rapidly
+  const streamedChunksRef = useRef([]);
+
+  // Keep ref synchronized with state
+  useEffect(() => {
+    streamedChunksRef.current = streamedChunks;
+  }, [streamedChunks]);
 
   // Draft state
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -659,6 +666,8 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
     setStreamingMetadata(null);
     // Reset metadata ref for clean state
     streamingMetadataRef.current = null;
+    // Reset chunks ref for clean state
+    streamedChunksRef.current = [];
 
     // Get all available variables for replacement
     const variables = await getAvailableVariables();
@@ -967,7 +976,15 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
             } else {
               // Handle normal streaming data - add as individual chunks and update content
               setStreamedContent(prev => prev + newData);
-              setStreamedChunks(prev => [...prev, newData]);
+
+              // Split multiple SSE events that might arrive in a single chunk
+              // SSE events are separated by double newlines
+              const sseEvents = newData.split(/\n\n+/).filter(chunk => chunk.trim());
+
+              // Use ref to prevent race conditions when chunks arrive rapidly
+              const currentChunks = [...streamedChunksRef.current, ...sseEvents];
+              streamedChunksRef.current = currentChunks;
+              setStreamedChunks(currentChunks);
             }
           }
         }
