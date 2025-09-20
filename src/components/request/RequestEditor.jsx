@@ -599,7 +599,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         const parsed = JSON.parse(trimmed);
         // Check for timeout response pattern
         if (parsed.success === false && parsed.error_type === 'request_timeout') {
-          return 'Request timeout reached. Closing connection.\n';
+          return { isTimeout: true };
         }
       }
     } catch (error) {
@@ -937,28 +937,31 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
             });
           } else {
             // Check if this chunk is a timeout JSON response
-            const timeoutMessage = checkForTimeoutResponse(newData);
-            if (timeoutMessage) {
-              // Replace timeout JSON with user-friendly message
+            const timeoutCheck = checkForTimeoutResponse(newData);
+            if (timeoutCheck?.isTimeout) {
+              // Mark the response as timed out and save to IndexedDB
               setStreamedContent(prev => {
-                const finalContent = prev + timeoutMessage;
                 setStreamedChunks(currentChunks => {
-                  const finalChunks = [...currentChunks, timeoutMessage];
-
-
                   // Save SSE response to IndexedDB when timing out
                   if (request?.id && streamingMetadataRef.current) {
                     saveSSEResponseToIndexedDB(request.id, {
                       streamingMetadata: streamingMetadataRef.current,
-                      streamedContent: finalContent,
-                      streamedChunks: finalChunks
+                      streamedContent: prev,
+                      streamedChunks: currentChunks
                     });
                   }
 
-                  return finalChunks;
+                  return currentChunks;
                 });
-                return finalContent;
+                return prev;
               });
+
+              // Update response to mark it as timed out
+              setResponse(prevResponse => ({
+                ...prevResponse,
+                timedOut: true
+              }));
+
               // Mark streaming as completed since it's a timeout
               setIsStreaming(false);
             } else {

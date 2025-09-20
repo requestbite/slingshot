@@ -228,8 +228,8 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
     <div class="relative">
       <div
         ref={containerRef}
-        class="streaming-display-container bg-gray-700 text-white font-mono text-xs rounded-md border border-gray-600 min-h-[200px] whitespace-pre-wrap break-words"
-        style="padding: 16px 16px 16px 8px"
+        class="streaming-display-container bg-gray-700 text-white font-mono text-xs rounded-md border border-gray-600 min-h-[200px] whitespace-pre overflow-x-auto"
+        style="padding: 10px 16px 10px 8px"
       >
         {streamedChunks.length === 0 && isStreaming && (
           <div class="flex items-start">
@@ -296,7 +296,16 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
           <div class="streaming-chunk flex items-start mb-0.5 pb-0.5 mt-2">
             <div class="flex-shrink-0 w-12 mr-2"></div>
             <div class="flex-1 text-red-400 italic">
-              Request cancelled by user.
+              {wasCancelled ? 'Request cancelled by user.' : 'Request cancelled by user.'}
+            </div>
+          </div>
+        )}
+
+        {response?.timedOut && !isStreaming && (
+          <div class="streaming-chunk flex items-start mb-0.5 pb-0.5 mt-2">
+            <div class="flex-shrink-0 w-12 mr-2"></div>
+            <div class="flex-1 text-orange-400 italic">
+              Request timed out.
             </div>
           </div>
         )}
