@@ -89,6 +89,7 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
   const [autoScroll, setAutoScroll] = useState(true);
   const [showNoScrollButton, setShowNoScrollButton] = useState(false);
   const [isToastVisible, showToast, hideToast] = useToast();
+  const [prettifiedChunks, setPrettifiedChunks] = useState(new Set());
 
 
   // Handle cancel button click
@@ -115,6 +116,48 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
     } catch (error) {
       console.error('Failed to copy chunk to clipboard:', error);
     }
+  };
+
+  // Toggle JSON prettification for a specific chunk
+  const togglePrettifyChunk = (index) => {
+    setPrettifiedChunks(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
+
+  // Format JSON with prettification if enabled for this chunk
+  const formatChunkContent = (chunk, index) => {
+    const isJSON = isValidJSON(chunk);
+    const isPrettified = prettifiedChunks.has(index);
+
+    if (!isJSON) {
+      return chunk;
+    }
+
+    if (isPrettified) {
+      try {
+        const jsonPart = extractJSONFromSSE(chunk);
+        const parsed = JSON.parse(jsonPart);
+        const prettified = JSON.stringify(parsed, null, 2);
+
+        // Handle SSE format
+        const dataMatch = chunk.match(/^(data:\\s*)/m);
+        if (dataMatch) {
+          return dataMatch[1] + prettified;
+        }
+        return prettified;
+      } catch {
+        return chunk;
+      }
+    }
+
+    return chunk;
   };
 
   // Auto-scroll when new chunks arrive during streaming
@@ -199,13 +242,16 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
 
         {streamedChunks.map((chunk, index) => {
           const isJSON = isValidJSON(chunk);
+          const formattedChunk = formatChunkContent(chunk, index);
+          const isPrettified = prettifiedChunks.has(index);
           return (
             <div
               key={index}
               class={`streaming-chunk flex items-start group ${index < streamedChunks.length - 1 ? 'mb-2 pb-2 border-b border-gray-600' : 'mb-0'}`}
             >
-              {/* Copy button gutter */}
-              <div class="flex-shrink-0 w-6 mr-2 flex justify-center">
+              {/* Button gutter */}
+              <div class="flex-shrink-0 w-12 mr-2 flex justify-center space-x-1">
+                {/* Copy button */}
                 <button
                   onClick={() => copyChunkToClipboard(chunk)}
                   class="bg-gray-600 text-gray-400 hover:text-white cursor-pointer p-1 rounded transition-colors duration-200"
@@ -215,14 +261,31 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
                     <path d="M20 2H10c-1.103 0-2 .897-2 2v4H4c-1.103 0-2 .897-2 2v10c0 1.103.897 2 2 2h10c1.103 0 2-.897 2-2v-4h4c1.103 0 2-.897 2-2V4c0-1.103-.897-2-2-2zM4 20V10h10l.002 10H4zm16-6h-4v-4c0-1.103-.897-2-2-2h-4V4h10v10z"></path>
                   </svg>
                 </button>
+
+                {/* Prettify JSON button */}
+                <button
+                  onClick={() => togglePrettifyChunk(index)}
+                  disabled={!isJSON}
+                  class={`p-1 rounded transition-colors duration-200 ${!isJSON
+                    ? 'text-gray-500 cursor-default'
+                    : isPrettified
+                      ? 'bg-sky-100 text-sky-700 hover:bg-sky-200 cursor-pointer'
+                      : 'bg-gray-600 text-gray-400 hover:text-white cursor-pointer'
+                    }`}
+                  title={!isJSON ? "Not valid JSON" : isPrettified ? "Minimize JSON" : "Prettify JSON"}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3">
+                    <path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1" /><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1" />
+                  </svg>
+                </button>
               </div>
 
               {/* Chunk content */}
               <div class="flex-1 min-w-0 my-1">
                 {isJSON ? (
-                  <div dangerouslySetInnerHTML={{ __html: highlightJSON(chunk) }} />
+                  <div dangerouslySetInnerHTML={{ __html: highlightJSON(formattedChunk) }} />
                 ) : (
-                  chunk
+                  formattedChunk
                 )}
               </div>
             </div>
@@ -231,7 +294,7 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
 
         {(wasCancelled || response?.cancelled) && !isStreaming && (
           <div class="streaming-chunk flex items-start mb-0.5 pb-0.5 mt-2">
-            <div class="flex-shrink-0 w-6 mr-2"></div>
+            <div class="flex-shrink-0 w-12 mr-2"></div>
             <div class="flex-1 text-red-400 italic">
               Request cancelled by user.
             </div>
@@ -240,7 +303,7 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
 
         {isStreaming && !wasCancelled && (
           <div class="flex items-start my-2">
-            <div class="flex-shrink-0 w-6 my-2 ml-2"></div>
+            <div class="flex-shrink-0 w-12 my-2 ml-2"></div>
             <div class="flex-1 text-green-400 italic">
               ● Streaming...
             </div>
