@@ -185,7 +185,7 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
     <div class="relative">
       <div
         ref={containerRef}
-        class="streaming-display-container bg-gray-700 text-white font-mono text-xs rounded-md border border-gray-600 min-h-[200px] max-h-[400px] overflow-y-auto whitespace-pre-wrap break-words"
+        class="streaming-display-container bg-gray-700 text-white font-mono text-xs rounded-md border border-gray-600 min-h-[200px] whitespace-pre-wrap break-words"
         style="padding: 16px 16px 16px 8px"
       >
         {streamedChunks.length === 0 && isStreaming && (
@@ -208,7 +208,7 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
               <div class="flex-shrink-0 w-6 mr-2 flex justify-center">
                 <button
                   onClick={() => copyChunkToClipboard(chunk)}
-                  class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-gray-400 hover:text-white cursor-pointer p-0.5 rounded"
+                  class="bg-gray-600 text-gray-400 hover:text-white cursor-pointer p-1 rounded transition-colors duration-200"
                   title="Copy chunk data"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3 h-3">
@@ -218,7 +218,7 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
               </div>
 
               {/* Chunk content */}
-              <div class="flex-1 min-w-0">
+              <div class="flex-1 min-w-0 my-1">
                 {isJSON ? (
                   <div dangerouslySetInnerHTML={{ __html: highlightJSON(chunk) }} />
                 ) : (
