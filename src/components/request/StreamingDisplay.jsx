@@ -202,7 +202,7 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
           return (
             <div
               key={index}
-              class={`streaming-chunk flex items-start group ${index < streamedChunks.length - 1 ? 'mb-1 pb-1 border-b border-gray-600' : 'mb-0'}`}
+              class={`streaming-chunk flex items-start group ${index < streamedChunks.length - 1 ? 'mb-2 pb-2 border-b border-gray-600' : 'mb-0'}`}
             >
               {/* Copy button gutter */}
               <div class="flex-shrink-0 w-6 mr-2 flex justify-center">
@@ -230,7 +230,7 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
         })}
 
         {(wasCancelled || response?.cancelled) && !isStreaming && (
-          <div class="streaming-chunk flex items-start mb-0.5 pb-0.5">
+          <div class="streaming-chunk flex items-start mb-0.5 pb-0.5 mt-2">
             <div class="flex-shrink-0 w-6 mr-2"></div>
             <div class="flex-1 text-red-400 italic">
               Request cancelled by user.
@@ -239,8 +239,8 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
         )}
 
         {isStreaming && !wasCancelled && (
-          <div class="flex items-start">
-            <div class="flex-shrink-0 w-6 mr-2"></div>
+          <div class="flex items-start my-2">
+            <div class="flex-shrink-0 w-6 my-2 ml-2"></div>
             <div class="flex-1 text-green-400 italic">
               ● Streaming...
             </div>
@@ -250,14 +250,14 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
 
       {/* Floating buttons - only show during streaming */}
       {isStreaming && !wasCancelled && (
-        <div class="fixed bottom-4 right-4 z-50 flex items-center space-x-2">
+        <div class="fixed bottom-8 right-8 z-50 flex items-center space-x-2">
           {/* No scroll button - only show when auto-scrolling is active */}
           {showNoScrollButton && (
             <button
               onClick={handleNoScroll}
               class="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md text-sm font-medium cursor-pointer shadow-lg border border-blue-300"
             >
-              No scroll
+              Stop Scroll
             </button>
           )}
 
