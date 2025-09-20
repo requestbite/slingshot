@@ -228,8 +228,8 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
     <div class="relative">
       <div
         ref={containerRef}
-        class="streaming-display-container bg-gray-700 text-white font-mono text-xs rounded-md border border-gray-600 min-h-[200px] whitespace-pre overflow-x-auto"
-        style="padding: 10px 16px 10px 8px"
+        class="streaming-display-container text-white font-mono text-xs rounded-md border border-gray-600 min-h-[200px] whitespace-pre overflow-x-auto"
+        style="padding: 10px 16px 10px 8px; background-color: #282a36;"
       >
         {streamedChunks.length === 0 && isStreaming && (
           <div class="flex items-start">
@@ -247,14 +247,14 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
           return (
             <div
               key={index}
-              class={`streaming-chunk flex items-start group ${index < streamedChunks.length - 1 ? 'mb-2 pb-2 border-b border-gray-600' : 'mb-0'}`}
+              class={`streaming-chunk flex items-start group ${index < streamedChunks.length - 1 ? 'mb-2 pb-2 border-b border-gray-700' : 'mb-0'}`}
             >
               {/* Button gutter */}
               <div class="flex-shrink-0 w-12 mr-2 flex justify-center space-x-1">
                 {/* Copy button */}
                 <button
                   onClick={() => copyChunkToClipboard(chunk)}
-                  class="bg-gray-600 text-gray-400 hover:text-white cursor-pointer p-1 rounded transition-colors duration-200"
+                  class="bg-gray-700 text-gray-400 hover:text-white cursor-pointer p-1 rounded transition-colors duration-200"
                   title="Copy chunk data"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3 h-3">
@@ -270,7 +270,7 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
                     ? 'text-gray-500 cursor-default'
                     : isPrettified
                       ? 'bg-sky-100 text-sky-700 hover:bg-sky-200 cursor-pointer'
-                      : 'bg-gray-600 text-gray-400 hover:text-white cursor-pointer'
+                      : 'bg-gray-700 text-gray-400 hover:text-white cursor-pointer'
                     }`}
                   title={!isJSON ? "Not valid JSON" : isPrettified ? "Minimize JSON" : "Prettify JSON"}
                 >

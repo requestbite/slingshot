@@ -547,10 +547,10 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
                               highlightSelectionMatches: false
                             }}
                             style={{
-                              border: '1px solid #44475a',
+                              border: '2px solid #282a36',
                               borderRadius: '0.375rem',
                               fontSize: '12px',
-                              fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+                              fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
                             }}
                           />
                         )}
@@ -579,10 +579,10 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
                           highlightSelectionMatches: false
                         }}
                         style={{
-                          border: '1px solid #44475a',
+                          border: '2px solid #282a36',
                           borderRadius: '0.375rem',
                           fontSize: '12px',
-                          fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+                          fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
                         }}
                       />
                     );

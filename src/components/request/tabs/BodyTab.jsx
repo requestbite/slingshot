@@ -123,9 +123,8 @@ function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFile
           onChange={(value) => updateField(field.id, 'value', value)}
           onKeyDown={onEnterKeyPress}
           placeholder="Value"
-          className={`w-full text-sm ${
-            field.enabled ? '' : 'opacity-50'
-          }`}
+          className={`w-full text-sm ${field.enabled ? '' : 'opacity-50'
+            }`}
           disabled={!field.enabled}
           selectedEnvironment={selectedEnvironment}
         />
@@ -172,8 +171,8 @@ function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFile
             {allowFiles && (
               <div class="col-span-1 flex justify-center">
                 <span class={`text-xs px-2 py-1 rounded ${field.type === 'file'
-                    ? 'bg-purple-100 text-purple-700'
-                    : 'bg-blue-100 text-blue-700'
+                  ? 'bg-purple-100 text-purple-700'
+                  : 'bg-blue-100 text-blue-700'
                   }`}>
                   {field.type === 'file' ? 'File' : 'Text'}
                 </span>
@@ -186,9 +185,8 @@ function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFile
                 onChange={(value) => updateField(field.id, 'key', value)}
                 onKeyDown={onEnterKeyPress}
                 placeholder="Key"
-                className={`w-full text-sm ${
-                  field.enabled ? '' : 'opacity-50'
-                }`}
+                className={`w-full text-sm ${field.enabled ? '' : 'opacity-50'
+                  }`}
                 disabled={!field.enabled}
                 selectedEnvironment={selectedEnvironment}
               />
@@ -329,24 +327,24 @@ export function BodyTab({
     const lineText = line.text;
     const lineStart = line.from;
     const cursorInLine = pos - lineStart;
-    
+
     // Look for {{ pattern before cursor
     const beforeCursor = lineText.substring(0, cursorInLine);
     const match = beforeCursor.match(/\{\{([^}]*)$/);
-    
+
     if (!match) return null;
-    
+
     const matchStart = lineStart + match.index;
     const currentWord = match[1];
-    
+
     // Get variable keys and filter based on current input
     const variableKeys = Array.from(availableVariables.keys());
-    const filtered = currentWord 
+    const filtered = currentWord
       ? variableKeys.filter(key => key.toLowerCase().startsWith(currentWord.toLowerCase()))
       : variableKeys;
-    
+
     if (filtered.length === 0) return null;
-    
+
     return {
       from: matchStart,
       options: filtered.map(key => ({
@@ -359,20 +357,20 @@ export function BodyTab({
 
   // Variable highlighting decoration
   const variableHighlightEffect = StateEffect.define();
-  
+
   const variableHighlightField = StateField.define({
     create() {
       return Decoration.none;
     },
     update(decorations, tr) {
       decorations = decorations.map(tr.changes);
-      
+
       for (let effect of tr.effects) {
         if (effect.is(variableHighlightEffect)) {
           decorations = effect.value;
         }
       }
-      
+
       return decorations;
     },
     provide: f => EditorView.decorations.from(f)
@@ -385,15 +383,15 @@ export function BodyTab({
     const text = doc.toString();
     const regex = /\{\{([^}]+)\}\}/g;
     let match;
-    
+
     while ((match = regex.exec(text)) !== null) {
       const variableName = match[1];
       const isValid = availableVariables.has(variableName);
       const className = isValid ? 'cm-variable-valid' : 'cm-variable-invalid';
-      
+
       const from = match.index;
       const to = match.index + match[0].length;
-      
+
       decorations.push(
         Decoration.mark({
           class: className,
@@ -403,7 +401,7 @@ export function BodyTab({
         }).range(from, to)
       );
     }
-    
+
     return Decoration.set(decorations);
   };
 
@@ -597,8 +595,8 @@ export function BodyTab({
                 onClick={prettifyJson}
                 disabled={!isValidJson || !bodyContent.trim()}
                 class={`px-2 py-1 text-xs font-medium rounded-md cursor-pointer ${isValidJson && bodyContent.trim()
-                    ? 'bg-sky-100 hover:bg-sky-200 text-sky-700'
-                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  ? 'bg-sky-100 hover:bg-sky-200 text-sky-700'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   }`}
               >
                 Prettify
@@ -650,20 +648,20 @@ export function BodyTab({
               highlightSelectionMatches: false
             }}
             style={{
-              border: '1px solid #44475a',
+              border: '2px solid #282a36',
               borderRadius: '0.375rem',
               fontSize: '12px',
               fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
             }}
           />
-          
+
           {/* Variable hint indicator */}
           {availableVariables.size > 0 && (
             <span class="flex items-center text-xs text-gray-400 font-normal whitespace-nowrap overflow-hidden mt-1">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info mr-1 flex-shrink-0">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M12 16v-4"/>
-                <path d="M12 8h.01"/>
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4" />
+                <path d="M12 8h.01" />
               </svg>
               To insert a variable, type {"\"{{\"" + " followed by Ctrl+Space (or Cmd+Space on Mac)"}
             </span>
