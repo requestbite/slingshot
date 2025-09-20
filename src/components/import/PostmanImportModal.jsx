@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
-import { processPostmanCollection } from '../../utils/postmanImporter';
+// processPostmanCollection will be dynamically imported when needed
 import { apiClient } from '../../api';
 import { useAppContext } from '../../hooks/useAppContext';
 import { Portal } from '../common/Portal';
@@ -115,7 +115,8 @@ export function PostmanImportModal({ isOpen, onClose, onSuccess }) {
       // Read file content
       const fileContent = await readFileContent(formData.file);
 
-      // Process Postman collection
+      // Process Postman collection with dynamic import
+      const { processPostmanCollection } = await import('../../utils/postmanImporter');
       const processedData = await processPostmanCollection(fileContent, formData.name);
 
       // Create collection using our API client

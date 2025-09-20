@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { fetchFromURL, detectContentFormat, extractDefaultName } from '../../utils/urlImporter';
-import { processOpenAPISpec } from '../../utils/openApiProcessor';
-import { processPostmanCollection } from '../../utils/postmanImporter';
 import { apiClient } from '../../api';
 import { useAppContext } from '../../hooks/useAppContext';
 import { Toast, useToast } from '../common/Toast';
@@ -102,10 +100,12 @@ export function URLImportModal({ isOpen, importUrl, onClose, onSuccess }) {
 
       let processedData;
 
-      // Process based on detected format
+      // Process based on detected format using dynamic imports
       if (format === 'openapi') {
+        const { processOpenAPISpec } = await import('../../utils/openApiProcessor');
         processedData = await processOpenAPISpec(content, collectionName);
       } else if (format === 'postman') {
+        const { processPostmanCollection } = await import('../../utils/postmanImporter');
         processedData = await processPostmanCollection(content, collectionName);
       }
 

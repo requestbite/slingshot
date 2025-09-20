@@ -1,8 +1,11 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
+import { Suspense, lazy } from 'preact/compat';
 import { useLocation } from 'wouter-preact';
-import { OpenAPIImportModal } from '../import/OpenAPIImportModal';
-import { PostmanImportModal } from '../import/PostmanImportModal';
-import { URLImportModal } from '../import/URLImportModal';
+
+// Dynamic imports for import modals - only loaded when needed
+const OpenAPIImportModal = lazy(() => import('../import/OpenAPIImportModal').then(m => ({ default: m.OpenAPIImportModal })));
+const PostmanImportModal = lazy(() => import('../import/PostmanImportModal').then(m => ({ default: m.PostmanImportModal })));
+const URLImportModal = lazy(() => import('../import/URLImportModal').then(m => ({ default: m.URLImportModal })));
 import { AddFolderModal } from '../modals/AddFolderModal';
 import { AddCollectionModal } from '../modals/AddCollectionModal';
 import { ExportPostmanModal } from '../modals/ExportPostmanModal';
@@ -416,13 +419,17 @@ export function SideBar({ onClose: _onClose }) {
       </aside>
 
       {/* OpenAPI Import Modal */}
-      <OpenAPIImportModal
-        isOpen={showImportModal}
-        onClose={() => setShowImportModal(false)}
-        onSuccess={(collection) => {
-          console.log('Collection imported successfully:', collection);
-        }}
-      />
+      {showImportModal && (
+        <Suspense fallback={null}>
+          <OpenAPIImportModal
+            isOpen={showImportModal}
+            onClose={() => setShowImportModal(false)}
+            onSuccess={(collection) => {
+              console.log('Collection imported successfully:', collection);
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* Add Folder Modal */}
       <AddFolderModal
@@ -450,23 +457,31 @@ export function SideBar({ onClose: _onClose }) {
       />
 
       {/* Postman Import Modal */}
-      <PostmanImportModal
-        isOpen={showPostmanImportModal}
-        onClose={() => setShowPostmanImportModal(false)}
-        onSuccess={(collection) => {
-          console.log('Postman collection imported successfully:', collection);
-        }}
-      />
+      {showPostmanImportModal && (
+        <Suspense fallback={null}>
+          <PostmanImportModal
+            isOpen={showPostmanImportModal}
+            onClose={() => setShowPostmanImportModal(false)}
+            onSuccess={(collection) => {
+              console.log('Postman collection imported successfully:', collection);
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* URL Import Modal */}
-      <URLImportModal
-        isOpen={showURLImportModal}
-        importUrl=""
-        onClose={() => setShowURLImportModal(false)}
-        onSuccess={(collection) => {
-          console.log('URL imported successfully:', collection);
-        }}
-      />
+      {showURLImportModal && (
+        <Suspense fallback={null}>
+          <URLImportModal
+            isOpen={showURLImportModal}
+            importUrl=""
+            onClose={() => setShowURLImportModal(false)}
+            onSuccess={(collection) => {
+              console.log('URL imported successfully:', collection);
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* Import Context Menu */}
       <ContextMenu

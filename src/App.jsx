@@ -1,19 +1,23 @@
 import { useState, useEffect } from 'preact/hooks';
+import { Suspense, lazy } from 'preact/compat';
 import { Router, Route, Switch, useLocation } from 'wouter-preact';
 import { AppProvider } from './context/AppContext';
 import { AppLayout } from './components/layout/AppLayout';
 import { FullPageLayout } from './components/layout/FullPageLayout';
 import { TopBar } from './components/layout/TopBar';
-import { HomePage } from './pages/HomePage';
-import { CollectionPage } from './pages/CollectionPage';
-import { RequestPage } from './pages/RequestPage';
-import { CollectionsPage } from './pages/CollectionsPage';
-import { CollectionUpdatePage } from './pages/CollectionUpdatePage';
-import { EnvironmentsPage } from './pages/EnvironmentsPage';
-import { EnvironmentUpdatePage } from './pages/EnvironmentUpdatePage';
-import { SettingsPage } from './pages/SettingsPage';
-import { AuthCallback } from './components/auth/AuthCallback';
-import { URLImportModal } from './components/import/URLImportModal';
+
+// Dynamic imports for pages - these are split into separate chunks
+const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
+const CollectionPage = lazy(() => import('./pages/CollectionPage').then(m => ({ default: m.CollectionPage })));
+const RequestPage = lazy(() => import('./pages/RequestPage').then(m => ({ default: m.RequestPage })));
+const CollectionsPage = lazy(() => import('./pages/CollectionsPage').then(m => ({ default: m.CollectionsPage })));
+const CollectionUpdatePage = lazy(() => import('./pages/CollectionUpdatePage').then(m => ({ default: m.CollectionUpdatePage })));
+const EnvironmentsPage = lazy(() => import('./pages/EnvironmentsPage').then(m => ({ default: m.EnvironmentsPage })));
+const EnvironmentUpdatePage = lazy(() => import('./pages/EnvironmentUpdatePage').then(m => ({ default: m.EnvironmentUpdatePage })));
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const AuthCallback = lazy(() => import('./components/auth/AuthCallback').then(m => ({ default: m.AuthCallback })));
+// Dynamic imports for modals that are only used conditionally
+const URLImportModal = lazy(() => import('./components/import/URLImportModal').then(m => ({ default: m.URLImportModal })));
 import { AppEncryptionKeyModal } from './components/modals/AppEncryptionKeyModal';
 import { ClearEnvironmentsModal } from './components/modals/ClearEnvironmentsModal';
 import { apiClient } from './api';
@@ -317,7 +321,8 @@ export function App() {
         {/* Persistent TopBar across all routes */}
         <TopBar />
 
-        <Switch>
+        <Suspense fallback={<div class="flex items-center justify-center h-64"><div class="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full"></div></div>}>
+          <Switch>
             <Route path="/collections/:uuid">
               <FullPageLayout>
                 <CollectionUpdatePage />
@@ -368,14 +373,19 @@ export function App() {
               </AppLayout>
             </Route>
           </Switch>
+        </Suspense>
 
         {/* URL Import Modal */}
-        <URLImportModal
-          isOpen={urlImportModal.isOpen}
-          importUrl={urlImportModal.importUrl}
-          onClose={handleCloseUrlImport}
-          onSuccess={handleUrlImportSuccess}
-        />
+        {urlImportModal.isOpen && (
+          <Suspense fallback={null}>
+            <URLImportModal
+              isOpen={urlImportModal.isOpen}
+              importUrl={urlImportModal.importUrl}
+              onClose={handleCloseUrlImport}
+              onSuccess={handleUrlImportSuccess}
+            />
+          </Suspense>
+        )}
       </div>
     );
   }
