@@ -28,19 +28,8 @@ db.version(1).stores({
   variables: '++id, environment_id, collection_id, key, value',
 });
 
-// Version 2: Add SSE streaming fields to requests table
-db.version(2).stores({
-  /** Environment table with indexes on id, name, description */
-  environments: '++id, name, description',
-  /** Collection table with indexes on id, name, description, environment_id */
-  collections: '++id, name, description, environment_id',
-  /** Folder table with indexes on id, collection_id, parent_folder_id, name */
-  folders: '++id, collection_id, parent_folder_id, name',
-  /** Request table with indexes on id, collection_id, folder_id, name, method, url */
-  requests: '++id, collection_id, folder_id, name, method, url',
-  /** Variable table with indexes on id, environment_id, collection_id, key, value */
-  variables: '++id, environment_id, collection_id, key, value',
-});
+// Note: SSE streaming fields (streaming_chunks, streaming_metadata) are added
+// as properties in the requests class definition below - no schema change needed
 
 /**
  * Environment entity class definition
