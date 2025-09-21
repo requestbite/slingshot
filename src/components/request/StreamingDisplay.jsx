@@ -188,7 +188,7 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
         container.scrollTop = container.scrollHeight;
       }
 
-      // Then check if we need to scroll the window to keep everything visible
+      // Check if container is visible on screen and scroll window only if needed
       requestAnimationFrame(() => {
         if (containerRef.current) {
           const containerRect = containerRef.current.getBoundingClientRect();
@@ -198,9 +198,10 @@ export function StreamingDisplay({ streamedChunks, isStreaming, onCancel, respon
             // Show the "No scroll" button
             setShowNoScrollButton(true);
 
-            // Scroll window to bottom smoothly
+            // Only scroll window enough to bring the container into view, not to the very bottom
+            const scrollTarget = window.scrollY + (containerRect.bottom - window.innerHeight) + 20; // 20px padding
             window.scrollTo({
-              top: document.documentElement.scrollHeight,
+              top: scrollTarget,
               behavior: shouldUseSmooth ? 'smooth' : 'instant'
             });
           }
