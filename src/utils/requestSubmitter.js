@@ -241,18 +241,33 @@ export class RequestSubmitter {
 
                 // Start background streaming and return immediately
 
-                // Send any initial buffer content immediately
+                // Send any initial buffer content immediately, but only complete SSE messages
+                let initialCompleteMessages = '';
+                let remainingBuffer = buffer;
+
                 if (buffer.length > 0) {
-                  if (this.onStreamData) {
-                    this.onStreamData(buffer);
+                  let lastCompleteIndex = -1;
+                  const doubleNewlinePattern = /\n\n/g;
+                  let match;
+                  while ((match = doubleNewlinePattern.exec(buffer)) !== null) {
+                    lastCompleteIndex = match.index + 2; // Include the \n\n
                   }
-                  streamedContent += buffer;
+
+                  if (lastCompleteIndex > -1) {
+                    initialCompleteMessages = buffer.slice(0, lastCompleteIndex);
+                    remainingBuffer = buffer.slice(lastCompleteIndex);
+
+                    if (this.onStreamData && initialCompleteMessages) {
+                      this.onStreamData(initialCompleteMessages);
+                    }
+                    streamedContent += initialCompleteMessages;
+                  }
                 }
 
                 // Transfer ownership of the reader to background streaming
                 // We don't release the lock here since the background function will handle it
                 readerOwnershipTransferred = true;
-                this.continueStreamingInBackground(reader, decoder, '', streamedContent);
+                this.continueStreamingInBackground(reader, decoder, remainingBuffer, streamedContent);
 
                 // Return streaming response immediately to exit loading state
                 const streamingResponse = {
@@ -276,13 +291,29 @@ export class RequestSubmitter {
           }
         } else {
           // We have metadata, now streaming SSE data
-          const newContent = buffer;
-          buffer = '';
-          streamedContent += newContent;
+          // Only send complete SSE messages to avoid splitting
+          let completeMessages = '';
+          let lastCompleteIndex = -1;
 
-          // Notify component of new streaming data
-          if (this.onStreamData) {
-            this.onStreamData(newContent);
+          // Find all complete SSE messages (those ending with double newlines)
+          const doubleNewlinePattern = /\n\n/g;
+          let match;
+          while ((match = doubleNewlinePattern.exec(buffer)) !== null) {
+            lastCompleteIndex = match.index + 2; // Include the \n\n
+          }
+
+          if (lastCompleteIndex > -1) {
+            // Extract complete messages
+            completeMessages = buffer.slice(0, lastCompleteIndex);
+            // Keep incomplete message in buffer
+            buffer = buffer.slice(lastCompleteIndex);
+
+            streamedContent += completeMessages;
+
+            // Notify component of complete SSE messages only
+            if (this.onStreamData && completeMessages) {
+              this.onStreamData(completeMessages);
+            }
           }
         }
       }
@@ -294,6 +325,12 @@ export class RequestSubmitter {
         } catch (e) {
         }
       }
+    }
+
+    // Send any remaining buffer content when stream ends
+    if (buffer && this.onStreamData) {
+      this.onStreamData(buffer);
+      streamedContent += buffer;
     }
 
     // Streaming completed, return final result
@@ -324,14 +361,29 @@ export class RequestSubmitter {
 
         buffer += decoder.decode(value, { stream: true });
 
-        // Stream all new content
-        const newContent = buffer;
-        buffer = '';
-        streamedContent += newContent;
+        // Only send complete SSE messages (ending with \n\n) to avoid splitting
+        let completeMessages = '';
+        let lastCompleteIndex = -1;
 
-        // Notify component of new streaming data
-        if (this.onStreamData) {
-          this.onStreamData(newContent);
+        // Find all complete SSE messages (those ending with double newlines)
+        const doubleNewlinePattern = /\n\n/g;
+        let match;
+        while ((match = doubleNewlinePattern.exec(buffer)) !== null) {
+          lastCompleteIndex = match.index + 2; // Include the \n\n
+        }
+
+        if (lastCompleteIndex > -1) {
+          // Extract complete messages
+          completeMessages = buffer.slice(0, lastCompleteIndex);
+          // Keep incomplete message in buffer
+          buffer = buffer.slice(lastCompleteIndex);
+
+          streamedContent += completeMessages;
+
+          // Notify component of complete SSE messages only
+          if (this.onStreamData && completeMessages) {
+            this.onStreamData(completeMessages);
+          }
         }
       }
     } catch (error) {
@@ -344,7 +396,10 @@ export class RequestSubmitter {
       }
     }
 
-    // Notify completion
+    // Send any remaining buffer content and notify completion
+    if (buffer && this.onStreamData) {
+      this.onStreamData(buffer);
+    }
     if (this.onStreamData) {
       this.onStreamData(null); // null indicates streaming completed
     }
