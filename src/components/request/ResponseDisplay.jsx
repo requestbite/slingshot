@@ -27,7 +27,7 @@ import {
   getStatusColor
 } from './ResponseDisplayUtils';
 
-export function ResponseDisplay({ response, isLoading, onCancel, collection, isStreaming, streamedContent, streamedChunks, streamingMetadata }) {
+export function ResponseDisplay({ response, isLoading, onCancel, onClear, collection, isStreaming, streamedContent, streamedChunks, streamingMetadata }) {
   // Initialize headers visibility from localStorage, defaulting to false (closed)
   const [showHeaders, setShowHeaders] = useState(() => {
     try {
@@ -340,9 +340,9 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
                 </div>
               </div>
 
-              {/* Copy Response Button */}
+              {/* Copy Response Button and Clear Button */}
               {(response.responseData || streamedContent || response.finalStreamedContent) && (
-                <div class="flex items-center">
+                <div class="flex items-center space-x-3">
                   <button
                     onClick={() => copyToClipboard(isStreaming ? streamedContent : processResponseContent(response, collection))}
                     class="inline-flex items-center text-sky-500 hover:text-sky-700 cursor-pointer"
@@ -354,6 +354,21 @@ export function ResponseDisplay({ response, isLoading, onCancel, collection, isS
                     </span>
                     Copy
                   </button>
+                  {onClear && (
+                    <button
+                      onClick={onClear}
+                      class="inline-flex items-center text-sky-500 hover:text-sky-700 cursor-pointer"
+                    >
+                      <span class="inline-block w-4 h-4 mr-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                          <path d="m3 6 18 0"></path>
+                          <path d="m19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                          <path d="m8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                        </svg>
+                      </span>
+                      Clear
+                    </button>
+                  )}
                 </div>
               )}
             </div>

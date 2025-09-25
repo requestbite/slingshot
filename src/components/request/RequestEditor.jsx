@@ -1138,6 +1138,40 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
     }
   };
 
+  // Handle clear response (clears all response and draft data)
+  const handleClearResponse = async () => {
+    if (!request?.id) return;
+
+    try {
+      const updatedRequest = await apiClient.clearRequestResponseAndDrafts(request.id);
+
+      // Clear the local response state to show WelcomeMessage
+      setResponse(null);
+      setIsStreaming(false);
+      setStreamedContent('');
+      setStreamedChunks([]);
+      setStreamingMetadata(null);
+
+      // Clear any draft changes
+      setHasUnsavedChanges(false);
+      setIsDraftDirty(false);
+
+      // Reload the original data
+      const originalData = getEffectiveRequestData(updatedRequest);
+      setRequestData(prev => ({
+        ...prev,
+        ...originalData
+      }));
+
+      // Trigger context refresh to update the request object
+      if (onRequestChange) {
+        onRequestChange(updatedRequest);
+      }
+    } catch (error) {
+      console.error('Failed to clear response:', error);
+    }
+  };
+
   return (
     <div class="h-full flex flex-col">
       {/* URL Input and HTTP Method Selection Bar */}
@@ -1368,6 +1402,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
             response={response}
             isLoading={isSubmitting}
             onCancel={handleCancelRequest}
+            onClear={handleClearResponse}
             collection={selectedCollection}
             isStreaming={isStreaming}
             streamedContent={streamedContent}
