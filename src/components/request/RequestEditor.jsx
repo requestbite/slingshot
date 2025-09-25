@@ -1211,6 +1211,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
               className="w-full text-sm font-inter text-gray-900"
               style="min-height: 38px; line-height: 22px; width: 100%; box-sizing: border-box;"
               selectedEnvironment={currentEnvironment}
+              inputType="url"
             />
           </div>
 

@@ -15,6 +15,7 @@ export function VariableInput({
   className = '',
   disabled = false,
   selectedEnvironment = null, // Override for current environment selection
+  inputType = 'text', // Support for different input types like 'url'
   ...props
 }) {
   const { selectedCollection, hasManuallySelectedEnvironment } = useAppContext();
@@ -353,6 +354,8 @@ export function VariableInput({
         data-placeholder={placeholder}
         className={`variable-input ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         suppressContentEditableWarning={true}
+        inputMode={inputType === 'url' ? 'url' : undefined}
+        spellCheck={inputType === 'url' ? false : undefined}
         {...props}
       />
 
