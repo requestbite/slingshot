@@ -372,7 +372,7 @@ function extractRequestBody(bodyData) {
   if (!bodyData) {
     return {
       requestType: 'none',
-      contentType: 'json',
+      contentType: 'application/json',
       body: '',
       formData: [],
       urlEncodedData: []
@@ -394,7 +394,7 @@ function extractRequestBody(bodyData) {
     case 'formdata':
       return {
         requestType: 'form-data',
-        contentType: 'text',
+        contentType: 'text/plain',
         body: '',
         formData: extractFormData(bodyData.formdata),
         urlEncodedData: []
@@ -402,8 +402,8 @@ function extractRequestBody(bodyData) {
       
     case 'urlencoded':
       return {
-        requestType: 'urlencoded',
-        contentType: 'text',
+        requestType: 'url-encoded',
+        contentType: 'text/plain',
         body: '',
         formData: [],
         urlEncodedData: extractUrlEncodedData(bodyData.urlencoded)
@@ -412,7 +412,7 @@ function extractRequestBody(bodyData) {
     default:
       return {
         requestType: 'none',
-        contentType: 'json',
+        contentType: 'application/json',
         body: '',
         formData: [],
         urlEncodedData: []
@@ -426,20 +426,20 @@ function extractRequestBody(bodyData) {
  * @returns {string} Content type
  */
 function getContentTypeFromRaw(options) {
-  if (!options || !options.raw) return 'json';
-  
+  if (!options || !options.raw) return 'application/json';
+
   const language = options.raw.language;
   switch (language) {
     case 'json':
-      return 'json';
+      return 'application/json';
     case 'xml':
-      return 'xml';
+      return 'application/xml';
     case 'html':
-      return 'html';
+      return 'text/plain';
     case 'text':
-      return 'text';
+      return 'text/plain';
     default:
-      return 'json';
+      return 'application/json';
   }
 }
 

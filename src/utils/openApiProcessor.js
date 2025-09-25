@@ -315,14 +315,14 @@ function extractParameters(operation) {
 function extractRequestBody(operation, spec) {
   const requestBody = operation.requestBody;
   if (!requestBody || !requestBody.content) {
-    return { requestType: 'none', contentType: 'json', body: '' };
+    return { requestType: 'none', contentType: 'application/json', body: '' };
   }
-  
+
   const content = requestBody.content;
   const contentTypes = Object.keys(content);
-  
+
   if (contentTypes.length === 0) {
-    return { requestType: 'none', contentType: 'json', body: '' };
+    return { requestType: 'none', contentType: 'application/json', body: '' };
   }
   
   // Prefer JSON, then form data, then anything else
@@ -340,17 +340,20 @@ function extractRequestBody(operation, spec) {
   
   // Determine request type and content type
   let requestType = 'raw';
-  let contentType = 'json';
-  
+  let contentType = 'application/json';
+
   if (selectedContentType.includes('json')) {
     requestType = 'raw';
-    contentType = 'json';
+    contentType = 'application/json';
   } else if (selectedContentType.includes('form-urlencoded')) {
-    requestType = 'urlencoded';
-    contentType = 'text';
+    requestType = 'url-encoded';
+    contentType = 'text/plain';
   } else if (selectedContentType.includes('form-data')) {
-    requestType = 'form';
-    contentType = 'text';
+    requestType = 'form-data';
+    contentType = 'text/plain';
+  } else if (selectedContentType.includes('xml')) {
+    requestType = 'raw';
+    contentType = 'application/xml';
   }
   
   // Generate example body
