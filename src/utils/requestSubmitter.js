@@ -121,7 +121,7 @@ export class RequestSubmitter {
       headers: this.formatHeadersForProxy(requestData.headers),
       timeout: requestData.timeout || 30,
       followRedirects: requestData.followRedirects !== false,
-      streaming: true // Always enable streaming for SSE auto-detection
+      streaming: !requestData.passThrough // Disable streaming for passThrough requests, enable for regular requests
     };
 
     // Add passThrough parameter if specified
