@@ -163,7 +163,7 @@ export function extractDefaultName(content, format, url) {
   } catch (_error) {
     // For YAML content, try basic regex extraction
     if (format === 'openapi') {
-      const titleMatch = content.match(/title:\s*['"]?([^'"\\n]+)['"]?/i);
+      const titleMatch = content.match(/title:\s*['"]?([^'"\n]+)['"]?/i);
       if (titleMatch) {
         return titleMatch[1].trim();
       }

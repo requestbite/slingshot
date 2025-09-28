@@ -16,19 +16,19 @@ export async function processOpenAPISpec(fileContent, collectionName = '') {
   try {
     // Parse the specification
     const spec = await parseSpecification(fileContent);
-    
+
     // Validate it's a valid OpenAPI/Swagger spec
     validateSpecification(spec);
-    
+
     // Extract collection metadata
     const metadata = extractMetadata(spec, collectionName);
-    
+
     // Extract base URL and create variables
     const variables = extractVariables(spec);
-    
+
     // Process paths to create folders and requests
     const { folders, requests } = await processPaths(spec, metadata.baseUrl);
-    
+
     return {
       collectionName: metadata.name,
       description: metadata.description,
@@ -36,7 +36,7 @@ export async function processOpenAPISpec(fileContent, collectionName = '') {
       folders: Array.from(folders),
       requests
     };
-    
+
   } catch (error) {
     throw new Error(`Failed to process OpenAPI specification: ${error.message}`);
   }
@@ -82,7 +82,7 @@ function validateSpecification(spec) {
   if (!spec || typeof spec !== 'object') {
     throw new Error('Invalid specification format');
   }
-  
+
   // Check for OpenAPI 3.x
   if (spec.openapi) {
     if (!spec.openapi.startsWith('3.')) {
@@ -90,7 +90,7 @@ function validateSpecification(spec) {
     }
     return;
   }
-  
+
   // Check for Swagger 2.0
   if (spec.swagger) {
     if (spec.swagger !== '2.0') {
@@ -98,7 +98,7 @@ function validateSpecification(spec) {
     }
     return;
   }
-  
+
   throw new Error('Not a valid OpenAPI or Swagger specification');
 }
 
@@ -110,13 +110,13 @@ function validateSpecification(spec) {
  */
 function extractMetadata(spec, collectionName) {
   const info = spec.info || {};
-  
+
   // Use provided name, or fall back to spec title, or generate one
   let name = collectionName;
   if (!name) {
     name = info.title || 'OpenAPI Import';
   }
-  
+
   // Extract base URL
   let baseUrl = '';
   if (spec.openapi) {
@@ -134,7 +134,7 @@ function extractMetadata(spec, collectionName) {
       baseUrl = `${schemes[0]}://${host}${basePath}`;
     }
   }
-  
+
   return {
     name,
     description: info.description || '',
@@ -150,7 +150,7 @@ function extractMetadata(spec, collectionName) {
  */
 function extractVariables(spec) {
   const variables = [];
-  
+
   // Add baseUrl as a variable if we found one
   const metadata = extractMetadata(spec, '');
   if (metadata.baseUrl) {
@@ -159,7 +159,7 @@ function extractVariables(spec) {
       value: metadata.baseUrl
     });
   }
-  
+
   // Extract server variables from OpenAPI 3.x
   if (spec.openapi && spec.servers) {
     for (const server of spec.servers) {
@@ -174,7 +174,7 @@ function extractVariables(spec) {
       }
     }
   }
-  
+
   return variables;
 }
 
@@ -188,22 +188,22 @@ async function processPaths(spec, baseUrl) {
   const folders = new Set();
   const requests = [];
   const paths = spec.paths || {};
-  
+
   for (const [path, pathItem] of Object.entries(paths)) {
     // Skip if no operations defined
     if (!pathItem || typeof pathItem !== 'object') continue;
-    
+
     const httpMethods = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];
-    
+
     for (const method of httpMethods) {
       const operation = pathItem[method];
       if (!operation) continue;
-      
+
       // Determine folder name from tags
       const tags = operation.tags || [];
       const folderName = tags.length > 0 ? tags[0] : 'Default';
       folders.add(folderName);
-      
+
       // Create request
       const request = await createRequestFromOperation({
         path,
@@ -213,11 +213,11 @@ async function processPaths(spec, baseUrl) {
         folderName,
         spec
       });
-      
+
       requests.push(request);
     }
   }
-  
+
   return { folders, requests };
 }
 
@@ -228,14 +228,14 @@ async function processPaths(spec, baseUrl) {
  */
 async function createRequestFromOperation({ path, method, operation, baseUrl: _baseUrl, folderName, spec }) {
   const name = operation.summary || operation.operationId || `${method} ${path}`;
-  
+
   // Convert OpenAPI path parameters to URL template format
   // Use {{baseUrl}} variable instead of hardcoded baseUrl
   let url = '{{baseUrl}}' + convertPathParameters(path);
-  
+
   // Extract parameters
   const { headers, params: queryParams, pathParams } = extractParameters(operation);
-  
+
   // Append query parameters to URL so RequestEditor can parse them
   if (queryParams.length > 0) {
     const queryString = queryParams
@@ -243,10 +243,10 @@ async function createRequestFromOperation({ path, method, operation, baseUrl: _b
       .join('&');
     url += '?' + queryString;
   }
-  
+
   // Determine request type and body
   const { requestType, contentType, body } = extractRequestBody(operation, spec);
-  
+
   return {
     name,
     method,
@@ -279,9 +279,9 @@ function extractParameters(operation) {
   const headers = [];
   const params = [];
   const pathParams = [];
-  
+
   const parameters = operation.parameters || [];
-  
+
   for (const param of parameters) {
     const paramObj = {
       key: param.name,
@@ -289,7 +289,7 @@ function extractParameters(operation) {
       description: param.description || '',
       enabled: true // Enable all parameters by default in RequestBite
     };
-    
+
     switch (param.in) {
       case 'header':
         headers.push(paramObj);
@@ -302,7 +302,7 @@ function extractParameters(operation) {
         break;
     }
   }
-  
+
   return { headers, params, pathParams };
 }
 
@@ -324,7 +324,7 @@ function extractRequestBody(operation, spec) {
   if (contentTypes.length === 0) {
     return { requestType: 'none', contentType: 'application/json', body: '' };
   }
-  
+
   // Prefer JSON, then form data, then anything else
   let selectedContentType = contentTypes[0];
   if (contentTypes.includes('application/json')) {
@@ -334,10 +334,10 @@ function extractRequestBody(operation, spec) {
   } else if (contentTypes.includes('multipart/form-data')) {
     selectedContentType = 'multipart/form-data';
   }
-  
+
   const mediaType = content[selectedContentType];
   const schema = mediaType?.schema;
-  
+
   // Determine request type and content type
   let requestType = 'raw';
   let contentType = 'application/json';
@@ -355,10 +355,10 @@ function extractRequestBody(operation, spec) {
     requestType = 'raw';
     contentType = 'application/xml';
   }
-  
+
   // Generate example body
   const body = generateExampleFromSchema(schema, spec);
-  
+
   return { requestType, contentType, body };
 }
 
@@ -371,11 +371,11 @@ function getExampleValue(param) {
   if (param.example !== undefined) {
     return String(param.example);
   }
-  
+
   if (param.schema?.example !== undefined) {
     return String(param.schema.example);
   }
-  
+
   // Generate based on type
   const type = param.type || param.schema?.type || 'string';
   switch (type) {
@@ -401,7 +401,7 @@ function getExampleValue(param) {
  */
 function generateExampleFromSchema(schema, spec) {
   if (!schema) return '';
-  
+
   try {
     const example = generateExample(schema, spec, new Set());
     return JSON.stringify(example, null, 2);
@@ -419,7 +419,7 @@ function generateExampleFromSchema(schema, spec) {
  */
 function generateExample(schema, spec, visited) {
   if (!schema) return null;
-  
+
   // Handle $ref
   if (schema.$ref) {
     const refPath = schema.$ref.replace('#/', '').split('/');
@@ -427,24 +427,24 @@ function generateExample(schema, spec, visited) {
     for (const part of refPath) {
       refSchema = refSchema[part];
     }
-    
+
     // Prevent circular references
     const refKey = schema.$ref;
     if (visited.has(refKey)) {
       return {};
     }
     visited.add(refKey);
-    
+
     const result = generateExample(refSchema, spec, visited);
     visited.delete(refKey);
     return result;
   }
-  
+
   // Use provided example
   if (schema.example !== undefined) {
     return schema.example;
   }
-  
+
   // Generate based on type
   switch (schema.type) {
     case 'string':
