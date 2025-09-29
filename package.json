@@ -3,7 +3,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "vite build",
+		"build": "./build.sh",
 		"preview": "vite preview",
 		"lint": "eslint . --ext .js,.jsx",
 		"lint:fix": "eslint . --ext .js,.jsx --fix"

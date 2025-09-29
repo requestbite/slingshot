@@ -52,7 +52,7 @@ export function TopBar() {
 
     // Listen for storage events (cross-tab changes)
     window.addEventListener('storage', handleStorageChange);
-    
+
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
@@ -216,17 +216,27 @@ export function TopBar() {
           </a>
         </nav>
 
-        {/* Right Section: Proxy Banner + Mobile Menu */}
+        {/* Right Section: Version + Proxy Banner + Mobile Menu */}
         <div class="flex items-center space-x-3">
+          {/* Desktop Version Link */}
+          <a href="https://docs.requestbite.com/changelog/" target="_blank" class="hidden lg:flex text-gray-600 hover:text-gray-400 flex items-center">
+            __VERSION_PLACEHOLDER__
+          </a>
+
           {/* Desktop Proxy Status Banner */}
           <button
             onClick={() => setLocation('/settings')}
-            class={`hidden md:flex px-2 py-1 rounded-md text-xs transition-colors cursor-pointer items-center ${banner.bgColor} ${banner.textColor} ${banner.hoverColor}`}
+            class={`hidden lg:flex px-2 py-1 rounded-md text-xs transition-colors cursor-pointer items-center ${banner.bgColor} ${banner.textColor} ${banner.hoverColor}`}
           >
             <WaypointsIcon />
             <span class="hidden xl:inline">{banner.textXl}</span>
             <span class="xl:hidden">{proxyConfig.proxyType === 'custom' ? 'Custom proxy' : banner.text}</span>
           </button>
+
+          {/* Mobile Version Link */}
+          <a href="https://docs.requestbite.com/changelog/" target="_blank" class="lg:hidden text-gray-600 hover:text-gray-400 flex items-center">
+            __VERSION_PLACEHOLDER__
+          </a>
 
           {/* Mobile Hamburger Menu */}
           <div class="block lg:hidden">
