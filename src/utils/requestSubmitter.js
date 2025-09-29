@@ -42,7 +42,7 @@ export class RequestSubmitter {
     } catch (error) {
       console.warn('Failed to load proxy settings from localStorage:', error);
     }
-    
+
     // Fall back to environment variable or default
     return import.meta.env.VITE_PROXY_HOST || 'http://localhost:8080';
   }
@@ -55,9 +55,9 @@ export class RequestSubmitter {
   async submitRequest(requestData) {
     // Create new abort controller for this request
     this.abortController = new AbortController();
-    
+
     const startTime = performance.now();
-    
+
     try {
       // Validate request
       const validationError = this.validateRequest(requestData);
@@ -67,14 +67,14 @@ export class RequestSubmitter {
 
       // Determine proxy method based on body type
       const useFormProxy = this.shouldUseFormProxy(requestData);
-      
+
       let proxyResponse;
       if (useFormProxy) {
         proxyResponse = await this.submitFormRequest(requestData);
       } else {
         proxyResponse = await this.submitJsonRequest(requestData);
       }
-      
+
       // Process proxy response (skip for passThrough mode which is already processed)
       if (requestData.passThrough && proxyResponse.success && 'responseData' in proxyResponse) {
         // PassThrough response is already in final format, just add timing
@@ -86,20 +86,20 @@ export class RequestSubmitter {
           receivedAt: new Date().toISOString()
         };
       }
-      
+
       return this.processProxyResponse(proxyResponse, startTime);
-      
+
     } catch (error) {
       const endTime = performance.now();
-      
+
       if (error.name === 'AbortError') {
         return this.createCancelledResponse(startTime);
       }
-      
+
       if (error instanceof TypeError && error.message.includes('fetch')) {
         return this.createErrorResponse('connection_error', 'Proxy Connection Failed', `Failed to connect to proxy: ${error.message}`, startTime);
       }
-      
+
       return this.createErrorResponse('unknown_error', 'Request Failed', error.message, startTime);
     }
   }
@@ -133,9 +133,9 @@ export class RequestSubmitter {
     if (!['GET', 'HEAD', 'OPTIONS'].includes(requestData.method)) {
       if (requestData.bodyType === 'raw' && requestData.bodyContent) {
         proxyRequest.body = requestData.bodyContent;
-        
+
         // Add content-type header if not already present
-        const hasContentType = proxyRequest.headers.some(h => 
+        const hasContentType = proxyRequest.headers.some(h =>
           h.toLowerCase().startsWith('content-type:')
         );
         if (!hasContentType && requestData.contentType) {
@@ -410,7 +410,7 @@ export class RequestSubmitter {
    */
   async submitFormRequest(requestData) {
     const queryParams = new URLSearchParams();
-    
+
     // Add required query parameters
     queryParams.set('url', this.processUrl(requestData.url, requestData.pathParams));
     queryParams.set('method', requestData.method);
@@ -514,19 +514,19 @@ export class RequestSubmitter {
     if (!requestData.url) {
       return 'URL is required';
     }
-    
+
     try {
       // Normalize URL by adding http:// if no protocol is specified
       let normalizedUrl = requestData.url;
       if (!normalizedUrl.match(/^https?:\/\//i)) {
         normalizedUrl = `http://${normalizedUrl}`;
       }
-      
+
       new URL(normalizedUrl);
     } catch {
       return 'Invalid URL format';
     }
-    
+
     return null;
   }
 
@@ -542,7 +542,7 @@ export class RequestSubmitter {
       if (proxyResponse.cancelled) {
         return this.createCancelledResponse(startTime);
       }
-      
+
       return {
         success: false,
         errorType: proxyResponse.error_type,
@@ -557,7 +557,7 @@ export class RequestSubmitter {
 
     // Handle successful proxy response
     const processedHeaders = this.processResponseHeaders(proxyResponse.response_headers || {});
-    
+
     return {
       success: true,
       status: proxyResponse.response_status,
@@ -565,8 +565,8 @@ export class RequestSubmitter {
       headers: processedHeaders,
       responseTime: proxyResponse.response_time || this.formatResponseTime(responseTime),
       responseSize: proxyResponse.response_size || this.formatResponseSize(0),
-      responseData: proxyResponse.is_binary ? 
-        `[Binary content - ${proxyResponse.response_size || '0 B'}]` : 
+      responseData: proxyResponse.is_binary ?
+        `[Binary content - ${proxyResponse.response_size || '0 B'}]` :
         (proxyResponse.response_data || ''),
       rawHeaders: proxyResponse.response_headers || {},
       rawResponseTime: responseTime,
@@ -592,12 +592,12 @@ export class RequestSubmitter {
    */
   processUrl(url, pathParams = []) {
     let processedUrl = url;
-    
+
     // Add http:// prefix if no protocol is specified
     if (processedUrl && !processedUrl.match(/^https?:\/\//i)) {
       processedUrl = `http://${processedUrl}`;
     }
-    
+
     // Replace path parameters :param with values for URL display
     // The proxy will handle the actual :param substitution
     pathParams?.forEach(param => {
@@ -608,7 +608,7 @@ export class RequestSubmitter {
         processedUrl = processedUrl.replace(new RegExp(pattern, 'g'), replacement);
       }
     });
-    
+
     return processedUrl;
   }
 
@@ -688,7 +688,7 @@ export class RequestSubmitter {
    */
   createErrorResponse(errorType, errorTitle, errorMessage, startTime) {
     const endTime = performance.now();
-    
+
     return {
       success: false,
       errorType,
@@ -706,7 +706,7 @@ export class RequestSubmitter {
    */
   createCancelledResponse(startTime) {
     const endTime = performance.now();
-    
+
     return {
       success: false,
       cancelled: true,
@@ -731,7 +731,7 @@ function getProxyUrl() {
   } catch (error) {
     console.warn('Failed to load proxy settings from localStorage:', error);
   }
-  
+
   // Fall back to environment variable or default
   return import.meta.env.VITE_PROXY_HOST || 'http://localhost:8080';
 }

@@ -67,7 +67,7 @@ const getAuthMethodDisplayName = (authField) => {
 };
 
 export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
-  const { selectedCollection, currentEnvironment, hasManuallySelectedEnvironment } = useAppContext();
+  const { selectedCollection, currentEnvironment, hasManuallySelectedEnvironment, loadCollections } = useAppContext();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState('params');
 
@@ -1408,6 +1408,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
             streamedContent={streamedContent}
             streamedChunks={streamedChunks}
             streamingMetadata={streamingMetadata}
+            onCollectionUpdate={loadCollections}
           />
         </div>
       </div>
