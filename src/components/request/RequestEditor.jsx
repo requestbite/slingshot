@@ -67,7 +67,7 @@ const getAuthMethodDisplayName = (authField) => {
 };
 
 export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
-  const { selectedCollection, currentEnvironment, hasManuallySelectedEnvironment, loadCollections } = useAppContext();
+  const { selectedCollection, currentEnvironment, hasManuallySelectedEnvironment, loadCollections, isDocsSidebarVisible, setIsDocsSidebarVisible } = useAppContext();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState('params');
 
@@ -1285,63 +1285,84 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       <div>
         {/* Tabs */}
         <div class="border-b border-gray-200 px-4 overflow-x-auto scrollbar-hide">
-          <div class="flex space-x-2 flex-nowrap min-w-max">
-            {Object.entries(getTabNames(!!selectedCollection)).map(([key, name]) => (
-              <button key={key} type="button" data-tab={key}
-                onClick={() => setActiveTab(key)}
-                class={`px-4 py-2 text-xs rounded-t-md font-medium focus:outline-none ${key === 'body' && isBodyDisabled
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : activeTab === key
-                    ? 'text-sky-600 bg-sky-50 border-b-2 border-sky-600 cursor-pointer'
-                    : 'text-gray-600 hover:text-sky-600 hover:bg-gray-100 cursor-pointer'
-                  }`}
-                disabled={key === 'body' && isBodyDisabled}
+          <div class="flex justify-between items-start flex-nowrap min-w-max">
+            <div class="flex space-x-2 flex-nowrap">
+              {Object.entries(getTabNames(!!selectedCollection)).map(([key, name]) => (
+                <button key={key} type="button" data-tab={key}
+                  onClick={() => setActiveTab(key)}
+                  class={`px-4 py-2 text-xs rounded-t-md font-medium focus:outline-none ${key === 'body' && isBodyDisabled
+                    ? 'text-gray-400 cursor-not-allowed'
+                    : activeTab === key
+                      ? 'text-sky-600 bg-sky-50 border-b-2 border-sky-600 cursor-pointer'
+                      : 'text-gray-600 hover:text-sky-600 hover:bg-gray-100 cursor-pointer'
+                    }`}
+                  disabled={key === 'body' && isBodyDisabled}
+                >
+                  {name}
+                  {key === 'params' && (requestData.queryParams.length + requestData.pathParams.length) > 0 && (
+                    <span class="ml-1 text-xs bg-sky-100 text-sky-600 rounded-full px-1.5 py-0.5">
+                      {requestData.queryParams.length + requestData.pathParams.length}
+                    </span>
+                  )}
+                  {key === 'headers' && requestData.headers.length > 0 && (
+                    <span class="ml-1 text-xs bg-sky-100 text-sky-600 rounded-full px-1.5 py-0.5">
+                      {requestData.headers.length}
+                    </span>
+                  )}
+                  {key === 'body' && requestData.bodyType === 'form-data' && requestData.formData.length > 0 && (
+                    <span class="ml-1 text-xs bg-sky-100 text-sky-600 rounded-full px-1.5 py-0.5">
+                      {requestData.formData.length}
+                    </span>
+                  )}
+                </button>
+              ))}
+              <button type="button"
+                onClick={() => setShowCurlImportModal(true)}
+                class="cursor-pointer px-4 py-2 text-xs rounded-t-md font-medium text-sky-500 hover:text-sky-700 hover:bg-sky-50 focus:outline-none"
               >
-                {name}
-                {key === 'params' && (requestData.queryParams.length + requestData.pathParams.length) > 0 && (
-                  <span class="ml-1 text-xs bg-sky-100 text-sky-600 rounded-full px-1.5 py-0.5">
-                    {requestData.queryParams.length + requestData.pathParams.length}
-                  </span>
-                )}
-                {key === 'headers' && requestData.headers.length > 0 && (
-                  <span class="ml-1 text-xs bg-sky-100 text-sky-600 rounded-full px-1.5 py-0.5">
-                    {requestData.headers.length}
-                  </span>
-                )}
-                {key === 'body' && requestData.bodyType === 'form-data' && requestData.formData.length > 0 && (
-                  <span class="ml-1 text-xs bg-sky-100 text-sky-600 rounded-full px-1.5 py-0.5">
-                    {requestData.formData.length}
-                  </span>
-                )}
+                Import cURL
               </button>
-            ))}
-            <button type="button"
-              onClick={() => setShowCurlImportModal(true)}
-              class="cursor-pointer px-4 py-2 text-xs rounded-t-md font-medium text-sky-500 hover:text-sky-700 hover:bg-sky-50 focus:outline-none"
-            >
-              Import cURL
-            </button>
-            <button type="button"
-              onClick={() => setShowCopyRequestModal(true)}
-              class="cursor-pointer px-4 py-2 text-xs rounded-t-md font-medium text-sky-500 hover:text-sky-700 hover:bg-sky-50 focus:outline-none"
-            >
-              Copy request
-            </button>
-
-            {/* Auth Banner */}
-            {currentEnvironment?.auth && currentEnvironment.auth !== 'none' && getAuthMethodDisplayName(currentEnvironment.auth) && (
-              <a
-                href={`/environments/${currentEnvironment.id}/auth`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setLocation(`/environments/${currentEnvironment.id}/auth`);
-                }}
-                class="cursor-pointer px-2 rounded-t-md text-xs transition-colors flex items-center text-green-600 hover:text-green-800 hover:bg-green-50"
-                title="Click to view authentication settings"
+              <button type="button"
+                onClick={() => setShowCopyRequestModal(true)}
+                class="cursor-pointer px-4 py-2 text-xs rounded-t-md font-medium text-sky-500 hover:text-sky-700 hover:bg-sky-50 focus:outline-none"
               >
-                Auth: {getAuthMethodDisplayName(currentEnvironment.auth)}
-              </a>
-            )}
+                Copy request
+              </button>
+
+              {/* Auth Banner */}
+              {currentEnvironment?.auth && currentEnvironment.auth !== 'none' && getAuthMethodDisplayName(currentEnvironment.auth) && (
+                <a
+                  href={`/environments/${currentEnvironment.id}/auth`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setLocation(`/environments/${currentEnvironment.id}/auth`);
+                  }}
+                  class="cursor-pointer px-2 rounded-t-md text-xs transition-colors flex items-center text-green-600 hover:text-green-800 hover:bg-green-50"
+                  title="Click to view authentication settings"
+                >
+                  Auth: {getAuthMethodDisplayName(currentEnvironment.auth)}
+                </a>
+              )}
+            </div>
+
+            {/* Right side container for docs toggle */}
+            <div class="flex-shrink-0">
+              {/* Docs Sidebar Toggle - show when collection is selected */}
+              {selectedCollection && (
+                <button type="button"
+                  onClick={() => setIsDocsSidebarVisible(!isDocsSidebarVisible)}
+                  class="cursor-pointer px-4 pt-2.5 pb-2 text-xs rounded-t-md font-medium text-sky-500 hover:text-sky-700 hover:bg-sky-50 focus:outline-none"
+                  title={isDocsSidebarVisible ? "Hide docs panel" : "Show docs panel"}
+                >
+                  <div class="flex items-center space-x-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
+                    </svg>
+                    <span>{isDocsSidebarVisible ? 'Hide docs' : 'Show docs'}</span>
+                  </div>
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

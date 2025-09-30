@@ -13,6 +13,7 @@ export function AppProvider({ children }) {
   const [currentEnvironment, setCurrentEnvironment] = useState(null);
   const [hasManuallySelectedEnvironment, setHasManuallySelectedEnvironment] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDocsSidebarVisible, setIsDocsSidebarVisible] = useState(true);
 
   // Load collections on app start
   useEffect(() => {
@@ -125,7 +126,8 @@ export function AppProvider({ children }) {
     currentEnvironment,
     hasManuallySelectedEnvironment,
     isLoading,
-    
+    isDocsSidebarVisible,
+
     // Actions
     loadCollections,
     addCollection,
@@ -135,6 +137,7 @@ export function AppProvider({ children }) {
     selectRequest,
     setCurrentEnvironment,
     setHasManuallySelectedEnvironment,
+    setIsDocsSidebarVisible,
     refreshCollectionData
   };
 

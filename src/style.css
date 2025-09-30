@@ -16,6 +16,11 @@ body {
   }
 }
 
+/* Hidden docs sidebar (when toggled off on large screens) */
+.docs-sidebar-hidden {
+  display: none !important;
+}
+
 /* Custom class for docs sidebar toggle button visibility */
 .docs-toggle-responsive {
   display: block;

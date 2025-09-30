@@ -1,10 +1,16 @@
 import { useState } from 'preact/hooks';
 import { SideBar } from './SideBar';
 import { DocsSideBar } from './DocsSideBar';
+import { useAppContext } from '../../hooks/useAppContext';
 
 export function AppLayout({ children, showDocsSidebar = false }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDocsSidebarOpen, setIsDocsSidebarOpen] = useState(false);
+  const { selectedCollection, isDocsSidebarVisible } = useAppContext();
+
+  // Show docs sidebar if explicitly requested OR if a collection is selected
+  // Visibility is controlled separately for large screen toggling
+  const shouldShowDocsSidebar = showDocsSidebar || (selectedCollection !== null);
 
   return (
     <div class="flex-grow flex flex-col min-h-0">{/* TopBar now handled at App level */}
@@ -21,8 +27,8 @@ export function AppLayout({ children, showDocsSidebar = false }) {
         </svg>
       </button>
 
-      {/* Docs Sidebar Toggle Button for Mobile/Tablet - only show when docs sidebar should be shown but is hidden */}
-      {showDocsSidebar && (
+      {/* Docs Sidebar Toggle Button for Mobile/Tablet - only show when docs sidebar is visible (tab says Hide docs) */}
+      {shouldShowDocsSidebar && isDocsSidebarVisible && (
         <button
           onClick={() => setIsDocsSidebarOpen(true)}
           class={`fixed top-1/2 -right-1 transform -translate-y-1/2 z-50 bg-sky-100 hover:bg-sky-200 text-sky-700 p-2 rounded-l-lg shadow-lg cursor-pointer transition-all duration-200 hover:-translate-x-1 ${isDocsSidebarOpen ? 'hidden' : 'docs-toggle-responsive'
@@ -59,7 +65,7 @@ export function AppLayout({ children, showDocsSidebar = false }) {
           )}
 
           {/* Mobile/Tablet Docs Sidebar */}
-          {showDocsSidebar && isDocsSidebarOpen && (
+          {shouldShowDocsSidebar && isDocsSidebarOpen && (
             <>
               {/* Full screen overlay covering topbar */}
               <div
@@ -75,13 +81,13 @@ export function AppLayout({ children, showDocsSidebar = false }) {
           )}
 
           {/* Main content area - fills available space */}
-          <div class={`mt-[2px] rounded-lg bg-white border border-gray-300 w-full min-h-full flex flex-col overflow-x-auto ${showDocsSidebar ? 'mr-4' : ''}`}>
+          <div class={`mt-[2px] rounded-lg bg-white border border-gray-300 w-full min-h-full flex flex-col overflow-x-auto`}>
             {children}
           </div>
 
           {/* Docs Sidebar - right column */}
-          {showDocsSidebar && (
-            <div class="mt-[2px] w-[300px] flex-shrink-0 min-h-full docs-sidebar-responsive">
+          {shouldShowDocsSidebar && (
+            <div class={`mt-[2px] w-[300px] flex-shrink-0 min-h-full ml-4 docs-sidebar-responsive ${!isDocsSidebarVisible ? 'docs-sidebar-hidden' : ''}`}>
               <DocsSideBar />
             </div>
           )}
