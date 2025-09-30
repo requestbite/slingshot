@@ -1424,12 +1424,10 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
             isLoading={isSubmitting}
             onCancel={handleCancelRequest}
             onClear={handleClearResponse}
-            collection={selectedCollection}
             isStreaming={isStreaming}
             streamedContent={streamedContent}
             streamedChunks={streamedChunks}
             streamingMetadata={streamingMetadata}
-            onCollectionUpdate={loadCollections}
           />
         </div>
       </div>

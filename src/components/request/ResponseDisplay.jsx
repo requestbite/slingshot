@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { WelcomeMessage } from '../common/WelcomeMessage';
-import { CollectionWelcome } from '../common/CollectionWelcome';
 import { Toast, useToast } from '../common/Toast';
 import CodeMirror from '@uiw/react-codemirror';
 import { requestSubmitter } from '../../utils/requestSubmitter';
@@ -28,7 +27,7 @@ import {
   getStatusColor
 } from './ResponseDisplayUtils';
 
-export function ResponseDisplay({ response, isLoading, onCancel, onClear, collection, isStreaming, streamedContent, streamedChunks, streamingMetadata, onCollectionUpdate }) {
+export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStreaming, streamedContent, streamedChunks, streamingMetadata }) {
   // Initialize headers visibility from localStorage, defaulting to false (closed)
   const [showHeaders, setShowHeaders] = useState(() => {
     try {
@@ -89,7 +88,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, collec
   if (!response) {
     return (
       <div class="px-6">
-        {collection ? <CollectionWelcome collection={collection} onCollectionUpdate={onCollectionUpdate} /> : <WelcomeMessage />}
+        <WelcomeMessage />
       </div>
     );
   }
@@ -100,7 +99,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, collec
   if (!response.status && !response.responseData && !response.cancelled && response.success !== false && !isStreaming && !streamedContent) {
     return (
       <div class="px-6">
-        {collection ? <CollectionWelcome collection={collection} onCollectionUpdate={onCollectionUpdate} /> : <WelcomeMessage />}
+        <WelcomeMessage />
       </div>
     );
   }
