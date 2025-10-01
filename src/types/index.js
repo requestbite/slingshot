@@ -69,6 +69,16 @@
  * @property {number|null} response_time - Request time in ms
  * @property {number|null} response_size - Response size in bytes
  * @property {Date|null} response_received_at - When response was received
+ * @property {string|null} description - OpenAPI operation description
+ * @property {string|null} summary - OpenAPI operation summary
+ * @property {string|null} operation_id - OpenAPI operationId
+ * @property {string[]|null} tags - OpenAPI tags
+ * @property {string|null} parameters_schema - JSON serialized resolved parameter schemas
+ * @property {string|null} request_body_schema - JSON serialized resolved request body schema
+ * @property {string|null} response_schemas - JSON serialized resolved response schemas by status code
+ * @property {string|null} request_example - JSON serialized request body example
+ * @property {string|null} response_examples - JSON serialized response examples by status code
+ * @property {string|null} path_template - Original OpenAPI path template
  */
 
 /**

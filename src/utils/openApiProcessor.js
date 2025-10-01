@@ -234,7 +234,7 @@ async function createRequestFromOperation({ path, method, operation, baseUrl: _b
   let url = '{{baseUrl}}' + convertPathParameters(path);
 
   // Extract parameters
-  const { headers, params: queryParams, pathParams } = extractParameters(operation);
+  const { headers, params: queryParams, pathParams, parametersSchema } = extractParameters(operation, spec);
 
   // Append query parameters to URL so RequestEditor can parse them
   if (queryParams.length > 0) {
@@ -245,7 +245,10 @@ async function createRequestFromOperation({ path, method, operation, baseUrl: _b
   }
 
   // Determine request type and body
-  const { requestType, contentType, body } = extractRequestBody(operation, spec);
+  const { requestType, contentType, body, requestBodySchema, requestExample } = extractRequestBody(operation, spec);
+
+  // Extract response schemas and examples
+  const { responseSchemas, responseExamples } = extractResponseSchemas(operation, spec);
 
   return {
     name,
@@ -257,7 +260,18 @@ async function createRequestFromOperation({ path, method, operation, baseUrl: _b
     requestType,
     contentType,
     body,
-    folderName
+    folderName,
+    // OpenAPI metadata
+    description: operation.description || '',
+    summary: operation.summary || '',
+    operation_id: operation.operationId || '',
+    tags: operation.tags || [],
+    parameters_schema: parametersSchema,
+    request_body_schema: requestBodySchema,
+    response_schemas: responseSchemas,
+    request_example: requestExample,
+    response_examples: responseExamples,
+    path_template: path // Original OpenAPI path template
   };
 }
 
@@ -271,58 +285,89 @@ function convertPathParameters(path) {
 }
 
 /**
- * Extracts parameters from an operation
+ * Extracts parameters from an operation with resolved schemas
  * @param {Object} operation - OpenAPI operation
- * @returns {Object} Extracted parameters
+ * @param {Object} spec - Full specification for reference resolution
+ * @returns {Object} Extracted parameters with resolved schemas
  */
-function extractParameters(operation) {
+function extractParameters(operation, spec) {
   const headers = [];
   const params = [];
   const pathParams = [];
+  const parametersSchema = {
+    headers: {},
+    query: {},
+    path: {}
+  };
 
   const parameters = operation.parameters || [];
 
   for (const param of parameters) {
+    const resolvedParam = resolveReferences(param, spec);
+
     const paramObj = {
-      key: param.name,
-      value: getExampleValue(param),
-      description: param.description || '',
+      key: resolvedParam.name,
+      value: getExampleValue(resolvedParam),
+      description: resolvedParam.description || '',
       enabled: true // Enable all parameters by default in RequestBite
     };
 
-    switch (param.in) {
+    // Store resolved schema for this parameter
+    const paramSchema = {
+      type: resolvedParam.type || resolvedParam.schema?.type || 'string',
+      description: resolvedParam.description || '',
+      required: resolvedParam.required || false,
+      schema: resolvedParam.schema ? resolveReferences(resolvedParam.schema, spec) : undefined
+    };
+
+    switch (resolvedParam.in) {
       case 'header':
         headers.push(paramObj);
+        parametersSchema.headers[resolvedParam.name] = paramSchema;
         break;
       case 'query':
         params.push(paramObj);
+        parametersSchema.query[resolvedParam.name] = paramSchema;
         break;
       case 'path':
         pathParams.push(paramObj);
+        parametersSchema.path[resolvedParam.name] = paramSchema;
         break;
     }
   }
 
-  return { headers, params, pathParams };
+  return { headers, params, pathParams, parametersSchema };
 }
 
 /**
- * Extracts request body information from an operation
+ * Extracts request body information from an operation with resolved schemas
  * @param {Object} operation - OpenAPI operation
  * @param {Object} spec - Full specification for schema resolution
- * @returns {Object} Request body data
+ * @returns {Object} Request body data with resolved schemas
  */
 function extractRequestBody(operation, spec) {
   const requestBody = operation.requestBody;
   if (!requestBody || !requestBody.content) {
-    return { requestType: 'none', contentType: 'application/json', body: '' };
+    return {
+      requestType: 'none',
+      contentType: 'application/json',
+      body: '',
+      requestBodySchema: null,
+      requestExample: null
+    };
   }
 
   const content = requestBody.content;
   const contentTypes = Object.keys(content);
 
   if (contentTypes.length === 0) {
-    return { requestType: 'none', contentType: 'application/json', body: '' };
+    return {
+      requestType: 'none',
+      contentType: 'application/json',
+      body: '',
+      requestBodySchema: null,
+      requestExample: null
+    };
   }
 
   // Prefer JSON, then form data, then anything else
@@ -356,10 +401,117 @@ function extractRequestBody(operation, spec) {
     contentType = 'application/xml';
   }
 
+  // Resolve request body schema
+  const requestBodySchema = schema ? resolveReferences(schema, spec) : null;
+
   // Generate example body
   const body = generateExampleFromSchema(schema, spec);
+  const requestExample = requestBodySchema ? generateExampleFromResolvedSchema(requestBodySchema) : null;
 
-  return { requestType, contentType, body };
+  return {
+    requestType,
+    contentType,
+    body,
+    requestBodySchema,
+    requestExample
+  };
+}
+
+/**
+ * Extracts response schemas from an operation
+ * @param {Object} operation - OpenAPI operation
+ * @param {Object} spec - Full specification for schema resolution
+ * @returns {Object} Response schemas and examples by status code
+ */
+function extractResponseSchemas(operation, spec) {
+  const responses = operation.responses || {};
+  const responseSchemas = {};
+  const responseExamples = {};
+
+  for (const [statusCode, response] of Object.entries(responses)) {
+    if (!response.content) {
+      responseSchemas[statusCode] = null;
+      responseExamples[statusCode] = null;
+      continue;
+    }
+
+    const content = response.content;
+    const contentTypes = Object.keys(content);
+
+    if (contentTypes.length === 0) {
+      responseSchemas[statusCode] = null;
+      responseExamples[statusCode] = null;
+      continue;
+    }
+
+    // Prefer JSON, then anything else
+    let selectedContentType = contentTypes[0];
+    if (contentTypes.includes('application/json')) {
+      selectedContentType = 'application/json';
+    }
+
+    const mediaType = content[selectedContentType];
+    const schema = mediaType?.schema;
+
+    if (schema) {
+      // Resolve response schema
+      const resolvedSchema = resolveReferences(schema, spec);
+      responseSchemas[statusCode] = {
+        contentType: selectedContentType,
+        schema: resolvedSchema,
+        description: response.description || ''
+      };
+
+      // Generate example
+      responseExamples[statusCode] = generateExampleFromResolvedSchema(resolvedSchema);
+    } else {
+      responseSchemas[statusCode] = null;
+      responseExamples[statusCode] = null;
+    }
+  }
+
+  return { responseSchemas, responseExamples };
+}
+
+/**
+ * Generates example data from a resolved schema (no $refs)
+ * @param {Object} schema - Resolved schema object
+ * @returns {*} Example data
+ */
+function generateExampleFromResolvedSchema(schema) {
+  if (!schema) return null;
+
+  // Use provided example
+  if (schema.example !== undefined) {
+    return schema.example;
+  }
+
+  // Generate based on type
+  switch (schema.type) {
+    case 'string':
+      return schema.enum ? schema.enum[0] : 'string';
+    case 'number':
+    case 'integer':
+      return 0;
+    case 'boolean':
+      return false;
+    case 'array':
+      if (schema.items) {
+        return [generateExampleFromResolvedSchema(schema.items)];
+      }
+      return [];
+    case 'object': {
+      const obj = {};
+      if (schema.properties) {
+        for (const [key, prop] of Object.entries(schema.properties)) {
+          obj[key] = generateExampleFromResolvedSchema(prop);
+        }
+      }
+      return obj;
+    }
+    default:
+      return null;
+  }
 }
 
 /**
@@ -408,6 +560,80 @@ function generateExampleFromSchema(schema, spec) {
   } catch (_error) {
     return '{}';
   }
+}
+
+/**
+ * Resolves all $ref references in a schema object recursively
+ * @param {Object} schema - Schema object that may contain $ref
+ * @param {Object} spec - Full OpenAPI specification for reference resolution
+ * @param {Set} visited - Visited references to prevent circular references
+ * @returns {Object} Completely resolved schema without any $ref references
+ */
+function resolveReferences(schema, spec, visited = new Set()) {
+  if (!schema || typeof schema !== 'object') {
+    return schema;
+  }
+
+  // Handle $ref
+  if (schema.$ref) {
+    const refPath = schema.$ref;
+
+    // Prevent circular references
+    if (visited.has(refPath)) {
+      return { type: 'object', description: 'Circular reference detected' };
+    }
+
+    visited.add(refPath);
+
+    try {
+      // Resolve the reference path
+      const resolved = resolveReference(refPath, spec);
+      const result = resolveReferences(resolved, spec, visited);
+      visited.delete(refPath);
+      return result;
+    } catch (error) {
+      console.warn(`Failed to resolve reference ${refPath}:`, error);
+      visited.delete(refPath);
+      return { type: 'object', description: `Unresolved reference: ${refPath}` };
+    }
+  }
+
+  // Handle arrays
+  if (Array.isArray(schema)) {
+    return schema.map(item => resolveReferences(item, spec, visited));
+  }
+
+  // Handle objects - recursively resolve all properties
+  const resolved = {};
+  for (const [key, value] of Object.entries(schema)) {
+    resolved[key] = resolveReferences(value, spec, visited);
+  }
+
+  return resolved;
+}
+
+/**
+ * Resolves a single $ref path to the actual schema object
+ * @param {string} refPath - Reference path like "#/components/schemas/User"
+ * @param {Object} spec - Full OpenAPI specification
+ * @returns {Object} Referenced schema object
+ */
+function resolveReference(refPath, spec) {
+  if (!refPath.startsWith('#/')) {
+    throw new Error(`External references not supported: ${refPath}`);
+  }
+
+  const path = refPath.substring(2).split('/'); // Remove '#/' and split
+  let current = spec;
+
+  for (const segment of path) {
+    if (!current || typeof current !== 'object' || !(segment in current)) {
+      throw new Error(`Reference path not found: ${refPath}`);
+    }
+    current = current[segment];
+  }
+
+  return current;
 }
 
 /**

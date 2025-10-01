@@ -123,6 +123,17 @@ db.requests.defineClass({
   draft_body: String,
   draft_form_data: Array,
   draft_url_encoded_data: Array,
+  // OpenAPI metadata fields (optional)
+  description: String,
+  summary: String,
+  operation_id: String,
+  tags: Array,
+  parameters_schema: String, // JSON serialized resolved parameter schemas
+  request_body_schema: String, // JSON serialized resolved request body schema
+  response_schemas: String, // JSON serialized resolved response schemas by status code
+  request_example: String, // JSON serialized request body example
+  response_examples: String, // JSON serialized response examples by status code
+  path_template: String, // Original OpenAPI path template (e.g., "/users/{id}")
 });
 
 /**

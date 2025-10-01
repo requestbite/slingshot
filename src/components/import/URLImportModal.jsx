@@ -167,7 +167,18 @@ export function URLImportModal({ isOpen, importUrl, onClose, onSuccess }) {
             content_type: requestData.contentType || 'json',
             body: requestData.body || '',
             form_data: requestData.formData || [],
-            url_encoded_data: requestData.urlEncodedData || []
+            url_encoded_data: requestData.urlEncodedData || [],
+            // Include OpenAPI metadata
+            description: requestData.description,
+            summary: requestData.summary,
+            operation_id: requestData.operation_id,
+            tags: requestData.tags,
+            parameters_schema: requestData.parameters_schema,
+            request_body_schema: requestData.request_body_schema,
+            response_schemas: requestData.response_schemas,
+            request_example: requestData.request_example,
+            response_examples: requestData.response_examples,
+            path_template: requestData.path_template
           });
         }
       } else {
@@ -195,7 +206,18 @@ export function URLImportModal({ isOpen, importUrl, onClose, onSuccess }) {
             path_params: requestData.pathParams || [],
             request_type: requestData.requestType || 'none',
             content_type: requestData.contentType || 'json',
-            body: requestData.body || ''
+            body: requestData.body || '',
+            // Include OpenAPI metadata
+            description: requestData.description,
+            summary: requestData.summary,
+            operation_id: requestData.operation_id,
+            tags: requestData.tags,
+            parameters_schema: requestData.parameters_schema,
+            request_body_schema: requestData.request_body_schema,
+            response_schemas: requestData.response_schemas,
+            request_example: requestData.request_example,
+            response_examples: requestData.response_examples,
+            path_template: requestData.path_template
           });
         }
       }
