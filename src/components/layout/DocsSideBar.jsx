@@ -3,9 +3,10 @@ import { MarkdownPreview } from '../common/MarkdownPreview';
 import { MarkdownModal } from '../modals/MarkdownModal';
 import { useAppContext } from '../../hooks/useAppContext';
 import { apiClient } from '../../api';
+import { getMethodColor } from '../../utils/httpMethods';
 
 export function DocsSideBar({ onClose: _onClose }) {
-  const { selectedCollection, loadCollections } = useAppContext();
+  const { selectedCollection, selectedRequest, loadCollections } = useAppContext();
   const [showMarkdownModal, setShowMarkdownModal] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -33,7 +34,26 @@ export function DocsSideBar({ onClose: _onClose }) {
       <aside class="bg-white rounded-lg md:border border-gray-300 h-full">
         <div class="flex grow flex-col gap-y-5 overflow-y-auto p-4">
           <nav class="flex flex-1 flex-col space-y-4">
-            {selectedCollection ? (
+            {selectedRequest ? (
+              <>
+                {/* Request Header */}
+                <div class="flex items-center gap-2">
+                  <span class={`text-[10px]/[12px] text-white py-0.5 px-1 rounded flex-shrink-0 ${getMethodColor(selectedRequest.method)}`}>
+                    {selectedRequest.method}
+                  </span>
+                  <h2 class="text-sm font-medium text-gray-900 truncate" title={selectedRequest.name || selectedRequest.url || 'Untitled Request'}>
+                    {selectedRequest.name || selectedRequest.url || 'Untitled Request'}
+                  </h2>
+                </div>
+
+                {/* Request Documentation Placeholder */}
+                <div class="flex-1 min-h-0">
+                  <div class="text-left text-gray-500 italic text-sm">
+                    Request documentation will be available here in future updates.
+                  </div>
+                </div>
+              </>
+            ) : selectedCollection ? (
               <>
                 {/* Collection Header */}
                 <div class="flex items-center justify-between">
@@ -99,8 +119,8 @@ export function DocsSideBar({ onClose: _onClose }) {
         </div>
       </aside>
 
-      {/* Markdown Modal */}
-      {selectedCollection && (
+      {/* Markdown Modal - only for collections, not requests */}
+      {selectedCollection && !selectedRequest && (
         <MarkdownModal
           key={`${selectedCollection.id}-${showMarkdownModal}`}
           isOpen={showMarkdownModal}
