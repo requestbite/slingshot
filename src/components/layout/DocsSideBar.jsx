@@ -1,14 +1,24 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { MarkdownPreview } from '../common/MarkdownPreview';
 import { MarkdownModal } from '../modals/MarkdownModal';
+import { ExampleViewer } from '../common/ExampleViewer';
+import { Select } from '../common/Select';
 import { useAppContext } from '../../hooks/useAppContext';
 import { apiClient } from '../../api';
 import { getMethodColor } from '../../utils/httpMethods';
+import {
+  parseRequestExamples,
+  parseResponseExamples,
+  getResponseStatusCodes,
+  getStatusCodeDisplayName,
+  getExampleContentType
+} from '../../utils/exampleParser';
 
 export function DocsSideBar({ onClose: _onClose }) {
   const { selectedCollection, selectedRequest, loadCollections } = useAppContext();
   const [showMarkdownModal, setShowMarkdownModal] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [selectedResponseStatus, setSelectedResponseStatus] = useState('');
 
   const handleEditDescription = async (newDescription) => {
     if (!selectedCollection?.id) return;
@@ -28,6 +38,28 @@ export function DocsSideBar({ onClose: _onClose }) {
     }
   };
 
+  // Parse examples data when request changes
+  const requestExamples = selectedRequest ? parseRequestExamples(selectedRequest.request_example) : [];
+  const responseExamples = selectedRequest ? parseResponseExamples(selectedRequest.response_examples) : {};
+  const responseStatusCodes = getResponseStatusCodes(responseExamples);
+
+  // Handle response status selection when data changes
+  useEffect(() => {
+    // Auto-select first status code if none selected
+    if (responseStatusCodes.length > 0 && !selectedResponseStatus) {
+      setSelectedResponseStatus(responseStatusCodes[0]);
+    }
+    // Reset selected status if it's no longer available
+    else if (selectedResponseStatus && !responseStatusCodes.includes(selectedResponseStatus)) {
+      setSelectedResponseStatus(responseStatusCodes[0] || '');
+    }
+  }, [responseStatusCodes, selectedResponseStatus]);
+
+  // Reset response status when request changes
+  useEffect(() => {
+    setSelectedResponseStatus('');
+  }, [selectedRequest?.id]);
+
   return (
     <>
       {/* Documentation Sidebar */}
@@ -46,11 +78,53 @@ export function DocsSideBar({ onClose: _onClose }) {
                   </h2>
                 </div>
 
-                {/* Request Documentation Placeholder */}
-                <div class="flex-1 min-h-0">
-                  <div class="text-left text-gray-500 italic text-sm">
-                    Request documentation will be available here in future updates.
-                  </div>
+                {/* Request Documentation */}
+                <div class="flex-1 min-h-0 space-y-4">
+                  {/* Request Examples */}
+                  {requestExamples.length > 0 && (
+                    <ExampleViewer
+                      examples={requestExamples}
+                      title="Request Examples"
+                      contentType={getExampleContentType(selectedRequest, 'request')}
+                    />
+                  )}
+
+                  {/* Response Examples */}
+                  {responseStatusCodes.length > 0 && (
+                    <div class="space-y-2">
+                      <div class="flex items-center justify-between">
+                        <label class="block text-xs font-medium text-gray-600">Response Examples</label>
+                      </div>
+
+                      {responseStatusCodes.length > 1 && (
+                        <Select
+                          value={selectedResponseStatus}
+                          onChange={setSelectedResponseStatus}
+                          options={responseStatusCodes.map(code => ({
+                            value: code,
+                            label: getStatusCodeDisplayName(code)
+                          }))}
+                          placeholder="Select status code..."
+                          size="small"
+                        />
+                      )}
+
+                      {selectedResponseStatus && responseExamples[selectedResponseStatus] && (
+                        <ExampleViewer
+                          examples={responseExamples[selectedResponseStatus]}
+                          title={responseStatusCodes.length === 1 ? getStatusCodeDisplayName(selectedResponseStatus) : ""}
+                          contentType={getExampleContentType(selectedRequest, 'response')}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Show placeholder when no examples available */}
+                  {requestExamples.length === 0 && responseStatusCodes.length === 0 && (
+                    <div class="text-left text-gray-500 italic text-sm">
+                      No examples available for this request.
+                    </div>
+                  )}
                 </div>
               </>
             ) : selectedCollection ? (
