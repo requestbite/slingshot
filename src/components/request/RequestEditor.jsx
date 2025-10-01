@@ -69,7 +69,7 @@ const getAuthMethodDisplayName = (authField) => {
 export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   const { selectedCollection, currentEnvironment, hasManuallySelectedEnvironment, loadCollections, isDocsSidebarVisible, setIsDocsSidebarVisible } = useAppContext();
   const [, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState('params');
+  const [activeTab, setActiveTab] = useState('overview');
 
   // Get placeholder URL from environment variable
   const placeholderUrl = import.meta.env.VITE_HELLO_URL || 'https://example.com';
@@ -1287,6 +1287,22 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         <div class="border-b border-gray-200 px-4 overflow-x-auto scrollbar-hide">
           <div class="flex justify-between items-start flex-nowrap min-w-max">
             <div class="flex space-x-2 flex-nowrap">
+              {/* Overview Tab with Eye-Closed Icon */}
+              <button type="button" data-tab="overview"
+                onClick={() => setActiveTab('overview')}
+                class={`px-4 py-2 text-xs rounded-t-md font-medium focus:outline-none ${activeTab === 'overview'
+                  ? 'text-sky-600 bg-sky-50 border-b-2 border-sky-600 cursor-pointer'
+                  : 'text-gray-600 hover:text-sky-600 hover:bg-gray-100 cursor-pointer'
+                  }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m15 18-.722-3.25" />
+                  <path d="M2 8a10.645 10.645 0 0 0 20 0" />
+                  <path d="m20 15-1.726-2.05" />
+                  <path d="m4 15 1.726-2.05" />
+                  <path d="m9 18 .722-3.25" />
+                </svg>
+              </button>
               {Object.entries(getTabNames(!!selectedCollection)).map(([key, name]) => (
                 <button key={key} type="button" data-tab={key}
                   onClick={() => setActiveTab(key)}
@@ -1351,7 +1367,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
               {selectedCollection && (
                 <button type="button"
                   onClick={() => setIsDocsSidebarVisible(!isDocsSidebarVisible)}
-                  class="cursor-pointer px-4 pt-2.5 pb-2 text-xs rounded-t-md font-medium text-sky-500 hover:text-sky-700 hover:bg-sky-50 focus:outline-none"
+                  class="cursor-pointer px-4 py-2 text-xs rounded-t-md font-medium text-sky-500 hover:text-sky-700 hover:bg-sky-50 focus:outline-none"
                   title={isDocsSidebarVisible ? "Hide docs panel" : "Show docs panel"}
                 >
                   <div class="flex items-center space-x-1">
@@ -1366,54 +1382,56 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
           </div>
         </div>
 
-        {/* Tab Content */}
-        <div class="p-4 pb-2">
-          {activeTab === 'params' && (
-            <ParamsTab
-              queryParams={requestData.queryParams}
-              pathParams={requestData.pathParams}
-              onQueryParamsChange={(params) => updateRequestData({ queryParams: params })}
-              onPathParamsChange={(params) => updateRequestData({ pathParams: params })}
-              onEnterKeyPress={handleEnterKeyPress}
-              selectedEnvironment={currentEnvironment}
-            />
-          )}
-          {activeTab === 'headers' && (
-            <HeadersTab
-              headers={requestData.headers}
-              onHeadersChange={(headers) => updateRequestData({ headers })}
-              onEnterKeyPress={handleEnterKeyPress}
-              selectedEnvironment={currentEnvironment}
-            />
-          )}
-          {activeTab === 'body' && (
-            <BodyTab
-              bodyType={requestData.bodyType}
-              bodyContent={requestData.bodyContent}
-              contentType={requestData.contentType}
-              method={requestData.method}
-              formData={requestData.formData}
-              urlEncodedData={requestData.urlEncodedData}
-              onBodyTypeChange={handleBodyTypeChange}
-              onBodyContentChange={(bodyContent) => updateRequestData({ bodyContent })}
-              onContentTypeChange={(contentType) => updateRequestData({ contentType })}
-              onFormDataChange={(formData) => updateRequestData({ formData })}
-              onUrlEncodedDataChange={(urlEncodedData) => updateRequestData({ urlEncodedData })}
-              onEnterKeyPress={handleEnterKeyPress}
-              onSendRequest={handleSendRequest}
-              selectedEnvironment={currentEnvironment}
-            />
-          )}
-          {activeTab === 'settings' && !selectedCollection && (
-            <SettingsTab
-              followRedirects={requestData.followRedirects}
-              timeout={requestData.timeout}
-              onFollowRedirectsChange={(followRedirects) => updateRequestData({ followRedirects })}
-              onTimeoutChange={(timeout) => updateRequestData({ timeout })}
-              onEnterKeyPress={handleEnterKeyPress}
-            />
-          )}
-        </div>
+        {/* Tab Content - Hide when overview tab is active */}
+        {activeTab !== 'overview' && (
+          <div class="p-4 pb-2">
+            {activeTab === 'params' && (
+              <ParamsTab
+                queryParams={requestData.queryParams}
+                pathParams={requestData.pathParams}
+                onQueryParamsChange={(params) => updateRequestData({ queryParams: params })}
+                onPathParamsChange={(params) => updateRequestData({ pathParams: params })}
+                onEnterKeyPress={handleEnterKeyPress}
+                selectedEnvironment={currentEnvironment}
+              />
+            )}
+            {activeTab === 'headers' && (
+              <HeadersTab
+                headers={requestData.headers}
+                onHeadersChange={(headers) => updateRequestData({ headers })}
+                onEnterKeyPress={handleEnterKeyPress}
+                selectedEnvironment={currentEnvironment}
+              />
+            )}
+            {activeTab === 'body' && (
+              <BodyTab
+                bodyType={requestData.bodyType}
+                bodyContent={requestData.bodyContent}
+                contentType={requestData.contentType}
+                method={requestData.method}
+                formData={requestData.formData}
+                urlEncodedData={requestData.urlEncodedData}
+                onBodyTypeChange={handleBodyTypeChange}
+                onBodyContentChange={(bodyContent) => updateRequestData({ bodyContent })}
+                onContentTypeChange={(contentType) => updateRequestData({ contentType })}
+                onFormDataChange={(formData) => updateRequestData({ formData })}
+                onUrlEncodedDataChange={(urlEncodedData) => updateRequestData({ urlEncodedData })}
+                onEnterKeyPress={handleEnterKeyPress}
+                onSendRequest={handleSendRequest}
+                selectedEnvironment={currentEnvironment}
+              />
+            )}
+            {activeTab === 'settings' && !selectedCollection && (
+              <SettingsTab
+                followRedirects={requestData.followRedirects}
+                timeout={requestData.timeout}
+                onFollowRedirectsChange={(followRedirects) => updateRequestData({ followRedirects })}
+                onTimeoutChange={(timeout) => updateRequestData({ timeout })}
+                onEnterKeyPress={handleEnterKeyPress}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {/* Response Section */}
