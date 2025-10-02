@@ -2,6 +2,7 @@ import { useState, useEffect } from 'preact/hooks';
 import { MarkdownPreview } from '../common/MarkdownPreview';
 import { MarkdownModal } from '../modals/MarkdownModal';
 import { ExampleViewer } from '../common/ExampleViewer';
+import { SchemaViewer } from '../common/SchemaViewer';
 import { Select } from '../common/Select';
 import { useAppContext } from '../../hooks/useAppContext';
 import { apiClient } from '../../api';
@@ -13,6 +14,11 @@ import {
   getStatusCodeDisplayName,
   getExampleContentType
 } from '../../utils/exampleParser';
+import {
+  parseParametersSchema,
+  parseRequestBodySchema,
+  parseResponseSchemas
+} from '../../utils/schemaParser';
 
 export function DocsSideBar({ onClose: _onClose }) {
   const { selectedCollection, selectedRequest, loadCollections } = useAppContext();
@@ -42,6 +48,11 @@ export function DocsSideBar({ onClose: _onClose }) {
   const requestExamples = selectedRequest ? parseRequestExamples(selectedRequest.request_example) : [];
   const responseExamples = selectedRequest ? parseResponseExamples(selectedRequest.response_examples) : {};
   const responseStatusCodes = getResponseStatusCodes(responseExamples);
+
+  // Parse schema data when request changes
+  const parametersSchema = selectedRequest ? parseParametersSchema(selectedRequest.parameters_schema) : null;
+  const requestBodySchema = selectedRequest ? parseRequestBodySchema(selectedRequest.request_body_schema) : null;
+  const responseSchemas = selectedRequest ? parseResponseSchemas(selectedRequest.response_schemas) : {};
 
   // Handle response status selection when data changes
   useEffect(() => {
@@ -77,6 +88,22 @@ export function DocsSideBar({ onClose: _onClose }) {
                     {selectedRequest.name || selectedRequest.url || 'Untitled Request'}
                   </h2>
                 </div>
+
+                {/* Request Summary */}
+                {selectedRequest.summary && selectedRequest.summary.trim() && (
+                  <div class="text-sm text-gray-700">
+                    {selectedRequest.summary}
+                  </div>
+                )}
+
+                {/* Request Description */}
+                {selectedRequest.description && selectedRequest.description.trim() && (
+                  <div class={`${selectedRequest.summary && selectedRequest.summary.trim() ? 'pt-3 border-t border-gray-200' : ''}`}>
+                    <div class="text-left">
+                      <MarkdownPreview markdown={selectedRequest.description} />
+                    </div>
+                  </div>
+                )}
 
                 {/* Request Documentation */}
                 <div class="flex-1 min-h-0 space-y-4">
@@ -119,10 +146,25 @@ export function DocsSideBar({ onClose: _onClose }) {
                     </div>
                   )}
 
-                  {/* Show placeholder when no examples available */}
-                  {requestExamples.length === 0 && responseStatusCodes.length === 0 && (
+                  {/* Schema Viewer */}
+                  {(parametersSchema || requestBodySchema || Object.keys(responseSchemas).length > 0) && (
+                    <div class="pt-4 border-t border-gray-200">
+                      <SchemaViewer
+                        parametersSchema={parametersSchema}
+                        requestBodySchema={requestBodySchema}
+                        responseSchemas={responseSchemas}
+                      />
+                    </div>
+                  )}
+
+                  {/* Show placeholder when no examples or schemas available */}
+                  {requestExamples.length === 0 &&
+                   responseStatusCodes.length === 0 &&
+                   !parametersSchema &&
+                   !requestBodySchema &&
+                   Object.keys(responseSchemas).length === 0 && (
                     <div class="text-left text-gray-500 italic text-sm">
-                      No examples available for this request.
+                      No examples or schemas available for this request.
                     </div>
                   )}
                 </div>
