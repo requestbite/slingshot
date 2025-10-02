@@ -107,6 +107,15 @@ export function DocsSideBar({ onClose: _onClose }) {
 
                 {/* Request Documentation */}
                 <div class="flex-1 min-h-0 space-y-4">
+                  {/* Schema Viewer - Parameters and Request Body */}
+                  {(parametersSchema || requestBodySchema) && (
+                    <SchemaViewer
+                      parametersSchema={parametersSchema}
+                      requestBodySchema={requestBodySchema}
+                      responseSchemas={{}}
+                    />
+                  )}
+
                   {/* Request Examples */}
                   {requestExamples.length > 0 && (
                     <ExampleViewer
@@ -114,6 +123,17 @@ export function DocsSideBar({ onClose: _onClose }) {
                       title="Request Examples"
                       contentType={getExampleContentType(selectedRequest, 'request')}
                     />
+                  )}
+
+                  {/* Response Schema */}
+                  {Object.keys(responseSchemas).length > 0 && (
+                    <div class={`${(parametersSchema || requestBodySchema) ? 'pt-4 border-t border-gray-200' : ''}`}>
+                      <SchemaViewer
+                        parametersSchema={null}
+                        requestBodySchema={null}
+                        responseSchemas={responseSchemas}
+                      />
+                    </div>
                   )}
 
                   {/* Response Examples */}
@@ -143,17 +163,6 @@ export function DocsSideBar({ onClose: _onClose }) {
                           contentType={getExampleContentType(selectedRequest, 'response')}
                         />
                       )}
-                    </div>
-                  )}
-
-                  {/* Schema Viewer */}
-                  {(parametersSchema || requestBodySchema || Object.keys(responseSchemas).length > 0) && (
-                    <div class="pt-4 border-t border-gray-200">
-                      <SchemaViewer
-                        parametersSchema={parametersSchema}
-                        requestBodySchema={requestBodySchema}
-                        responseSchemas={responseSchemas}
-                      />
                     </div>
                   )}
 
