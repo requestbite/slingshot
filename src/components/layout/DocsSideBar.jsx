@@ -170,11 +170,26 @@ export function DocsSideBar({ onClose: _onClose }) {
 
                 {/* Request Documentation */}
                 <div class="flex-1 min-h-0 space-y-4">
-                  {/* Schema Viewer - Parameters and Request Body */}
-                  {(parametersSchema || requestBodySchema) && (shouldShowSection('path-parameters') || shouldShowSection('query-parameters') || shouldShowSection('request-body')) && (
+                  {/* Parameters Schema - filtered by TOC selection */}
+                  {parametersSchema && (shouldShowSection('path-parameters') || shouldShowSection('query-parameters')) && (
                     <div id="parameters-schema">
                       <SchemaViewer
-                        parametersSchema={parametersSchema}
+                        parametersSchema={{
+                          path: (selectedTocSection === 'show-all' || selectedTocSection === 'path-parameters') ? parametersSchema.path : {},
+                          query: (selectedTocSection === 'show-all' || selectedTocSection === 'query-parameters') ? parametersSchema.query : {},
+                          headers: parametersSchema.headers || {}
+                        }}
+                        requestBodySchema={null}
+                        responseSchemas={{}}
+                      />
+                    </div>
+                  )}
+
+                  {/* Request Body Schema */}
+                  {requestBodySchema && shouldShowSection('request-body') && (
+                    <div id="request-body-schema">
+                      <SchemaViewer
+                        parametersSchema={null}
                         requestBodySchema={requestBodySchema}
                         responseSchemas={{}}
                       />
@@ -194,7 +209,7 @@ export function DocsSideBar({ onClose: _onClose }) {
 
                   {/* Response Schema */}
                   {Object.keys(responseSchemas).length > 0 && shouldShowSection('response-schema') && (
-                    <div id="response-schema" class={`${(parametersSchema || requestBodySchema) && (shouldShowSection('path-parameters') || shouldShowSection('query-parameters') || shouldShowSection('request-body')) ? 'pt-4 border-t border-gray-200' : ''}`}>
+                    <div id="response-schema" class={`${((parametersSchema && (shouldShowSection('path-parameters') || shouldShowSection('query-parameters'))) || (requestBodySchema && shouldShowSection('request-body'))) ? 'pt-4 border-t border-gray-200' : ''}`}>
                       <SchemaViewer
                         parametersSchema={null}
                         requestBodySchema={null}

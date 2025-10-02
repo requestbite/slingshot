@@ -129,7 +129,7 @@ export function SchemaTree({
       const required = effectiveSchema.required || [];
 
       return (
-        <div class="ml-4 border-l border-gray-200 pl-4 space-y-2">
+        <div class="ml-2 border-l border-gray-200 pl-4 space-y-2">
           {Object.entries(effectiveSchema.properties).map(([propName, propSchema]) => (
             <SchemaTree
               key={propName}
@@ -145,7 +145,7 @@ export function SchemaTree({
 
     if (effectiveSchema.type === 'array' && effectiveSchema.items) {
       return (
-        <div class="ml-4 border-l border-gray-200 pl-4">
+        <div class="ml-2 border-l border-gray-200 pl-4">
           <SchemaTree
             schema={effectiveSchema.items}
             name="[item]"

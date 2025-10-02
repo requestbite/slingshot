@@ -92,6 +92,10 @@ export function ParametersSchemaViewer({ parametersSchema, className = '' }) {
 
   return (
     <div class={`space-y-4 ${className}`}>
+      <div class="flex items-center justify-between">
+        <label class="block text-xs font-medium text-gray-600">Parameters Schema</label>
+      </div>
+
       {sections.map((section, index) => (
         <div key={section.title} class={index > 0 ? 'pt-3 border-t border-gray-200' : ''}>
           <SchemaTreeRoot
@@ -169,18 +173,18 @@ export function ResponseSchemasViewer({ responseSchemas, className = '' }) {
         />
       )}
 
+      {selectedResponse && selectedResponse.description && (
+        <div class="text-xs text-gray-600 italic pb-1">
+          {selectedResponse.description}
+        </div>
+      )}
       {selectedResponse && selectedResponse.schema && (
-        <div class="space-y-2">
+        <div class="space-y-2 border-b border-gray-200 pb-2">
           <SchemaTreeRoot
             schema={selectedResponse.schema}
             title={statusCodes.length === 1 ? getStatusCodeDisplayName(selectedStatusCode) : ""}
           />
 
-          {selectedResponse.description && (
-            <div class="text-xs text-gray-600 italic border-t border-gray-200 pt-2">
-              {selectedResponse.description}
-            </div>
-          )}
         </div>
       )}
     </div>
