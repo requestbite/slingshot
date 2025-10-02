@@ -27,7 +27,7 @@ import {
   getStatusColor
 } from './ResponseDisplayUtils';
 
-export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStreaming, streamedContent, streamedChunks, streamingMetadata }) {
+export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStreaming, streamedContent, streamedChunks, streamingMetadata, selectedCollection }) {
   // Initialize headers visibility from localStorage, defaulting to false (closed)
   const [showHeaders, setShowHeaders] = useState(() => {
     try {
@@ -246,7 +246,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
       return [...baseExtensions, json()];
     } else if (contentType.includes('application/xml') || contentType.includes('text/xml')) {
       return [...baseExtensions, xml()];
-    } else if (contentType.includes('text/plain') && collection?.parse_ansi_colors !== false) {
+    } else if (contentType.includes('text/plain') && selectedCollection?.parse_ansi_colors !== false) {
       // Add ANSI color support for text/plain responses when enabled (default: true)
       // Pass the original content with ANSI sequences for styling
       const originalContent = getOriginalResponseContent(response);
@@ -344,7 +344,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
               {(response.responseData || streamedContent || response.finalStreamedContent) && (
                 <div class="flex items-center space-x-3">
                   <button
-                    onClick={() => copyToClipboard(isStreaming ? streamedContent : processResponseContent(response, collection))}
+                    onClick={() => copyToClipboard(isStreaming ? streamedContent : processResponseContent(response, selectedCollection))}
                     class="inline-flex items-center text-sky-500 hover:text-sky-700 cursor-pointer"
                   >
                     <span class="inline-block w-4 h-4 mr-1">
@@ -544,7 +544,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                         ) : (
                           <CodeMirror
                             ref={editorRef}
-                            value={isStreaming ? (streamedContent || '') : processResponseContent(response, collection)}
+                            value={isStreaming ? (streamedContent || '') : processResponseContent(response, selectedCollection)}
                             extensions={getResponseCodeMirrorExtensions(response)}
                             theme={dracula}
                             editable={false}
@@ -576,7 +576,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                     return (
                       <CodeMirror
                         ref={editorRef}
-                        value={isStreaming ? (streamedContent || '') : processResponseContent(response, collection)}
+                        value={isStreaming ? (streamedContent || '') : processResponseContent(response, selectedCollection)}
                         extensions={getResponseCodeMirrorExtensions(response)}
                         theme={dracula}
                         editable={false}

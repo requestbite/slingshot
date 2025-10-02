@@ -1446,6 +1446,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
             streamedContent={streamedContent}
             streamedChunks={streamedChunks}
             streamingMetadata={streamingMetadata}
+            selectedCollection={selectedCollection}
           />
         </div>
       </div>
