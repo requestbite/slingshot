@@ -26,7 +26,7 @@ export function SchemaTree({
     : schema;
 
   const hasChildren = effectiveSchema.type === 'object' && effectiveSchema.properties ||
-                     effectiveSchema.type === 'array' && effectiveSchema.items;
+    effectiveSchema.type === 'array' && effectiveSchema.items;
 
   const getTypeDisplay = (schema) => {
     if (schema.type === 'array' && schema.items) {
@@ -53,11 +53,11 @@ export function SchemaTree({
 
     return (
       <div class="flex items-center gap-2">
-        <span class="font-medium text-gray-900">
+        <span class="text-xs font-medium text-gray-900">
           {name}
           {isRequired && <span class="text-red-500 ml-1">*</span>}
         </span>
-        <span class={`px-1.5 py-0.5 text-xs rounded ${getTypeBadgeColor(effectiveSchema.type)}`}>
+        <span class={`px-1 py-0.5 text-[10px]/[12px] rounded ${getTypeBadgeColor(effectiveSchema.type)}`}>
           {getTypeDisplay(effectiveSchema)}
         </span>
       </div>
@@ -188,7 +188,7 @@ export function SchemaTreeRoot({ schema, title, className = '' }) {
   return (
     <div class={`space-y-2 ${className}`}>
       {title && (
-        <h4 class="text-xs font-medium text-gray-600 uppercase tracking-wide">
+        <h4 class="text-xs font-medium text-gray-600 tracking-wide">
           {title}
         </h4>
       )}

@@ -92,10 +92,6 @@ export function ParametersSchemaViewer({ parametersSchema, className = '' }) {
 
   return (
     <div class={`space-y-4 ${className}`}>
-      <div class="flex items-center justify-between">
-        <label class="block text-xs font-medium text-gray-600">Parameters Schema</label>
-      </div>
-
       {sections.map((section, index) => (
         <div key={section.title} class={index > 0 ? 'pt-3 border-t border-gray-200' : ''}>
           <SchemaTreeRoot

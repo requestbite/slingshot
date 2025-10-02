@@ -25,6 +25,7 @@ export function DocsSideBar({ onClose: _onClose }) {
   const [showMarkdownModal, setShowMarkdownModal] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedResponseStatus, setSelectedResponseStatus] = useState('');
+  const [selectedTocSection, setSelectedTocSection] = useState('show-all');
 
   const handleEditDescription = async (newDescription) => {
     if (!selectedCollection?.id) return;
@@ -69,7 +70,33 @@ export function DocsSideBar({ onClose: _onClose }) {
   // Reset response status when request changes
   useEffect(() => {
     setSelectedResponseStatus('');
+    setSelectedTocSection('show-all');
   }, [selectedRequest?.id]);
+
+  // Build table of contents sections
+  const tocSections = [];
+  if (parametersSchema?.path && Object.keys(parametersSchema.path).length > 0) {
+    tocSections.push({ id: 'path-parameters', label: 'Path Parameters' });
+  }
+  if (parametersSchema?.query && Object.keys(parametersSchema.query).length > 0) {
+    tocSections.push({ id: 'query-parameters', label: 'Query Parameters' });
+  }
+  if (requestBodySchema) {
+    tocSections.push({ id: 'request-body', label: 'Request Body Schema' });
+  }
+  if (requestExamples.length > 0) {
+    tocSections.push({ id: 'request-examples', label: 'Request Examples' });
+  }
+  if (Object.keys(responseSchemas).length > 0) {
+    tocSections.push({ id: 'response-schema', label: 'Response Schema' });
+  }
+  if (responseStatusCodes.length > 0) {
+    tocSections.push({ id: 'response-examples', label: 'Response Examples' });
+  }
+
+  const shouldShowSection = (sectionId) => {
+    return selectedTocSection === 'show-all' || selectedTocSection === sectionId;
+  };
 
   return (
     <>
@@ -105,29 +132,69 @@ export function DocsSideBar({ onClose: _onClose }) {
                   </div>
                 )}
 
+                {/* Table of Contents */}
+                {tocSections.length > 0 && (
+                  <div class="pt-3 pb-4 border-t border-b border-gray-200">
+                    <h3 class="text-xs font-medium text-gray-600 mb-2">Table of Contents</h3>
+                    <div class="space-y-1">
+                      {/* Show All option */}
+                      <label class="flex items-center text-xs text-gray-700 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="toc-section"
+                          value="show-all"
+                          checked={selectedTocSection === 'show-all'}
+                          onChange={(e) => setSelectedTocSection(e.target.value)}
+                          class="mr-2 text-sky-600 focus:ring-sky-500"
+                        />
+                        Show all
+                      </label>
+
+                      {/* Individual sections */}
+                      {tocSections.map((section) => (
+                        <label key={section.id} class="flex items-center text-xs text-gray-700 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="toc-section"
+                            value={section.id}
+                            checked={selectedTocSection === section.id}
+                            onChange={(e) => setSelectedTocSection(e.target.value)}
+                            class="mr-2 text-sky-600 focus:ring-sky-500"
+                          />
+                          <span class="hover:text-sky-600">{section.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Request Documentation */}
                 <div class="flex-1 min-h-0 space-y-4">
                   {/* Schema Viewer - Parameters and Request Body */}
-                  {(parametersSchema || requestBodySchema) && (
-                    <SchemaViewer
-                      parametersSchema={parametersSchema}
-                      requestBodySchema={requestBodySchema}
-                      responseSchemas={{}}
-                    />
+                  {(parametersSchema || requestBodySchema) && (shouldShowSection('path-parameters') || shouldShowSection('query-parameters') || shouldShowSection('request-body')) && (
+                    <div id="parameters-schema">
+                      <SchemaViewer
+                        parametersSchema={parametersSchema}
+                        requestBodySchema={requestBodySchema}
+                        responseSchemas={{}}
+                      />
+                    </div>
                   )}
 
                   {/* Request Examples */}
-                  {requestExamples.length > 0 && (
-                    <ExampleViewer
-                      examples={requestExamples}
-                      title="Request Examples"
-                      contentType={getExampleContentType(selectedRequest, 'request')}
-                    />
+                  {requestExamples.length > 0 && shouldShowSection('request-examples') && (
+                    <div id="request-examples">
+                      <ExampleViewer
+                        examples={requestExamples}
+                        title="Request Examples"
+                        contentType={getExampleContentType(selectedRequest, 'request')}
+                      />
+                    </div>
                   )}
 
                   {/* Response Schema */}
-                  {Object.keys(responseSchemas).length > 0 && (
-                    <div class={`${(parametersSchema || requestBodySchema) ? 'pt-4 border-t border-gray-200' : ''}`}>
+                  {Object.keys(responseSchemas).length > 0 && shouldShowSection('response-schema') && (
+                    <div id="response-schema" class={`${(parametersSchema || requestBodySchema) && (shouldShowSection('path-parameters') || shouldShowSection('query-parameters') || shouldShowSection('request-body')) ? 'pt-4 border-t border-gray-200' : ''}`}>
                       <SchemaViewer
                         parametersSchema={null}
                         requestBodySchema={null}
@@ -137,8 +204,8 @@ export function DocsSideBar({ onClose: _onClose }) {
                   )}
 
                   {/* Response Examples */}
-                  {responseStatusCodes.length > 0 && (
-                    <div class="space-y-2">
+                  {responseStatusCodes.length > 0 && shouldShowSection('response-examples') && (
+                    <div id="response-examples" class="space-y-2">
                       <div class="flex items-center justify-between">
                         <label class="block text-xs font-medium text-gray-600">Response Examples</label>
                       </div>
@@ -168,14 +235,14 @@ export function DocsSideBar({ onClose: _onClose }) {
 
                   {/* Show placeholder when no examples or schemas available */}
                   {requestExamples.length === 0 &&
-                   responseStatusCodes.length === 0 &&
-                   !parametersSchema &&
-                   !requestBodySchema &&
-                   Object.keys(responseSchemas).length === 0 && (
-                    <div class="text-left text-gray-500 italic text-sm">
-                      No examples or schemas available for this request.
-                    </div>
-                  )}
+                    responseStatusCodes.length === 0 &&
+                    !parametersSchema &&
+                    !requestBodySchema &&
+                    Object.keys(responseSchemas).length === 0 && (
+                      <div class="text-left text-gray-500 italic text-sm">
+                        No examples or schemas available for this request.
+                      </div>
+                    )}
                 </div>
               </>
             ) : selectedCollection ? (
