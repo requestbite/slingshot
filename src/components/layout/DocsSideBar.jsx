@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { MarkdownPreview } from '../common/MarkdownPreview';
 import { MarkdownModal } from '../modals/MarkdownModal';
 import { DeleteAllDocsModal } from '../modals/DeleteAllDocsModal';
+import { DocsEditIntroModal } from '../modals/DocsEditIntroModal';
 import { ExampleViewer } from '../common/ExampleViewer';
 import { SchemaViewer } from '../common/SchemaViewer';
 import { Select } from '../common/Select';
@@ -26,6 +27,7 @@ export function DocsSideBar({ onClose: _onClose }) {
   const { selectedCollection, selectedRequest, loadCollections } = useAppContext();
   const [showMarkdownModal, setShowMarkdownModal] = useState(false);
   const [showDeleteDocsModal, setShowDeleteDocsModal] = useState(false);
+  const [showEditIntroModal, setShowEditIntroModal] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedResponseStatus, setSelectedResponseStatus] = useState('');
@@ -89,7 +91,39 @@ export function DocsSideBar({ onClose: _onClose }) {
     await loadCollections();
   };
 
+  const handleEditIntro = async (updates) => {
+    if (!selectedRequest?.id) return;
+
+    setIsUpdating(true);
+    try {
+      await apiClient.updateRequest(selectedRequest.id, updates);
+
+      // Refresh collections to get updated data
+      await loadCollections();
+    } catch (error) {
+      console.error('Failed to update request intro:', error);
+      throw error; // Re-throw so modal can handle it
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const contextMenuItems = [
+    {
+      label: 'Edit intro...',
+      onClick: () => {
+        setShowContextMenu(false);
+        setShowEditIntroModal(true);
+      },
+      icon: (
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      )
+    },
+    {
+      divider: true
+    },
     {
       label: 'Delete all...',
       onClick: () => {
@@ -392,6 +426,16 @@ export function DocsSideBar({ onClose: _onClose }) {
           onClose={() => setShowDeleteDocsModal(false)}
           request={selectedRequest}
           onDelete={handleDeleteDocs}
+        />
+      )}
+
+      {/* Edit Intro Modal - only for requests */}
+      {showEditIntroModal && (
+        <DocsEditIntroModal
+          isOpen={showEditIntroModal}
+          onClose={() => setShowEditIntroModal(false)}
+          request={selectedRequest}
+          onSave={handleEditIntro}
         />
       )}
 
