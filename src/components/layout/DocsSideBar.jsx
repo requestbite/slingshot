@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { MarkdownPreview } from '../common/MarkdownPreview';
 import { MarkdownModal } from '../modals/MarkdownModal';
+import { DeleteAllDocsModal } from '../modals/DeleteAllDocsModal';
 import { ExampleViewer } from '../common/ExampleViewer';
 import { SchemaViewer } from '../common/SchemaViewer';
 import { Select } from '../common/Select';
+import { ContextMenu } from '../common/ContextMenu';
 import { useAppContext } from '../../hooks/useAppContext';
 import { apiClient } from '../../api';
 import { getMethodColor } from '../../utils/httpMethods';
@@ -23,9 +25,12 @@ import {
 export function DocsSideBar({ onClose: _onClose }) {
   const { selectedCollection, selectedRequest, loadCollections } = useAppContext();
   const [showMarkdownModal, setShowMarkdownModal] = useState(false);
+  const [showDeleteDocsModal, setShowDeleteDocsModal] = useState(false);
+  const [showContextMenu, setShowContextMenu] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedResponseStatus, setSelectedResponseStatus] = useState('');
   const [selectedTocSection, setSelectedTocSection] = useState('show-all');
+  const menuTriggerRef = useRef();
 
   const handleEditDescription = async (newDescription) => {
     if (!selectedCollection?.id) return;
@@ -71,7 +76,34 @@ export function DocsSideBar({ onClose: _onClose }) {
   useEffect(() => {
     setSelectedResponseStatus('');
     setSelectedTocSection('show-all');
+    setShowContextMenu(false);
   }, [selectedRequest?.id]);
+
+  const handleContextMenuClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowContextMenu(true);
+  };
+
+  const handleDeleteDocs = async () => {
+    await loadCollections();
+  };
+
+  const contextMenuItems = [
+    {
+      label: 'Delete all...',
+      onClick: () => {
+        setShowContextMenu(false);
+        setShowDeleteDocsModal(true);
+      },
+      destructive: true,
+      icon: (
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      )
+    }
+  ];
 
   // Build table of contents sections
   const tocSections = [];
@@ -107,13 +139,30 @@ export function DocsSideBar({ onClose: _onClose }) {
             {selectedRequest ? (
               <>
                 {/* Request Header */}
-                <div class="flex items-center gap-2">
-                  <span class={`text-[10px]/[12px] text-white py-0.5 px-1 rounded flex-shrink-0 ${getMethodColor(selectedRequest.method)}`}>
-                    {selectedRequest.method}
-                  </span>
-                  <h2 class="text-sm font-medium text-gray-900 truncate" title={selectedRequest.name || selectedRequest.url || 'Untitled Request'}>
-                    {selectedRequest.name || selectedRequest.url || 'Untitled Request'}
-                  </h2>
+                <div class="flex items-center gap-2 justify-between">
+                  <div class="flex items-center gap-2 flex-grow overflow-hidden">
+                    <span class={`text-[10px]/[12px] text-white py-0.5 px-1 rounded flex-shrink-0 ${getMethodColor(selectedRequest.method)}`}>
+                      {selectedRequest.method}
+                    </span>
+                    <h2 class="text-sm font-medium text-gray-900 truncate" title={selectedRequest.name || selectedRequest.url || 'Untitled Request'}>
+                      {selectedRequest.name || selectedRequest.url || 'Untitled Request'}
+                    </h2>
+                  </div>
+
+                  {/* Context Menu Trigger */}
+                  <button
+                    ref={menuTriggerRef}
+                    onClick={handleContextMenuClick}
+                    class="flex items-center text-sky-400 hover:text-sky-700 focus:outline-none cursor-pointer flex-shrink-0"
+                    title="More options"
+                  >
+                    <span class="sr-only">Open options</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="flex-shrink-0">
+                      <circle cx="5" cy="12" r="2" />
+                      <circle cx="12" cy="12" r="2" />
+                      <circle cx="19" cy="12" r="2" />
+                    </svg>
+                  </button>
                 </div>
 
                 {/* Request Summary */}
@@ -325,6 +374,26 @@ export function DocsSideBar({ onClose: _onClose }) {
           </nav>
         </div>
       </aside>
+
+      {/* Context Menu - only for requests */}
+      {selectedRequest && (
+        <ContextMenu
+          isOpen={showContextMenu}
+          onClose={() => setShowContextMenu(false)}
+          trigger={menuTriggerRef.current}
+          items={contextMenuItems}
+        />
+      )}
+
+      {/* Delete Documentation Modal - only for requests */}
+      {showDeleteDocsModal && (
+        <DeleteAllDocsModal
+          isOpen={showDeleteDocsModal}
+          onClose={() => setShowDeleteDocsModal(false)}
+          request={selectedRequest}
+          onDelete={handleDeleteDocs}
+        />
+      )}
 
       {/* Markdown Modal - only for collections, not requests */}
       {selectedCollection && !selectedRequest && (

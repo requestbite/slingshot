@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { createPortal } from 'preact/compat';
 
 export function Portal({ children }) {
   const containerRef = useRef();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     // Create container element if it doesn't exist
@@ -15,6 +16,8 @@ export function Portal({ children }) {
         pointer-events: none;
       `;
       document.body.appendChild(containerRef.current);
+      // Trigger re-render now that container exists
+      setMounted(true);
     }
 
     const container = containerRef.current;

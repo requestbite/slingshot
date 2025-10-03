@@ -111,7 +111,11 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
     if (item.onClick) {
       item.onClick();
     }
-    onClose();
+    // Defer onClose to next tick to allow onClick handler to complete
+    // This prevents state update conflicts when onClick opens a modal
+    setTimeout(() => {
+      onClose();
+    }, 0);
   };
 
   if (!isOpen) return null;

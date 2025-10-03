@@ -73,13 +73,13 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
 
   return (
     <Portal>
-      <div class="relative z-[80]" role="dialog" aria-modal="true" style={{
+      <div class="relative z-[60]" role="dialog" aria-modal="true" style={{
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        zIndex: 9999,
+        zIndex: 60,
         WebkitBackfaceVisibility: 'hidden',
         backfaceVisibility: 'hidden',
         WebkitTransform: 'translate3d(0,0,0)',
@@ -91,15 +91,15 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 9998
+          zIndex: 58
         }}></div>
-        <div class="fixed inset-0 z-[80] w-screen overflow-y-auto" style={{
+        <div class="fixed inset-0 z-[60] w-screen overflow-y-auto" style={{
           position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 9999,
+          zIndex: 60,
           WebkitOverflowScrolling: 'touch'
         }}>
           <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">

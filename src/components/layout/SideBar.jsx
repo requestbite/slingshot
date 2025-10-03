@@ -494,8 +494,8 @@ export function SideBar({ onClose: _onClose }) {
           {
             label: 'Link...',
             onClick: () => {
-              setShowURLImportModal(true);
               setShowImportContextMenu(false);
+              setShowURLImportModal(true);
             },
             icon: (
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-symlink-icon lucide-file-symlink">
@@ -508,8 +508,8 @@ export function SideBar({ onClose: _onClose }) {
           {
             label: 'OpenAPI spec...',
             onClick: () => {
-              setShowImportModal(true);
               setShowImportContextMenu(false);
+              setShowImportModal(true);
             },
             icon: (
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -524,8 +524,8 @@ export function SideBar({ onClose: _onClose }) {
           {
             label: 'Postman collection...',
             onClick: () => {
-              setShowPostmanImportModal(true);
               setShowImportContextMenu(false);
+              setShowPostmanImportModal(true);
             },
             icon: (
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
