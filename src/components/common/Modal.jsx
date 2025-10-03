@@ -102,7 +102,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
           zIndex: 60,
           WebkitOverflowScrolling: 'touch'
         }}>
-          <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
+          <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:px-4 sm:py-0">
             <div
               class={`relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 w-full ${sizeClasses[size]} sm:p-6`}
               onClick={(e) => e.stopPropagation()}
