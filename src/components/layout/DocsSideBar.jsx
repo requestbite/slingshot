@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { MarkdownPreview } from '../common/MarkdownPreview';
-import { MarkdownModal } from '../modals/MarkdownModal';
+import { DocsEditCol } from '../modals/DocsEditCol';
 import { DocsDeleteAllModal } from '../modals/DocsDeleteAllModal';
 import { DocsEditIntroModal } from '../modals/DocsEditIntroModal';
 import { DocsEditParams } from '../modals/DocsEditParams';
@@ -1195,9 +1195,9 @@ export function DocsSideBar({ onClose: _onClose }) {
         />
       )}
 
-      {/* Markdown Modal - only for collections, not requests */}
+      {/* Collection Documentation Editor - only for collections, not requests */}
       {selectedCollection && !selectedRequest && (
-        <MarkdownModal
+        <DocsEditCol
           key={`${selectedCollection.id}-${showMarkdownModal}`}
           isOpen={showMarkdownModal}
           onClose={() => setShowMarkdownModal(false)}

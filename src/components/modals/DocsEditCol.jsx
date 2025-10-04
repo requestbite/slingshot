@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { MarkdownPreview } from '../common/MarkdownPreview';
 
-export function MarkdownModal({
+export function DocsEditCol({
   isOpen,
   onClose,
   onSave,
