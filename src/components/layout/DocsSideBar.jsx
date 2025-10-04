@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { MarkdownPreview } from '../common/MarkdownPreview';
 import { DocsEditCol } from '../modals/DocsEditCol';
 import { DocsDeleteAllModal } from '../modals/DocsDeleteAllModal';
+import { DocsDeleteCol } from '../modals/DocsDeleteCol';
+import { DocsDeleteAllDocsModal } from '../modals/DocsDeleteAllDocsModal';
 import { DocsEditIntroModal } from '../modals/DocsEditIntroModal';
 import { DocsEditParams } from '../modals/DocsEditParams';
 import { DocsEditResponse } from '../modals/DocsEditResponse';
@@ -36,6 +38,8 @@ export function DocsSideBar({ onClose: _onClose }) {
   const { selectedCollection, selectedRequest, loadCollections } = useAppContext();
   const [showMarkdownModal, setShowMarkdownModal] = useState(false);
   const [showDeleteDocsModal, setShowDeleteDocsModal] = useState(false);
+  const [showDeleteColDocsModal, setShowDeleteColDocsModal] = useState(false);
+  const [showDeleteAllDocsModal, setShowDeleteAllDocsModal] = useState(false);
   const [showEditIntroModal, setShowEditIntroModal] = useState(false);
   const [showEditParamsModal, setShowEditParamsModal] = useState(false);
   const [showEditResponseModal, setShowEditResponseModal] = useState(false);
@@ -231,6 +235,14 @@ export function DocsSideBar({ onClose: _onClose }) {
   };
 
   const handleDeleteDocs = async () => {
+    await loadCollections();
+  };
+
+  const handleDeleteColDocs = async () => {
+    await loadCollections();
+  };
+
+  const handleDeleteAllDocs = async () => {
     await loadCollections();
   };
 
@@ -468,6 +480,35 @@ export function DocsSideBar({ onClose: _onClose }) {
       icon: (
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      )
+    },
+    {
+      divider: true
+    },
+    {
+      label: 'Delete collection docs...',
+      onClick: () => {
+        setShowCollectionContextMenu(false);
+        setShowDeleteColDocsModal(true);
+      },
+      destructive: true,
+      icon: (
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      )
+    },
+    {
+      label: 'Delete all docs...',
+      onClick: () => {
+        setShowCollectionContextMenu(false);
+        setShowDeleteAllDocsModal(true);
+      },
+      destructive: true,
+      icon: (
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
         </svg>
       )
     }
@@ -941,11 +982,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                     <div class="text-left pb-4 border-b border-gray-200">
                       <MarkdownPreview markdown={selectedCollection.description} />
                     </div>
-                  ) : (
-                    <div class="text-left text-gray-500 italic text-sm pb-4 border-b border-gray-200">
-                      No documentation provided for this collection.
-                    </div>
-                  )}
+                  ) : ''}
                 </div>
 
                 {/* Authorization Section */}
@@ -1291,6 +1328,7 @@ export function DocsSideBar({ onClose: _onClose }) {
           isOpen={showCollectionContextMenu}
           onClose={() => setShowCollectionContextMenu(false)}
           trigger={collectionMenuTriggerRef.current}
+          width={230}
           items={collectionContextMenuItems}
         />
       )}
@@ -1326,6 +1364,26 @@ export function DocsSideBar({ onClose: _onClose }) {
           onClose={() => setShowEditAuthModal(false)}
           collection={selectedCollection}
           onSave={handleSaveAuth}
+        />
+      )}
+
+      {/* Delete Collection Documentation Modal - only for collections */}
+      {showDeleteColDocsModal && selectedCollection && !selectedRequest && (
+        <DocsDeleteCol
+          isOpen={showDeleteColDocsModal}
+          onClose={() => setShowDeleteColDocsModal(false)}
+          collection={selectedCollection}
+          onDelete={handleDeleteColDocs}
+        />
+      )}
+
+      {/* Delete All Documentation Modal - only for collections */}
+      {showDeleteAllDocsModal && selectedCollection && !selectedRequest && (
+        <DocsDeleteAllDocsModal
+          isOpen={showDeleteAllDocsModal}
+          onClose={() => setShowDeleteAllDocsModal(false)}
+          collection={selectedCollection}
+          onDelete={handleDeleteAllDocs}
         />
       )}
     </>
