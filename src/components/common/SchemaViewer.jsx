@@ -202,9 +202,6 @@ export function ResponseSchemasViewer({ responseSchemas, className = '' }) {
 
   return (
     <div class={`space-y-2 ${className}`}>
-      <div class="flex items-center justify-between">
-        <label class="block text-xs font-medium text-gray-600">Response Schemas</label>
-      </div>
 
       {statusCodes.length > 1 && (
         <Select
