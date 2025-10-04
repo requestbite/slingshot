@@ -6,6 +6,7 @@ import { DocsEditIntroModal } from '../modals/DocsEditIntroModal';
 import { DocsEditParams } from '../modals/DocsEditParams';
 import { DocsEditResponse } from '../modals/DocsEditResponse';
 import { DocsEditRequest } from '../modals/DocsEditRequest';
+import { DocsEditAuth } from '../modals/DocsEditAuth';
 import { ExampleViewer } from '../common/ExampleViewer';
 import { SchemaViewer } from '../common/SchemaViewer';
 import { Select } from '../common/Select';
@@ -45,6 +46,8 @@ export function DocsSideBar({ onClose: _onClose }) {
   const [showRequestBodyContextMenu, setShowRequestBodyContextMenu] = useState(false);
   const [showRequestExamplesContextMenu, setShowRequestExamplesContextMenu] = useState(false);
   const [showCollectionContextMenu, setShowCollectionContextMenu] = useState(false);
+  const [showAuthContextMenu, setShowAuthContextMenu] = useState(false);
+  const [showEditAuthModal, setShowEditAuthModal] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedResponseStatus, setSelectedResponseStatus] = useState('');
   const [selectedResponseContentType, setSelectedResponseContentType] = useState('');
@@ -60,6 +63,7 @@ export function DocsSideBar({ onClose: _onClose }) {
   const requestBodyMenuTriggerRef = useRef();
   const requestExamplesMenuTriggerRef = useRef();
   const collectionMenuTriggerRef = useRef();
+  const authMenuTriggerRef = useRef();
 
   const handleEditDescription = async (updates) => {
     if (!selectedCollection?.id) return;
@@ -298,6 +302,23 @@ export function DocsSideBar({ onClose: _onClose }) {
     }
   };
 
+  const handleSaveAuth = async (updates) => {
+    if (!selectedCollection?.id) return;
+
+    setIsUpdating(true);
+    try {
+      await apiClient.updateCollection(selectedCollection.id, updates);
+
+      // Refresh collections to get updated data
+      await loadCollections();
+    } catch (error) {
+      console.error('Failed to update security schemes:', error);
+      throw error; // Re-throw so modal can handle it
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const contextMenuItems = [
     {
       label: 'Edit intro...',
@@ -431,6 +452,33 @@ export function DocsSideBar({ onClose: _onClose }) {
       onClick: () => {
         setShowCollectionContextMenu(false);
         setShowMarkdownModal(true);
+      },
+      icon: (
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      )
+    },
+    {
+      label: 'Edit auth...',
+      onClick: () => {
+        setShowCollectionContextMenu(false);
+        setShowEditAuthModal(true);
+      },
+      icon: (
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      )
+    }
+  ];
+
+  const authContextMenuItems = [
+    {
+      label: 'Edit auth...',
+      onClick: () => {
+        setShowAuthContextMenu(false);
+        setShowEditAuthModal(true);
       },
       icon: (
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1062,6 +1110,23 @@ export function DocsSideBar({ onClose: _onClose }) {
                     <div class="space-y-3">
                       <div class="flex items-center justify-between">
                         <label class="block text-xs font-medium text-gray-600">Authorization</label>
+                        <button
+                          ref={authMenuTriggerRef}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setShowAuthContextMenu(true);
+                          }}
+                          class="flex items-center text-sky-400 hover:text-sky-700 focus:outline-none cursor-pointer"
+                          title="More options"
+                        >
+                          <span class="sr-only">Open options</span>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="5" cy="12" r="2" />
+                            <circle cx="12" cy="12" r="2" />
+                            <circle cx="19" cy="12" r="2" />
+                          </svg>
+                        </button>
                       </div>
 
                       {/* Auth Scheme Selector */}
@@ -1241,6 +1306,26 @@ export function DocsSideBar({ onClose: _onClose }) {
           initialMarkdown={selectedCollection.description || ''}
           title="Edit Collection Documentation"
           subtitle="Update the documentation for this collection using CommonMark Markdown."
+        />
+      )}
+
+      {/* Auth Context Menu - only for collections with security schemes */}
+      {selectedCollection && !selectedRequest && selectedCollection.security_schemes && (
+        <ContextMenu
+          isOpen={showAuthContextMenu}
+          onClose={() => setShowAuthContextMenu(false)}
+          trigger={authMenuTriggerRef.current}
+          items={authContextMenuItems}
+        />
+      )}
+
+      {/* Edit Auth Modal - only for collections */}
+      {showEditAuthModal && selectedCollection && !selectedRequest && (
+        <DocsEditAuth
+          isOpen={showEditAuthModal}
+          onClose={() => setShowEditAuthModal(false)}
+          collection={selectedCollection}
+          onSave={handleSaveAuth}
         />
       )}
     </>
