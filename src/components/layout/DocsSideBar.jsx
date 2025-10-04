@@ -330,7 +330,7 @@ export function DocsSideBar({ onClose: _onClose }) {
       divider: true
     },
     {
-      label: 'Delete all...',
+      label: 'Delete docs...',
       onClick: () => {
         setShowContextMenu(false);
         setShowDeleteDocsModal(true);
