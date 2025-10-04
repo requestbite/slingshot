@@ -129,15 +129,20 @@ export function RequestBodySchemaViewer({ requestBodySchema, className = '' }) {
   );
 }
 
-// Component for viewing response schemas with status code selection
+// Component for viewing response schemas with status code and content type selection
 export function ResponseSchemasViewer({ responseSchemas, className = '' }) {
   const [selectedStatusCode, setSelectedStatusCode] = useState('');
+  const [selectedContentType, setSelectedContentType] = useState('');
 
   const statusCodes = Object.keys(responseSchemas || {}).sort((a, b) => {
     const numA = parseInt(a, 10);
     const numB = parseInt(b, 10);
     return numA - numB;
   });
+
+  // Get content types for selected status code
+  const selectedResponse = responseSchemas[selectedStatusCode];
+  const contentTypes = selectedResponse?.content ? Object.keys(selectedResponse.content) : [];
 
   // Auto-select first status code
   useEffect(() => {
@@ -150,11 +155,50 @@ export function ResponseSchemasViewer({ responseSchemas, className = '' }) {
     }
   }, [statusCodes, selectedStatusCode]);
 
+  // Auto-select first content type when status code changes
+  useEffect(() => {
+    if (contentTypes.length > 0 && !selectedContentType) {
+      // Prefer JSON if available
+      const preferredType = contentTypes.includes('application/json')
+        ? 'application/json'
+        : contentTypes[0];
+      setSelectedContentType(preferredType);
+    }
+    // Reset if selected content type is no longer available
+    else if (selectedContentType && !contentTypes.includes(selectedContentType)) {
+      const preferredType = contentTypes.includes('application/json')
+        ? 'application/json'
+        : (contentTypes[0] || '');
+      setSelectedContentType(preferredType);
+    }
+  }, [contentTypes, selectedContentType]);
+
   if (statusCodes.length === 0) {
     return null;
   }
 
-  const selectedResponse = responseSchemas[selectedStatusCode];
+  const selectedContentData = selectedResponse?.content?.[selectedContentType];
+  const hasHeaders = selectedResponse?.headers && Object.keys(selectedResponse.headers).length > 0;
+
+  // Build headers schema for display
+  let headersSchema = null;
+  if (hasHeaders) {
+    headersSchema = {
+      type: 'object',
+      properties: {},
+      required: []
+    };
+    for (const [name, headerDef] of Object.entries(selectedResponse.headers)) {
+      headersSchema.properties[name] = {
+        type: headerDef.schema?.type || 'string',
+        description: headerDef.description || '',
+        ...headerDef.schema
+      };
+      if (headerDef.required) {
+        headersSchema.required.push(name);
+      }
+    }
+  }
 
   return (
     <div class={`space-y-2 ${className}`}>
@@ -180,13 +224,45 @@ export function ResponseSchemasViewer({ responseSchemas, className = '' }) {
           {selectedResponse.description}
         </div>
       )}
-      {selectedResponse && selectedResponse.schema && (
+
+      {/* Response Headers */}
+      {hasHeaders && (
         <div class="space-y-2 pb-2">
           <SchemaTreeRoot
-            schema={selectedResponse.schema}
-            title={statusCodes.length === 1 ? getStatusCodeDisplayName(selectedStatusCode) : ""}
+            schema={headersSchema}
+            title="Response Headers"
           />
+        </div>
+      )}
 
+      {/* Content Type Selector */}
+      {contentTypes.length > 1 && (
+        <div class="space-y-1">
+          <label class="block text-xs font-medium text-gray-600">Content Type</label>
+          <Select
+            value={selectedContentType}
+            onChange={setSelectedContentType}
+            options={contentTypes.map(type => ({
+              value: type,
+              label: type
+            }))}
+            placeholder="Select content type..."
+            size="small"
+          />
+        </div>
+      )}
+
+      {/* Response Body Schema */}
+      {selectedContentData && selectedContentData.schema && (
+        <div class={`space-y-2 pb-2 ${hasHeaders ? 'pt-4 border-t border-gray-200' : ''}`}>
+          <SchemaTreeRoot
+            schema={selectedContentData.schema}
+            title={statusCodes.length === 1 && contentTypes.length === 1
+              ? getStatusCodeDisplayName(selectedStatusCode)
+              : contentTypes.length === 1
+                ? ""
+                : `${selectedContentType} Body`}
+          />
         </div>
       )}
     </div>

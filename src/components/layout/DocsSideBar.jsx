@@ -14,9 +14,12 @@ import { getMethodColor } from '../../utils/httpMethods';
 import {
   parseRequestExamples,
   parseResponseExamples,
+  extractResponseExamplesFromSchemas,
   getResponseStatusCodes,
   getStatusCodeDisplayName,
-  getExampleContentType
+  getExampleContentType,
+  getContentTypesForStatus,
+  getContentTypeDisplayName
 } from '../../utils/exampleParser';
 import {
   parseParametersSchema,
@@ -34,6 +37,8 @@ export function DocsSideBar({ onClose: _onClose }) {
   const [showParamsContextMenu, setShowParamsContextMenu] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedResponseStatus, setSelectedResponseStatus] = useState('');
+  const [selectedResponseContentType, setSelectedResponseContentType] = useState('');
+  const [selectedResponseExample, setSelectedResponseExample] = useState('');
   const [selectedTocSection, setSelectedTocSection] = useState('show-all');
   const menuTriggerRef = useRef();
   const paramsMenuTriggerRef = useRef();
@@ -58,13 +63,22 @@ export function DocsSideBar({ onClose: _onClose }) {
 
   // Parse examples data when request changes
   const requestExamples = selectedRequest ? parseRequestExamples(selectedRequest.request_example) : [];
-  const responseExamples = selectedRequest ? parseResponseExamples(selectedRequest.response_examples) : {};
+
+  // Try new response_schemas structure first, fall back to legacy response_examples
+  const responseSchemas = selectedRequest ? parseResponseSchemas(selectedRequest.response_schemas) : {};
+  const responseExamplesFromSchemas = extractResponseExamplesFromSchemas(responseSchemas);
+  const legacyResponseExamples = selectedRequest ? parseResponseExamples(selectedRequest.response_examples) : {};
+
+  // Use new structure if available, otherwise use legacy
+  const responseExamples = Object.keys(responseExamplesFromSchemas).length > 0
+    ? responseExamplesFromSchemas
+    : legacyResponseExamples;
+
   const responseStatusCodes = getResponseStatusCodes(responseExamples);
 
   // Parse schema data when request changes
   const parametersSchema = selectedRequest ? parseParametersSchema(selectedRequest.parameters_schema) : null;
   const requestBodySchema = selectedRequest ? parseRequestBodySchema(selectedRequest.request_body_schema) : null;
-  const responseSchemas = selectedRequest ? parseResponseSchemas(selectedRequest.response_schemas) : {};
 
   // Handle response status selection when data changes
   useEffect(() => {
@@ -78,9 +92,46 @@ export function DocsSideBar({ onClose: _onClose }) {
     }
   }, [responseStatusCodes, selectedResponseStatus]);
 
-  // Reset response status when request changes
+  // Handle content type selection when status changes
+  useEffect(() => {
+    if (!selectedResponseStatus) return;
+
+    const contentTypes = getContentTypesForStatus(responseExamples, selectedResponseStatus);
+    if (contentTypes.length > 0 && !selectedResponseContentType) {
+      // Prefer JSON if available
+      const preferredType = contentTypes.includes('application/json')
+        ? 'application/json'
+        : contentTypes[0];
+      setSelectedResponseContentType(preferredType);
+    }
+    // Reset if selected content type is no longer available
+    else if (selectedResponseContentType && !contentTypes.includes(selectedResponseContentType)) {
+      const preferredType = contentTypes.includes('application/json')
+        ? 'application/json'
+        : (contentTypes[0] || '');
+      setSelectedResponseContentType(preferredType);
+    }
+  }, [selectedResponseStatus, responseExamples, selectedResponseContentType]);
+
+  // Handle example selection when content type changes
+  useEffect(() => {
+    if (!selectedResponseStatus || !selectedResponseContentType) return;
+
+    const examples = responseExamples[selectedResponseStatus]?.[selectedResponseContentType] || [];
+    if (examples.length > 0 && !selectedResponseExample) {
+      setSelectedResponseExample(examples[0].name);
+    }
+    // Reset if selected example is no longer available
+    else if (selectedResponseExample && !examples.find(ex => ex.name === selectedResponseExample)) {
+      setSelectedResponseExample(examples[0]?.name || '');
+    }
+  }, [selectedResponseStatus, selectedResponseContentType, responseExamples, selectedResponseExample]);
+
+  // Reset response selections when request changes
   useEffect(() => {
     setSelectedResponseStatus('');
+    setSelectedResponseContentType('');
+    setSelectedResponseExample('');
     setSelectedTocSection('show-all');
     setShowContextMenu(false);
   }, [selectedRequest?.id]);
@@ -371,34 +422,81 @@ export function DocsSideBar({ onClose: _onClose }) {
                   )}
 
                   {/* Response Examples */}
-                  {responseStatusCodes.length > 0 && shouldShowSection('response-examples') && (
-                    <div id="response-examples" class="space-y-2">
-                      <div class="flex items-center justify-between">
-                        <label class="block text-xs font-medium text-gray-600">Response Examples</label>
+                  {responseStatusCodes.length > 0 && shouldShowSection('response-examples') && (() => {
+                    const contentTypes = getContentTypesForStatus(responseExamples, selectedResponseStatus);
+                    const examples = responseExamples[selectedResponseStatus]?.[selectedResponseContentType] || [];
+                    const selectedExample = examples.find(ex => ex.name === selectedResponseExample);
+
+                    return (
+                      <div id="response-examples" class="space-y-2">
+                        <div class="flex items-center justify-between">
+                          <label class="block text-xs font-medium text-gray-600">Response Examples</label>
+                        </div>
+
+                        {/* Status Code Selector */}
+                        {responseStatusCodes.length > 1 && (
+                          <div class="space-y-1">
+                            <label class="block text-[10px] font-medium text-gray-500">Status Code</label>
+                            <Select
+                              value={selectedResponseStatus}
+                              onChange={setSelectedResponseStatus}
+                              options={responseStatusCodes.map(code => ({
+                                value: code,
+                                label: getStatusCodeDisplayName(code)
+                              }))}
+                              placeholder="Select status code..."
+                              size="small"
+                            />
+                          </div>
+                        )}
+
+                        {/* Content Type Selector */}
+                        {contentTypes.length > 1 && (
+                          <div class="space-y-1">
+                            <label class="block text-[10px] font-medium text-gray-500">Content Type</label>
+                            <Select
+                              value={selectedResponseContentType}
+                              onChange={setSelectedResponseContentType}
+                              options={contentTypes.map(type => ({
+                                value: type,
+                                label: getContentTypeDisplayName(type)
+                              }))}
+                              placeholder="Select content type..."
+                              size="small"
+                            />
+                          </div>
+                        )}
+
+                        {/* Example Name Selector */}
+                        {examples.length > 1 && (
+                          <div class="space-y-1">
+                            <label class="block text-[10px] font-medium text-gray-500">Example</label>
+                            <Select
+                              value={selectedResponseExample}
+                              onChange={setSelectedResponseExample}
+                              options={examples.map(ex => ({
+                                value: ex.name,
+                                label: ex.summary || ex.name
+                              }))}
+                              placeholder="Select example..."
+                              size="small"
+                            />
+                          </div>
+                        )}
+
+                        {/* Display Selected Example */}
+                        {selectedExample && (
+                          <ExampleViewer
+                            examples={[selectedExample]}
+                            title={responseStatusCodes.length === 1 && contentTypes.length === 1 && examples.length === 1
+                              ? getStatusCodeDisplayName(selectedResponseStatus)
+                              : ""}
+                            contentType={selectedResponseContentType || 'application/json'}
+                          />
+                        )}
                       </div>
-
-                      {responseStatusCodes.length > 1 && (
-                        <Select
-                          value={selectedResponseStatus}
-                          onChange={setSelectedResponseStatus}
-                          options={responseStatusCodes.map(code => ({
-                            value: code,
-                            label: getStatusCodeDisplayName(code)
-                          }))}
-                          placeholder="Select status code..."
-                          size="small"
-                        />
-                      )}
-
-                      {selectedResponseStatus && responseExamples[selectedResponseStatus] && (
-                        <ExampleViewer
-                          examples={responseExamples[selectedResponseStatus]}
-                          title={responseStatusCodes.length === 1 ? getStatusCodeDisplayName(selectedResponseStatus) : ""}
-                          contentType={getExampleContentType(selectedRequest, 'response')}
-                        />
-                      )}
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Show placeholder when no examples or schemas available */}
                   {requestExamples.length === 0 &&

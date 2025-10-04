@@ -1,0 +1,256 @@
+openapi: 3.1.0
+info:
+  title: Full-featured POST Example API
+  description: A test API that uses a single POST endpoint with comprehensive OpenAPI 3.1 features.
+  version: 1.0.0
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+  - url: https://staging-api.example.com/v1
+    description: Staging server
+
+tags:
+  - name: example
+    description: Example operations
+    externalDocs:
+      url: https://example.com/docs/tag
+      description: More tag info
+
+paths:
+  /submit:
+    post:
+      tags:
+        - example
+      summary: Submit data
+      description: Submits a complex object and returns multiple possible responses.
+      operationId: submitData
+      deprecated: false
+      externalDocs:
+        url: https://example.com/docs/submit
+        description: Endpoint-specific documentation
+
+      parameters:
+        - name: X-Request-ID
+          in: header
+          required: false
+          description: Unique ID for tracing the request
+          schema:
+            type: string
+        - name: debug
+          in: query
+          required: false
+          description: Enable debug mode
+          schema:
+            type: boolean
+            default: false
+        - name: session_id
+          in: cookie
+          required: false
+          description: Session identifier
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitPayload"
+            examples:
+              minimal:
+                summary: Minimal payload
+                value:
+                  name: "Minimal"
+                  age: 30
+              full:
+                summary: Full payload with nested data
+                value:
+                  name: "Full Example"
+                  age: 40
+                  metadata:
+                    interests: ["coding", "testing"]
+                    preferences:
+                      theme: "dark"
+                      notifications: true
+          application/xml:
+            schema:
+              $ref: "#/components/schemas/SubmitPayload"
+            examples:
+              xmlExample:
+                summary: XML payload
+                value: |
+                  <SubmitPayload>
+                    <name>XML User</name>
+                    <age>28</age>
+                  </SubmitPayload>
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                description:
+                  type: string
+            examples:
+              uploadExample:
+                summary: Upload with description
+                value:
+                  description: "Test upload"
+
+      responses:
+        "200":
+          description: Submission successful
+          headers:
+            X-Rate-Limit:
+              description: Rate limit
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmitResponse"
+              examples:
+                successMinimal:
+                  summary: Minimal success response
+                  value:
+                    status: "success"
+                    id: "abc123"
+                successDetailed:
+                  summary: Detailed success response
+                  value:
+                    status: "success"
+                    id: "xyz789"
+                    message: "Your submission was successful."
+        "400":
+          description: Bad request due to invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                missingField:
+                  summary: Missing required field
+                  value:
+                    error: "Missing field: name"
+                    code: 4001
+                invalidType:
+                  summary: Invalid field type
+                  value:
+                    error: "Field 'age' must be a number"
+                    code: 4002
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                serverCrashed:
+                  summary: Internal server error
+                  value:
+                    error: "Unexpected server error"
+                    code: 5000
+
+      callbacks:
+        onEvent:
+          "{$request.body#/callbackUrl}":
+            post:
+              summary: Callback after processing
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        result:
+                          type: string
+              responses:
+                "200":
+                  description: Callback received
+
+      security:
+        - apiKeyAuth: []
+        - basicAuth: []
+
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    basicAuth:
+      type: http
+      scheme: basic
+
+  schemas:
+    SubmitPayload:
+      type: object
+      required:
+        - name
+        - age
+      properties:
+        name:
+          type: string
+          description: Full name
+        age:
+          type: integer
+          description: Age of the person
+        metadata:
+          type: object
+          properties:
+            interests:
+              type: array
+              items:
+                type: string
+            preferences:
+              type: object
+              properties:
+                theme:
+                  type: string
+                  enum: [light, dark]
+                notifications:
+                  type: boolean
+      example:
+        name: "John Doe"
+        age: 35
+        metadata:
+          interests: ["reading", "sports"]
+          preferences:
+            theme: "light"
+            notifications: false
+
+    SubmitResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ["success", "failure"]
+        id:
+          type: string
+        message:
+          type: string
+      example:
+        status: "success"
+        id: "abc123"
+        message: "Created successfully"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: integer
+      example:
+        error: "Invalid input"
+        code: 4000
+
+  links:
+    GetSubmissionById:
+      operationId: getSubmission
+      parameters:
+        id: "$response.body#/id"
+      description: Retrieve the submission by ID

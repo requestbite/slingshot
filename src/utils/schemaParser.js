@@ -46,7 +46,20 @@ export function parseRequestBodySchema(requestBodySchemaJson) {
 /**
  * Parses response schemas from the response_schemas field
  * @param {string|null} responseSchemasJson - JSON string from response_schemas field
- * @returns {Object} Object with status codes as keys and schema objects as values
+ * @returns {Object} Object with status codes as keys and enhanced response data
+ *
+ * New structure (v2):
+ * {
+ *   statusCode: {
+ *     description: "...",
+ *     headers: { headerName: { schema, description, required } },
+ *     content: {
+ *       contentType: { schema: {...}, examples: {...} }
+ *     }
+ *   }
+ * }
+ *
+ * Legacy structure (v1): { contentType, schema, description }
  */
 export function parseResponseSchemas(responseSchemasJson) {
   if (!responseSchemasJson) {
@@ -61,13 +74,29 @@ export function parseResponseSchemas(responseSchemasJson) {
       return {};
     }
 
-    // Each status code contains: { contentType, schema, description }
     for (const [statusCode, responseData] of Object.entries(parsed)) {
-      if (responseData && responseData.schema) {
+      if (!responseData) continue;
+
+      // Detect new structure (has 'content' property)
+      if (responseData.content !== undefined) {
         result[statusCode] = {
-          contentType: responseData.contentType || 'application/json',
-          schema: responseData.schema,
-          description: responseData.description || ''
+          description: responseData.description || '',
+          headers: responseData.headers || {},
+          content: responseData.content || {}
+        };
+      }
+      // Legacy structure (has 'schema' property directly)
+      else if (responseData.schema) {
+        // Convert legacy format to new format
+        result[statusCode] = {
+          description: responseData.description || '',
+          headers: {},
+          content: {
+            [responseData.contentType || 'application/json']: {
+              schema: responseData.schema,
+              examples: {}
+            }
+          }
         };
       }
     }

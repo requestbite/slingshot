@@ -247,8 +247,8 @@ async function createRequestFromOperation({ path, method, operation, baseUrl: _b
   // Determine request type and body
   const { requestType, contentType, body, requestBodySchema, requestExample } = extractRequestBody(operation, spec);
 
-  // Extract response schemas and examples
-  const { responseSchemas, responseExamples } = extractResponseSchemas(operation, spec);
+  // Extract response schemas (now includes headers, multiple content types, and examples)
+  const { responseSchemas } = extractResponseSchemas(operation, spec);
 
   return {
     name,
@@ -270,7 +270,7 @@ async function createRequestFromOperation({ path, method, operation, baseUrl: _b
     request_body_schema: requestBodySchema,
     response_schemas: responseSchemas,
     request_example: requestExample,
-    response_examples: responseExamples,
+    response_examples: null, // Deprecated: examples now stored in response_schemas
     path_template: path // Original OpenAPI path template
   };
 }
@@ -418,59 +418,93 @@ function extractRequestBody(operation, spec) {
 }
 
 /**
- * Extracts response schemas from an operation
+ * Extracts response schemas from an operation with headers, multiple content types, and examples
  * @param {Object} operation - OpenAPI operation
  * @param {Object} spec - Full specification for schema resolution
- * @returns {Object} Response schemas and examples by status code
+ * @returns {Object} Enhanced response schemas by status code
  */
 function extractResponseSchemas(operation, spec) {
   const responses = operation.responses || {};
   const responseSchemas = {};
-  const responseExamples = {};
 
   for (const [statusCode, response] of Object.entries(responses)) {
-    if (!response.content) {
-      responseSchemas[statusCode] = null;
-      responseExamples[statusCode] = null;
-      continue;
+    const responseData = {
+      description: response.description || '',
+      headers: {},
+      content: {}
+    };
+
+    // Extract response headers
+    if (response.headers) {
+      for (const [headerName, headerDef] of Object.entries(response.headers)) {
+        const resolvedHeader = resolveReferences(headerDef, spec);
+        responseData.headers[headerName] = {
+          schema: resolvedHeader.schema ? resolveReferences(resolvedHeader.schema, spec) : { type: 'string' },
+          description: resolvedHeader.description || '',
+          required: resolvedHeader.required || false
+        };
+      }
     }
 
-    const content = response.content;
-    const contentTypes = Object.keys(content);
+    // Extract all content types with their schemas and examples
+    if (response.content) {
+      for (const [contentType, mediaType] of Object.entries(response.content)) {
+        const contentData = {
+          schema: null,
+          examples: {}
+        };
 
-    if (contentTypes.length === 0) {
-      responseSchemas[statusCode] = null;
-      responseExamples[statusCode] = null;
-      continue;
+        // Resolve schema
+        if (mediaType.schema) {
+          contentData.schema = resolveReferences(mediaType.schema, spec);
+        }
+
+        // Extract all named examples
+        if (mediaType.examples) {
+          for (const [exampleName, exampleDef] of Object.entries(mediaType.examples)) {
+            const resolvedExample = resolveReferences(exampleDef, spec);
+            contentData.examples[exampleName] = {
+              summary: resolvedExample.summary || '',
+              description: resolvedExample.description || '',
+              value: resolvedExample.value !== undefined ? resolvedExample.value : null
+            };
+          }
+        }
+        // If no named examples but has a single example, use it
+        else if (mediaType.example !== undefined) {
+          contentData.examples['default'] = {
+            summary: 'Example',
+            description: '',
+            value: mediaType.example
+          };
+        }
+        // Generate example from schema if no examples provided
+        else if (contentData.schema) {
+          contentData.examples['generated'] = {
+            summary: 'Generated Example',
+            description: '',
+            value: generateExampleFromResolvedSchema(contentData.schema)
+          };
+        }
+
+        responseData.content[contentType] = contentData;
+      }
     }
 
-    // Prefer JSON, then anything else
-    let selectedContentType = contentTypes[0];
-    if (contentTypes.includes('application/json')) {
-      selectedContentType = 'application/json';
-    }
-
-    const mediaType = content[selectedContentType];
-    const schema = mediaType?.schema;
-
-    if (schema) {
-      // Resolve response schema
-      const resolvedSchema = resolveReferences(schema, spec);
-      responseSchemas[statusCode] = {
-        contentType: selectedContentType,
-        schema: resolvedSchema,
-        description: response.description || ''
-      };
-
-      // Generate example
-      responseExamples[statusCode] = generateExampleFromResolvedSchema(resolvedSchema);
+    // Only add response if it has content or headers
+    if (Object.keys(responseData.content).length > 0 || Object.keys(responseData.headers).length > 0) {
+      responseSchemas[statusCode] = responseData;
     } else {
-      responseSchemas[statusCode] = null;
-      responseExamples[statusCode] = null;
+      // Store minimal response with just description
+      responseSchemas[statusCode] = {
+        description: responseData.description,
+        headers: {},
+        content: {}
+      };
     }
   }
 
-  return { responseSchemas, responseExamples };
+  return { responseSchemas };
 }
 
 /**

@@ -110,6 +110,51 @@ export function parseResponseExamples(responseExamplesJson) {
 }
 
 /**
+ * Extracts response examples from the new response_schemas structure
+ * @param {Object} responseSchemas - Parsed response schemas object (from parseResponseSchemas)
+ * @returns {Object} Nested object: { statusCode: { contentType: [examples] } }
+ */
+export function extractResponseExamplesFromSchemas(responseSchemas) {
+  const result = {};
+
+  if (!responseSchemas || typeof responseSchemas !== 'object') {
+    return {};
+  }
+
+  for (const [statusCode, responseData] of Object.entries(responseSchemas)) {
+    if (!responseData || !responseData.content) continue;
+
+    result[statusCode] = {};
+
+    for (const [contentType, contentData] of Object.entries(responseData.content)) {
+      if (!contentData || !contentData.examples) continue;
+
+      const examplesArray = [];
+
+      for (const [exampleName, exampleData] of Object.entries(contentData.examples)) {
+        examplesArray.push({
+          name: exampleData.summary || exampleName,
+          value: exampleData.value,
+          summary: exampleData.summary || '',
+          description: exampleData.description || ''
+        });
+      }
+
+      if (examplesArray.length > 0) {
+        result[statusCode][contentType] = examplesArray;
+      }
+    }
+
+    // Clean up empty status codes
+    if (Object.keys(result[statusCode]).length === 0) {
+      delete result[statusCode];
+    }
+  }
+
+  return result;
+}
+
+/**
  * Gets all available status codes from response examples
  * @param {Object} responseExamples - Parsed response examples object
  * @returns {Array} Array of status code strings sorted numerically
@@ -145,6 +190,37 @@ export function getStatusCodeDisplayName(statusCode) {
   };
 
   return statusTexts[statusCode] || `${statusCode} Response`;
+}
+
+/**
+ * Gets all available content types for a specific status code from response examples
+ * @param {Object} responseExamples - Response examples object from extractResponseExamplesFromSchemas
+ * @param {string} statusCode - HTTP status code
+ * @returns {Array} Array of content type strings
+ */
+export function getContentTypesForStatus(responseExamples, statusCode) {
+  if (!responseExamples || !responseExamples[statusCode]) {
+    return [];
+  }
+  return Object.keys(responseExamples[statusCode]);
+}
+
+/**
+ * Gets display name for a content type
+ * @param {string} contentType - Content type string
+ * @returns {string} Human-readable content type name
+ */
+export function getContentTypeDisplayName(contentType) {
+  const displayNames = {
+    'application/json': 'JSON',
+    'application/xml': 'XML',
+    'text/xml': 'XML',
+    'application/x-www-form-urlencoded': 'Form URL Encoded',
+    'multipart/form-data': 'Form Data',
+    'text/plain': 'Plain Text',
+    'text/html': 'HTML'
+  };
+  return displayNames[contentType] || contentType;
 }
 
 /**
