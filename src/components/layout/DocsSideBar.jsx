@@ -44,6 +44,7 @@ export function DocsSideBar({ onClose: _onClose }) {
   const [showResponseContextMenu, setShowResponseContextMenu] = useState(false);
   const [showRequestBodyContextMenu, setShowRequestBodyContextMenu] = useState(false);
   const [showRequestExamplesContextMenu, setShowRequestExamplesContextMenu] = useState(false);
+  const [showCollectionContextMenu, setShowCollectionContextMenu] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedResponseStatus, setSelectedResponseStatus] = useState('');
   const [selectedResponseContentType, setSelectedResponseContentType] = useState('');
@@ -58,6 +59,7 @@ export function DocsSideBar({ onClose: _onClose }) {
   const responseMenuTriggerRef = useRef();
   const requestBodyMenuTriggerRef = useRef();
   const requestExamplesMenuTriggerRef = useRef();
+  const collectionMenuTriggerRef = useRef();
 
   const handleEditDescription = async (newDescription) => {
     if (!selectedCollection?.id) return;
@@ -412,6 +414,21 @@ export function DocsSideBar({ onClose: _onClose }) {
       onClick: () => {
         setShowRequestExamplesContextMenu(false);
         setShowEditRequestModal(true);
+      },
+      icon: (
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      )
+    }
+  ];
+
+  const collectionContextMenuItems = [
+    {
+      label: 'Edit intro...',
+      onClick: () => {
+        setShowCollectionContextMenu(false);
+        setShowMarkdownModal(true);
       },
       icon: (
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -843,24 +860,43 @@ export function DocsSideBar({ onClose: _onClose }) {
             ) : selectedCollection ? (
               <>
                 {/* Collection Header */}
-                <div class="flex items-center justify-between">
-                  <h2 class="text-sm font-medium text-gray-900 truncate" title={selectedCollection.name}>
+                <div class="flex items-center gap-2 justify-between">
+                  <h2 class="text-sm font-medium text-gray-900 truncate flex-grow overflow-hidden" title={selectedCollection.name}>
                     {selectedCollection.name}
                   </h2>
+
+                  {/* Context Menu Trigger */}
+                  <button
+                    ref={collectionMenuTriggerRef}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowCollectionContextMenu(true);
+                    }}
+                    class="flex items-center text-sky-400 hover:text-sky-700 focus:outline-none cursor-pointer flex-shrink-0"
+                    title="More options"
+                  >
+                    <span class="sr-only">Open options</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="flex-shrink-0">
+                      <circle cx="5" cy="12" r="2" />
+                      <circle cx="12" cy="12" r="2" />
+                      <circle cx="19" cy="12" r="2" />
+                    </svg>
+                  </button>
                 </div>
 
-                {/* Edit Button */}
-                <button
-                  onClick={() => setShowMarkdownModal(true)}
-                  disabled={isUpdating}
-                  class="w-full cursor-pointer rounded-md px-3 py-2 text-xs focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 bg-sky-100 hover:bg-sky-200 text-sky-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                    <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
-                  </svg>
-                  {isUpdating ? 'Updating...' : 'Edit Documentation'}
-                </button>
+                {/* Collection Documentation */}
+                <div class="flex-1 min-h-0">
+                  {selectedCollection.description && selectedCollection.description.trim() ? (
+                    <div class="text-left pb-4 border-b border-gray-200">
+                      <MarkdownPreview markdown={selectedCollection.description} />
+                    </div>
+                  ) : (
+                    <div class="text-left text-gray-500 italic text-sm pb-4 border-b border-gray-200">
+                      No documentation provided for this collection.
+                    </div>
+                  )}
+                </div>
 
                 {/* Authorization Section */}
                 {selectedCollection.security_schemes && Object.keys(selectedCollection.security_schemes).length > 0 && (() => {
@@ -969,7 +1005,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                               <label class="block text-[10px] font-medium text-gray-500">Scopes</label>
                               <div class="text-xs text-gray-700">
                                 {Object.entries(flowData.scopes).map(([scope, description]) => (
-                                  <div key={scope} class="ml-2">
+                                  <div key={scope} class="ml-2 mb-2">
                                     <span class="font-medium">{scope}</span>
                                     {description && <span class="text-gray-500"> - {description}</span>}
                                   </div>
@@ -1021,7 +1057,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                   };
 
                   return (
-                    <div class="space-y-3 pb-4 border-b border-gray-200">
+                    <div class="space-y-3">
                       <div class="flex items-center justify-between">
                         <label class="block text-xs font-medium text-gray-600">Authorization</label>
                       </div>
@@ -1050,19 +1086,6 @@ export function DocsSideBar({ onClose: _onClose }) {
                     </div>
                   );
                 })()}
-
-                {/* Collection Documentation */}
-                <div class="flex-1 min-h-0">
-                  {selectedCollection.description && selectedCollection.description.trim() ? (
-                    <div class="text-left">
-                      <MarkdownPreview markdown={selectedCollection.description} />
-                    </div>
-                  ) : (
-                    <div class="text-left text-gray-500 italic text-sm">
-                      No documentation provided for this collection.
-                    </div>
-                  )}
-                </div>
               </>
             ) : (
               <>
@@ -1192,6 +1215,16 @@ export function DocsSideBar({ onClose: _onClose }) {
           onClose={() => setShowEditRequestModal(false)}
           request={selectedRequest}
           onSave={handleSaveRequest}
+        />
+      )}
+
+      {/* Collection Context Menu - only for collections */}
+      {selectedCollection && !selectedRequest && (
+        <ContextMenu
+          isOpen={showCollectionContextMenu}
+          onClose={() => setShowCollectionContextMenu(false)}
+          trigger={collectionMenuTriggerRef.current}
+          items={collectionContextMenuItems}
         />
       )}
 
