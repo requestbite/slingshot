@@ -409,7 +409,23 @@ export function SideBar({ onClose: _onClose }) {
                 )}
               </div>
 
-              <div class="mt-2 overflow-y-auto overflow-x-visible relative">
+              <div class="mt-4 overflow-y-auto overflow-x-visible relative">
+                {/* Collection link */}
+                {selectedCollection && (
+                  <a
+                    href={`/${selectedCollection.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      selectRequest(null);
+                      const url = `/${selectedCollection.id}`;
+                      setLastSlingshotUrl(url);
+                      setLocation(url);
+                    }}
+                    class="flex items-center py-1 rounded text-xs font-medium hover:bg-gray-100 cursor-pointer no-underline text-gray-600"
+                  >
+                    <span class="truncate font-medium">{selectedCollection.name}</span>
+                  </a>
+                )}
                 <FolderTree searchTerm={searchTerm} />
               </div>
             </div>

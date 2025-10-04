@@ -28,7 +28,7 @@ export function FolderTree({ searchTerm = '' }) {
 
     try {
       setIsLoading(true);
-      
+
       // Load folders and requests for the selected collection
       const [folders, requests] = await Promise.all([
         apiClient.getFoldersByCollection(selectedCollection.id),
@@ -38,7 +38,7 @@ export function FolderTree({ searchTerm = '' }) {
       // Build hierarchical tree structure
       const tree = buildTreeStructure(folders, requests);
       setTreeData(tree);
-      
+
     } catch (error) {
       console.error('Failed to load tree data:', error);
       setTreeData({ folders: [], requests: [] });
@@ -51,7 +51,7 @@ export function FolderTree({ searchTerm = '' }) {
     // Create lookup maps
     const folderMap = new Map();
     const requestsByFolder = new Map();
-    
+
     // Initialize folder map
     folders.forEach(folder => {
       folderMap.set(folder.id, {
@@ -86,7 +86,7 @@ export function FolderTree({ searchTerm = '' }) {
 
     folders.forEach(folder => {
       const folderWithData = folderMap.get(folder.id);
-      
+
       if (folder.parent_folder_id) {
         // This is a subfolder
         const parentFolder = folderMap.get(folder.parent_folder_id);
@@ -108,14 +108,14 @@ export function FolderTree({ searchTerm = '' }) {
 
     // Sort folders and requests alphabetically
     const sortByName = (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase());
-    
+
     // Sort root folders and their contents recursively
     const sortFolderRecursively = (folder) => {
       folder.subfolders.sort(sortByName);
       folder.requests.sort(sortByName);
       folder.subfolders.forEach(sortFolderRecursively);
     };
-    
+
     rootFolders.sort(sortByName);
     rootFolders.forEach(sortFolderRecursively);
     rootRequests.sort(sortByName);
@@ -138,7 +138,7 @@ export function FolderTree({ searchTerm = '' }) {
     }
 
     const term = searchTerm.toLowerCase();
-    
+
     // Filter folders and requests recursively
     const filterFolder = (folder) => {
       const folderMatches = folder.name.toLowerCase().includes(term);
@@ -175,14 +175,14 @@ export function FolderTree({ searchTerm = '' }) {
 
     // Sort filtered results alphabetically
     const sortByName = (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase());
-    
+
     // Sort folders and requests recursively
     const sortFolderRecursively = (folder) => {
       folder.subfolders.sort(sortByName);
       folder.requests.sort(sortByName);
       folder.subfolders.forEach(sortFolderRecursively);
     };
-    
+
     filteredFolders.sort(sortByName);
     filteredFolders.forEach(sortFolderRecursively);
     filteredRequests.sort(sortByName);
@@ -238,7 +238,7 @@ export function FolderTree({ searchTerm = '' }) {
   }
 
   return (
-    <div class="mt-2">
+    <div class="mt-1">
       <ul class="space-y-1">
         {/* Render root folders */}
         {filteredData.folders.map(folder => (
@@ -252,7 +252,7 @@ export function FolderTree({ searchTerm = '' }) {
             onFolderUpdate={handleTreeUpdate}
           />
         ))}
-        
+
         {/* Render root-level requests (not in any folder) */}
         {filteredData.requests.map(request => (
           <RequestItem
