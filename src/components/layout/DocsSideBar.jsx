@@ -4,6 +4,7 @@ import { MarkdownModal } from '../modals/MarkdownModal';
 import { DocsDeleteAllModal } from '../modals/DocsDeleteAllModal';
 import { DocsEditIntroModal } from '../modals/DocsEditIntroModal';
 import { DocsEditParams } from '../modals/DocsEditParams';
+import { DocsEditResponse } from '../modals/DocsEditResponse';
 import { ExampleViewer } from '../common/ExampleViewer';
 import { SchemaViewer } from '../common/SchemaViewer';
 import { Select } from '../common/Select';
@@ -32,8 +33,10 @@ export function DocsSideBar({ onClose: _onClose }) {
   const [showDeleteDocsModal, setShowDeleteDocsModal] = useState(false);
   const [showEditIntroModal, setShowEditIntroModal] = useState(false);
   const [showEditParamsModal, setShowEditParamsModal] = useState(false);
+  const [showEditResponseModal, setShowEditResponseModal] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [showParamsContextMenu, setShowParamsContextMenu] = useState(false);
+  const [showResponseContextMenu, setShowResponseContextMenu] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedResponseStatus, setSelectedResponseStatus] = useState('');
   const [selectedResponseContentType, setSelectedResponseContentType] = useState('');
@@ -41,6 +44,7 @@ export function DocsSideBar({ onClose: _onClose }) {
   const [selectedTocSection, setSelectedTocSection] = useState('show-all');
   const menuTriggerRef = useRef();
   const paramsMenuTriggerRef = useRef();
+  const responseMenuTriggerRef = useRef();
 
   const handleEditDescription = async (newDescription) => {
     if (!selectedCollection?.id) return;
@@ -172,6 +176,23 @@ export function DocsSideBar({ onClose: _onClose }) {
     }
   };
 
+  const handleSaveResponse = async (updates) => {
+    if (!selectedRequest?.id) return;
+
+    setIsUpdating(true);
+    try {
+      await apiClient.updateRequest(selectedRequest.id, updates);
+
+      // Refresh collections to get updated data
+      await loadCollections();
+    } catch (error) {
+      console.error('Failed to update response schemas:', error);
+      throw error; // Re-throw so modal can handle it
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const contextMenuItems = [
     {
       label: 'Edit intro...',
@@ -221,6 +242,21 @@ export function DocsSideBar({ onClose: _onClose }) {
       onClick: () => {
         setShowParamsContextMenu(false);
         setShowEditParamsModal(true);
+      },
+      icon: (
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      )
+    }
+  ];
+
+  const responseContextMenuItems = [
+    {
+      label: 'Edit response...',
+      onClick: () => {
+        setShowResponseContextMenu(false);
+        setShowEditResponseModal(true);
       },
       icon: (
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -405,10 +441,31 @@ export function DocsSideBar({ onClose: _onClose }) {
                   {/* Response Schema */}
                   {Object.keys(responseSchemas).length > 0 && shouldShowSection('response-schema') && (
                     <div id="response-schema">
+                      <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-medium text-gray-600">Response Schema</label>
+                        <button
+                          ref={responseMenuTriggerRef}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setShowResponseContextMenu(true);
+                          }}
+                          class="flex items-center text-sky-400 hover:text-sky-700 focus:outline-none cursor-pointer"
+                          title="More options"
+                        >
+                          <span class="sr-only">Open options</span>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="5" cy="12" r="2" />
+                            <circle cx="12" cy="12" r="2" />
+                            <circle cx="19" cy="12" r="2" />
+                          </svg>
+                        </button>
+                      </div>
                       <SchemaViewer
                         parametersSchema={null}
                         requestBodySchema={null}
                         responseSchemas={responseSchemas}
+                        showResponseTitle={false}
                       />
                     </div>
                   )}
@@ -423,6 +480,22 @@ export function DocsSideBar({ onClose: _onClose }) {
                       <div id="response-examples" class="space-y-2">
                         <div class="flex items-center justify-between">
                           <label class="block text-xs font-medium text-gray-600">Response Examples</label>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowResponseContextMenu(true);
+                            }}
+                            class="flex items-center text-sky-400 hover:text-sky-700 focus:outline-none cursor-pointer"
+                            title="More options"
+                          >
+                            <span class="sr-only">Open options</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                              <circle cx="5" cy="12" r="2" />
+                              <circle cx="12" cy="12" r="2" />
+                              <circle cx="19" cy="12" r="2" />
+                            </svg>
+                          </button>
                         </div>
 
                         {/* Status Code Selector */}
@@ -615,6 +688,26 @@ export function DocsSideBar({ onClose: _onClose }) {
           onClose={() => setShowParamsContextMenu(false)}
           trigger={paramsMenuTriggerRef.current}
           items={paramsContextMenuItems}
+        />
+      )}
+
+      {/* Response Context Menu - only for requests */}
+      {selectedRequest && (
+        <ContextMenu
+          isOpen={showResponseContextMenu}
+          onClose={() => setShowResponseContextMenu(false)}
+          trigger={responseMenuTriggerRef.current}
+          items={responseContextMenuItems}
+        />
+      )}
+
+      {/* Edit Response Modal - only for requests */}
+      {showEditResponseModal && (
+        <DocsEditResponse
+          isOpen={showEditResponseModal}
+          onClose={() => setShowEditResponseModal(false)}
+          request={selectedRequest}
+          onSave={handleSaveResponse}
         />
       )}
 
