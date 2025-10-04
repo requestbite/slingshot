@@ -2,7 +2,7 @@ import { useState } from 'preact/hooks';
 import { Modal } from '../common/Modal';
 import { apiClient } from '../../api';
 
-export function DeleteAllDocsModal({ isOpen, onClose, request, onDelete }) {
+export function DocsDeleteAllModal({ isOpen, onClose, request, onDelete }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState(null);
 

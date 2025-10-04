@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { MarkdownPreview } from '../common/MarkdownPreview';
 import { MarkdownModal } from '../modals/MarkdownModal';
-import { DeleteAllDocsModal } from '../modals/DeleteAllDocsModal';
+import { DocsDeleteAllModal } from '../modals/DocsDeleteAllModal';
 import { DocsEditIntroModal } from '../modals/DocsEditIntroModal';
 import { ExampleViewer } from '../common/ExampleViewer';
 import { SchemaViewer } from '../common/SchemaViewer';
@@ -421,7 +421,7 @@ export function DocsSideBar({ onClose: _onClose }) {
 
       {/* Delete Documentation Modal - only for requests */}
       {showDeleteDocsModal && (
-        <DeleteAllDocsModal
+        <DocsDeleteAllModal
           isOpen={showDeleteDocsModal}
           onClose={() => setShowDeleteDocsModal(false)}
           request={selectedRequest}
