@@ -15,6 +15,8 @@ export function DocsDeleteAllModal({ isOpen, onClose, request, onDelete }) {
     try {
       // Remove documentation fields from the request
       await apiClient.updateRequest(request.id, {
+        summary: null,
+        description: null,
         parameters_schema: null,
         request_body_schema: null,
         response_schemas: null,
