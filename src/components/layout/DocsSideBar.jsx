@@ -292,7 +292,7 @@ export function DocsSideBar({ onClose: _onClose }) {
 
                   {/* Response Schema */}
                   {Object.keys(responseSchemas).length > 0 && shouldShowSection('response-schema') && (
-                    <div id="response-schema" class={`${((parametersSchema && shouldShowSection('parameters-schema')) || (requestBodySchema && shouldShowSection('request-body'))) ? 'pt-4 border-t border-gray-200' : ''}`}>
+                    <div id="response-schema">
                       <SchemaViewer
                         parametersSchema={null}
                         requestBodySchema={null}
