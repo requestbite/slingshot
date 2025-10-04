@@ -29,6 +29,9 @@ export function parseParametersSchema(parametersSchemaJson) {
  * Parses request body schema from the request_body_schema field
  * @param {string|null} requestBodySchemaJson - JSON string from request_body_schema field
  * @returns {Object|null} Parsed schema object or null
+ *
+ * New structure (v2): { content: { contentType: { schema, examples } } }
+ * Legacy structure (v1): { type: "object", properties: {...}, ... } (single schema)
  */
 export function parseRequestBodySchema(requestBodySchemaJson) {
   if (!requestBodySchemaJson) {
@@ -36,11 +39,55 @@ export function parseRequestBodySchema(requestBodySchemaJson) {
   }
 
   try {
-    return JSON.parse(requestBodySchemaJson);
+    const parsed = JSON.parse(requestBodySchemaJson);
+
+    // Detect new structure (has 'content' property)
+    if (parsed && parsed.content !== undefined) {
+      return parsed;
+    }
+
+    // Legacy structure - convert to new format with default content type
+    if (parsed && typeof parsed === 'object' && !parsed.content) {
+      return {
+        content: {
+          'application/json': {
+            schema: parsed,
+            examples: {}
+          }
+        }
+      };
+    }
+
+    return parsed;
   } catch (error) {
     console.error('Failed to parse request body schema:', error);
     return null;
   }
+}
+
+/**
+ * Gets all available content types from a parsed request body schema
+ * @param {Object|null} requestBodySchema - Parsed request body schema
+ * @returns {Array} Array of content type strings
+ */
+export function getRequestBodyContentTypes(requestBodySchema) {
+  if (!requestBodySchema || !requestBodySchema.content) {
+    return [];
+  }
+  return Object.keys(requestBodySchema.content);
+}
+
+/**
+ * Gets the schema for a specific content type from request body schema
+ * @param {Object|null} requestBodySchema - Parsed request body schema
+ * @param {string} contentType - Content type to get schema for
+ * @returns {Object|null} Schema object or null
+ */
+export function getRequestBodySchemaForContentType(requestBodySchema, contentType) {
+  if (!requestBodySchema || !requestBodySchema.content || !requestBodySchema.content[contentType]) {
+    return null;
+  }
+  return requestBodySchema.content[contentType].schema || null;
 }
 
 /**

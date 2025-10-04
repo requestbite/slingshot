@@ -110,6 +110,40 @@ export function parseResponseExamples(responseExamplesJson) {
 }
 
 /**
+ * Extracts request examples from the new request_body_schema structure
+ * @param {Object} requestBodySchema - Parsed request body schema object (from parseRequestBodySchema)
+ * @returns {Object} Nested object: { contentType: [examples] }
+ */
+export function extractRequestExamplesFromSchema(requestBodySchema) {
+  const result = {};
+
+  if (!requestBodySchema || !requestBodySchema.content || typeof requestBodySchema.content !== 'object') {
+    return {};
+  }
+
+  for (const [contentType, contentData] of Object.entries(requestBodySchema.content)) {
+    if (!contentData || !contentData.examples) continue;
+
+    const examplesArray = [];
+
+    for (const [exampleName, exampleData] of Object.entries(contentData.examples)) {
+      examplesArray.push({
+        name: exampleData.summary || exampleName,
+        value: exampleData.value,
+        summary: exampleData.summary || '',
+        description: exampleData.description || ''
+      });
+    }
+
+    if (examplesArray.length > 0) {
+      result[contentType] = examplesArray;
+    }
+  }
+
+  return result;
+}
+
+/**
  * Extracts response examples from the new response_schemas structure
  * @param {Object} responseSchemas - Parsed response schemas object (from parseResponseSchemas)
  * @returns {Object} Nested object: { statusCode: { contentType: [examples] } }

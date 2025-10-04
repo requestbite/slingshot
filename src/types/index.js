@@ -74,9 +74,8 @@
  * @property {string|null} operation_id - OpenAPI operationId
  * @property {string[]|null} tags - OpenAPI tags
  * @property {string|null} parameters_schema - JSON serialized resolved parameter schemas
- * @property {string|null} request_body_schema - JSON serialized resolved request body schema
+ * @property {string|null} request_body_schema - JSON serialized resolved request body schema with content types and examples
  * @property {string|null} response_schemas - JSON serialized resolved response schemas by status code (includes examples)
- * @property {string|null} request_example - JSON serialized request body example
  */
 
 /**

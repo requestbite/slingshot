@@ -245,7 +245,7 @@ async function createRequestFromOperation({ path, method, operation, baseUrl: _b
   }
 
   // Determine request type and body
-  const { requestType, contentType, body, requestBodySchema, requestExample } = extractRequestBody(operation, spec);
+  const { requestType, contentType, body, requestBodySchema } = extractRequestBody(operation, spec);
 
   // Extract response schemas (now includes headers, multiple content types, and examples)
   const { responseSchemas } = extractResponseSchemas(operation, spec);
@@ -268,8 +268,7 @@ async function createRequestFromOperation({ path, method, operation, baseUrl: _b
     tags: operation.tags || [],
     parameters_schema: parametersSchema,
     request_body_schema: requestBodySchema,
-    response_schemas: responseSchemas,
-    request_example: requestExample
+    response_schemas: responseSchemas
   };
 }
 
@@ -350,8 +349,7 @@ function extractRequestBody(operation, spec) {
       requestType: 'none',
       contentType: 'application/json',
       body: '',
-      requestBodySchema: null,
-      requestExample: null
+      requestBodySchema: null
     };
   }
 
@@ -363,12 +361,16 @@ function extractRequestBody(operation, spec) {
       requestType: 'none',
       contentType: 'application/json',
       body: '',
-      requestBodySchema: null,
-      requestExample: null
+      requestBodySchema: null
     };
   }
 
-  // Prefer JSON, then form data, then anything else
+  // Build enhanced request body schema with all content types and examples
+  const requestBodySchemaData = {
+    content: {}
+  };
+
+  // Prefer JSON, then form data, then anything else (for default request type/body)
   let selectedContentType = contentTypes[0];
   if (contentTypes.includes('application/json')) {
     selectedContentType = 'application/json';
@@ -378,10 +380,50 @@ function extractRequestBody(operation, spec) {
     selectedContentType = 'multipart/form-data';
   }
 
-  const mediaType = content[selectedContentType];
-  const schema = mediaType?.schema;
+  // Extract all content types with their schemas and examples
+  for (const [contentType, mediaType] of Object.entries(content)) {
+    const contentData = {
+      schema: null,
+      examples: {}
+    };
 
-  // Determine request type and content type
+    // Resolve schema
+    if (mediaType.schema) {
+      contentData.schema = resolveReferences(mediaType.schema, spec);
+    }
+
+    // Extract all named examples
+    if (mediaType.examples) {
+      for (const [exampleName, exampleDef] of Object.entries(mediaType.examples)) {
+        const resolvedExample = resolveReferences(exampleDef, spec);
+        contentData.examples[exampleName] = {
+          summary: resolvedExample.summary || '',
+          description: resolvedExample.description || '',
+          value: resolvedExample.value !== undefined ? resolvedExample.value : null
+        };
+      }
+    }
+    // If no named examples but has a single example, use it
+    else if (mediaType.example !== undefined) {
+      contentData.examples['default'] = {
+        summary: 'Example',
+        description: '',
+        value: mediaType.example
+      };
+    }
+    // Generate example from schema if no examples provided
+    else if (contentData.schema) {
+      contentData.examples['generated'] = {
+        summary: 'Generated Example',
+        description: '',
+        value: generateExampleFromResolvedSchema(contentData.schema)
+      };
+    }
+
+    requestBodySchemaData.content[contentType] = contentData;
+  }
+
+  // Determine request type and content type for the default request editor
   let requestType = 'raw';
   let contentType = 'application/json';
 
@@ -399,19 +441,15 @@ function extractRequestBody(operation, spec) {
     contentType = 'application/xml';
   }
 
-  // Resolve request body schema
-  const requestBodySchema = schema ? resolveReferences(schema, spec) : null;
-
-  // Generate example body
-  const body = generateExampleFromSchema(schema, spec);
-  const requestExample = requestBodySchema ? generateExampleFromResolvedSchema(requestBodySchema) : null;
+  // Generate default body from selected content type's first example
+  const selectedMediaType = content[selectedContentType];
+  const body = generateExampleFromSchema(selectedMediaType?.schema, spec);
 
   return {
     requestType,
     contentType,
     body,
-    requestBodySchema,
-    requestExample
+    requestBodySchema: requestBodySchemaData
   };
 }
 

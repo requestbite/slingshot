@@ -171,8 +171,7 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
           tags: requestData.tags,
           parameters_schema: requestData.parameters_schema,
           request_body_schema: requestData.request_body_schema,
-          response_schemas: requestData.response_schemas,
-          request_example: requestData.request_example
+          response_schemas: requestData.response_schemas
         });
       }
 

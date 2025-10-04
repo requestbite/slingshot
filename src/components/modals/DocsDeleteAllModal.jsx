@@ -19,8 +19,7 @@ export function DocsDeleteAllModal({ isOpen, onClose, request, onDelete }) {
         description: null,
         parameters_schema: null,
         request_body_schema: null,
-        response_schemas: null,
-        request_example: null
+        response_schemas: null
       });
 
       if (onDelete) {

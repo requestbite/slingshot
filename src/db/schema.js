@@ -129,9 +129,8 @@ db.requests.defineClass({
   operation_id: String,
   tags: Array,
   parameters_schema: String, // JSON serialized resolved parameter schemas
-  request_body_schema: String, // JSON serialized resolved request body schema
+  request_body_schema: String, // JSON serialized resolved request body schema with content types and examples
   response_schemas: String, // JSON serialized resolved response schemas by status code (includes examples)
-  request_example: String, // JSON serialized request body example
 });
 
 /**
