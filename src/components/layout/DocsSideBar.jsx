@@ -61,19 +61,21 @@ export function DocsSideBar({ onClose: _onClose }) {
   const requestExamplesMenuTriggerRef = useRef();
   const collectionMenuTriggerRef = useRef();
 
-  const handleEditDescription = async (newDescription) => {
+  const handleEditDescription = async (updates) => {
     if (!selectedCollection?.id) return;
 
     setIsUpdating(true);
     try {
       await apiClient.updateCollection(selectedCollection.id, {
-        description: newDescription
+        name: updates.name,
+        description: updates.markdown
       });
 
       // Refresh collections to get updated data
       await loadCollections();
     } catch (error) {
-      console.error('Failed to update collection description:', error);
+      console.error('Failed to update collection:', error);
+      throw error; // Re-throw so modal can handle it
     } finally {
       setIsUpdating(false);
     }
@@ -1235,6 +1237,7 @@ export function DocsSideBar({ onClose: _onClose }) {
           isOpen={showMarkdownModal}
           onClose={() => setShowMarkdownModal(false)}
           onSave={handleEditDescription}
+          initialName={selectedCollection.name || ''}
           initialMarkdown={selectedCollection.description || ''}
           title="Edit Collection Documentation"
           subtitle="Update the documentation for this collection using CommonMark Markdown."
