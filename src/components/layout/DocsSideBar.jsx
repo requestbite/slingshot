@@ -13,7 +13,6 @@ import { apiClient } from '../../api';
 import { getMethodColor } from '../../utils/httpMethods';
 import {
   parseRequestExamples,
-  parseResponseExamples,
   extractResponseExamplesFromSchemas,
   getResponseStatusCodes,
   getStatusCodeDisplayName,
@@ -64,16 +63,9 @@ export function DocsSideBar({ onClose: _onClose }) {
   // Parse examples data when request changes
   const requestExamples = selectedRequest ? parseRequestExamples(selectedRequest.request_example) : [];
 
-  // Try new response_schemas structure first, fall back to legacy response_examples
+  // Extract response examples from response_schemas
   const responseSchemas = selectedRequest ? parseResponseSchemas(selectedRequest.response_schemas) : {};
-  const responseExamplesFromSchemas = extractResponseExamplesFromSchemas(responseSchemas);
-  const legacyResponseExamples = selectedRequest ? parseResponseExamples(selectedRequest.response_examples) : {};
-
-  // Use new structure if available, otherwise use legacy
-  const responseExamples = Object.keys(responseExamplesFromSchemas).length > 0
-    ? responseExamplesFromSchemas
-    : legacyResponseExamples;
-
+  const responseExamples = extractResponseExamplesFromSchemas(responseSchemas);
   const responseStatusCodes = getResponseStatusCodes(responseExamples);
 
   // Parse schema data when request changes

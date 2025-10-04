@@ -269,9 +269,7 @@ async function createRequestFromOperation({ path, method, operation, baseUrl: _b
     parameters_schema: parametersSchema,
     request_body_schema: requestBodySchema,
     response_schemas: responseSchemas,
-    request_example: requestExample,
-    response_examples: null, // Deprecated: examples now stored in response_schemas
-    path_template: path // Original OpenAPI path template
+    request_example: requestExample
   };
 }
 

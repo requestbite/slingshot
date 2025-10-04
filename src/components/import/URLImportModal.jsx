@@ -176,9 +176,7 @@ export function URLImportModal({ isOpen, importUrl, onClose, onSuccess }) {
             parameters_schema: requestData.parameters_schema,
             request_body_schema: requestData.request_body_schema,
             response_schemas: requestData.response_schemas,
-            request_example: requestData.request_example,
-            response_examples: requestData.response_examples,
-            path_template: requestData.path_template
+            request_example: requestData.request_example
           });
         }
       } else {
@@ -215,9 +213,7 @@ export function URLImportModal({ isOpen, importUrl, onClose, onSuccess }) {
             parameters_schema: requestData.parameters_schema,
             request_body_schema: requestData.request_body_schema,
             response_schemas: requestData.response_schemas,
-            request_example: requestData.request_example,
-            response_examples: requestData.response_examples,
-            path_template: requestData.path_template
+            request_example: requestData.request_example
           });
         }
       }

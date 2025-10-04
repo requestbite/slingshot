@@ -356,9 +356,7 @@ export class SlingshotApiClient {
       parameters_schema: requestData.parameters_schema && Object.keys(requestData.parameters_schema).length > 0 ? JSON.stringify(requestData.parameters_schema) : null,
       request_body_schema: requestData.request_body_schema ? JSON.stringify(requestData.request_body_schema) : null,
       response_schemas: requestData.response_schemas && Object.keys(requestData.response_schemas).length > 0 ? JSON.stringify(requestData.response_schemas) : null,
-      request_example: requestData.request_example ? JSON.stringify(requestData.request_example) : null,
-      response_examples: requestData.response_examples && Object.keys(requestData.response_examples).length > 0 ? JSON.stringify(requestData.response_examples) : null,
-      path_template: requestData.path_template !== undefined ? requestData.path_template : null
+      request_example: requestData.request_example ? JSON.stringify(requestData.request_example) : null
     };
 
     const id = await db.requests.add(request);
@@ -519,9 +517,7 @@ export class SlingshotApiClient {
       parameters_schema: original.parameters_schema ? JSON.parse(original.parameters_schema) : null,
       request_body_schema: original.request_body_schema ? JSON.parse(original.request_body_schema) : null,
       response_schemas: original.response_schemas ? JSON.parse(original.response_schemas) : null,
-      request_example: original.request_example ? JSON.parse(original.request_example) : null,
-      response_examples: original.response_examples ? JSON.parse(original.response_examples) : null,
-      path_template: original.path_template || null
+      request_example: original.request_example ? JSON.parse(original.request_example) : null
       // Note: Response fields are intentionally not copied
     };
 
