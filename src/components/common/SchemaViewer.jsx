@@ -97,7 +97,7 @@ export function ParametersSchemaViewer({ parametersSchema, className = '' }) {
       </div>
 
       {sections.map((section, index) => (
-        <div key={section.title} class={index > 0 ? 'pt-3 border-t border-gray-200' : ''}>
+        <div key={section.title} class={index > 0 ? '' : ''}>
           <SchemaTreeRoot
             schema={section.schema}
             title={section.title}
@@ -179,7 +179,7 @@ export function ResponseSchemasViewer({ responseSchemas, className = '' }) {
         </div>
       )}
       {selectedResponse && selectedResponse.schema && (
-        <div class="space-y-2 border-b border-gray-200 pb-2">
+        <div class="space-y-2 pb-2">
           <SchemaTreeRoot
             schema={selectedResponse.schema}
             title={statusCodes.length === 1 ? getStatusCodeDisplayName(selectedStatusCode) : ""}

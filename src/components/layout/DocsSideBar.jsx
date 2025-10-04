@@ -141,11 +141,15 @@ export function DocsSideBar({ onClose: _onClose }) {
 
   // Build table of contents sections
   const tocSections = [];
-  if (parametersSchema?.path && Object.keys(parametersSchema.path).length > 0) {
-    tocSections.push({ id: 'path-parameters', label: 'Path Parameters' });
+  if (selectedRequest?.description && selectedRequest.description.trim()) {
+    tocSections.push({ id: 'description', label: 'Description' });
   }
-  if (parametersSchema?.query && Object.keys(parametersSchema.query).length > 0) {
-    tocSections.push({ id: 'query-parameters', label: 'Query Parameters' });
+  if (parametersSchema && (
+    (parametersSchema.path && Object.keys(parametersSchema.path).length > 0) ||
+    (parametersSchema.query && Object.keys(parametersSchema.query).length > 0) ||
+    (parametersSchema.headers && Object.keys(parametersSchema.headers).length > 0)
+  )) {
+    tocSections.push({ id: 'parameters-schema', label: 'Parameters Schema' });
   }
   if (requestBodySchema) {
     tocSections.push({ id: 'request-body', label: 'Request Body Schema' });
@@ -206,18 +210,9 @@ export function DocsSideBar({ onClose: _onClose }) {
                   </div>
                 )}
 
-                {/* Request Description */}
-                {selectedRequest.description && selectedRequest.description.trim() && (
-                  <div class={`${selectedRequest.summary && selectedRequest.summary.trim() ? 'pt-3 border-t border-gray-200' : ''}`}>
-                    <div class="text-left">
-                      <MarkdownPreview markdown={selectedRequest.description} />
-                    </div>
-                  </div>
-                )}
-
                 {/* Table of Contents */}
                 {tocSections.length > 0 && (
-                  <div class="pt-3 pb-4 border-t border-b border-gray-200">
+                  <div class={`pb-4 border-b border-gray-200 ${selectedRequest.summary && selectedRequest.summary.trim() ? 'pt-3 border-t' : ''}`}>
                     <h3 class="text-xs font-medium text-gray-600 mb-2">Table of Contents</h3>
                     <div class="space-y-1">
                       {/* Show All option */}
@@ -251,17 +246,22 @@ export function DocsSideBar({ onClose: _onClose }) {
                   </div>
                 )}
 
+                {/* Request Description */}
+                {selectedRequest.description && selectedRequest.description.trim() && shouldShowSection('description') && (
+                  <div>
+                    <div class="text-left">
+                      <MarkdownPreview markdown={selectedRequest.description} />
+                    </div>
+                  </div>
+                )}
+
                 {/* Request Documentation */}
                 <div class="flex-1 min-h-0 space-y-4">
                   {/* Parameters Schema - filtered by TOC selection */}
-                  {parametersSchema && (shouldShowSection('path-parameters') || shouldShowSection('query-parameters')) && (
+                  {parametersSchema && shouldShowSection('parameters-schema') && (
                     <div id="parameters-schema">
                       <SchemaViewer
-                        parametersSchema={{
-                          path: (selectedTocSection === 'show-all' || selectedTocSection === 'path-parameters') ? parametersSchema.path : {},
-                          query: (selectedTocSection === 'show-all' || selectedTocSection === 'query-parameters') ? parametersSchema.query : {},
-                          headers: parametersSchema.headers || {}
-                        }}
+                        parametersSchema={parametersSchema}
                         requestBodySchema={null}
                         responseSchemas={{}}
                       />
@@ -292,7 +292,7 @@ export function DocsSideBar({ onClose: _onClose }) {
 
                   {/* Response Schema */}
                   {Object.keys(responseSchemas).length > 0 && shouldShowSection('response-schema') && (
-                    <div id="response-schema" class={`${((parametersSchema && (shouldShowSection('path-parameters') || shouldShowSection('query-parameters'))) || (requestBodySchema && shouldShowSection('request-body'))) ? 'pt-4 border-t border-gray-200' : ''}`}>
+                    <div id="response-schema" class={`${((parametersSchema && shouldShowSection('parameters-schema')) || (requestBodySchema && shouldShowSection('request-body'))) ? 'pt-4 border-t border-gray-200' : ''}`}>
                       <SchemaViewer
                         parametersSchema={null}
                         requestBodySchema={null}
