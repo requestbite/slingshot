@@ -4,7 +4,7 @@ import { SchemaTreeRoot } from './SchemaTree';
 import { getStatusCodeDisplayName } from '../../utils/exampleParser';
 
 // Component for viewing parameters schema (headers, query, path)
-export function ParametersSchemaViewer({ parametersSchema, className = '' }) {
+export function ParametersSchemaViewer({ parametersSchema, className = '', showTitle = true }) {
   if (!parametersSchema) {
     return null;
   }
@@ -92,9 +92,11 @@ export function ParametersSchemaViewer({ parametersSchema, className = '' }) {
 
   return (
     <div class={`space-y-4 ${className}`}>
-      <div class="flex items-center justify-between">
-        <label class="block text-xs font-medium text-gray-600">Parameters Schema</label>
-      </div>
+      {showTitle && (
+        <div class="flex items-center justify-between">
+          <label class="block text-xs font-medium text-gray-600">Parameters Schema</label>
+        </div>
+      )}
 
       {sections.map((section, index) => (
         <div key={section.title} class={index > 0 ? '' : ''}>
@@ -196,7 +198,8 @@ export function SchemaViewer({
   parametersSchema,
   requestBodySchema,
   responseSchemas,
-  className = ''
+  className = '',
+  showParametersTitle = true
 }) {
   const hasParametersSchema = parametersSchema && (
     Object.keys(parametersSchema.headers || {}).length > 0 ||
@@ -215,7 +218,10 @@ export function SchemaViewer({
   return (
     <div class={`space-y-4 ${className}`}>
       {hasParametersSchema && (
-        <ParametersSchemaViewer parametersSchema={parametersSchema} />
+        <ParametersSchemaViewer
+          parametersSchema={parametersSchema}
+          showTitle={showParametersTitle}
+        />
       )}
 
       {hasRequestBodySchema && (
