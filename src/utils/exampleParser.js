@@ -3,6 +3,47 @@
  */
 
 /**
+ * Checks if a content type is a form data type
+ * @param {string} contentType - Content type to check
+ * @returns {boolean} True if it's a form data type
+ */
+function isFormDataContentType(contentType) {
+  return contentType && (contentType.includes('form-urlencoded') || contentType.includes('form-data'));
+}
+
+/**
+ * Converts an object/value to plain-text form data format (key: value pairs)
+ * @param {*} value - Value to convert
+ * @returns {string} Plain text form data format
+ */
+function convertToFormDataFormat(value) {
+  // If already a string, return as-is
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  // If not an object, convert to string
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return String(value);
+  }
+
+  // Convert object to key: value format
+  const lines = [];
+  for (const [key, val] of Object.entries(value)) {
+    // Convert value to string, handling nested objects/arrays
+    let valueStr;
+    if (typeof val === 'object' && val !== null) {
+      valueStr = JSON.stringify(val);
+    } else {
+      valueStr = String(val);
+    }
+    lines.push(`${key}: ${valueStr}`);
+  }
+
+  return lines.join('\n');
+}
+
+/**
  * Parses request examples from the request_example field
  * @param {string|null} requestExampleJson - JSON string from request_example field
  * @returns {Array} Array of example objects with name/value properties
@@ -125,11 +166,19 @@ export function extractRequestExamplesFromSchema(requestBodySchema) {
     if (!contentData || !contentData.examples) continue;
 
     const examplesArray = [];
+    const isFormData = isFormDataContentType(contentType);
 
     for (const [exampleName, exampleData] of Object.entries(contentData.examples)) {
+      let exampleValue = exampleData.value;
+
+      // Convert to form data format for presentation if needed
+      if (isFormData && exampleValue && typeof exampleValue === 'object') {
+        exampleValue = convertToFormDataFormat(exampleValue);
+      }
+
       examplesArray.push({
         name: exampleData.summary || exampleName,
-        value: exampleData.value,
+        value: exampleValue,
         summary: exampleData.summary || '',
         description: exampleData.description || ''
       });
@@ -164,11 +213,19 @@ export function extractResponseExamplesFromSchemas(responseSchemas) {
       if (!contentData || !contentData.examples) continue;
 
       const examplesArray = [];
+      const isFormData = isFormDataContentType(contentType);
 
       for (const [exampleName, exampleData] of Object.entries(contentData.examples)) {
+        let exampleValue = exampleData.value;
+
+        // Convert to form data format for presentation if needed
+        if (isFormData && exampleValue && typeof exampleValue === 'object') {
+          exampleValue = convertToFormDataFormat(exampleValue);
+        }
+
         examplesArray.push({
           name: exampleData.summary || exampleName,
-          value: exampleData.value,
+          value: exampleValue,
           summary: exampleData.summary || '',
           description: exampleData.description || ''
         });
