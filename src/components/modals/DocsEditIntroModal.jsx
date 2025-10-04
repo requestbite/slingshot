@@ -55,7 +55,7 @@ export function DocsEditIntroModal({ isOpen, onClose, request, onSave }) {
       <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
         <div class="mt-2">
           <p class="text-sm text-gray-500 mb-4">
-            Edit the possible introductory details for this request.
+            Edit the introductory details for this request.
           </p>
 
           {/* Name Field */}
@@ -66,9 +66,8 @@ export function DocsEditIntroModal({ isOpen, onClose, request, onSave }) {
               value={name}
               onInput={(e) => setName(e.target.value)}
               disabled={!enableName || isSaving}
-              class={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 ${
-                !enableName ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''
-              }`}
+              class={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 ${!enableName ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''
+                }`}
               placeholder="Request name..."
             />
             <label class="flex items-center mt-2 text-xs text-gray-600 cursor-pointer">
@@ -91,9 +90,8 @@ export function DocsEditIntroModal({ isOpen, onClose, request, onSave }) {
               value={summary}
               onInput={(e) => setSummary(e.target.value)}
               disabled={!enableSummary || isSaving}
-              class={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 ${
-                !enableSummary ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''
-              }`}
+              class={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 ${!enableSummary ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''
+                }`}
               placeholder="Brief summary..."
             />
             <label class="flex items-center mt-2 text-xs text-gray-600 cursor-pointer">
@@ -118,16 +116,14 @@ export function DocsEditIntroModal({ isOpen, onClose, request, onSave }) {
                   value={description}
                   onInput={(e) => setDescription(e.target.value)}
                   disabled={!enableDescription || isSaving}
-                  class={`w-full h-48 resize-none rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 ${
-                    !enableDescription ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''
-                  }`}
+                  class={`w-full h-48 resize-none rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 ${!enableDescription ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''
+                    }`}
                   placeholder="Enter markdown description..."
                 />
               </div>
               {/* Preview */}
-              <div class={`h-48 overflow-y-auto rounded-md border border-gray-300 px-3 py-2 bg-gray-50 ${
-                !enableDescription ? 'opacity-50' : ''
-              }`}>
+              <div class={`h-48 overflow-y-auto rounded-md border border-gray-300 px-3 py-2 bg-gray-50 ${!enableDescription ? 'opacity-50' : ''
+                }`}>
                 <MarkdownPreview markdown={description} />
               </div>
             </div>

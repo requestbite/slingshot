@@ -48,22 +48,6 @@ export function SchemaTree({
     return colors[type] || colors.any;
   };
 
-  const renderPropertyName = () => {
-    if (!name) return null;
-
-    return (
-      <div class="flex items-center gap-2">
-        <span class="text-xs font-medium text-gray-900">
-          {name}
-          {isRequired && <span class="text-red-500 ml-1">*</span>}
-        </span>
-        <span class={`px-1 py-0.5 text-[10px]/[12px] rounded ${getTypeBadgeColor(effectiveSchema.type)}`}>
-          {getTypeDisplay(effectiveSchema)}
-        </span>
-      </div>
-    );
-  };
-
   const renderCompositionSelector = () => {
     if (!composition.hasComposition) return null;
 
@@ -113,7 +97,9 @@ export function SchemaTree({
 
   const renderDescription = () => {
     const description = effectiveSchema.description;
-    if (!description) return null;
+    if (!description) return (
+      <div class="h-1"></div>
+    );
 
     return (
       <div class="text-xs text-gray-600 leading-relaxed">
@@ -162,9 +148,21 @@ export function SchemaTree({
   return (
     <div class={`${className}`}>
       <div class="flex items-start">
-        {renderExpandButton()}
+        <div class="flex-shrink-0" style={{ width: hasChildren ? 'auto' : '0' }}>
+          {renderExpandButton()}
+        </div>
         <div class="flex-1 min-w-0">
-          {renderPropertyName()}
+          {name && (
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-medium text-gray-900">
+                {name}
+                {isRequired && <span class="text-red-500 ml-1">*</span>}
+              </span>
+              <span class={`px-1 py-0.5 text-[10px]/[12px] rounded ${getTypeBadgeColor(effectiveSchema.type)}`}>
+                {getTypeDisplay(effectiveSchema)}
+              </span>
+            </div>
+          )}
           {renderDescription()}
         </div>
       </div>

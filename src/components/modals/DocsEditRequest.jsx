@@ -180,13 +180,13 @@ export function DocsEditRequest({ isOpen, onClose, request, onSave }) {
       <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
         <div class="mt-2">
           <p class="text-sm text-gray-500 mb-4">
-            Basic JSON based update of OpenAPI request body schema and examples.
+            Basic JSON based editor of the OpenAPI request body schema and examples.
           </p>
 
           {/* Schema Editor */}
           <div class="mb-4">
             <div class="flex items-center justify-between mb-2">
-              <label class="block text-sm font-medium text-gray-700">Valid OpenAPI request body schema</label>
+              <label class="block text-sm font-medium text-gray-700">OpenAPI request body schema</label>
 
               {/* Schema validity indicator */}
               <div class="flex items-center text-xs">
