@@ -58,6 +58,7 @@ db.collections.defineClass({
   follow_redirects: Boolean,
   timeout: Number,
   parse_ansi_colors: Boolean,
+  security_schemes: Object, // OpenAPI security schemes from components.securitySchemes
 });
 
 /**

@@ -26,6 +26,9 @@ export async function processOpenAPISpec(fileContent, collectionName = '') {
     // Extract base URL and create variables
     const variables = extractVariables(spec);
 
+    // Extract security schemes from components
+    const securitySchemes = extractSecuritySchemes(spec);
+
     // Process paths to create folders and requests
     const { folders, requests } = await processPaths(spec, metadata.baseUrl);
 
@@ -33,6 +36,7 @@ export async function processOpenAPISpec(fileContent, collectionName = '') {
       collectionName: metadata.name,
       description: metadata.description,
       variables,
+      securitySchemes,
       folders: Array.from(folders),
       requests
     };
@@ -176,6 +180,25 @@ function extractVariables(spec) {
   }
 
   return variables;
+}
+
+/**
+ * Extracts security schemes from OpenAPI components
+ * @param {Object} spec - Parsed specification
+ * @returns {Object|null} Security schemes object or null if not present
+ */
+function extractSecuritySchemes(spec) {
+  // Extract security schemes from components (OpenAPI 3.x)
+  if (spec.components && spec.components.securitySchemes) {
+    return spec.components.securitySchemes;
+  }
+
+  // Swagger 2.0 uses securityDefinitions at the root level
+  if (spec.securityDefinitions) {
+    return spec.securityDefinitions;
+  }
+
+  return null;
 }
 
 /**

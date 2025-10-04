@@ -52,6 +52,7 @@ export function DocsSideBar({ onClose: _onClose }) {
   const [selectedRequestExampleContentType, setSelectedRequestExampleContentType] = useState('');
   const [selectedRequestExample, setSelectedRequestExample] = useState('');
   const [selectedTocSection, setSelectedTocSection] = useState('show-all');
+  const [selectedAuthScheme, setSelectedAuthScheme] = useState('');
   const menuTriggerRef = useRef();
   const paramsMenuTriggerRef = useRef();
   const responseMenuTriggerRef = useRef();
@@ -198,6 +199,22 @@ export function DocsSideBar({ onClose: _onClose }) {
     setSelectedTocSection('show-all');
     setShowContextMenu(false);
   }, [selectedRequest?.id]);
+
+  // Handle auth scheme selection when collection changes
+  useEffect(() => {
+    if (selectedCollection?.security_schemes) {
+      const schemeNames = Object.keys(selectedCollection.security_schemes);
+      if (schemeNames.length > 0 && !selectedAuthScheme) {
+        setSelectedAuthScheme(schemeNames[0]);
+      }
+      // Reset if selected scheme is no longer available
+      else if (selectedAuthScheme && !schemeNames.includes(selectedAuthScheme)) {
+        setSelectedAuthScheme(schemeNames[0] || '');
+      }
+    } else {
+      setSelectedAuthScheme('');
+    }
+  }, [selectedCollection?.security_schemes, selectedAuthScheme]);
 
   const handleContextMenuClick = (e) => {
     e.preventDefault();
@@ -844,6 +861,195 @@ export function DocsSideBar({ onClose: _onClose }) {
                   </svg>
                   {isUpdating ? 'Updating...' : 'Edit Documentation'}
                 </button>
+
+                {/* Authorization Section */}
+                {selectedCollection.security_schemes && Object.keys(selectedCollection.security_schemes).length > 0 && (() => {
+                  const schemeNames = Object.keys(selectedCollection.security_schemes);
+                  const selectedScheme = selectedCollection.security_schemes[selectedAuthScheme];
+
+                  const renderAuthDetails = (scheme) => {
+                    if (!scheme) return null;
+
+                    const details = [];
+
+                    // API Key
+                    if (scheme.type === 'apiKey') {
+                      details.push(
+                        <div key="type" class="space-y-1">
+                          <label class="block text-[10px] font-medium text-gray-500">Type</label>
+                          <div class="text-xs text-gray-700">API Key</div>
+                        </div>
+                      );
+                      details.push(
+                        <div key="in" class="space-y-1">
+                          <label class="block text-[10px] font-medium text-gray-500">Location</label>
+                          <div class="text-xs text-gray-700">{scheme.in}</div>
+                        </div>
+                      );
+                      details.push(
+                        <div key="name" class="space-y-1">
+                          <label class="block text-[10px] font-medium text-gray-500">Parameter Name</label>
+                          <div class="text-xs text-gray-700">{scheme.name}</div>
+                        </div>
+                      );
+                    }
+
+                    // HTTP (Basic, Bearer, etc.)
+                    else if (scheme.type === 'http') {
+                      details.push(
+                        <div key="type" class="space-y-1">
+                          <label class="block text-[10px] font-medium text-gray-500">Type</label>
+                          <div class="text-xs text-gray-700">HTTP</div>
+                        </div>
+                      );
+                      details.push(
+                        <div key="scheme" class="space-y-1">
+                          <label class="block text-[10px] font-medium text-gray-500">Scheme</label>
+                          <div class="text-xs text-gray-700">{scheme.scheme}</div>
+                        </div>
+                      );
+                      if (scheme.bearerFormat) {
+                        details.push(
+                          <div key="bearerFormat" class="space-y-1">
+                            <label class="block text-[10px] font-medium text-gray-500">Bearer Format</label>
+                            <div class="text-xs text-gray-700">{scheme.bearerFormat}</div>
+                          </div>
+                        );
+                      }
+                    }
+
+                    // OAuth2
+                    else if (scheme.type === 'oauth2' && scheme.flows) {
+                      details.push(
+                        <div key="type" class="space-y-1">
+                          <label class="block text-[10px] font-medium text-gray-500">Type</label>
+                          <div class="text-xs text-gray-700">OAuth 2.0</div>
+                        </div>
+                      );
+
+                      // Iterate through flows (implicit, password, clientCredentials, authorizationCode)
+                      Object.entries(scheme.flows).forEach(([flowType, flowData]) => {
+                        details.push(
+                          <div key={`flow-${flowType}`} class="space-y-1">
+                            <label class="block text-[10px] font-medium text-gray-500">Flow Type</label>
+                            <div class="text-xs text-gray-700">{flowType}</div>
+                          </div>
+                        );
+
+                        if (flowData.authorizationUrl) {
+                          details.push(
+                            <div key={`auth-url-${flowType}`} class="space-y-1">
+                              <label class="block text-[10px] font-medium text-gray-500">Authorization URL</label>
+                              <div class="text-xs text-gray-700 break-all">{flowData.authorizationUrl}</div>
+                            </div>
+                          );
+                        }
+
+                        if (flowData.tokenUrl) {
+                          details.push(
+                            <div key={`token-url-${flowType}`} class="space-y-1">
+                              <label class="block text-[10px] font-medium text-gray-500">Token URL</label>
+                              <div class="text-xs text-gray-700 break-all">{flowData.tokenUrl}</div>
+                            </div>
+                          );
+                        }
+
+                        if (flowData.refreshUrl) {
+                          details.push(
+                            <div key={`refresh-url-${flowType}`} class="space-y-1">
+                              <label class="block text-[10px] font-medium text-gray-500">Refresh URL</label>
+                              <div class="text-xs text-gray-700 break-all">{flowData.refreshUrl}</div>
+                            </div>
+                          );
+                        }
+
+                        if (flowData.scopes && Object.keys(flowData.scopes).length > 0) {
+                          details.push(
+                            <div key={`scopes-${flowType}`} class="space-y-1">
+                              <label class="block text-[10px] font-medium text-gray-500">Scopes</label>
+                              <div class="text-xs text-gray-700">
+                                {Object.entries(flowData.scopes).map(([scope, description]) => (
+                                  <div key={scope} class="ml-2">
+                                    <span class="font-medium">{scope}</span>
+                                    {description && <span class="text-gray-500"> - {description}</span>}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        }
+                      });
+                    }
+
+                    // OpenID Connect
+                    else if (scheme.type === 'openIdConnect') {
+                      details.push(
+                        <div key="type" class="space-y-1">
+                          <label class="block text-[10px] font-medium text-gray-500">Type</label>
+                          <div class="text-xs text-gray-700">OpenID Connect</div>
+                        </div>
+                      );
+                      details.push(
+                        <div key="url" class="space-y-1">
+                          <label class="block text-[10px] font-medium text-gray-500">OpenID Connect URL</label>
+                          <div class="text-xs text-gray-700 break-all">{scheme.openIdConnectUrl}</div>
+                        </div>
+                      );
+                    }
+
+                    // Mutual TLS
+                    else if (scheme.type === 'mutualTLS') {
+                      details.push(
+                        <div key="type" class="space-y-1">
+                          <label class="block text-[10px] font-medium text-gray-500">Type</label>
+                          <div class="text-xs text-gray-700">Mutual TLS</div>
+                        </div>
+                      );
+                    }
+
+                    // Description (if present)
+                    if (scheme.description) {
+                      details.push(
+                        <div key="description" class="space-y-1">
+                          <label class="block text-[10px] font-medium text-gray-500">Description</label>
+                          <div class="text-xs text-gray-700">{scheme.description}</div>
+                        </div>
+                      );
+                    }
+
+                    return details;
+                  };
+
+                  return (
+                    <div class="space-y-3 pb-4 border-b border-gray-200">
+                      <div class="flex items-center justify-between">
+                        <label class="block text-xs font-medium text-gray-600">Authorization</label>
+                      </div>
+
+                      {/* Auth Scheme Selector */}
+                      {schemeNames.length > 1 && (
+                        <div class="space-y-1">
+                          <label class="block text-[10px] font-medium text-gray-500">Auth Mechanism</label>
+                          <Select
+                            value={selectedAuthScheme}
+                            onChange={setSelectedAuthScheme}
+                            options={schemeNames.map(name => ({
+                              value: name,
+                              label: name
+                            }))}
+                            placeholder="Select auth mechanism..."
+                            size="small"
+                          />
+                        </div>
+                      )}
+
+                      {/* Auth Details */}
+                      <div class="space-y-3">
+                        {renderAuthDetails(selectedScheme)}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Collection Documentation */}
                 <div class="flex-1 min-h-0">

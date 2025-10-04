@@ -123,7 +123,8 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
       const collection = await apiClient.createCollection({
         name: processedData.collectionName,
         description: processedData.description || '',
-        variables: processedData.variables || []
+        variables: processedData.variables || [],
+        security_schemes: processedData.securitySchemes || null
       });
 
       // Create individual variable records for collection management UI
