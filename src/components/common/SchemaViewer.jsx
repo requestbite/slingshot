@@ -118,10 +118,6 @@ export function RequestBodySchemaViewer({ requestBodySchema, className = '' }) {
 
   return (
     <div class={`space-y-2 ${className}`}>
-      <div class="flex items-center justify-between">
-        <label class="block text-xs font-medium text-gray-600">Request Body Schema</label>
-      </div>
-
       <SchemaTreeRoot
         schema={requestBodySchema}
       />
