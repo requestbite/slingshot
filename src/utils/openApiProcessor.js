@@ -216,6 +216,9 @@ async function processPaths(spec, baseUrl) {
     // Skip if no operations defined
     if (!pathItem || typeof pathItem !== 'object') continue;
 
+    // Extract path-level parameters
+    const pathLevelParameters = pathItem.parameters || [];
+
     const httpMethods = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];
 
     for (const method of httpMethods) {
@@ -234,7 +237,8 @@ async function processPaths(spec, baseUrl) {
         operation,
         baseUrl,
         folderName,
-        spec
+        spec,
+        pathLevelParameters
       });
 
       requests.push(request);
@@ -249,15 +253,15 @@ async function processPaths(spec, baseUrl) {
  * @param {Object} params - Operation parameters
  * @returns {Object} Request data
  */
-async function createRequestFromOperation({ path, method, operation, baseUrl: _baseUrl, folderName, spec }) {
+async function createRequestFromOperation({ path, method, operation, baseUrl: _baseUrl, folderName, spec, pathLevelParameters = [] }) {
   const name = operation.summary || operation.operationId || `${method} ${path}`;
 
   // Convert OpenAPI path parameters to URL template format
   // Use {{baseUrl}} variable instead of hardcoded baseUrl
   let url = '{{baseUrl}}' + convertPathParameters(path);
 
-  // Extract parameters
-  const { headers, params: queryParams, pathParams, parametersSchema } = extractParameters(operation, spec);
+  // Extract parameters (including path-level parameters)
+  const { headers, params: queryParams, pathParams, parametersSchema } = extractParameters(operation, spec, pathLevelParameters);
 
   // Append query parameters to URL so RequestEditor can parse them
   if (queryParams.length > 0) {
@@ -308,9 +312,10 @@ function convertPathParameters(path) {
  * Extracts parameters from an operation with resolved schemas
  * @param {Object} operation - OpenAPI operation
  * @param {Object} spec - Full specification for reference resolution
+ * @param {Array} pathLevelParameters - Path-level parameters to merge
  * @returns {Object} Extracted parameters with resolved schemas
  */
-function extractParameters(operation, spec) {
+function extractParameters(operation, spec, pathLevelParameters = []) {
   const headers = [];
   const params = [];
   const pathParams = [];
@@ -320,7 +325,8 @@ function extractParameters(operation, spec) {
     path: {}
   };
 
-  const parameters = operation.parameters || [];
+  // Merge path-level parameters with operation-level parameters
+  const parameters = [...pathLevelParameters, ...(operation.parameters || [])];
 
   for (const param of parameters) {
     const resolvedParam = resolveReferences(param, spec);
