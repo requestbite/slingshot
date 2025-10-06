@@ -13,7 +13,12 @@ export function AppProvider({ children }) {
   const [currentEnvironment, setCurrentEnvironment] = useState(null);
   const [hasManuallySelectedEnvironment, setHasManuallySelectedEnvironment] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDocsSidebarVisible, setIsDocsSidebarVisible] = useState(true);
+
+  // Initialize docs sidebar visibility from localStorage, defaulting to true
+  const [isDocsSidebarVisible, setIsDocsSidebarVisible] = useState(() => {
+    const stored = localStorage.getItem('show-docs');
+    return stored === null ? true : stored === 'true';
+  });
 
   // Load collections on app start
   useEffect(() => {
@@ -117,6 +122,11 @@ export function AppProvider({ children }) {
       setSelectedCollection({ ...selectedCollection, _refreshTrigger: Date.now() });
     }
   };
+
+  // Persist docs sidebar visibility to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('show-docs', isDocsSidebarVisible.toString());
+  }, [isDocsSidebarVisible]);
 
   const value = {
     // Collections

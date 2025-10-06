@@ -112,7 +112,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
             <div id="cancelled-response-container">
               <div class="text-center py-6">
                 {/* Cancelled Image */}
-                <div class="mb-4">
+                <div class="mx-auto mb-4 w-44">
                   <img src="/images/rabbit-timer-v1.webp" alt="Request Cancelled" class="mx-auto w-64 mb-4" />
                 </div>
                 {/* Cancelled Title */}
@@ -135,7 +135,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
             <div id="error-response-container">
               <div class="text-center py-6">
                 {/* Error Image */}
-                <div class="mb-4">
+                <div class="mx-auto mb-4 w-44">
                   <img src="/images/rabbit-dizzy-v1.webp" alt="Request Error" class="mx-auto w-64 mb-4" />
                 </div>
                 {/* Error Title */}
