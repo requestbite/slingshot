@@ -120,10 +120,10 @@ export function DocsEditResponse({ isOpen, onClose, request, onSave }) {
           setContent(JSON.stringify(parsed, null, 2));
         } catch (err) {
           console.error('Failed to parse response_schemas:', err);
-          setContent(BOILERPLATE_TEMPLATE);
+          setContent('');
         }
       } else {
-        setContent(BOILERPLATE_TEMPLATE);
+        setContent('');
       }
       setError(null);
     }
@@ -163,6 +163,11 @@ export function DocsEditResponse({ isOpen, onClose, request, onSave }) {
       setError(null);
       onClose();
     }
+  };
+
+  const handlePasteExample = () => {
+    setContent(BOILERPLATE_TEMPLATE);
+    setError(null);
   };
 
   const getCodeMirrorExtensions = () => {
@@ -240,6 +245,17 @@ export function DocsEditResponse({ isOpen, onClose, request, onSave }) {
                 fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
               }}
             />
+
+            {/* Paste example link */}
+            <div class="mt-2 text-left">
+              <button
+                onClick={handlePasteExample}
+                type="button"
+                class="text-xs text-sky-600 hover:text-sky-700 cursor-pointer"
+              >
+                Paste example
+              </button>
+            </div>
 
             {/* Validation error message */}
             {!validation.isValid && validation.error && (
