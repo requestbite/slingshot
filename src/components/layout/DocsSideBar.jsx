@@ -487,7 +487,7 @@ export function DocsSideBar({ onClose: _onClose }) {
       divider: true
     },
     {
-      label: 'Delete collection docs...',
+      label: 'Delete intro docs...',
       onClick: () => {
         setShowCollectionContextMenu(false);
         setShowDeleteColDocsModal(true);
@@ -653,35 +653,35 @@ export function DocsSideBar({ onClose: _onClose }) {
                     (parametersSchema.query && Object.keys(parametersSchema.query).length > 0) ||
                     (parametersSchema.headers && Object.keys(parametersSchema.headers).length > 0)
                   ) && shouldShowSection('parameters-schema') && (
-                    <div id="parameters-schema">
-                      <div class="flex items-center justify-between mb-2">
-                        <label class="block text-xs font-medium text-gray-600">Parameters Schema</label>
-                        <button
-                          ref={paramsMenuTriggerRef}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setShowParamsContextMenu(true);
-                          }}
-                          class="flex items-center text-sky-400 hover:text-sky-700 focus:outline-none cursor-pointer"
-                          title="More options"
-                        >
-                          <span class="sr-only">Open options</span>
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                            <circle cx="5" cy="12" r="2" />
-                            <circle cx="12" cy="12" r="2" />
-                            <circle cx="19" cy="12" r="2" />
-                          </svg>
-                        </button>
+                      <div id="parameters-schema">
+                        <div class="flex items-center justify-between mb-2">
+                          <label class="block text-xs font-medium text-gray-600">Parameters Schema</label>
+                          <button
+                            ref={paramsMenuTriggerRef}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowParamsContextMenu(true);
+                            }}
+                            class="flex items-center text-sky-400 hover:text-sky-700 focus:outline-none cursor-pointer"
+                            title="More options"
+                          >
+                            <span class="sr-only">Open options</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                              <circle cx="5" cy="12" r="2" />
+                              <circle cx="12" cy="12" r="2" />
+                              <circle cx="19" cy="12" r="2" />
+                            </svg>
+                          </button>
+                        </div>
+                        <SchemaViewer
+                          parametersSchema={parametersSchema}
+                          requestBodySchema={null}
+                          responseSchemas={{}}
+                          showParametersTitle={false}
+                        />
                       </div>
-                      <SchemaViewer
-                        parametersSchema={parametersSchema}
-                        requestBodySchema={null}
-                        responseSchemas={{}}
-                        showParametersTitle={false}
-                      />
-                    </div>
-                  )}
+                    )}
 
                   {/* Request Body Schema */}
                   {requestBodySchema && shouldShowSection('request-body') && (() => {

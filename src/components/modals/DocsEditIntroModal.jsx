@@ -8,11 +8,6 @@ export function DocsEditIntroModal({ isOpen, onClose, request, onSave }) {
   const [summary, setSummary] = useState(request?.summary || '');
   const [description, setDescription] = useState(request?.description || '');
 
-  // Initialize enable flags - enabled if field has data
-  const [enableName, setEnableName] = useState(Boolean(request?.name));
-  const [enableSummary, setEnableSummary] = useState(Boolean(request?.summary));
-  const [enableDescription, setEnableDescription] = useState(Boolean(request?.description));
-
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
 
@@ -23,11 +18,11 @@ export function DocsEditIntroModal({ isOpen, onClose, request, onSave }) {
     setError(null);
 
     try {
-      // Build updates object - null for disabled fields
+      // Build updates object - null for empty fields
       const updates = {
-        name: enableName ? name : null,
-        summary: enableSummary ? summary : null,
-        description: enableDescription ? description : null
+        name: name.trim() ? name : null,
+        summary: summary.trim() ? summary : null,
+        description: description.trim() ? description : null
       };
 
       if (onSave) {
@@ -65,21 +60,10 @@ export function DocsEditIntroModal({ isOpen, onClose, request, onSave }) {
               type="text"
               value={name}
               onInput={(e) => setName(e.target.value)}
-              disabled={!enableName || isSaving}
-              class={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 ${!enableName ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''
-                }`}
+              disabled={isSaving}
+              class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
               placeholder="Request name..."
             />
-            <label class="flex items-center mt-2 text-xs text-gray-600 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={enableName}
-                onChange={(e) => setEnableName(e.target.checked)}
-                disabled={isSaving}
-                class="mr-2 text-sky-600 focus:ring-sky-500 cursor-pointer"
-              />
-              Enable field
-            </label>
           </div>
 
           {/* Summary Field */}
@@ -89,54 +73,31 @@ export function DocsEditIntroModal({ isOpen, onClose, request, onSave }) {
               type="text"
               value={summary}
               onInput={(e) => setSummary(e.target.value)}
-              disabled={!enableSummary || isSaving}
-              class={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 ${!enableSummary ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''
-                }`}
+              disabled={isSaving}
+              class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
               placeholder="Brief summary..."
             />
-            <label class="flex items-center mt-2 text-xs text-gray-600 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={enableSummary}
-                onChange={(e) => setEnableSummary(e.target.checked)}
-                disabled={isSaving}
-                class="mr-2 text-sky-600 focus:ring-sky-500 cursor-pointer"
-              />
-              Enable field
-            </label>
           </div>
 
           {/* Description Field with Markdown Preview */}
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <div class="grid grid-cols-2 gap-4 mb-2">
+            <div class="grid grid-cols-2 gap-4">
               {/* Textarea */}
               <div>
                 <textarea
                   value={description}
                   onInput={(e) => setDescription(e.target.value)}
-                  disabled={!enableDescription || isSaving}
-                  class={`w-full h-48 resize-none rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 ${!enableDescription ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''
-                    }`}
+                  disabled={isSaving}
+                  class="w-full h-48 resize-none rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
                   placeholder="Enter markdown description..."
                 />
               </div>
               {/* Preview */}
-              <div class={`h-48 overflow-y-auto rounded-md border border-gray-300 px-3 py-2 bg-gray-50 ${!enableDescription ? 'opacity-50' : ''
-                }`}>
+              <div class="h-48 overflow-y-auto rounded-md border border-gray-300 px-3 py-2 bg-gray-50">
                 <MarkdownPreview markdown={description} />
               </div>
             </div>
-            <label class="flex items-center mt-2 text-xs text-gray-600 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={enableDescription}
-                onChange={(e) => setEnableDescription(e.target.checked)}
-                disabled={isSaving}
-                class="mr-2 text-sky-600 focus:ring-sky-500 cursor-pointer"
-              />
-              Enable field
-            </label>
           </div>
         </div>
 
