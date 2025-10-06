@@ -648,7 +648,11 @@ export function DocsSideBar({ onClose: _onClose }) {
                 {/* Request Documentation */}
                 <div class="flex-1 min-h-0 space-y-4">
                   {/* Parameters Schema - filtered by TOC selection */}
-                  {parametersSchema && shouldShowSection('parameters-schema') && (
+                  {parametersSchema && (
+                    (parametersSchema.path && Object.keys(parametersSchema.path).length > 0) ||
+                    (parametersSchema.query && Object.keys(parametersSchema.query).length > 0) ||
+                    (parametersSchema.headers && Object.keys(parametersSchema.headers).length > 0)
+                  ) && shouldShowSection('parameters-schema') && (
                     <div id="parameters-schema">
                       <div class="flex items-center justify-between mb-2">
                         <label class="block text-xs font-medium text-gray-600">Parameters Schema</label>
