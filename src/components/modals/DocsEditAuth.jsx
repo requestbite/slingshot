@@ -126,7 +126,7 @@ export function DocsEditAuth({ isOpen, onClose, collection, onSave }) {
       if (collection.security_schemes && Object.keys(collection.security_schemes).length > 0) {
         setContent(JSON.stringify(collection.security_schemes, null, 2));
       } else {
-        setContent(BOILERPLATE_TEMPLATE);
+        setContent('');
       }
       setError(null);
     }
@@ -166,6 +166,11 @@ export function DocsEditAuth({ isOpen, onClose, collection, onSave }) {
       setError(null);
       onClose();
     }
+  };
+
+  const handlePasteExample = () => {
+    setContent(BOILERPLATE_TEMPLATE);
+    setError(null);
   };
 
   const getCodeMirrorExtensions = () => {
@@ -243,6 +248,17 @@ export function DocsEditAuth({ isOpen, onClose, collection, onSave }) {
                 fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
               }}
             />
+
+            {/* Paste example link */}
+            <div class="mt-2 text-left">
+              <button
+                onClick={handlePasteExample}
+                type="button"
+                class="text-xs text-sky-600 hover:text-sky-700 cursor-pointer"
+              >
+                Paste example
+              </button>
+            </div>
 
             {/* Validation error message */}
             {!validation.isValid && validation.error && (
