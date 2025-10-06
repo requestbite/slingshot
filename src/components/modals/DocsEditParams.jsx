@@ -176,7 +176,7 @@ export function DocsEditParams({ isOpen, onClose, request, onSave }) {
       if (openAPIArray.length > 0) {
         setContent(JSON.stringify(openAPIArray, null, 2));
       } else {
-        setContent(BOILERPLATE_TEMPLATE);
+        setContent('');
       }
       setError(null);
     }
@@ -195,10 +195,15 @@ export function DocsEditParams({ isOpen, onClose, request, onSave }) {
     setError(null);
 
     try {
-      // Parse and convert to internal format
-      const openAPIArray = JSON.parse(content);
-      const internalFormat = convertFromOpenAPIFormat(openAPIArray);
-      const parametersSchemaJson = JSON.stringify(internalFormat);
+      let parametersSchemaJson = null;
+
+      // Only process if content is not empty
+      if (content.trim()) {
+        // Parse and convert to internal format
+        const openAPIArray = JSON.parse(content);
+        const internalFormat = convertFromOpenAPIFormat(openAPIArray);
+        parametersSchemaJson = JSON.stringify(internalFormat);
+      }
 
       if (onSave) {
         await onSave({ parameters_schema: parametersSchemaJson });
@@ -218,6 +223,11 @@ export function DocsEditParams({ isOpen, onClose, request, onSave }) {
       setError(null);
       onClose();
     }
+  };
+
+  const handlePasteExample = () => {
+    setContent(BOILERPLATE_TEMPLATE);
+    setError(null);
   };
 
   const getCodeMirrorExtensions = () => {
@@ -295,6 +305,17 @@ export function DocsEditParams({ isOpen, onClose, request, onSave }) {
                 fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
               }}
             />
+
+            {/* Paste example link */}
+            <div class="mt-2 text-left">
+              <button
+                onClick={handlePasteExample}
+                type="button"
+                class="text-xs text-sky-600 hover:text-sky-700 cursor-pointer"
+              >
+                Paste example
+              </button>
+            </div>
 
             {/* Validation error message */}
             {!validation.isValid && validation.error && (
