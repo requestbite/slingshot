@@ -1284,7 +1284,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       {/* Tabs and Tab Content */}
       <div>
         {/* Tabs */}
-        <div class="border-b border-gray-200 px-4 overflow-x-auto scrollbar-hide">
+        <div class={`px-4 overflow-x-auto scrollbar-hide ${activeTab !== 'overview' ? 'border-b border-gray-200' : ''}`}>
           <div class="flex justify-between items-start flex-nowrap min-w-max">
             <div class="flex space-x-2 flex-nowrap">
               {/* Overview Tab with Eye-Closed Icon */}
