@@ -57,6 +57,8 @@ export function DocsSideBar({ onClose: _onClose }) {
   const [selectedResponseStatus, setSelectedResponseStatus] = useState('');
   const [selectedResponseContentType, setSelectedResponseContentType] = useState('');
   const [selectedResponseExample, setSelectedResponseExample] = useState('');
+  const [selectedSchemaStatus, setSelectedSchemaStatus] = useState('');
+  const [selectedSchemaContentType, setSelectedSchemaContentType] = useState('');
   const [selectedRequestBodyContentType, setSelectedRequestBodyContentType] = useState('');
   const [selectedRequestExampleContentType, setSelectedRequestExampleContentType] = useState('');
   const [selectedRequestExample, setSelectedRequestExample] = useState('');
@@ -115,6 +117,40 @@ export function DocsSideBar({ onClose: _onClose }) {
       setSelectedResponseStatus(responseStatusCodes[0] || '');
     }
   }, [responseStatusCodes, selectedResponseStatus]);
+
+  // Handle schema status selection when data changes
+  useEffect(() => {
+    const schemaStatusCodes = Object.keys(responseSchemas);
+    // Auto-select first status code if none selected
+    if (schemaStatusCodes.length > 0 && !selectedSchemaStatus) {
+      setSelectedSchemaStatus(schemaStatusCodes[0]);
+    }
+    // Reset selected status if it's no longer available
+    else if (selectedSchemaStatus && !schemaStatusCodes.includes(selectedSchemaStatus)) {
+      setSelectedSchemaStatus(schemaStatusCodes[0] || '');
+    }
+  }, [responseSchemas, selectedSchemaStatus]);
+
+  // Handle schema content type selection when status changes
+  useEffect(() => {
+    if (!selectedSchemaStatus || !responseSchemas[selectedSchemaStatus]) return;
+
+    const contentTypes = Object.keys(responseSchemas[selectedSchemaStatus].content || {});
+    if (contentTypes.length > 0 && !selectedSchemaContentType) {
+      // Prefer JSON if available
+      const preferredType = contentTypes.includes('application/json')
+        ? 'application/json'
+        : contentTypes[0];
+      setSelectedSchemaContentType(preferredType);
+    }
+    // Reset if selected content type is no longer available
+    else if (selectedSchemaContentType && !contentTypes.includes(selectedSchemaContentType)) {
+      const preferredType = contentTypes.includes('application/json')
+        ? 'application/json'
+        : (contentTypes[0] || '');
+      setSelectedSchemaContentType(preferredType);
+    }
+  }, [selectedSchemaStatus, responseSchemas, selectedSchemaContentType]);
 
   // Handle content type selection when status changes
   useEffect(() => {
@@ -207,6 +243,8 @@ export function DocsSideBar({ onClose: _onClose }) {
     setSelectedResponseStatus('');
     setSelectedResponseContentType('');
     setSelectedResponseExample('');
+    setSelectedSchemaStatus('');
+    setSelectedSchemaContentType('');
     setSelectedRequestBodyContentType('');
     setSelectedRequestExampleContentType('');
     setSelectedRequestExample('');
@@ -715,7 +753,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         </div>
 
                         {/* Content Type Selector */}
-                        {requestBodyContentTypes.length > 1 && (
+                        {requestBodyContentTypes.length > 0 && (
                           <div class="space-y-1">
                             <label class="block text-[10px] font-medium text-gray-500">Content Type</label>
                             <Select
@@ -723,10 +761,11 @@ export function DocsSideBar({ onClose: _onClose }) {
                               onChange={setSelectedRequestBodyContentType}
                               options={requestBodyContentTypes.map(type => ({
                                 value: type,
-                                label: getContentTypeDisplayName(type)
+                                label: type
                               }))}
                               placeholder="Select content type..."
                               size="small"
+                              disabled={requestBodyContentTypes.length === 1}
                             />
                           </div>
                         )}
@@ -774,7 +813,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         </div>
 
                         {/* Content Type Selector */}
-                        {contentTypes.length > 1 && (
+                        {contentTypes.length > 0 && (
                           <div class="space-y-1">
                             <label class="block text-[10px] font-medium text-gray-500">Content Type</label>
                             <Select
@@ -782,16 +821,17 @@ export function DocsSideBar({ onClose: _onClose }) {
                               onChange={setSelectedRequestExampleContentType}
                               options={contentTypes.map(type => ({
                                 value: type,
-                                label: getContentTypeDisplayName(type)
+                                label: type
                               }))}
                               placeholder="Select content type..."
                               size="small"
+                              disabled={contentTypes.length === 1}
                             />
                           </div>
                         )}
 
                         {/* Example Selector */}
-                        {examples.length > 1 && (
+                        {examples.length > 0 && (
                           <div class="space-y-1">
                             <label class="block text-[10px] font-medium text-gray-500">Example</label>
                             <Select
@@ -803,6 +843,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                               }))}
                               placeholder="Select example..."
                               size="small"
+                              disabled={examples.length === 1}
                             />
                           </div>
                         )}
@@ -811,7 +852,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         {selectedExample && (
                           <ExampleViewer
                             examples={[selectedExample]}
-                            title={contentTypes.length === 1 && examples.length === 1 ? "Request Example" : ""}
+                            title=""
                             contentType={selectedRequestExampleContentType || 'application/json'}
                           />
                         )}
@@ -820,36 +861,91 @@ export function DocsSideBar({ onClose: _onClose }) {
                   })()}
 
                   {/* Response Schema */}
-                  {Object.keys(responseSchemas).length > 0 && shouldShowSection('response-schema') && (
-                    <div id="response-schema">
-                      <div class="flex items-center justify-between mb-2">
-                        <label class="block text-xs font-medium text-gray-600">Response Schemas</label>
-                        <button
-                          ref={responseMenuTriggerRef}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setShowResponseContextMenu(true);
-                          }}
-                          class="flex items-center text-sky-400 hover:text-sky-700 focus:outline-none cursor-pointer"
-                          title="More options"
-                        >
-                          <span class="sr-only">Open options</span>
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                            <circle cx="5" cy="12" r="2" />
-                            <circle cx="12" cy="12" r="2" />
-                            <circle cx="19" cy="12" r="2" />
-                          </svg>
-                        </button>
+                  {Object.keys(responseSchemas).length > 0 && shouldShowSection('response-schema') && (() => {
+                    const schemaStatusCodes = Object.keys(responseSchemas);
+                    const schemaContentTypes = selectedSchemaStatus && responseSchemas[selectedSchemaStatus]?.content
+                      ? Object.keys(responseSchemas[selectedSchemaStatus].content)
+                      : [];
+
+                    return (
+                      <div id="response-schema" class="space-y-2">
+                        <div class="flex items-center justify-between">
+                          <label class="block text-xs font-medium text-gray-600">Response Schema</label>
+                          <button
+                            ref={responseMenuTriggerRef}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowResponseContextMenu(true);
+                            }}
+                            class="flex items-center text-sky-400 hover:text-sky-700 focus:outline-none cursor-pointer"
+                            title="More options"
+                          >
+                            <span class="sr-only">Open options</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                              <circle cx="5" cy="12" r="2" />
+                              <circle cx="12" cy="12" r="2" />
+                              <circle cx="19" cy="12" r="2" />
+                            </svg>
+                          </button>
+                        </div>
+
+                        {/* Status Code Selector */}
+                        {schemaStatusCodes.length > 0 && (
+                          <div class="space-y-1">
+                            <label class="block text-[10px] font-medium text-gray-500">Status Code</label>
+                            <Select
+                              value={selectedSchemaStatus}
+                              onChange={setSelectedSchemaStatus}
+                              options={schemaStatusCodes.map(code => ({
+                                value: code,
+                                label: code
+                              }))}
+                              placeholder="Select status code..."
+                              size="small"
+                              disabled={schemaStatusCodes.length === 1}
+                            />
+                          </div>
+                        )}
+
+                        {/* Content Type Selector */}
+                        {schemaContentTypes.length > 0 && (
+                          <div class="space-y-1">
+                            <label class="block text-[10px] font-medium text-gray-500">Content Type</label>
+                            <Select
+                              value={selectedSchemaContentType}
+                              onChange={setSelectedSchemaContentType}
+                              options={schemaContentTypes.map(type => ({
+                                value: type,
+                                label: type
+                              }))}
+                              placeholder="Select content type..."
+                              size="small"
+                              disabled={schemaContentTypes.length === 1}
+                            />
+                          </div>
+                        )}
+
+                        {/* Display Selected Schema */}
+                        {selectedSchemaStatus && selectedSchemaContentType && (
+                          <SchemaViewer
+                            parametersSchema={null}
+                            requestBodySchema={null}
+                            responseSchemas={{
+                              [selectedSchemaStatus]: {
+                                description: responseSchemas[selectedSchemaStatus]?.description,
+                                headers: responseSchemas[selectedSchemaStatus]?.headers,
+                                content: {
+                                  [selectedSchemaContentType]: responseSchemas[selectedSchemaStatus]?.content?.[selectedSchemaContentType]
+                                }
+                              }
+                            }}
+                            showResponseTitle={false}
+                          />
+                        )}
                       </div>
-                      <SchemaViewer
-                        parametersSchema={null}
-                        requestBodySchema={null}
-                        responseSchemas={responseSchemas}
-                        showResponseTitle={false}
-                      />
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Response Examples */}
                   {responseStatusCodes.length > 0 && shouldShowSection('response-examples') && (() => {
@@ -881,7 +977,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         </div>
 
                         {/* Status Code Selector */}
-                        {responseStatusCodes.length > 1 && (
+                        {responseStatusCodes.length > 0 && (
                           <div class="space-y-1">
                             <label class="block text-[10px] font-medium text-gray-500">Status Code</label>
                             <Select
@@ -889,16 +985,17 @@ export function DocsSideBar({ onClose: _onClose }) {
                               onChange={setSelectedResponseStatus}
                               options={responseStatusCodes.map(code => ({
                                 value: code,
-                                label: getStatusCodeDisplayName(code)
+                                label: code
                               }))}
                               placeholder="Select status code..."
                               size="small"
+                              disabled={responseStatusCodes.length === 1}
                             />
                           </div>
                         )}
 
                         {/* Content Type Selector */}
-                        {contentTypes.length > 1 && (
+                        {contentTypes.length > 0 && (
                           <div class="space-y-1">
                             <label class="block text-[10px] font-medium text-gray-500">Content Type</label>
                             <Select
@@ -906,16 +1003,17 @@ export function DocsSideBar({ onClose: _onClose }) {
                               onChange={setSelectedResponseContentType}
                               options={contentTypes.map(type => ({
                                 value: type,
-                                label: getContentTypeDisplayName(type)
+                                label: type
                               }))}
                               placeholder="Select content type..."
                               size="small"
+                              disabled={contentTypes.length === 1}
                             />
                           </div>
                         )}
 
                         {/* Example Name Selector */}
-                        {examples.length > 1 && (
+                        {examples.length > 0 && (
                           <div class="space-y-1">
                             <label class="block text-[10px] font-medium text-gray-500">Example</label>
                             <Select
@@ -927,6 +1025,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                               }))}
                               placeholder="Select example..."
                               size="small"
+                              disabled={examples.length === 1}
                             />
                           </div>
                         )}
@@ -935,9 +1034,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         {selectedExample && (
                           <ExampleViewer
                             examples={[selectedExample]}
-                            title={responseStatusCodes.length === 1 && contentTypes.length === 1 && examples.length === 1
-                              ? getStatusCodeDisplayName(selectedResponseStatus)
-                              : ""}
+                            title=""
                             contentType={selectedResponseContentType || 'application/json'}
                           />
                         )}

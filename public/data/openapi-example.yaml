@@ -1,495 +1,834 @@
 openapi: 3.1.0
 info:
-  title: cURL apps
-  description: Some example requests to explore Slingshot with.
-  version: 1.0.0
-  x-postman-id: bda5fd7b-8b68-4d7d-9401-2e37df598b6e
+  title: REST Countries API
+  description: |
+    **Slingshot Note:**
+
+    This is an AI generated OpenAPI spec for the free and open-source RESTful
+    API at [restcountries.com](https://restcountries.com) through which you can
+    get information about countries.
+
+    Please be a good netizen and use it with care.
+
+    While we're very happy to showcase this API as an example API in Slingshot,
+    we cannot guarantee the accuracy of this OpenAPI spec, nor the availability,
+    performance or robustness of the API itself.
+
+    **About restcountries.com:**
+
+    This project is inspired by restcountries.eu by Fayder Florez and is Open Source and Free to use.
+  version: 3.1.0
+  contact:
+    name: REST Countries
+    url: https://restcountries.com
+  license:
+    name: Mozilla Public License 2.0
+    url: https://www.mozilla.org/en-US/MPL/2.0/
+
+servers:
+  - url: https://restcountries.com/v3.1
+    description: Production server (v3.1)
+
+tags:
+  - name: Countries
+    description: Search and retrieve country information
 
 paths:
-  https://api.qrserver.com/v1/create-qr-code:
+  /all:
     get:
       tags:
-        - goqr.me - QR Code Generator
-      summary: Create QR code
-      operationId: createQRCode
-      parameters:
-        - name: size
-          in: query
-          required: false
-          schema:
-            type: string
-            default: 150x150
-          example: 150x150
-        - name: data
-          in: query
-          required: false
-          schema:
-            type: string
-          example: Example
-      responses:
-        '200':
-          description: Successful response
-          content:
-            image/png:
-              schema:
-                type: string
-                format: binary
+        - Countries
+      summary: Get all countries
+      description: |
+        Returns information about all countries in the world.
 
-  https://picsum.photos/v2/list:
-    get:
-      tags:
-        - picsum.photos - Lorem Picsum API
-      summary: 1 - List random images
-      operationId: listRandomImages
+        **IMPORTANT:** You must specify the fields you need (up to 10 fields) using the `fields` query parameter, 
+        otherwise you'll get a 400 Bad Request response.
+      operationId: getAllCountries
+      parameters:
+        - $ref: "#/components/parameters/FieldsParameter"
       responses:
-        '200':
-      ,     description: Successful response
+        "200":
+          description: Successful response
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  type: object
+                  $ref: "#/components/schemas/Country"
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
-  https://picsum.photos/{width}/{height}:
+  /independent:
     get:
       tags:
-        - picsum.photos - Lorem Picsum API
-      summary: 2 - Get random image
-      operationId: getRandomImage
+        - Countries
+      summary: Get independent or dependent countries
+      description: |
+        Returns all independent (or not independent) countries. 
+        If you don't specify the status, true will be taken as default.
+        You can mix it with the fields filter.
+      operationId: getIndependentCountries
       parameters:
-        - name: width
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 200
-        - name: height
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 300
-      responses:
-        '200':
-          description: Successful response
-          content:
-            image/jpeg:
-              schema:
-                type: string
-                format: binary
-
-  https://picsum.photos/id/{id}/{width}/{height}:
-    get:
-      tags:
-        - picsum.photos - Lorem Picsum API
-      summary: 3 - Get specific image
-      operationId: getSpecificImage
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 4
-        - name: width
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 200
-        - name: height
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 300
-      responses:
-        '200':
-          description: Successful response
-          content:
-            image/jpeg:
-              schema:
-                type: string
-                format: binary
-
-  https://picsum.photos/g/{width}/{height}:
-    get:
-      tags:
-        - picsum.photos - Lorem Picsum API
-      summary: 4 - Get random grayscale image
-      operationId: getRandomGrayscaleImage
-      parameters:
-        - name: width
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 200
-        - name: height
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 300
-      responses:
-        '200':
-          description: Successful response
-          content:
-            image/jpeg:
-              schema:
-                type: string
-                format: binary
-
-  https://httpbin.org/image/webp:
-    get:
-      tags:
-        - httpbin.org - Images
-      summary: webp
-      operationId: getWebpImage
-      parameters:
-        - name: accept
-          in: header
-          required: false
-          schema:
-            type: string
-            default: image/jpeg
-      responses:
-        '200':
-          description: Successful response
-          content:
-            image/webp:
-              schema:
-                type: string
-                format: binary
-
-  https://httpbin.org/image/png:
-    get:
-      tags:
-        - httpbin.org - Images
-      summary: png
-      operationId: getPngImage
-      parameters:
-        - name: accept
-          in: header
-          required: false
-          schema:
-            type: string
-            default: image/jpeg
-      responses:
-        '200':
-          description: Successful response
-          content:
-            image/png:
-              schema:
-                type: string
-                format: binary
-
-  https://httpbin.org/image/svg:
-    get:
-      tags:
-        - httpbin.org - Images
-      summary: svg
-      operationId: getSvgImage
-      parameters:
-        - name: accept
-          in: header
-          required: false
-          schema:
-            type: string
-            default: image/jpeg
-      responses:
-        '200':
-          description: Successful response
-          content:
-            image/svg+xml:
-              schema:
-                type: string
-
-  https://httpbin.org/image/jpeg:
-    get:
-      tags:
-        - httpbin.org - Images
-      summary: jpeg
-      operationId: getJpegImage
-      parameters:
-        - name: accept
-          in: header
-          required: false
-          schema:
-            type: string
-            default: image/jpeg
-      responses:
-        '200':
-          description: Successful response
-          content:
-            image/jpeg:
-              schema:
-                type: string
-                format: binary
-
-  https://httpbin.org/robots.txt:
-    get:
-      tags:
-        - httpbin.org - Response formats
-      summary: robots.txt
-      operationId: getRobotsTxt
-      parameters:
-        - name: accept
-          in: header
-          required: false
-          schema:
-            type: string
-            default: image/jpeg
-      responses:
-        '200':
-          description: Successful response
-          content:
-            text/plain:
-              schema:
-                type: string
-
-  http://cht.sh/:
-    get:
-      tags:
-        - cht.sh - The only cheat sheet you need
-      summary: 1 - Root
-      operationId: chtshRoot
-      parameters:
-        - name: User-agent
-          in: header
-          required: false
-          schema:
-            type: string
-            default: curl/7.88.1
-      responses:
-        '200':
-          description: Successful response
-          content:
-            text/plain:
-              schema:
-                type: string
-
-  http://cht.sh/:list:
-    get:
-      tags:
-        - cht.sh - The only cheat sheet you need
-      summary: 4 - List all cheat sheets
-      operationId: chtshListAll
-      parameters:
-        - name: User-agent
-          in: header
-          required: false
-          schema:
-            type: string
-            default: curl/7.88.1
-      responses:
-        '200':
-          description: Successful response
-          content:
-            text/plain:
-              schema:
-                type: string
-
-  http://cht.sh/latencies:
-    get:
-      tags:
-        - cht.sh - The only cheat sheet you need
-      summary: 5 - Latency every programmer should know
-      operationId: chtshLatencies
-      parameters:
-        - name: User-agent
-          in: header
-          required: false
-          schema:
-            type: string
-            default: curl/7.88.1
-      responses:
-        '200':
-          description: Successful response
-          content:
-            text/plain:
-              schema:
-                type: string
-
-  http://cht.sh/:help:
-    get:
-      tags:
-        - cht.sh - The only cheat sheet you need
-      summary: 3 - Help
-      operationId: chtshHelp
-      parameters:
-        - name: User-agent
-          in: header
-          required: false
-          schema:
-            type: string
-            default: curl/7.88.1
-      responses:
-        '200':
-          description: Successful response
-          content:
-            text/plain:
-              schema:
-                type: string
-
-  http://cht.sh/:intro:
-    get:
-      tags:
-        - cht.sh - The only cheat sheet you need
-      summary: 2 - Intro
-      operationId: chtshIntro
-      parameters:
-        - name: User-agent
-          in: header
-          required: false
-          schema:
-            type: string
-            default: curl/7.88.1
-      responses:
-        '200':
-          description: Successful response
-          content:
-            text/plain:
-              schema:
-                type: string
-
-  http://wttr.in/stockholm:
-    get:
-      tags:
-        - wttr.in - Weather in Stockholm
-      summary: 1 - Default (metric)
-      operationId: weatherStockholmDefault
-      parameters:
-        - name: User-agent
-          in: header
-          required: false
-          schema:
-            type: string
-            default: curl/7.88.1
-        - name: u
+        - name: status
           in: query
+          description: Filter by independence status
           required: false
-          description: Use imperial units
+          schema:
+            type: boolean
+            default: true
+        - $ref: "#/components/parameters/FieldsParameter"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Country"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /name/{name}:
+    get:
+      tags:
+        - Countries
+      summary: Search by country name
+      description: |
+        Search by country name. It can be the common or official name.
+        This endpoint performs partial matching.
+      operationId: getCountryByName
+      parameters:
+        - name: name
+          in: path
+          description: Country name (common or official, partial match supported)
+          required: true
           schema:
             type: string
-        - name: '0'
+          examples:
+            english:
+              value: united
+              summary: Partial name search
+            native:
+              value: deutschland
+              summary: Native name search
+        - name: fullText
           in: query
+          description: Search by exact full name match
           required: false
-          description: Show only current weather
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/FieldsParameter"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Country"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /alpha/{code}:
+    get:
+      tags:
+        - Countries
+      summary: Search by country code
+      description: |
+        Search by cca2, ccn3, cca3 or cioc country code.
+        Supports ISO 3166-1 2-letter, 3-letter codes, numeric codes, and IOC codes.
+      operationId: getCountryByCode
+      parameters:
+        - name: code
+          in: path
+          description: Country code (cca2, cca3, ccn3, or cioc)
+          required: true
           schema:
             type: string
-        - name: format
+          examples:
+            cca2:
+              value: co
+              summary: 2-letter code
+            cca3:
+              value: col
+              summary: 3-letter code
+            ccn3:
+              value: "170"
+              summary: Numeric code
+        - $ref: "#/components/parameters/FieldsParameter"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Country"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /alpha:
+    get:
+      tags:
+        - Countries
+      summary: Search by list of country codes
+      description: Search by a comma-separated list of cca2, ccn3, cca3 or cioc country codes
+      operationId: getCountriesByCodes
+      parameters:
+        - name: codes
           in: query
-          required: false
-          description: Output format (j1 for JSON, %m for moon phase, etc.)
+          description: Comma-separated list of country codes
+          required: true
           schema:
             type: string
+          example: "170,no,est,pe"
+        - $ref: "#/components/parameters/FieldsParameter"
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
+                type: array
+                items:
+                  $ref: "#/components/schemas/Country"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
-  http://v2d.wttr.in/stockholm:
+  /currency/{currency}:
     get:
       tags:
-        - wttr.in - Weather in Stockholm
-      summary: 2 - Data-rich format (v2)
-      operationId: weatherStockholmV2
+        - Countries
+      summary: Search by currency
+      description: Search by currency code or name
+      operationId: getCountriesByCurrency
       parameters:
-        - name: User-agent
-          in: header
-          required: false
+        - name: currency
+          in: path
+          description: Currency code or name
+          required: true
           schema:
             type: string
-            default: curl/7.88.1
+          examples:
+            code:
+              value: cop
+              summary: Currency code
+            name:
+              value: dollar
+              summary: Currency name
+        - $ref: "#/components/parameters/FieldsParameter"
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
+                type: array
+                items:
+                  $ref: "#/components/schemas/Country"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
-  http://sv.wttr.in/stockholm:
+  /demonym/{demonym}:
     get:
       tags:
-        - wttr.in - Weather in Stockholm
-      summary: 4 - In Swedish
-      operationId: weatherStockholmSwedish
+        - Countries
+      summary: Search by demonym
+      description: Search by how a citizen is called (demonym)
+      operationId: getCountriesByDemonym
       parameters:
-        - name: User-agent
-          in: header
-          required: false
+        - name: demonym
+          in: path
+          description: Demonym (how citizens are called)
+          required: true
           schema:
             type: string
-            default: curl/7.88.1
+          example: peruvian
+        - $ref: "#/components/parameters/FieldsParameter"
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
+                type: array
+                items:
+                  $ref: "#/components/schemas/Country"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
-  http://wttr.in/stockholm.png:
+  /lang/{language}:
     get:
       tags:
-        - wttr.in - Weather in Stockholm
-      summary: 5 - PNG image
-      operationId: weatherStockholmPng
+        - Countries
+      summary: Search by language
+      description: Search by language code or name
+      operationId: getCountriesByLanguage
       parameters:
-        - name: User-agent
-          in: header
-          required: false
+        - name: language
+          in: path
+          description: Language code (ISO 639-1) or language name
+          required: true
           schema:
             type: string
-            default: curl/7.88.1
+          examples:
+            code:
+              value: es
+              summary: Language code
+            name:
+              value: spanish
+              summary: Language name
+        - $ref: "#/components/parameters/FieldsParameter"
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
-            image/png:
+            application/json:
               schema:
-                type: string
-                format: binary
+                type: array
+                items:
+                  $ref: "#/components/schemas/Country"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
-  http://wttr.in/Moon:
+  /capital/{capital}:
     get:
       tags:
-        - wttr.in - Other
-      summary: Moon phases
-      operationId: moonPhases
+        - Countries
+      summary: Search by capital city
+      description: Search by capital city name
+      operationId: getCountriesByCapital
       parameters:
-        - name: User-agent
-          in: header
-          required: false
+        - name: capital
+          in: path
+          description: Capital city name
+          required: true
           schema:
             type: string
-            default: curl/7.88.1
+          example: tallinn
+        - $ref: "#/components/parameters/FieldsParameter"
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
+                type: array
+                items:
+                  $ref: "#/components/schemas/Country"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
-tags:
-  - name: goqr.me - QR Code Generator
-    description: QR Code generation service
-  - name: picsum.photos - Lorem Picsum API
-    description: Lorem Picsum image service
-  - name: httpbin.org - Images
-    description: HTTP testing service - Images
-  - name: httpbin.org - Response formats
-    description: HTTP testing service - Response formats
-  - name: cht.sh - The only cheat sheet you need
-    description: Cheat sheet service
-  - name: wttr.in - Weather in Stockholm
-    description: Weather service for Stockholm
-  - name: wttr.in - Other
-    description: Weather service - Other features
+  /region/{region}:
+    get:
+      tags:
+        - Countries
+      summary: Search by region
+      description: |
+        Search by region. Valid regions are:
+        - Africa
+        - Americas
+        - Asia
+        - Europe
+        - Oceania
+      operationId: getCountriesByRegion
+      parameters:
+        - name: region
+          in: path
+          description: Region name
+          required: true
+          schema:
+            type: string
+            enum:
+              - Africa
+              - Americas
+              - Asia
+              - Europe
+              - Oceania
+          example: europe
+        - $ref: "#/components/parameters/FieldsParameter"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Country"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /subregion/{subregion}:
+    get:
+      tags:
+        - Countries
+      summary: Search by subregion
+      description: Search by subregion name
+      operationId: getCountriesBySubregion
+      parameters:
+        - name: subregion
+          in: path
+          description: Subregion name
+          required: true
+          schema:
+            type: string
+          example: Northern Europe
+        - $ref: "#/components/parameters/FieldsParameter"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Country"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /translation/{translation}:
+    get:
+      tags:
+        - Countries
+      summary: Search by translation
+      description: Search by any translation name of a country
+      operationId: getCountriesByTranslation
+      parameters:
+        - name: translation
+          in: path
+          description: Translated country name
+          required: true
+          schema:
+            type: string
+          examples:
+            english:
+              value: germany
+              summary: English translation
+            spanish:
+              value: alemania
+              summary: Spanish translation
+            estonian:
+              value: Saksamaa
+              summary: Estonian translation
+        - $ref: "#/components/parameters/FieldsParameter"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Country"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  parameters:
+    FieldsParameter:
+      name: fields
+      in: query
+      description: |
+        Comma-separated list of fields to include in the response (maximum 10 fields).
+        This parameter is **required** for the `/all` endpoint.
+
+        Available fields include: name, tld, cca2, ccn3, cca3, cioc, independent, status, unMember, 
+        currencies, idd, capital, altSpellings, region, subregion, languages, translations, latlng, 
+        landlocked, borders, area, demonyms, flag, maps, population, gini, fifa, car, timezones, 
+        continents, flags, coatOfArms, startOfWeek, capitalInfo, postalCode
+      required: false
+      schema:
+        type: string
+      example: name,capital,currencies
+
+  responses:
+    NotFound:
+      description: Country not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                example: 404
+              message:
+                type: string
+                example: Not Found
+
+    BadRequest:
+      description: Bad request - fields parameter required for /all endpoint
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                example: 400
+              message:
+                type: string
+                example: Bad Request
+
+  schemas:
+    Country:
+      type: object
+      description: Country information object
+      properties:
+        name:
+          type: object
+          description: Country name information
+          properties:
+            common:
+              type: string
+              description: Common country name
+              example: United States
+            official:
+              type: string
+              description: Official country name
+              example: United States of America
+            nativeName:
+              type: object
+              description: Native names in different languages
+              additionalProperties:
+                type: object
+                properties:
+                  official:
+                    type: string
+                  common:
+                    type: string
+              example:
+                eng:
+                  official: United States of America
+                  common: United States
+
+        tld:
+          type: array
+          description: Top level domains
+          items:
+            type: string
+          example: [".us"]
+
+        cca2:
+          type: string
+          description: ISO 3166-1 alpha-2 two-letter country code
+          example: US
+
+        ccn3:
+          type: string
+          description: ISO 3166-1 numeric code
+          example: "840"
+
+        cca3:
+          type: string
+          description: ISO 3166-1 alpha-3 three-letter country code
+          example: USA
+
+        cioc:
+          type: string
+          description: International Olympic Committee country code
+          example: USA
+
+        independent:
+          type: boolean
+          description: Independence status
+          example: true
+
+        status:
+          type: string
+          description: ISO 3166-1 assignment status
+          enum:
+            - officially-assigned
+            - user-assigned
+          example: officially-assigned
+
+        unMember:
+          type: boolean
+          description: UN membership status
+          example: true
+
+        currencies:
+          type: object
+          description: Currencies used in the country
+          additionalProperties:
+            type: object
+            properties:
+              name:
+                type: string
+                description: Currency name
+              symbol:
+                type: string
+                description: Currency symbol
+          example:
+            USD:
+              name: United States dollar
+              symbol: $
+
+        idd:
+          type: object
+          description: International direct dialing info
+          properties:
+            root:
+              type: string
+              description: IDD root
+              example: "+1"
+            suffixes:
+              type: array
+              description: IDD suffixes
+              items:
+                type: string
+              example: ["201", "202", "203"]
+
+        capital:
+          type: array
+          description: Capital city/cities
+          items:
+            type: string
+          example: ["Washington, D.C."]
+
+        altSpellings:
+          type: array
+          description: Alternative country name spellings
+          items:
+            type: string
+          example: ["US", "USA", "United States of America"]
+
+        region:
+          type: string
+          description: Region
+          enum:
+            - Africa
+            - Americas
+            - Asia
+            - Europe
+            - Oceania
+            - Antarctic
+          example: Americas
+
+        subregion:
+          type: string
+          description: Subregion
+          example: North America
+
+        languages:
+          type: object
+          description: Official languages
+          additionalProperties:
+            type: string
+          example:
+            eng: English
+
+        translations:
+          type: object
+          description: Country name translations
+          additionalProperties:
+            type: object
+            properties:
+              official:
+                type: string
+              common:
+                type: string
+          example:
+            ara:
+              official: الولايات المتحدة الامريكية
+              common: الولايات المتحدة
+            fra:
+              official: Les états-unis d'Amérique
+              common: États-Unis
+
+        latlng:
+          type: array
+          description: Latitude and longitude
+          items:
+            type: number
+          minItems: 2
+          maxItems: 2
+          example: [38.0, -97.0]
+
+        landlocked:
+          type: boolean
+          description: Landlocked status
+          example: false
+
+        borders:
+          type: array
+          description: Border countries (cca3 codes)
+          items:
+            type: string
+          example: ["CAN", "MEX"]
+
+        area:
+          type: number
+          description: Country area in km²
+          example: 9372610.0
+
+        demonyms:
+          type: object
+          description: Demonyms (what citizens are called)
+          additionalProperties:
+            type: object
+            properties:
+              f:
+                type: string
+                description: Feminine form
+              m:
+                type: string
+                description: Masculine form
+          example:
+            eng:
+              f: American
+              m: American
+
+        flag:
+          type: string
+          description: Flag emoji
+          example: 🇺🇸
+
+        maps:
+          type: object
+          description: Map links
+          properties:
+            googleMaps:
+              type: string
+              format: uri
+              description: Google Maps URL
+            openStreetMaps:
+              type: string
+              format: uri
+              description: OpenStreetMap URL
+          example:
+            googleMaps: https://goo.gl/maps/e8M246zY4BSjkjAv6
+            openStreetMaps: https://www.openstreetmap.org/relation/148838
+
+        population:
+          type: integer
+          description: Country population
+          example: 329484123
+
+        gini:
+          type: object
+          description: Gini coefficient (income inequality index)
+          additionalProperties:
+            type: number
+          example:
+            "2018": 41.4
+
+        fifa:
+          type: string
+          description: FIFA country code
+          example: USA
+
+        car:
+          type: object
+          description: Car information
+          properties:
+            signs:
+              type: array
+              description: Car distinguishing signs
+              items:
+                type: string
+            side:
+              type: string
+              description: Driving side
+              enum:
+                - right
+                - left
+          example:
+            signs: ["USA"]
+            side: right
+
+        timezones:
+          type: array
+          description: Timezones
+          items:
+            type: string
+          example: ["UTC-12:00", "UTC-11:00", "UTC-10:00"]
+
+        continents:
+          type: array
+          description: Continents where the country is located
+          items:
+            type: string
+          example: ["North America"]
+
+        flags:
+          type: object
+          description: Flag images
+          properties:
+            png:
+              type: string
+              format: uri
+              description: PNG flag image URL
+            svg:
+              type: string
+              format: uri
+              description: SVG flag image URL
+            alt:
+              type: string
+              description: Flag description
+          example:
+            png: https://flagcdn.com/w320/us.png
+            svg: https://flagcdn.com/us.svg
+            alt: The flag of the United States of America...
+
+        coatOfArms:
+          type: object
+          description: Coat of arms images
+          properties:
+            png:
+              type: string
+              format: uri
+              description: PNG coat of arms URL
+            svg:
+              type: string
+              format: uri
+              description: SVG coat of arms URL
+          example:
+            png: https://mainfacts.com/media/images/coats_of_arms/us.png
+            svg: https://mainfacts.com/media/images/coats_of_arms/us.svg
+
+        startOfWeek:
+          type: string
+          description: Start of week
+          enum:
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
+          example: sunday
+
+        capitalInfo:
+          type: object
+          description: Capital city coordinates
+          properties:
+            latlng:
+              type: array
+              items:
+                type: number
+              minItems: 2
+              maxItems: 2
+          example:
+            latlng: [38.89, -77.05]
+
+        postalCode:
+          type: object
+          description: Postal code information
+          properties:
+            format:
+              type: string
+              description: Postal code format
+            regex:
+              type: string
+              description: Postal code validation regex
+          example:
+            format: "#####-####"
+            regex: ^\d{5}(-\d{4})?$
