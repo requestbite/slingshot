@@ -47,6 +47,7 @@ export function DocsSideBar({ onClose: _onClose }) {
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [showParamsContextMenu, setShowParamsContextMenu] = useState(false);
   const [showResponseContextMenu, setShowResponseContextMenu] = useState(false);
+  const [showResponseExamplesContextMenu, setShowResponseExamplesContextMenu] = useState(false);
   const [showRequestBodyContextMenu, setShowRequestBodyContextMenu] = useState(false);
   const [showRequestExamplesContextMenu, setShowRequestExamplesContextMenu] = useState(false);
   const [showCollectionContextMenu, setShowCollectionContextMenu] = useState(false);
@@ -64,6 +65,7 @@ export function DocsSideBar({ onClose: _onClose }) {
   const menuTriggerRef = useRef();
   const paramsMenuTriggerRef = useRef();
   const responseMenuTriggerRef = useRef();
+  const responseExamplesMenuTriggerRef = useRef();
   const requestBodyMenuTriggerRef = useRef();
   const requestExamplesMenuTriggerRef = useRef();
   const collectionMenuTriggerRef = useRef();
@@ -858,10 +860,11 @@ export function DocsSideBar({ onClose: _onClose }) {
                         <div class="flex items-center justify-between">
                           <label class="block text-xs font-medium text-gray-600">Response Examples</label>
                           <button
+                            ref={responseExamplesMenuTriggerRef}
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              setShowResponseContextMenu(true);
+                              setShowResponseExamplesContextMenu(true);
                             }}
                             class="flex items-center text-sky-400 hover:text-sky-700 focus:outline-none cursor-pointer"
                             title="More options"
@@ -1282,6 +1285,16 @@ export function DocsSideBar({ onClose: _onClose }) {
           isOpen={showResponseContextMenu}
           onClose={() => setShowResponseContextMenu(false)}
           trigger={responseMenuTriggerRef.current}
+          items={responseContextMenuItems}
+        />
+      )}
+
+      {/* Response Examples Context Menu - only for requests */}
+      {selectedRequest && (
+        <ContextMenu
+          isOpen={showResponseExamplesContextMenu}
+          onClose={() => setShowResponseExamplesContextMenu(false)}
+          trigger={responseExamplesMenuTriggerRef.current}
           items={responseContextMenuItems}
         />
       )}
