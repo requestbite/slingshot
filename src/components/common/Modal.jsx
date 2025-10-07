@@ -121,8 +121,8 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
                   </button>
                 </div>
 
-                <div class="text-center mt-0 sm:text-left">
-                  <h3 class="text-base font-semibold text-gray-900">{title}</h3>
+                <div class="mt-0">
+                  <h3 class="text-base font-semibold text-gray-900 text-center sm:text-left">{title}</h3>
 
                   {/* Content */}
                   <div class="mt-2">

@@ -189,7 +189,7 @@ export function DocsEditRequest({ isOpen, onClose, request, onSave }) {
     <Modal isOpen={isOpen && !!request} onClose={handleClose} title="Update request body schema" size="xl">
       <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
         <div class="mt-2">
-          <p class="text-sm text-gray-500 mb-4">
+          <p class="text-sm text-gray-500 mb-4 text-center sm:text-left">
             Basic JSON based editor of the OpenAPI request body schema and examples.
           </p>
 

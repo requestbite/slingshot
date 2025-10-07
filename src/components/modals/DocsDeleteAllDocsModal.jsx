@@ -58,7 +58,7 @@ export function DocsDeleteAllDocsModal({ isOpen, onClose, collection, onDelete }
     <Modal isOpen={isOpen && !!collection} onClose={handleClose} title="Delete all collection docs" size="md">
       <form onSubmit={(e) => { e.preventDefault(); handleDelete(); }}>
         <div class="mt-2">
-          <p class="text-sm text-gray-500">This will delete all documentation for the collection itself as well as all requests within the collection to free up space. This is not possible to undo. Are you sure you want to continue?</p>
+          <p class="text-sm text-gray-500 text-center sm:text-left">This will delete all documentation for the collection itself as well as all requests within the collection to free up space. This is not possible to undo. Are you sure you want to continue?</p>
         </div>
 
         {error && (

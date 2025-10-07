@@ -49,7 +49,7 @@ export function DocsEditIntroModal({ isOpen, onClose, request, onSave }) {
     <Modal isOpen={isOpen && !!request} onClose={handleClose} title="Edit intro" size="xl">
       <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
         <div class="mt-2">
-          <p class="text-sm text-gray-500 mb-4">
+          <p class="text-sm text-gray-500 mb-4 text-center sm:text-left">
             Edit the introductory details for this request.
           </p>
 
