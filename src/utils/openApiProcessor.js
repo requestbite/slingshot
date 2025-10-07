@@ -253,12 +253,12 @@ async function processPaths(spec, baseUrl) {
  * @param {Object} params - Operation parameters
  * @returns {Object} Request data
  */
-async function createRequestFromOperation({ path, method, operation, baseUrl: _baseUrl, folderName, spec, pathLevelParameters = [] }) {
+async function createRequestFromOperation({ path, method, operation, baseUrl, folderName, spec, pathLevelParameters = [] }) {
   const name = operation.summary || operation.operationId || `${method} ${path}`;
 
   // Convert OpenAPI path parameters to URL template format
-  // Use {{baseUrl}} variable instead of hardcoded baseUrl
-  let url = '{{baseUrl}}' + convertPathParameters(path);
+  // Only use {{baseUrl}} variable if a server object exists in the spec
+  let url = baseUrl ? '{{baseUrl}}' + convertPathParameters(path) : convertPathParameters(path);
 
   // Extract parameters (including path-level parameters)
   const { headers, params: queryParams, pathParams, parametersSchema } = extractParameters(operation, spec, pathLevelParameters);
