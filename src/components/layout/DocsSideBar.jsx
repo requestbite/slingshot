@@ -555,6 +555,8 @@ export function DocsSideBar({ onClose: _onClose }) {
   if (responseStatusCodes.length > 0) {
     tocSections.push({ id: 'response-examples', label: 'Response Examples' });
   }
+  // Always add Slingshot Docs as the last item
+  tocSections.push({ id: 'slingshot-docs', label: 'Slingshot Docs' });
 
   const shouldShowSection = (sectionId) => {
     return selectedTocSection === 'show-all' || selectedTocSection === sectionId;
@@ -953,6 +955,147 @@ export function DocsSideBar({ onClose: _onClose }) {
                         No examples or schemas available for this request.
                       </div>
                     )}
+
+                  {/* Slingshot Docs */}
+                  {shouldShowSection('slingshot-docs') && (
+                    <div id="slingshot-docs" class="space-y-2">
+                      <label class="block text-xs font-medium text-gray-600 mb-2">Slingshot Docs</label>
+                      <ul class="space-y-1.5 text-xs text-gray-700">
+                        <li class="flex items-start">
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <a
+                            href="https://docs.requestbite.com/slingshot/slingshot/#making-a-request"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:text-sky-600 hover:underline"
+                          >
+                            Making a request
+                          </a>
+                        </li>
+                        <li class="flex items-start">
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <a
+                            href="https://docs.requestbite.com/slingshot/slingshot/#what-are-collections"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:text-sky-600 hover:underline"
+                          >
+                            What are collections?
+                          </a>
+                        </li>
+                        <li class="flex items-start">
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <a
+                            href="https://docs.requestbite.com/slingshot/slingshot/#what-are-environments"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:text-sky-600 hover:underline"
+                          >
+                            What are environments?
+                          </a>
+                        </li>
+                        <li class="flex items-start">
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <a
+                            href="https://docs.requestbite.com/slingshot/slingshot/#drafts-vs-saved-requests"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:text-sky-600 hover:underline"
+                          >
+                            Drafts vs saved requests
+                          </a>
+                        </li>
+                        <li class="flex items-start">
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <a
+                            href="https://docs.requestbite.com/slingshot/slingshot/#import-openapi-or-postman-collection"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:text-sky-600 hover:underline"
+                          >
+                            Import OpenAPI or Postman collection
+                          </a>
+                        </li>
+                        <li class="flex items-start">
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <a
+                            href="https://docs.requestbite.com/slingshot/slingshot/#import-curl-command"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:text-sky-600 hover:underline"
+                          >
+                            Import cURL command
+                          </a>
+                        </li>
+                        <li class="flex items-start">
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <a
+                            href="https://docs.requestbite.com/slingshot/slingshot/#export-request-as-curl-command"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:text-sky-600 hover:underline"
+                          >
+                            Export request as cURL command
+                          </a>
+                        </li>
+                        <li class="flex items-start">
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <a
+                            href="https://docs.requestbite.com/slingshot/slingshot/#copy-request"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:text-sky-600 hover:underline"
+                          >
+                            Copy request
+                          </a>
+                        </li>
+                        <li class="flex items-start">
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <a
+                            href="https://docs.requestbite.com/slingshot/slingshot/#copy-response-from-request"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:text-sky-600 hover:underline"
+                          >
+                            Copy response from request
+                          </a>
+                        </li>
+                        <li class="flex items-start">
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <a
+                            href="https://docs.requestbite.com/slingshot/slingshot/#presentation-of-response-data"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:text-sky-600 hover:underline"
+                          >
+                            Presentation of response data
+                          </a>
+                        </li>
+                        <li class="flex items-start">
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <a
+                            href="https://docs.requestbite.com/slingshot/slingshot/#precedence-of-variables-and-secrets"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:text-sky-600 hover:underline"
+                          >
+                            Precedence of variables and secrets
+                          </a>
+                        </li>
+                        <li class="flex items-start">
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <a
+                            href="https://docs.requestbite.com/slingshot/slingshot/#how-requests-are-sent"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:text-sky-600 hover:underline"
+                          >
+                            How requests are sent
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </>
             ) : selectedCollection ? (
@@ -1197,6 +1340,145 @@ export function DocsSideBar({ onClose: _onClose }) {
                     </div>
                   );
                 })()}
+
+                {/* Slingshot Docs */}
+                <div class="space-y-2">
+                  <label class="block text-xs font-medium text-gray-600 mb-2">Slingshot Docs</label>
+                  <ul class="space-y-1.5 text-xs text-gray-700">
+                    <li class="flex items-start">
+                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                      <a
+                        href="https://docs.requestbite.com/slingshot/slingshot/#making-a-request"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="hover:text-sky-600 hover:underline"
+                      >
+                        Making a request
+                      </a>
+                    </li>
+                    <li class="flex items-start">
+                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                      <a
+                        href="https://docs.requestbite.com/slingshot/slingshot/#what-are-collections"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="hover:text-sky-600 hover:underline"
+                      >
+                        What are collections?
+                      </a>
+                    </li>
+                    <li class="flex items-start">
+                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                      <a
+                        href="https://docs.requestbite.com/slingshot/slingshot/#what-are-environments"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="hover:text-sky-600 hover:underline"
+                      >
+                        What are environments?
+                      </a>
+                    </li>
+                    <li class="flex items-start">
+                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                      <a
+                        href="https://docs.requestbite.com/slingshot/slingshot/#drafts-vs-saved-requests"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="hover:text-sky-600 hover:underline"
+                      >
+                        Drafts vs saved requests
+                      </a>
+                    </li>
+                    <li class="flex items-start">
+                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                      <a
+                        href="https://docs.requestbite.com/slingshot/slingshot/#import-openapi-or-postman-collection"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="hover:text-sky-600 hover:underline"
+                      >
+                        Import OpenAPI or Postman collection
+                      </a>
+                    </li>
+                    <li class="flex items-start">
+                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                      <a
+                        href="https://docs.requestbite.com/slingshot/slingshot/#import-curl-command"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="hover:text-sky-600 hover:underline"
+                      >
+                        Import cURL command
+                      </a>
+                    </li>
+                    <li class="flex items-start">
+                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                      <a
+                        href="https://docs.requestbite.com/slingshot/slingshot/#export-request-as-curl-command"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="hover:text-sky-600 hover:underline"
+                      >
+                        Export request as cURL command
+                      </a>
+                    </li>
+                    <li class="flex items-start">
+                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                      <a
+                        href="https://docs.requestbite.com/slingshot/slingshot/#copy-request"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="hover:text-sky-600 hover:underline"
+                      >
+                        Copy request
+                      </a>
+                    </li>
+                    <li class="flex items-start">
+                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                      <a
+                        href="https://docs.requestbite.com/slingshot/slingshot/#copy-response-from-request"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="hover:text-sky-600 hover:underline"
+                      >
+                        Copy response from request
+                      </a>
+                    </li>
+                    <li class="flex items-start">
+                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                      <a
+                        href="https://docs.requestbite.com/slingshot/slingshot/#presentation-of-response-data"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="hover:text-sky-600 hover:underline"
+                      >
+                        Presentation of response data
+                      </a>
+                    </li>
+                    <li class="flex items-start">
+                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                      <a
+                        href="https://docs.requestbite.com/slingshot/slingshot/#precedence-of-variables-and-secrets"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="hover:text-sky-600 hover:underline"
+                      >
+                        Precedence of variables and secrets
+                      </a>
+                    </li>
+                    <li class="flex items-start">
+                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                      <a
+                        href="https://docs.requestbite.com/slingshot/slingshot/#how-requests-are-sent"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="hover:text-sky-600 hover:underline"
+                      >
+                        How requests are sent
+                      </a>
+                    </li>
+                  </ul>
+                </div>
               </>
             ) : (
               <>

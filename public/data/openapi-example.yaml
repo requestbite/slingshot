@@ -1,0 +1,495 @@
+openapi: 3.1.0
+info:
+  title: cURL apps
+  description: Some example requests to explore Slingshot with.
+  version: 1.0.0
+  x-postman-id: bda5fd7b-8b68-4d7d-9401-2e37df598b6e
+
+paths:
+  https://api.qrserver.com/v1/create-qr-code:
+    get:
+      tags:
+        - goqr.me - QR Code Generator
+      summary: Create QR code
+      operationId: createQRCode
+      parameters:
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: string
+            default: 150x150
+          example: 150x150
+        - name: data
+          in: query
+          required: false
+          schema:
+            type: string
+          example: Example
+      responses:
+        '200':
+          description: Successful response
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+
+  https://picsum.photos/v2/list:
+    get:
+      tags:
+        - picsum.photos - Lorem Picsum API
+      summary: 1 - List random images
+      operationId: listRandomImages
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  https://picsum.photos/{width}/{height}:
+    get:
+      tags:
+        - picsum.photos - Lorem Picsum API
+      summary: 2 - Get random image
+      operationId: getRandomImage
+      parameters:
+        - name: width
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 200
+        - name: height
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 300
+      responses:
+        '200':
+          description: Successful response
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+
+  https://picsum.photos/id/{id}/{width}/{height}:
+    get:
+      tags:
+        - picsum.photos - Lorem Picsum API
+      summary: 3 - Get specific image
+      operationId: getSpecificImage
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 4
+        - name: width
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 200
+        - name: height
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 300
+      responses:
+        '200':
+          description: Successful response
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+
+  https://picsum.photos/g/{width}/{height}:
+    get:
+      tags:
+        - picsum.photos - Lorem Picsum API
+      summary: 4 - Get random grayscale image
+      operationId: getRandomGrayscaleImage
+      parameters:
+        - name: width
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 200
+        - name: height
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 300
+      responses:
+        '200':
+          description: Successful response
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+
+  https://httpbin.org/image/webp:
+    get:
+      tags:
+        - httpbin.org - Images
+      summary: webp
+      operationId: getWebpImage
+      parameters:
+        - name: accept
+          in: header
+          required: false
+          schema:
+            type: string
+            default: image/jpeg
+      responses:
+        '200':
+          description: Successful response
+          content:
+            image/webp:
+              schema:
+                type: string
+                format: binary
+
+  https://httpbin.org/image/png:
+    get:
+      tags:
+        - httpbin.org - Images
+      summary: png
+      operationId: getPngImage
+      parameters:
+        - name: accept
+          in: header
+          required: false
+          schema:
+            type: string
+            default: image/jpeg
+      responses:
+        '200':
+          description: Successful response
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+
+  https://httpbin.org/image/svg:
+    get:
+      tags:
+        - httpbin.org - Images
+      summary: svg
+      operationId: getSvgImage
+      parameters:
+        - name: accept
+          in: header
+          required: false
+          schema:
+            type: string
+            default: image/jpeg
+      responses:
+        '200':
+          description: Successful response
+          content:
+            image/svg+xml:
+              schema:
+                type: string
+
+  https://httpbin.org/image/jpeg:
+    get:
+      tags:
+        - httpbin.org - Images
+      summary: jpeg
+      operationId: getJpegImage
+      parameters:
+        - name: accept
+          in: header
+          required: false
+          schema:
+            type: string
+            default: image/jpeg
+      responses:
+        '200':
+          description: Successful response
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+
+  https://httpbin.org/robots.txt:
+    get:
+      tags:
+        - httpbin.org - Response formats
+      summary: robots.txt
+      operationId: getRobotsTxt
+      parameters:
+        - name: accept
+          in: header
+          required: false
+          schema:
+            type: string
+            default: image/jpeg
+      responses:
+        '200':
+          description: Successful response
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  http://cht.sh/:
+    get:
+      tags:
+        - cht.sh - The only cheat sheet you need
+      summary: 1 - Root
+      operationId: chtshRoot
+      parameters:
+        - name: User-agent
+          in: header
+          required: false
+          schema:
+            type: string
+            default: curl/7.88.1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  http://cht.sh/:list:
+    get:
+      tags:
+        - cht.sh - The only cheat sheet you need
+      summary: 4 - List all cheat sheets
+      operationId: chtshListAll
+      parameters:
+        - name: User-agent
+          in: header
+          required: false
+          schema:
+            type: string
+            default: curl/7.88.1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  http://cht.sh/latencies:
+    get:
+      tags:
+        - cht.sh - The only cheat sheet you need
+      summary: 5 - Latency every programmer should know
+      operationId: chtshLatencies
+      parameters:
+        - name: User-agent
+          in: header
+          required: false
+          schema:
+            type: string
+            default: curl/7.88.1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  http://cht.sh/:help:
+    get:
+      tags:
+        - cht.sh - The only cheat sheet you need
+      summary: 3 - Help
+      operationId: chtshHelp
+      parameters:
+        - name: User-agent
+          in: header
+          required: false
+          schema:
+            type: string
+            default: curl/7.88.1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  http://cht.sh/:intro:
+    get:
+      tags:
+        - cht.sh - The only cheat sheet you need
+      summary: 2 - Intro
+      operationId: chtshIntro
+      parameters:
+        - name: User-agent
+          in: header
+          required: false
+          schema:
+            type: string
+            default: curl/7.88.1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  http://wttr.in/stockholm:
+    get:
+      tags:
+        - wttr.in - Weather in Stockholm
+      summary: 1 - Default (metric)
+      operationId: weatherStockholmDefault
+      parameters:
+        - name: User-agent
+          in: header
+          required: false
+          schema:
+            type: string
+            default: curl/7.88.1
+        - name: u
+          in: query
+          required: false
+          description: Use imperial units
+          schema:
+            type: string
+        - name: '0'
+          in: query
+          required: false
+          description: Show only current weather
+          schema:
+            type: string
+        - name: format
+          in: query
+          required: false
+          description: Output format (j1 for JSON, %m for moon phase, etc.)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  http://v2d.wttr.in/stockholm:
+    get:
+      tags:
+        - wttr.in - Weather in Stockholm
+      summary: 2 - Data-rich format (v2)
+      operationId: weatherStockholmV2
+      parameters:
+        - name: User-agent
+          in: header
+          required: false
+          schema:
+            type: string
+            default: curl/7.88.1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  http://sv.wttr.in/stockholm:
+    get:
+      tags:
+        - wttr.in - Weather in Stockholm
+      summary: 4 - In Swedish
+      operationId: weatherStockholmSwedish
+      parameters:
+        - name: User-agent
+          in: header
+          required: false
+          schema:
+            type: string
+            default: curl/7.88.1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  http://wttr.in/stockholm.png:
+    get:
+      tags:
+        - wttr.in - Weather in Stockholm
+      summary: 5 - PNG image
+      operationId: weatherStockholmPng
+      parameters:
+        - name: User-agent
+          in: header
+          required: false
+          schema:
+            type: string
+            default: curl/7.88.1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+
+  http://wttr.in/Moon:
+    get:
+      tags:
+        - wttr.in - Other
+      summary: Moon phases
+      operationId: moonPhases
+      parameters:
+        - name: User-agent
+          in: header
+          required: false
+          schema:
+            type: string
+            default: curl/7.88.1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            text/plain:
+              schema:
+                type: string
+
+tags:
+  - name: goqr.me - QR Code Generator
+    description: QR Code generation service
+  - name: picsum.photos - Lorem Picsum API
+    description: Lorem Picsum image service
+  - name: httpbin.org - Images
+    description: HTTP testing service - Images
+  - name: httpbin.org - Response formats
+    description: HTTP testing service - Response formats
+  - name: cht.sh - The only cheat sheet you need
+    description: Cheat sheet service
+  - name: wttr.in - Weather in Stockholm
+    description: Weather service for Stockholm
+  - name: wttr.in - Other
+    description: Weather service - Other features
