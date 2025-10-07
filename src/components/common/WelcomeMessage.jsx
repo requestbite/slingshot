@@ -1,4 +1,5 @@
 export function WelcomeMessage() {
+  const baseUrl = import.meta.env.VITE_BASE_URL || 'https://s.requestbite.com';
   return (
     <div class="text-center py-8 flex flex-col items-center justify-center">
       <div class="mx-auto w-32 mb-4">
@@ -28,7 +29,7 @@ export function WelcomeMessage() {
       <div class="w-px h-4 bg-gray-300"></div>
       <div class="bg-gray-50 px-2 py-1 text-gray-500 text-sm rounded-md border border-gray-200">
         <button
-          onClick={() => window.openUrlImportModal?.('https://docs.requestbite.com/assets/curl-apps.json')}
+          onClick={() => window.openUrlImportModal?.(baseUrl + '/data/openapi-example.yaml')}
           class="text-gray-400 underline bg-transparent border-none p-0 cursor-pointer hover:text-gray-500"
         >
           Import
