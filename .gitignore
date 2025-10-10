@@ -152,3 +152,6 @@ dist-ssr
 # Proxy binary
 proxy/proxy
 proxy/proxy-go
+
+*storybook.log
+storybook-static
