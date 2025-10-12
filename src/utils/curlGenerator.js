@@ -5,15 +5,15 @@
 
 export function generateCurlCommand(requestData) {
   const parts = ['curl'];
-  
+
   // Add HTTP method (only if not GET, as GET is default)
   if (requestData.method && requestData.method !== 'GET') {
     parts.push('-X', escapeShellArg(requestData.method));
   }
-  
+
   // Process URL with path parameters
   let url = requestData.url || '';
-  
+
   // Replace path parameters
   if (requestData.pathParams && requestData.pathParams.length > 0) {
     requestData.pathParams.forEach(param => {
@@ -27,7 +27,7 @@ export function generateCurlCommand(requestData) {
       }
     });
   }
-  
+
   // Add query parameters
   if (requestData.queryParams && requestData.queryParams.length > 0) {
     const enabledParams = requestData.queryParams.filter(param => param.enabled && param.key);
@@ -38,10 +38,10 @@ export function generateCurlCommand(requestData) {
       url = url + (url.includes('?') ? '&' : '?') + queryString;
     }
   }
-  
+
   // Add URL (always quoted)
   parts.push(escapeShellArg(url));
-  
+
   // Add headers
   if (requestData.headers && requestData.headers.length > 0) {
     requestData.headers.forEach(header => {
@@ -50,14 +50,14 @@ export function generateCurlCommand(requestData) {
       }
     });
   }
-  
+
   // Add body based on body type
   if (requestData.bodyType && requestData.bodyType !== 'none' && !['GET', 'HEAD'].includes(requestData.method)) {
     switch (requestData.bodyType) {
       case 'raw':
         if (requestData.bodyContent) {
           // Add content-type header if not already present and we have a content type
-          const hasContentType = requestData.headers?.some(h => 
+          const hasContentType = requestData.headers?.some(h =>
             h.enabled && h.key.toLowerCase() === 'content-type'
           );
           if (!hasContentType && requestData.contentType) {
@@ -66,7 +66,7 @@ export function generateCurlCommand(requestData) {
           parts.push('-d', escapeShellArg(requestData.bodyContent));
         }
         break;
-        
+
       case 'form-data':
         if (requestData.formData && requestData.formData.length > 0) {
           requestData.formData.forEach(field => {
@@ -80,7 +80,7 @@ export function generateCurlCommand(requestData) {
           });
         }
         break;
-        
+
       case 'url-encoded':
         if (requestData.urlEncodedData && requestData.urlEncodedData.length > 0) {
           const enabledFields = requestData.urlEncodedData.filter(field => field.enabled && field.key);
@@ -95,19 +95,19 @@ export function generateCurlCommand(requestData) {
         break;
     }
   }
-  
+
   // Add settings
   if (requestData.followRedirects === false) {
     parts.push('--max-redirs', '0');
   }
-  
+
   if (requestData.timeout && requestData.timeout !== 30) {
     parts.push('--max-time', requestData.timeout.toString());
   }
-  
+
   // Add common options for better debugging
   parts.push('-v'); // Verbose mode to show headers
-  
+
   return parts.join(' ');
 }
 
@@ -118,13 +118,13 @@ function escapeShellArg(arg) {
   if (typeof arg !== 'string') {
     arg = String(arg);
   }
-  
+
   // If the argument contains special characters, wrap in single quotes
   // and escape any single quotes within
   if (/[^\w@%+=:,./-]/.test(arg)) {
     return "'" + arg.replace(/'/g, "'\"'\"'") + "'";
   }
-  
+
   return arg;
 }
 
@@ -133,15 +133,15 @@ function escapeShellArg(arg) {
  */
 export function generateFormattedCurlCommand(requestData) {
   const parts = ['curl'];
-  
+
   // Add HTTP method
   if (requestData.method && requestData.method !== 'GET') {
     parts.push(`  -X ${escapeShellArg(requestData.method)}`);
   }
-  
+
   // Process URL
   let url = requestData.url || '';
-  
+
   // Replace path parameters
   if (requestData.pathParams && requestData.pathParams.length > 0) {
     requestData.pathParams.forEach(param => {
@@ -155,7 +155,7 @@ export function generateFormattedCurlCommand(requestData) {
       }
     });
   }
-  
+
   // Add query parameters
   if (requestData.queryParams && requestData.queryParams.length > 0) {
     const enabledParams = requestData.queryParams.filter(param => param.enabled && param.key);
@@ -166,7 +166,7 @@ export function generateFormattedCurlCommand(requestData) {
       url = url + (url.includes('?') ? '&' : '?') + queryString;
     }
   }
-  
+
   // Add headers
   if (requestData.headers && requestData.headers.length > 0) {
     requestData.headers.forEach(header => {
@@ -175,13 +175,13 @@ export function generateFormattedCurlCommand(requestData) {
       }
     });
   }
-  
+
   // Add body
   if (requestData.bodyType && requestData.bodyType !== 'none' && !['GET', 'HEAD'].includes(requestData.method)) {
     switch (requestData.bodyType) {
       case 'raw':
         if (requestData.bodyContent) {
-          const hasContentType = requestData.headers?.some(h => 
+          const hasContentType = requestData.headers?.some(h =>
             h.enabled && h.key.toLowerCase() === 'content-type'
           );
           if (!hasContentType && requestData.contentType) {
@@ -190,7 +190,7 @@ export function generateFormattedCurlCommand(requestData) {
           parts.push(`  -d ${escapeShellArg(requestData.bodyContent)}`);
         }
         break;
-        
+
       case 'form-data':
         if (requestData.formData && requestData.formData.length > 0) {
           requestData.formData.forEach(field => {
@@ -204,7 +204,7 @@ export function generateFormattedCurlCommand(requestData) {
           });
         }
         break;
-        
+
       case 'url-encoded':
         if (requestData.urlEncodedData && requestData.urlEncodedData.length > 0) {
           const enabledFields = requestData.urlEncodedData.filter(field => field.enabled && field.key);
@@ -219,18 +219,24 @@ export function generateFormattedCurlCommand(requestData) {
         break;
     }
   }
-  
+
   // Add settings
   if (requestData.followRedirects === false) {
     parts.push('  --max-redirs 0');
   }
-  
+
   if (requestData.timeout && requestData.timeout !== 30) {
     parts.push(`  --max-time ${requestData.timeout}`);
   }
-  
+
   // Add URL at the end
   parts.push(`  ${escapeShellArg(url)}`);
-  
+
+  // If there are only 2 parts (curl + url), format on single line
+  // Otherwise use multi-line format with backslashes
+  if (parts.length === 2) {
+    return parts.join('');
+  }
+
   return parts.join(' \\\n');
 }
