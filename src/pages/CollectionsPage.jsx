@@ -7,6 +7,7 @@ import { Toast, useToast } from '../components/common/Toast';
 import { useAppContext } from '../hooks/useAppContext';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { apiClient } from '../api';
+import { Button } from '../components/common/Button';
 
 export function CollectionsPage() {
   usePageTitle('Collections');
@@ -153,13 +154,15 @@ export function CollectionsPage() {
                 </p>
               </div>
               <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-                <button
+                <Button
                   onClick={() => setShowAddModal(true)}
                   type="button"
-                  class="cursor-pointer block rounded-md bg-sky-500 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-sky-400 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+                  variant="primary"
+                  size="md"
+                  className="block text-center"
                 >
                   Add Collection
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -217,10 +220,11 @@ export function CollectionsPage() {
                         </td>
                         <td class="table-cell py-4 pl-3 pr-6 text-right text-sm sm:pr-0">
                           <div class="flex justify-end">
-                            <button
+                            <Button
                               onClick={(e) => handleContextMenuOpen(e, collection)}
                               type="button"
-                              class="cursor-pointer inline-flex items-center text-sky-500 hover:text-sky-700 hover:underline flex-shrink-0"
+                              variant="ghost"
+                              size="sm"
                               id={`collection-menu-button-${collection.id}`}
                               aria-expanded="false"
                               aria-haspopup="true"
@@ -231,7 +235,7 @@ export function CollectionsPage() {
                                 <circle cx="19" cy="12" r="1" />
                                 <circle cx="5" cy="12" r="1" />
                               </svg>
-                            </button>
+                            </Button>
                           </div>
                         </td>
                       </tr>

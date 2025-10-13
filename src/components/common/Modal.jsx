@@ -1,5 +1,6 @@
 import { useEffect } from 'preact/hooks';
 import { Portal } from './Portal';
+import { Button } from './Button';
 
 export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
   const sizeClasses = {
@@ -109,16 +110,17 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
             >
               <div>
                 <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
-                  <button
+                  <Button
                     onClick={onClose}
                     type="button"
-                    class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 cursor-pointer"
+                    variant="ghost"
+                    size="sm"
                   >
                     <span class="sr-only">Close</span>
                     <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                     </svg>
-                  </button>
+                  </Button>
                 </div>
 
                 <div class="mt-0">

@@ -9,7 +9,7 @@ export default {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['primary', 'secondary', 'ghost', 'icon', 'danger', 'utility', 'success'],
+      options: ['primary', 'secondary', 'ghost', 'icon', 'danger', 'utility', 'success', 'none'],
     },
     size: {
       control: 'select',
@@ -178,6 +178,23 @@ export const SuccessSmall = {
     variant: 'success',
     size: 'xs',
     children: 'Make default',
+  },
+};
+
+// None variant (no styling, use className for custom styling)
+export const None = {
+  args: {
+    variant: 'none',
+    className: 'px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600',
+    children: 'Custom Styled Button',
+  },
+};
+
+export const NoneMinimal = {
+  args: {
+    variant: 'none',
+    className: 'text-blue-600 underline hover:text-blue-800',
+    children: 'Link-style button',
   },
 };
 
@@ -515,6 +532,15 @@ export const AllVariants = {
           <Button variant="success" size="sm">Small</Button>
           <Button variant="success" size="md">Medium</Button>
           <Button variant="success" size="md" disabled>Disabled</Button>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-sm font-semibold text-gray-900 mb-3">None (Custom Styling)</h3>
+        <div class="flex flex-wrap gap-3">
+          <Button variant="none" className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 font-medium">Custom Purple</Button>
+          <Button variant="none" className="text-blue-600 underline hover:text-blue-800">Link Style</Button>
+          <Button variant="none" className="px-3 py-1 border-2 border-orange-500 text-orange-500 rounded-full hover:bg-orange-50 font-semibold">Custom Border</Button>
         </div>
       </div>
     </div>

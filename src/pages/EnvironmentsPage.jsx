@@ -10,6 +10,7 @@ import { useAppContext } from '../hooks/useAppContext';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { apiClient } from '../api';
 import { setupEncryptionKey, hasSessionKey, storeEncryptedReference } from '../utils/encryption';
+import { Button } from '../components/common/Button';
 
 // Map auth field values to display names
 const getAuthMethodDisplayName = (authField) => {
@@ -300,13 +301,15 @@ export function EnvironmentsPage() {
                   </div>
 
                   <div class="mt-6">
-                    <button
+                    <Button
                       type="submit"
                       disabled={isSubmitting || !password.trim() || !confirmPassword.trim() || password !== confirmPassword || password.length < 4}
-                      class="inline-flex w-full justify-center rounded-md bg-sky-500 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-400 disabled:bg-sky-300 disabled:cursor-not-allowed cursor-pointer"
+                      variant="primary"
+                      size="md"
+                      className="w-full"
                     >
                       {isSubmitting ? 'Setting up...' : 'Save'}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </form>
@@ -343,17 +346,20 @@ export function EnvironmentsPage() {
               </div>
               <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
                 <div class="flex space-x-2">
-                  <button
+                  <Button
                     onClick={() => setShowAddModal(true)}
                     type="button"
-                    class="cursor-pointer block rounded-md bg-sky-500 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-sky-400 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+                    variant="primary"
+                    size="md"
+                    className="block text-center"
                   >
                     Add Environment
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={handleExportMenuOpen}
                     type="button"
-                    class="cursor-pointer inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                    variant="secondary"
+                    size="md"
                     id="export-menu-button"
                     aria-expanded="false"
                     aria-haspopup="true"
@@ -364,7 +370,7 @@ export function EnvironmentsPage() {
                       <circle cx="19" cy="12" r="1" />
                       <circle cx="5" cy="12" r="1" />
                     </svg>
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -431,10 +437,11 @@ export function EnvironmentsPage() {
                         </td>
                         <td class="table-cell py-4 pl-3 pr-6 text-right text-sm sm:pr-0">
                           <div class="flex justify-end">
-                            <button
+                            <Button
                               onClick={(e) => handleContextMenuOpen(e, environment)}
                               type="button"
-                              class="cursor-pointer inline-flex items-center text-sky-500 hover:text-sky-700 hover:underline flex-shrink-0"
+                              variant="ghost"
+                              size="sm"
                               id={`environment-menu-button-${environment.id}`}
                               aria-expanded="false"
                               aria-haspopup="true"
@@ -445,7 +452,7 @@ export function EnvironmentsPage() {
                                 <circle cx="19" cy="12" r="1" />
                                 <circle cx="5" cy="12" r="1" />
                               </svg>
-                            </button>
+                            </Button>
                           </div>
                         </td>
                       </tr>

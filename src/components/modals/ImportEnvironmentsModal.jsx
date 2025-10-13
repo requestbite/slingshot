@@ -3,6 +3,7 @@ import { apiClient } from '../../api';
 import { encryptSecret } from '../../utils/encryption';
 import db from '../../db/schema';
 import { Modal } from '../common/Modal';
+import { Button } from '../common/Button';
 
 export function ImportEnvironmentsModal({ isOpen, onClose, onSuccess }) {
   const [file, setFile] = useState(null);
@@ -281,28 +282,26 @@ export function ImportEnvironmentsModal({ isOpen, onClose, onSuccess }) {
 
           {/* Action buttons */}
           <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-            <button
+            <Button
               type="submit"
               disabled={isLoading || !file}
-              class="inline-flex w-full justify-center rounded-md bg-sky-500 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-400 disabled:bg-sky-300 disabled:cursor-not-allowed sm:ml-3 sm:w-auto cursor-pointer"
+              loading={isLoading}
+              variant="primary"
+              size="md"
+              className="w-full sm:ml-3 sm:w-auto"
             >
-              {isLoading ? (
-                <div class="flex items-center">
-                  <div class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-solid border-white border-r-transparent mr-2"></div>
-                  Importing...
-                </div>
-              ) : (
-                'Import'
-              )}
-            </button>
-            <button
+              Import
+            </Button>
+            <Button
               type="button"
               onClick={handleClose}
               disabled={isLoading}
-              class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed sm:mt-0 sm:w-auto cursor-pointer"
+              variant="secondary"
+              size="md"
+              className="mt-3 w-full sm:mt-0 sm:w-auto"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       </form>

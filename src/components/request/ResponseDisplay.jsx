@@ -26,6 +26,7 @@ import {
   getOriginalResponseContent,
   getStatusColor
 } from './ResponseDisplayUtils';
+import { Button } from '../common/Button';
 
 export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStreaming, streamedContent, streamedChunks, streamingMetadata, selectedCollection }) {
   // Initialize headers visibility from localStorage, defaulting to false (closed)
@@ -74,12 +75,13 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
         <div class="text-center">
           <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-solid border-sky-500 border-r-transparent mb-4"></div>
           <div class="text-sm text-gray-700 mb-3">Request in progress...</div>
-          <button
+          <Button
             onClick={onCancel}
-            class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-md text-sm font-medium cursor-pointer"
+            variant="danger"
+            size="md"
           >
             Cancel Request
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -317,9 +319,10 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                   </div>
                 )}
                 <div class="flex items-center space-x-2 whitespace-nowrap">
-                  <button
+                  <Button
                     onClick={() => setShowHeaders(!showHeaders)}
-                    class="flex items-center text-sm font-medium text-gray-700 cursor-pointer whitespace-nowrap mr-4"
+                    variant="none"
+                    className="flex items-center text-sm font-medium text-gray-700 cursor-pointer whitespace-nowrap mr-4"
                   >
                     <svg
                       class={`h-4 w-4 mr-1 transition-transform duration-200 ${showHeaders ? 'rotate-90' : ''}`}
@@ -331,7 +334,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                     </svg>
                     Headers&nbsp;
                     <span class="text-gray-500 font-normal ml-1">({processedHeaders.length})</span>
-                  </button>
+                  </Button>
                   {effectiveResponse.saved && effectiveResponse.receivedAt && (
                     <span class="text-xs text-gray-400 font-normal whitespace-nowrap mr-4">
                       Cached response from {new Date(effectiveResponse.receivedAt).toLocaleString()}
@@ -343,9 +346,10 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
               {/* Copy Response Button and Clear Button */}
               {(response.responseData || streamedContent || response.finalStreamedContent) && (
                 <div class="flex items-center space-x-3">
-                  <button
+                  <Button
                     onClick={() => copyToClipboard(isStreaming ? streamedContent : processResponseContent(response, selectedCollection))}
-                    class="inline-flex items-center text-sky-500 hover:text-sky-700 cursor-pointer"
+                    variant="none"
+                    className="inline-flex items-center text-sky-500 hover:text-sky-700 cursor-pointer"
                   >
                     <span class="inline-block w-4 h-4 mr-1">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-full h-full">
@@ -353,11 +357,14 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                       </svg>
                     </span>
                     Copy
-                  </button>
+                  </Button>
                   {onClear && (
-                    <button
+                    <Button
                       onClick={onClear}
-                      class="inline-flex items-center text-sky-500 hover:text-sky-700 cursor-pointer"
+                      variant="none"
+                      disabled={!(response.status || response.responseData || effectiveResponse.saved || streamedContent)}
+                      className="inline-flex items-center text-sky-500 hover:text-sky-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      title={(response.status || response.responseData || effectiveResponse.saved || streamedContent) ? "Clear cached response from IndexedDB" : "No response to clear"}
                     >
                       <span class="inline-block w-4 h-4 mr-1">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
@@ -367,7 +374,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                         </svg>
                       </span>
                       Clear
-                    </button>
+                    </Button>
                   )}
                 </div>
               )}
@@ -431,9 +438,10 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
               {/* Download link for binary content */}
               {(response.isBinary || response.binaryData) && (
                 <div class="mb-4">
-                  <button
+                  <Button
                     onClick={() => downloadBinaryContent(response)}
-                    class="inline-flex items-center text-sky-500 hover:text-sky-700 cursor-pointer text-sm"
+                    variant="none"
+                    className="inline-flex items-center text-sky-500 hover:text-sky-700 cursor-pointer text-sm"
                   >
                     <span class="inline-block w-4 h-4 mr-2">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-full h-full">
@@ -441,7 +449,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                       </svg>
                     </span>
                     Download {getDownloadFilename(response)}
-                  </button>
+                  </Button>
                 </div>
               )}
 

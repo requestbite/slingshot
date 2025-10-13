@@ -16,6 +16,7 @@ import { requestSubmitter } from '../../utils/requestSubmitter';
 import { apiClient } from '../../api';
 import { useAppContext } from '../../hooks/useAppContext';
 import { decryptSecret } from '../../utils/encryption';
+import { Button } from '../common/Button';
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 
@@ -1189,26 +1190,25 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
                     <path d="M12 16v-4" />
                     <path d="M12 8h.01" />
                   </svg>
-                  Request has unsaved data ( <button onClick={handleRestore} class="text-sky-500 hover:text-sky-700 cursor-pointer">restore</button>)
+                  Request has unsaved data ( <Button onClick={handleRestore} variant="ghost" size="xs" className="p-0 h-auto">restore</Button>)
                 </span>
               )}
-              <button
+              <Button
                 onClick={handleUpdate}
                 disabled={!hasUnsavedChanges}
-                class={`cursor-pointer rounded-md px-2 py-1 text-xs focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${hasUnsavedChanges
-                  ? 'bg-sky-100 hover:bg-sky-200 text-sky-700'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  }`}
+                variant={hasUnsavedChanges ? 'icon' : 'icon'}
+                size="xs"
               >
                 Update
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => setShowSaveAsModal(true)}
                 title="Save the current request to a collection"
-                class="cursor-pointer rounded-md px-2 py-1 text-xs focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 bg-sky-100 hover:bg-sky-200 text-sky-700"
+                variant="icon"
+                size="xs"
               >
                 Save as
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1251,32 +1251,27 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
 
           {/* Send and Code buttons */}
           <div class="flex flex-none">
-            <button
+            <Button
               onClick={handleSendRequest}
               disabled={isSubmitting}
-              class={`cursor-pointer rounded-md px-3 py-2 text-sm font-semibold focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${isSubmitting
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-sky-500 hover:bg-sky-400 text-white'
-                }`}
+              variant="primary"
+              size="md"
             >
               {isSubmitting ? 'Sending...' : 'Send'}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setShowCurlModal(true)}
               disabled={isSubmitting}
               type="button"
-              class={`hidden ml-2 sm:block cursor-pointer rounded-md px-3 py-2 text-sm font-semibold border border-gray-300 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-gray-500 ${isSubmitting
-                ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                }`}
+              variant="utility"
+              size="md"
+              className="hidden ml-2 sm:block"
             >
-              <span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-code-icon lucide-code">
-                  <path d="m16 18 6-6-6-6" />
-                  <path d="m8 6-6 6 6 6" />
-                </svg>
-              </span>
-            </button>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-code-icon lucide-code">
+                <path d="m16 18 6-6-6-6" />
+                <path d="m8 6-6 6 6 6" />
+              </svg>
+            </Button>
           </div>
         </div>
       </div>
@@ -1332,18 +1327,22 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
                   )}
                 </button>
               ))}
-              <button type="button"
+              <Button type="button"
                 onClick={() => setShowCurlImportModal(true)}
-                class="cursor-pointer px-4 py-2 text-xs rounded-t-md font-medium text-sky-500 hover:text-sky-700 hover:bg-sky-50 focus:outline-none"
+                variant="ghost"
+                size="xs"
+                className="px-4 py-2 rounded-t-md"
               >
                 Import cURL
-              </button>
-              <button type="button"
+              </Button>
+              <Button type="button"
                 onClick={() => setShowCopyRequestModal(true)}
-                class="cursor-pointer px-4 py-2 text-xs rounded-t-md font-medium text-sky-500 hover:text-sky-700 hover:bg-sky-50 focus:outline-none"
+                variant="ghost"
+                size="xs"
+                className="px-4 py-2 rounded-t-md"
               >
                 Copy request
-              </button>
+              </Button>
 
               {/* Auth Banner */}
               {currentEnvironment?.auth && currentEnvironment.auth !== 'none' && getAuthMethodDisplayName(currentEnvironment.auth) && (
@@ -1365,9 +1364,11 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
             <div class="flex-shrink-0">
               {/* Docs Sidebar Toggle - show when collection is selected */}
               {selectedCollection && (
-                <button type="button"
+                <Button type="button"
                   onClick={() => setIsDocsSidebarVisible(!isDocsSidebarVisible)}
-                  class="cursor-pointer px-4 py-2 text-xs rounded-t-md font-medium text-sky-500 hover:text-sky-700 hover:bg-sky-50 focus:outline-none"
+                  variant="ghost"
+                  size="xs"
+                  className="px-4 py-2 rounded-t-md"
                   title={isDocsSidebarVisible ? "Hide docs panel" : "Show docs panel"}
                 >
                   <div class="flex items-center space-x-1">
@@ -1376,7 +1377,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
                     </svg>
                     <span>{isDocsSidebarVisible ? 'Hide docs' : 'Show docs'}</span>
                   </div>
-                </button>
+                </Button>
               )}
             </div>
           </div>

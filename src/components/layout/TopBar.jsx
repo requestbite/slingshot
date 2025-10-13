@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import LogoHorizontal from '../../assets/logo-horizontal-slingshot.svg';
 import { getLastSlingshotUrl, setLastSlingshotUrl, isValidSlingshotUrl } from '../../utils/slingshotNavigation';
+import { Button } from '../common/Button';
 
 export function TopBar() {
   const [location, setLocation] = useLocation();
@@ -228,14 +229,16 @@ export function TopBar() {
           </a>
 
           {/* Desktop Proxy Status Banner */}
-          <button
+          <Button
             onClick={() => setLocation('/settings')}
-            class={`hidden lg:flex px-2 py-1 rounded-md text-xs transition-colors cursor-pointer items-center ${banner.bgColor} ${banner.textColor} ${banner.hoverColor}`}
+            variant={proxyConfig.proxyType === 'custom' ? 'success' : 'icon'}
+            size="xs"
+            className={`hidden lg:flex ${proxyConfig.proxyType === 'custom' ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-sky-100 text-sky-800 hover:bg-sky-200'}`}
           >
             <WaypointsIcon />
             <span class="hidden xl:inline">{banner.textXl}</span>
             <span class="xl:hidden">{proxyConfig.proxyType === 'custom' ? 'Custom proxy' : banner.text}</span>
-          </button>
+          </Button>
 
           {/* Mobile Version Link */}
           <a href="https://docs.requestbite.com/changelog/" target="_blank" class="lg:hidden text-gray-600 hover:text-gray-400 flex items-center">
@@ -244,10 +247,12 @@ export function TopBar() {
 
           {/* Mobile Hamburger Menu */}
           <div class="block lg:hidden">
-            <button
+            <Button
               onClick={() => setIsMobileMenuOpen(true)}
               type="button"
-              class="cursor-pointer text-gray-600 hover:text-gray-900"
+              variant="ghost"
+              size="sm"
+              className="text-gray-600 hover:text-gray-900"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="currentColor" class="w-6 h-6">
                 <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
@@ -256,7 +261,7 @@ export function TopBar() {
                   <path d="M7.94971 35.9497H39.9497" />
                 </g>
               </svg>
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -273,23 +278,27 @@ export function TopBar() {
           {/* Sidebar */}
           <div class="fixed top-0 right-0 inset-y-0 h-screen w-[calc(100%-75px)] bg-white shadow-lg z-50 text-left overflow-y-auto">
             <div class="flex items-center justify-between border-b border-gray-300">
-              <button
+              <Button
                 onClick={() => setLocation(getLastSlingshotUrl())}
-                class="ml-3 mr-1.5 p-1.5 hover:opacity-80 transition-opacity"
+                variant="ghost"
+                size="sm"
+                className="ml-3 mr-1.5 p-1.5 hover:opacity-80 transition-opacity"
               >
                 <span class="sr-only">RequestBite</span>
                 <img class="h-8 w-auto" src={LogoHorizontal} alt="RequestBite" />
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 onClick={() => setIsMobileMenuOpen(false)}
-                class="m-2.5 rounded-md p-2.5 text-gray-700 cursor-pointer hover:bg-gray-100"
+                variant="ghost"
+                size="sm"
+                className="m-2.5 rounded-md p-2.5 text-gray-700 hover:bg-gray-100"
               >
                 <span class="sr-only">Close menu</span>
                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                 </svg>
-              </button>
+              </Button>
             </div>
 
             <div class="mt-6 flow-root text-sm bg-white">
@@ -378,16 +387,18 @@ export function TopBar() {
                   </a>
 
                   {/* Mobile Proxy Banner */}
-                  <button
+                  <Button
                     onClick={() => {
                       setLocation('/settings');
                       setIsMobileMenuOpen(false);
                     }}
-                    class={`mx-4 mt-4 px-3 py-2 rounded-md text-xs transition-colors cursor-pointer flex items-center ${banner.bgColor} ${banner.textColor} ${banner.hoverColor}`}
+                    variant={proxyConfig.proxyType === 'custom' ? 'success' : 'icon'}
+                    size="sm"
+                    className={`mx-4 mt-4 flex items-center ${proxyConfig.proxyType === 'custom' ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-sky-100 text-sky-800 hover:bg-sky-200'}`}
                   >
                     <WaypointsIcon />
                     {banner.text}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
