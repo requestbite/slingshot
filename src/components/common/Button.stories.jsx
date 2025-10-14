@@ -9,7 +9,7 @@ export default {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['primary', 'secondary', 'ghost', 'icon', 'danger', 'utility', 'success', 'none'],
+      options: ['primary', 'secondary', 'ghost', 'icon', 'danger', 'utility', 'success', 'link', 'none'],
     },
     size: {
       control: 'select',
@@ -84,6 +84,30 @@ export const GhostSmall = {
     variant: 'ghost',
     size: 'sm',
     children: 'Ghost Small',
+  },
+};
+
+// Link variant (text link style)
+export const Link = {
+  args: {
+    variant: 'link',
+    children: 'Link Button',
+  },
+};
+
+export const LinkSmall = {
+  args: {
+    variant: 'link',
+    children: 'Forgot password?',
+    className: 'text-sm',
+  },
+};
+
+export const LinkDisabled = {
+  args: {
+    variant: 'link',
+    children: 'Disabled Link',
+    disabled: true,
   },
 };
 
@@ -383,6 +407,7 @@ export const Interactive = {
                   <option value="primary">Primary</option>
                   <option value="secondary">Secondary</option>
                   <option value="ghost">Ghost</option>
+                  <option value="link">Link</option>
                   <option value="icon">Icon</option>
                   <option value="danger">Danger</option>
                   <option value="utility">Utility</option>
@@ -476,6 +501,16 @@ export const AllVariants = {
           <Button variant="ghost" size="sm">Small</Button>
           <Button variant="ghost" size="md">Medium</Button>
           <Button variant="ghost" size="md" disabled>Disabled</Button>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-sm font-semibold text-gray-900 mb-3">Link</h3>
+        <div class="flex flex-wrap gap-3">
+          <Button variant="link">Default Link</Button>
+          <Button variant="link" className="text-sm">Small Link</Button>
+          <Button variant="link" className="text-xs">Extra Small Link</Button>
+          <Button variant="link" disabled>Disabled Link</Button>
         </div>
       </div>
 

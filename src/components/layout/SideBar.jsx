@@ -11,6 +11,7 @@ import { AddCollectionModal } from '../modals/AddCollectionModal';
 import { ExportPostmanModal } from '../modals/ExportPostmanModal';
 import { ContextMenu } from '../common/ContextMenu';
 import { FolderTree } from '../sidebar/FolderTree';
+import { TextInput } from '../common/TextInput';
 import { useAppContext } from '../../hooks/useAppContext';
 import { apiClient } from '../../api';
 import { hasSessionKey } from '../../utils/encryption';
@@ -384,13 +385,12 @@ export function SideBar({ onClose: _onClose }) {
 
               {/* Filter input */}
               <div class="relative mb-2">
-                <input
-                  type="text"
+                <TextInput
                   placeholder="Filter requests..."
                   value={searchTerm}
                   onInput={(e) => setSearchTerm(e.target.value)}
-                  class="w-full text-xs bg-white border border-gray-300 rounded-sm py-1 pl-7 pr-8 focus:outline-none focus:ring-1 focus:ring-sky-500 placeholder-gray-400"
                   disabled={!selectedCollection}
+                  style={{ fontSize: '0.75rem', paddingLeft: '1.75rem', paddingRight: '2rem' }}
                 />
                 <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

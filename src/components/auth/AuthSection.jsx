@@ -8,6 +8,10 @@ import { dracula } from '@uiw/codemirror-theme-dracula';
 import { EditorView } from '@codemirror/view';
 import { bracketMatching } from '@codemirror/language';
 import { Toast, useToast } from '../common/Toast';
+import { TextInput } from '../common/TextInput';
+import { Select } from '../common/Select';
+import { Label } from '../common/Label';
+import { Button } from '../common/Button';
 
 // Helper function to encrypt auth configuration
 const encryptAuthConfig = async (authConfig) => {
@@ -1239,23 +1243,22 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
     <div class="space-y-6">
       {/* Auth Type Selection */}
       <div>
-        <label for="auth-type" class="block text-sm font-medium text-gray-700 mb-2">
+        <Label htmlFor="auth-type">
           Authentication Type
-        </label>
-        <select
-          id="auth-type"
+        </Label>
+        <Select
           value={authType}
-          onChange={(e) => handleAuthTypeChange(e.target.value)}
-          class="block w-full rounded-md px-3 py-2 text-gray-900 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-sky-500 text-sm"
-        >
-          <option value="none">No auth</option>
-          <option value="api_key">API Key</option>
-          <option value="basic_auth">Basic Auth</option>
-          <option value="bearer_token">Bearer Token</option>
-          <option value="oauth2_pkce">OAuth 2.0 (PKCE)</option>
-          <option value="oauth2_code">OAuth 2.0 (Code Flow)</option>
-          <option value="oidc_pkce">OpenID Connect (PKCE)</option>
-        </select>
+          onChange={handleAuthTypeChange}
+          options={[
+            { value: 'none', label: 'No auth' },
+            { value: 'api_key', label: 'API Key' },
+            { value: 'basic_auth', label: 'Basic Auth' },
+            { value: 'bearer_token', label: 'Bearer Token' },
+            { value: 'oauth2_pkce', label: 'OAuth 2.0 (PKCE)' },
+            { value: 'oauth2_code', label: 'OAuth 2.0 (Code Flow)' },
+            { value: 'oidc_pkce', label: 'OpenID Connect (PKCE)' }
+          ]}
+        />
       </div>
 
       {/* OAuth 2.0 Code Flow Notice */}
@@ -1275,52 +1278,45 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
       {authType === 'api_key' && (
         <div class="space-y-4">
           <div>
-            <label for="api-key" class="block text-sm font-medium text-gray-700">
-              Key <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
+            <Label htmlFor="api-key" mandatory>
+              Key
+            </Label>
+            <TextInput
               id="api-key"
               value={authConfig.key || ''}
               onInput={(e) => handleConfigChange('key', e.target.value)}
               placeholder="X-API-Key"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description='The name of the API key parameter (e.g., "X-API-Key", "api_key")'
             />
-            <p class="mt-1 text-xs text-gray-500">
-              The name of the API key parameter (e.g., "X-API-Key", "api_key")
-            </p>
           </div>
 
           <div>
-            <label for="api-value" class="block text-sm font-medium text-gray-700">
-              Value <span class="text-red-500">*</span>
-            </label>
-            <input
+            <Label htmlFor="api-value" mandatory>
+              Value
+            </Label>
+            <TextInput
               type="password"
               id="api-value"
               value={authConfig.value || ''}
               onInput={(e) => handleConfigChange('value', e.target.value)}
               placeholder="your-api-key-value"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="The actual API key value"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              The actual API key value
-            </p>
           </div>
 
           <div>
-            <label for="api-add-to" class="block text-sm font-medium text-gray-700">
+            <Label htmlFor="api-add-to">
               Add to
-            </label>
-            <select
-              id="api-add-to"
+            </Label>
+            <Select
               value={authConfig.addTo || 'header'}
-              onChange={(e) => handleConfigChange('addTo', e.target.value)}
-              class="mt-1 block w-full rounded-md px-3 py-2 text-gray-900 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-sky-500 text-sm"
-            >
-              <option value="header">Header</option>
-              <option value="query">Query Params</option>
-            </select>
+              onChange={(value) => handleConfigChange('addTo', value)}
+              options={[
+                { value: 'header', label: 'Header' },
+                { value: 'query', label: 'Query Params' }
+              ]}
+              className="mt-1"
+            />
             <p class="mt-1 text-xs text-gray-500">
               Where to add the API key in the request
             </p>
@@ -1328,18 +1324,18 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
 
           {/* Save and Cancel Buttons */}
           <div class="flex items-center gap-3">
-            <button
+            <Button
               onClick={handleApiKeySave}
-              class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+              variant="primary"
             >
               Save
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleApiKeyCancel}
-              class="cursor-pointer rounded-md bg-white hover:bg-gray-50 px-3 py-2 text-sm border border-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+              variant="secondary"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -1348,53 +1344,46 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
       {authType === 'basic_auth' && (
         <div class="space-y-4">
           <div>
-            <label for="basic-username" class="block text-sm font-medium text-gray-700">
+            <Label htmlFor="basic-username">
               Username
-            </label>
-            <input
-              type="text"
+            </Label>
+            <TextInput
               id="basic-username"
               value={authConfig.username || ''}
               onInput={(e) => handleConfigChange('username', e.target.value)}
               placeholder="your-username"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="The username for basic authentication"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              The username for basic authentication
-            </p>
           </div>
 
           <div>
-            <label for="basic-password" class="block text-sm font-medium text-gray-700">
+            <Label htmlFor="basic-password">
               Password
-            </label>
-            <input
+            </Label>
+            <TextInput
               type="password"
               id="basic-password"
               value={authConfig.password || ''}
               onInput={(e) => handleConfigChange('password', e.target.value)}
               placeholder="your-password"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="The password for basic authentication"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              The password for basic authentication
-            </p>
           </div>
 
           {/* Save and Cancel Buttons */}
           <div class="flex items-center gap-3">
-            <button
+            <Button
               onClick={handleBasicAuthSave}
-              class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+              variant="primary"
             >
               Save
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleBasicAuthCancel}
-              class="cursor-pointer rounded-md bg-white hover:bg-gray-50 px-3 py-2 text-sm border border-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+              variant="secondary"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -1403,36 +1392,33 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
       {authType === 'bearer_token' && (
         <div class="space-y-4">
           <div>
-            <label for="bearer-token" class="block text-sm font-medium text-gray-700">
-              Token <span class="text-red-500">*</span>
-            </label>
-            <input
+            <Label htmlFor="bearer-token" mandatory>
+              Token
+            </Label>
+            <TextInput
               type="password"
               id="bearer-token"
               value={authConfig.token || ''}
               onInput={(e) => handleConfigChange('token', e.target.value)}
               placeholder="your-bearer-token"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="The bearer token for authentication"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              The bearer token for authentication
-            </p>
           </div>
 
           {/* Save and Cancel Buttons */}
           <div class="flex items-center gap-3">
-            <button
+            <Button
               onClick={handleBearerTokenSave}
-              class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+              variant="primary"
             >
               Save
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleBearerTokenCancel}
-              class="cursor-pointer rounded-md bg-white hover:bg-gray-50 px-3 py-2 text-sm border border-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+              variant="secondary"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -1441,157 +1427,128 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
       {authType === 'oauth2_pkce' && (
         <div class="space-y-4">
           <div>
-            <label for="oauth2-auth-url" class="block text-sm font-medium text-gray-700">
-              Authorization URL <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
+            <Label htmlFor="oauth2-auth-url" mandatory>
+              Authorization URL
+            </Label>
+            <TextInput
               id="oauth2-auth-url"
               value={authConfig.authorization_url || ''}
               onInput={(e) => handleConfigChange('authorization_url', e.target.value)}
               placeholder="https://example.com/oauth2/auth"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="The authorization endpoint of the OAuth 2.0 provider"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              The authorization endpoint of the OAuth 2.0 provider
-            </p>
           </div>
 
           <div>
-            <label for="oauth2-token-url" class="block text-sm font-medium text-gray-700">
-              Token URL <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
+            <Label htmlFor="oauth2-token-url" mandatory>
+              Token URL
+            </Label>
+            <TextInput
               id="oauth2-token-url"
               value={authConfig.token_url || ''}
               onInput={(e) => handleConfigChange('token_url', e.target.value)}
               placeholder="https://example.com/oauth2/token"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="The token endpoint of the OAuth 2.0 provider"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              The token endpoint of the OAuth 2.0 provider
-            </p>
           </div>
 
           <div>
-            <label for="oauth2-client-id" class="block text-sm font-medium text-gray-700">
-              Client ID <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
+            <Label htmlFor="oauth2-client-id" mandatory>
+              Client ID
+            </Label>
+            <TextInput
               id="oauth2-client-id"
               value={authConfig.clientId || ''}
               onInput={(e) => handleConfigChange('clientId', e.target.value)}
               placeholder="your-client-id"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="The client ID for your OAuth 2.0 application"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              The client ID for your OAuth 2.0 application
-            </p>
           </div>
 
           <div>
-            <label for="oauth2-client-secret" class="block text-sm font-medium text-gray-700">
+            <Label htmlFor="oauth2-client-secret">
               Client Secret
-            </label>
-            <input
+            </Label>
+            <TextInput
               type="password"
               id="oauth2-client-secret"
               value={authConfig.clientSecret || ''}
               onInput={(e) => handleConfigChange('clientSecret', e.target.value)}
               placeholder="Leave empty for public clients"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="The client secret (optional for public clients with PKCE)"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              The client secret (optional for public clients with PKCE)
-            </p>
           </div>
 
           <div>
-            <label for="oauth2-redirect-uri" class="block text-sm font-medium text-gray-700">
-              Redirect URI <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
+            <Label htmlFor="oauth2-redirect-uri" mandatory>
+              Redirect URI
+            </Label>
+            <TextInput
               id="oauth2-redirect-uri"
               value={authConfig.redirect_uri || `${window.location.origin}/auth/callback`}
               onInput={(e) => handleConfigChange('redirect_uri', e.target.value)}
               placeholder={`${window.location.origin}/auth/callback`}
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="The redirect URI configured in your OAuth 2.0 application"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              The redirect URI configured in your OAuth 2.0 application
-            </p>
           </div>
 
           <div>
-            <label for="oauth2-scope" class="block text-sm font-medium text-gray-700">
-              Scope <span class="text-red-500">*</span>
-            </label>
-            <textarea
+            <Label htmlFor="oauth2-scope" mandatory>
+              Scope
+            </Label>
+            <TextInput
+              type="textarea"
               id="oauth2-scope"
-              rows="2"
+              rows={2}
               value={authConfig.scope || ''}
               onInput={(e) => handleConfigChange('scope', e.target.value)}
               placeholder=""
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="Space-separated list of OAuth 2.0 scopes"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              Space-separated list of OAuth 2.0 scopes
-            </p>
           </div>
 
           <div>
-            <label for="oauth2-state" class="block text-sm font-medium text-gray-700">
+            <Label htmlFor="oauth2-state">
               State
-            </label>
-            <input
-              type="text"
+            </Label>
+            <TextInput
               id="oauth2-state"
               value={authConfig.state || ''}
               onInput={(e) => handleConfigChange('state', e.target.value)}
               placeholder="random-state-value (optional)"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="Optional state parameter for additional security"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              Optional state parameter for additional security
-            </p>
           </div>
 
           <div>
-            <label for="oauth2-challenge-method" class="block text-sm font-medium text-gray-700">
-              Code Challenge Method <span class="text-red-500">*</span>
-            </label>
-            <select
-              id="oauth2-challenge-method"
+            <Label htmlFor="oauth2-challenge-method" mandatory>
+              Code Challenge Method
+            </Label>
+            <Select
               value={authConfig.code_challenge_method || 'SHA-256'}
-              onChange={(e) => handleConfigChange('code_challenge_method', e.target.value)}
-              class="mt-1 block w-full rounded-md px-3 py-2 text-gray-900 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-sky-500 text-sm"
-            >
-              <option value="SHA-256">SHA-256</option>
-              <option value="plain">plain</option>
-            </select>
+              onChange={(value) => handleConfigChange('code_challenge_method', value)}
+              options={[
+                { value: 'SHA-256', label: 'SHA-256' },
+                { value: 'plain', label: 'plain' }
+              ]}
+              className="mt-1"
+            />
             <p class="mt-1 text-xs text-gray-500">
               The method used to generate the code challenge for PKCE
             </p>
           </div>
 
           <div>
-            <label for="oauth2-refresh-url" class="block text-sm font-medium text-gray-700">
+            <Label htmlFor="oauth2-refresh-url">
               Refresh Token URL
-            </label>
-            <input
-              type="text"
+            </Label>
+            <TextInput
               id="oauth2-refresh-url"
               value={authConfig.refresh_token_url || ''}
               onInput={(e) => handleConfigChange('refresh_token_url', e.target.value)}
               placeholder="https://example.com/oauth2/token (usually same as token URL)"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="The endpoint for refreshing tokens (often same as token URL)"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              The endpoint for refreshing tokens (often same as token URL)
-            </p>
           </div>
 
           {/* Token Request Headers */}
@@ -1603,46 +1560,43 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
             <form onSubmit={handleAddTokenHeader} class="mb-4">
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
-                  <label for="oauth2-token-header-key" class="block text-sm font-medium text-gray-700">Key</label>
-                  <input
-                    type="text"
+                  <Label htmlFor="oauth2-token-header-key">Key</Label>
+                  <TextInput
                     id="oauth2-token-header-key"
                     value={tokenHeaderForm.key}
                     onInput={(e) => setTokenHeaderForm({ ...tokenHeaderForm, key: e.target.value })}
-                    class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
                     placeholder="Accept"
                   />
                 </div>
                 <div>
-                  <label for="oauth2-token-header-value" class="block text-sm font-medium text-gray-700">Value</label>
-                  <input
-                    type="text"
+                  <Label htmlFor="oauth2-token-header-value">Value</Label>
+                  <TextInput
                     id="oauth2-token-header-value"
                     value={tokenHeaderForm.value}
                     onInput={(e) => setTokenHeaderForm({ ...tokenHeaderForm, value: e.target.value })}
-                    class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
                     placeholder="application/json"
                   />
                 </div>
-                <div class="flex items-end">
+                <div class="flex items-end gap-2">
                   <div class="flex-1">
-                    <label for="oauth2-token-header-send-in" class="block text-sm font-medium text-gray-700">Send in</label>
-                    <select
-                      id="oauth2-token-header-send-in"
+                    <Label htmlFor="oauth2-token-header-send-in">Send in</Label>
+                    <Select
                       value={tokenHeaderForm.sendIn}
-                      onChange={(e) => setTokenHeaderForm({ ...tokenHeaderForm, sendIn: e.target.value })}
-                      class="mt-1 block w-full rounded-l-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-sky-500 text-sm"
-                    >
-                      <option value="header">Header</option>
-                    </select>
+                      onChange={(value) => setTokenHeaderForm({ ...tokenHeaderForm, sendIn: value })}
+                      options={[
+                        { value: 'header', label: 'Header' }
+                      ]}
+                      className="mt-1"
+                    />
                   </div>
-                  <button
+                  <Button
                     type="submit"
                     disabled={!tokenHeaderForm.key || !tokenHeaderForm.value}
-                    class="rounded-r-md bg-sky-500 hover:bg-sky-400 disabled:bg-gray-300 px-3 py-1.5 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+                    variant="primary"
+                    size="sm"
                   >
                     Add
-                  </button>
+                  </Button>
                 </div>
               </div>
             </form>
@@ -1704,40 +1658,42 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
 
           {/* Save Configuration and Get Tokens Buttons */}
           <div class="flex items-center gap-3 flex-wrap">
-            <button
+            <Button
               onClick={() => handleOAuth2SaveConfig()}
-              class="cursor-pointer rounded-md bg-gray-500 hover:bg-gray-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500"
+              variant="none"
+              className="cursor-pointer rounded-md bg-gray-500 hover:bg-gray-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500"
             >
               Save Configuration
-            </button>
+            </Button>
 
             &middot;
 
-            <button
+            <Button
               onClick={() => handleOAuth2GetTokens()}
               disabled={loading || !authConfig.authorization_url || !authConfig.token_url || !authConfig.clientId || !authConfig.redirect_uri || !authConfig.scope}
-              class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 disabled:bg-gray-300 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+              variant="primary"
             >
               {loading ? 'Authenticating...' : 'Get Tokens'}
-            </button>
+            </Button>
 
             {authResponse?.refresh_token && (
-              <button
+              <Button
                 onClick={() => handleOAuth2RefreshTokens()}
                 disabled={loading}
-                class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 disabled:bg-gray-300 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                variant="primary"
               >
                 {loading ? 'Refreshing...' : 'Refresh Tokens'}
-              </button>
+              </Button>
             )}
 
             {authResponse && (
-              <button
+              <Button
                 onClick={clearTokens}
-                class="cursor-pointer rounded-md bg-red-500 hover:bg-red-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+                variant="none"
+                className="cursor-pointer rounded-md bg-red-500 hover:bg-red-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
               >
                 Clear Tokens
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -1747,122 +1703,97 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
       {authType === 'oauth2_code' && (
         <div class="space-y-4">
           <div>
-            <label for="oauth2-code-auth-url" class="block text-sm font-medium text-gray-700">
-              Authorization URL <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
+            <Label htmlFor="oauth2-code-auth-url" mandatory>
+              Authorization URL
+            </Label>
+            <TextInput
               id="oauth2-code-auth-url"
               value={authConfig.authorization_url || ''}
               onInput={(e) => handleConfigChange('authorization_url', e.target.value)}
               placeholder="https://example.com/oauth/authorize"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="The authorization endpoint of the OAuth 2.0 provider"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              The authorization endpoint of the OAuth 2.0 provider
-            </p>
           </div>
 
           <div>
-            <label for="oauth2-code-token-url" class="block text-sm font-medium text-gray-700">
-              Token URL <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
+            <Label htmlFor="oauth2-code-token-url" mandatory>
+              Token URL
+            </Label>
+            <TextInput
               id="oauth2-code-token-url"
               value={authConfig.token_url || ''}
               onInput={(e) => handleConfigChange('token_url', e.target.value)}
               placeholder="https://example.com/oauth/access_token"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="The token endpoint of the OAuth 2.0 provider"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              The token endpoint of the OAuth 2.0 provider
-            </p>
           </div>
 
           <div>
-            <label for="oauth2-code-client-id" class="block text-sm font-medium text-gray-700">
-              Client ID <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
+            <Label htmlFor="oauth2-code-client-id" mandatory>
+              Client ID
+            </Label>
+            <TextInput
               id="oauth2-code-client-id"
               value={authConfig.clientId || ''}
               onInput={(e) => handleConfigChange('clientId', e.target.value)}
               placeholder="your-oauth-app-client-id"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="The client ID for your OAuth 2.0 application"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              The client ID for your OAuth 2.0 application
-            </p>
           </div>
 
           <div>
-            <label for="oauth2-code-client-secret" class="block text-sm font-medium text-gray-700">
-              Client Secret <span class="text-red-500">*</span>
-            </label>
-            <input
+            <Label htmlFor="oauth2-code-client-secret" mandatory>
+              Client Secret
+            </Label>
+            <TextInput
               type="password"
               id="oauth2-code-client-secret"
               value={authConfig.clientSecret || ''}
               onInput={(e) => handleConfigChange('clientSecret', e.target.value)}
               placeholder="your-oauth-app-client-secret"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="The client secret for your OAuth 2.0 application (required for server-side flow)"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              The client secret for your OAuth 2.0 application (required for server-side flow)
-            </p>
           </div>
 
           <div>
-            <label for="oauth2-code-redirect-uri" class="block text-sm font-medium text-gray-700">
-              Redirect URI <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
+            <Label htmlFor="oauth2-code-redirect-uri" mandatory>
+              Redirect URI
+            </Label>
+            <TextInput
               id="oauth2-code-redirect-uri"
               value={authConfig.redirect_uri || `${window.location.origin}/auth/callback`}
               onInput={(e) => handleConfigChange('redirect_uri', e.target.value)}
               placeholder={`${window.location.origin}/auth/callback`}
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="The redirect URI configured in your OAuth 2.0 application"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              The redirect URI configured in your OAuth 2.0 application
-            </p>
           </div>
 
           <div>
-            <label for="oauth2-code-scope" class="block text-sm font-medium text-gray-700">
+            <Label htmlFor="oauth2-code-scope">
               Scope
-            </label>
-            <textarea
+            </Label>
+            <TextInput
+              type="textarea"
               id="oauth2-code-scope"
-              rows="2"
+              rows={2}
               value={authConfig.scope || ''}
               onInput={(e) => handleConfigChange('scope', e.target.value)}
               placeholder=""
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="Space-separated list of OAuth 2.0 scopes (optional)"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              Space-separated list of OAuth 2.0 scopes (optional)
-            </p>
           </div>
 
           <div>
-            <label for="oauth2-code-state" class="block text-sm font-medium text-gray-700">
+            <Label htmlFor="oauth2-code-state">
               State
-            </label>
-            <input
-              type="text"
+            </Label>
+            <TextInput
               id="oauth2-code-state"
               value={authConfig.state || ''}
               onInput={(e) => handleConfigChange('state', e.target.value)}
               placeholder="random-state-value (optional)"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="Optional state parameter for additional security"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              Optional state parameter for additional security
-            </p>
           </div>
 
           {/* Token Request Headers */}
@@ -1874,46 +1805,43 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
             <form onSubmit={handleAddTokenHeader} class="mb-4">
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
-                  <label for="oauth2-code-token-header-key" class="block text-sm font-medium text-gray-700">Key</label>
-                  <input
-                    type="text"
+                  <Label htmlFor="oauth2-code-token-header-key">Key</Label>
+                  <TextInput
                     id="oauth2-code-token-header-key"
                     value={tokenHeaderForm.key}
                     onInput={(e) => setTokenHeaderForm({ ...tokenHeaderForm, key: e.target.value })}
-                    class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
                     placeholder="Authorization"
                   />
                 </div>
                 <div>
-                  <label for="oauth2-code-token-header-value" class="block text-sm font-medium text-gray-700">Value</label>
-                  <input
-                    type="text"
+                  <Label htmlFor="oauth2-code-token-header-value">Value</Label>
+                  <TextInput
                     id="oauth2-code-token-header-value"
                     value={tokenHeaderForm.value}
                     onInput={(e) => setTokenHeaderForm({ ...tokenHeaderForm, value: e.target.value })}
-                    class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
                     placeholder="Bearer xyz123"
                   />
                 </div>
-                <div class="flex items-end">
+                <div class="flex items-end gap-2">
                   <div class="flex-1">
-                    <label for="oauth2-code-token-header-send-in" class="block text-sm font-medium text-gray-700">Send in</label>
-                    <select
-                      id="oauth2-code-token-header-send-in"
+                    <Label htmlFor="oauth2-code-token-header-send-in">Send in</Label>
+                    <Select
                       value={tokenHeaderForm.sendIn}
-                      onChange={(e) => setTokenHeaderForm({ ...tokenHeaderForm, sendIn: e.target.value })}
-                      class="mt-1 block w-full rounded-l-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-sky-500 text-sm"
-                    >
-                      <option value="header">Header</option>
-                    </select>
+                      onChange={(value) => setTokenHeaderForm({ ...tokenHeaderForm, sendIn: value })}
+                      options={[
+                        { value: 'header', label: 'Header' }
+                      ]}
+                      className="mt-1"
+                    />
                   </div>
-                  <button
+                  <Button
                     type="submit"
                     disabled={!tokenHeaderForm.key || !tokenHeaderForm.value}
-                    class="rounded-r-md bg-sky-500 hover:bg-sky-400 disabled:bg-gray-300 px-3 py-1.5 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+                    variant="primary"
+                    size="sm"
                   >
                     Add
-                  </button>
+                  </Button>
                 </div>
               </div>
             </form>
@@ -1975,40 +1903,42 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
 
           {/* Save Configuration and Get Tokens Buttons */}
           <div class="flex items-center gap-3 flex-wrap">
-            <button
+            <Button
               onClick={() => handleOAuth2CodeSaveConfig()}
-              class="cursor-pointer rounded-md bg-gray-500 hover:bg-gray-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500"
+              variant="none"
+              className="cursor-pointer rounded-md bg-gray-500 hover:bg-gray-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500"
             >
               Save Configuration
-            </button>
+            </Button>
 
             &middot;
 
-            <button
+            <Button
               onClick={() => handleOAuth2CodeGetTokens()}
               disabled={loading || !authConfig.authorization_url || !authConfig.token_url || !authConfig.clientId || !authConfig.clientSecret || !authConfig.redirect_uri}
-              class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 disabled:bg-gray-300 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+              variant="primary"
             >
               {loading ? 'Authenticating...' : 'Get Tokens'}
-            </button>
+            </Button>
 
             {authResponse?.refresh_token && (
-              <button
+              <Button
                 onClick={() => handleOAuth2CodeRefreshTokens()}
                 disabled={loading}
-                class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 disabled:bg-gray-300 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                variant="primary"
               >
                 {loading ? 'Refreshing...' : 'Refresh Tokens'}
-              </button>
+              </Button>
             )}
 
             {authResponse && (
-              <button
+              <Button
                 onClick={clearTokens}
-                class="cursor-pointer rounded-md bg-red-500 hover:bg-red-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+                variant="none"
+                className="cursor-pointer rounded-md bg-red-500 hover:bg-red-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
               >
                 Clear Tokens
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -2018,109 +1948,98 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
       {authType === 'oidc_pkce' && (
         <div class="space-y-4">
           <div>
-            <label for="oidc-domain" class="block text-sm font-medium text-gray-700">
-              Domain <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
+            <Label htmlFor="oidc-domain" mandatory>
+              Domain
+            </Label>
+            <TextInput
               id="oidc-domain"
               value={authConfig.domain}
               onInput={(e) => handleConfigChange('domain', e.target.value)}
               placeholder="auth.example.com or https://auth.example.com"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="The domain of your OIDC provider (without protocol, or with https://)"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              The domain of your OIDC provider (without protocol, or with https://)
-            </p>
           </div>
 
           <div>
-            <label for="oidc-client-id" class="block text-sm font-medium text-gray-700">
-              Client ID <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
+            <Label htmlFor="oidc-client-id" mandatory>
+              Client ID
+            </Label>
+            <TextInput
               id="oidc-client-id"
               value={authConfig.clientId}
               onInput={(e) => handleConfigChange('clientId', e.target.value)}
               placeholder="your-client-id"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="The client ID for your OIDC application"
             />
-            <p class="mt-1 text-xs text-gray-500">
-              The client ID for your OIDC application
-            </p>
           </div>
 
           <div>
-            <label for="oidc-client-secret" class="block text-sm font-medium text-gray-700">
+            <Label htmlFor="oidc-client-secret">
               Client Secret
-            </label>
-            <input
+            </Label>
+            <TextInput
               type="password"
               id="oidc-client-secret"
               value={authConfig.clientSecret || ''}
               onInput={(e) => handleConfigChange('clientSecret', e.target.value)}
               placeholder="Leave empty for PKCE-only (if supported)"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description="Google OAuth2 requires client secret even with PKCE. Other providers may not need this."
             />
-            <p class="mt-1 text-xs text-gray-500">
-              Google OAuth2 requires client secret even with PKCE. Other providers may not need this.
-            </p>
           </div>
 
           <div>
-            <label for="oidc-scopes" class="block text-sm font-medium text-gray-700">
-              Scopes <span class="text-red-500">*</span>
-            </label>
-            <textarea
+            <Label htmlFor="oidc-scopes" mandatory>
+              Scopes
+            </Label>
+            <TextInput
+              type="textarea"
               id="oidc-scopes"
-              rows="3"
+              rows={3}
               value={authConfig.scopes}
               onInput={(e) => handleConfigChange('scopes', e.target.value)}
               placeholder="openid profile email"
-              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
+              description='Space-separated list of OAuth2 scopes (e.g., "openid profile email offline_access")'
             />
-            <p class="mt-1 text-xs text-gray-500">
-              Space-separated list of OAuth2 scopes (e.g., "openid profile email offline_access")
-            </p>
           </div>
 
           {/* Get Tokens Button */}
           <div class="flex items-center gap-3 flex-wrap">
-            <button
+            <Button
               onClick={handleSaveConfig}
-              class="cursor-pointer rounded-md bg-gray-500 hover:bg-gray-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500"
+              variant="none"
+              className="cursor-pointer rounded-md bg-gray-500 hover:bg-gray-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500"
             >
               Save Configuration
-            </button>
+            </Button>
 
             &middot;
 
-            <button
+            <Button
               onClick={handleGetTokens}
               disabled={loading || !authConfig.domain || !authConfig.clientId || !authConfig.scopes}
-              class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 disabled:bg-gray-300 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+              variant="primary"
             >
               {loading ? 'Authenticating...' : 'Get Tokens'}
-            </button>
+            </Button>
 
             {authResponse?.refresh_token && (
-              <button
+              <Button
                 onClick={handleRefreshTokens}
                 disabled={loading}
-                class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 disabled:bg-gray-300 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                variant="primary"
               >
                 {loading ? 'Refreshing...' : 'Refresh Tokens'}
-              </button>
+              </Button>
             )}
 
             {authResponse && (
-              <button
+              <Button
                 onClick={clearTokens}
-                class="cursor-pointer rounded-md bg-red-500 hover:bg-red-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+                variant="none"
+                className="cursor-pointer rounded-md bg-red-500 hover:bg-red-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
               >
                 Clear Tokens
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -2242,52 +2161,50 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
                     </div>
                     <div class="mt-6 space-y-4">
                       <div>
-                        <label for="edit_token_header_key" class="block text-sm font-medium text-gray-700">Key</label>
-                        <input
-                          type="text"
+                        <Label htmlFor="edit_token_header_key">Key</Label>
+                        <TextInput
                           id="edit_token_header_key"
                           value={editingTokenHeader.key}
                           onInput={(e) => setEditingTokenHeader({ ...editingTokenHeader, key: e.target.value })}
-                          class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
                         />
                       </div>
                       <div>
-                        <label for="edit_token_header_value" class="block text-sm font-medium text-gray-700">Value</label>
-                        <input
-                          type="text"
+                        <Label htmlFor="edit_token_header_value">Value</Label>
+                        <TextInput
                           id="edit_token_header_value"
                           value={editingTokenHeader.value}
                           onInput={(e) => setEditingTokenHeader({ ...editingTokenHeader, value: e.target.value })}
-                          class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
                         />
                       </div>
                       <div>
-                        <label for="edit_token_header_send_in" class="block text-sm font-medium text-gray-700">Send in</label>
-                        <select
+                        <Label htmlFor="edit_token_header_send_in">Send in</Label>
+                        <Select
                           id="edit_token_header_send_in"
                           value={editingTokenHeader.sendIn}
-                          onChange={(e) => setEditingTokenHeader({ ...editingTokenHeader, sendIn: e.target.value })}
-                          class="mt-1 block w-full rounded-md px-3 py-2 text-gray-900 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-sky-500 text-sm"
-                        >
-                          <option value="header">Header</option>
-                        </select>
+                          onChange={(value) => setEditingTokenHeader({ ...editingTokenHeader, sendIn: value })}
+                          options={[
+                            { value: 'header', label: 'Header' }
+                          ]}
+                          className="mt-1"
+                        />
                       </div>
                     </div>
                   </div>
                   <div class="mt-8 flex justify-end">
-                    <button
+                    <Button
                       onClick={() => setEditTokenHeaderModal(false)}
                       type="button"
-                      class="mr-3 inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 cursor-pointer"
+                      variant="secondary"
+                      className="mr-3"
                     >
                       Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="submit"
-                      class="inline-flex justify-center rounded-md bg-sky-500 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 cursor-pointer"
+                      variant="primary"
                     >
                       Save
-                    </button>
+                    </Button>
                   </div>
                 </form>
               </div>
@@ -2330,20 +2247,22 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
                   </div>
                 </div>
                 <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                  <button
+                  <Button
                     onClick={handleDeleteTokenHeader}
                     type="button"
-                    class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-500 sm:ml-3 sm:w-auto cursor-pointer"
+                    variant="none"
+                    className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-500 sm:ml-3 sm:w-auto cursor-pointer"
                   >
                     Delete Header
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() => setDeleteTokenHeaderModal(false)}
                     type="button"
-                    class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto cursor-pointer"
+                    variant="secondary"
+                    className="mt-3 inline-flex w-full justify-center sm:mt-0 sm:w-auto"
                   >
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

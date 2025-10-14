@@ -11,6 +11,7 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import { apiClient } from '../api';
 import { setupEncryptionKey, hasSessionKey, storeEncryptedReference } from '../utils/encryption';
 import { Button } from '../components/common/Button';
+import { TextInput } from '../components/common/TextInput';
 
 // Map auth field values to display names
 const getAuthMethodDisplayName = (authField) => {
@@ -272,12 +273,11 @@ export function EnvironmentsPage() {
 
                   <div class="mt-6">
                     <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                    <input
+                    <TextInput
                       ref={passwordInputRef}
                       id="password"
                       type="password"
                       placeholder="Enter your password"
-                      class="block w-full rounded-md px-3 py-1.5 text-gray-900 outline focus:outline-2 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-sky-500 text-sm/6"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       disabled={isSubmitting}
@@ -288,11 +288,10 @@ export function EnvironmentsPage() {
 
                   <div class="mt-4">
                     <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">Repeat password</label>
-                    <input
+                    <TextInput
                       id="confirmPassword"
                       type="password"
                       placeholder="Confirm your password"
-                      class="block w-full rounded-md px-3 py-1.5 text-gray-900 outline focus:outline-2 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-sky-500 text-sm/6"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       disabled={isSubmitting}
@@ -413,29 +412,29 @@ export function EnvironmentsPage() {
                   <tbody class="divide-y divide-gray-200">
                     {environmentsWithCounts.map((environment) => (
                       <tr key={environment.id}>
-                        <td class="py-4 pl-6 pr-3 text-sm sm:pl-0">
+                        <td class="py-3 pl-6 pr-3 text-sm sm:pl-0">
                           <div class="truncate">
                             <a href="#" onClick={(e) => { e.preventDefault(); handleEditEnvironment(environment); }} class="text-sky-500 hover:text-sky-700 hover:underline block truncate">
                               {environment.name}
                             </a>
                           </div>
                         </td>
-                        <td class="hidden sm:table-cell py-4 pl-6 pr-3 text-sm sm:pl-0">
+                        <td class="hidden sm:table-cell py-3 pl-6 pr-3 text-sm sm:pl-0">
                           <div class="truncate">
                             {environment.collection_count}
                           </div>
                         </td>
-                        <td class="hidden sm:table-cell py-4 pl-6 pr-3 text-sm sm:pl-0">
+                        <td class="hidden sm:table-cell py-3 pl-6 pr-3 text-sm sm:pl-0">
                           <div class="truncate">
                             {environment.secret_count}
                           </div>
                         </td>
-                        <td class="hidden sm:table-cell py-4 pl-6 pr-3 text-sm sm:pl-0">
+                        <td class="hidden sm:table-cell py-3 pl-6 pr-3 text-sm sm:pl-0">
                           <div class="truncate">
                             {environment.auth_method}
                           </div>
                         </td>
-                        <td class="table-cell py-4 pl-3 pr-6 text-right text-sm sm:pr-0">
+                        <td class="table-cell py-3 pl-3 pr-6 text-right text-sm sm:pr-0">
                           <div class="flex justify-end">
                             <Button
                               onClick={(e) => handleContextMenuOpen(e, environment)}

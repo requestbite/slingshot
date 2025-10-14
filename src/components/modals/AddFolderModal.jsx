@@ -4,6 +4,8 @@ import { apiClient } from '../../api';
 import { Modal } from '../common/Modal';
 import { Select } from '../common/Select';
 import { Button } from '../common/Button';
+import { TextInput } from '../common/TextInput';
+import { Label } from '../common/Label';
 
 export function AddFolderModal({ isOpen, onClose, parentFolder = null, onSuccess }) {
   const { selectedCollection, loadCollections } = useAppContext();
@@ -181,11 +183,9 @@ export function AddFolderModal({ isOpen, onClose, parentFolder = null, onSuccess
 
       <form onSubmit={handleSubmit}>
         <div class="mt-6">
-          <input
+          <TextInput
             ref={nameInputRef}
-            type="text"
             placeholder="Name of folder"
-            class="block w-full rounded-md px-3 py-1.5 text-gray-900 outline focus:outline-2 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-sky-500 text-sm/6"
             value={formData.name}
             onChange={(e) => handleInputChange('name', e.target.value)}
             disabled={isSubmitting}
@@ -193,7 +193,7 @@ export function AddFolderModal({ isOpen, onClose, parentFolder = null, onSuccess
         </div>
 
         <div class="mt-6">
-          <label for="parent-folder" class="block text-xs font-medium text-gray-600 mb-1">Parent Folder</label>
+          <Label htmlFor="parent-folder">Parent Folder</Label>
           <Select
             value={formData.parent_folder_id}
             onChange={(value) => handleInputChange('parent_folder_id', value)}

@@ -6,6 +6,9 @@ import { Toast, useToast } from '../components/common/Toast';
 import { AuthSection } from '../components/auth/AuthSection';
 import { apiClient } from '../api';
 import { decryptSecret } from '../utils/encryption';
+import { TextInput } from '../components/common/TextInput';
+import { Label } from '../components/common/Label';
+import { Button } from '../components/common/Button';
 
 // Helper function to decrypt auth configuration  
 const decryptAuthConfig = async (encryptedConfig) => {
@@ -727,9 +730,8 @@ export function EnvironmentUpdatePage() {
                     <form onSubmit={handleGeneralSave}>
                       <div class="space-y-6">
                         <div>
-                          <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-                          <input
-                            type="text"
+                          <Label htmlFor="name">Name</Label>
+                          <TextInput
                             id="name"
                             value={formData.name}
                             onInput={(e) => {
@@ -737,23 +739,22 @@ export function EnvironmentUpdatePage() {
                               setHasChanges(true);
                               setHasGeneralChanges(true);
                             }}
-                            class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
                             required
                           />
                         </div>
 
                         <div>
-                          <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-                          <textarea
+                          <Label htmlFor="description">Description</Label>
+                          <TextInput
+                            type="textarea"
                             id="description"
-                            rows="3"
+                            rows={3}
                             value={formData.description}
                             onInput={(e) => {
                               setFormData({ ...formData, description: e.target.value });
                               setHasChanges(true);
                               setHasGeneralChanges(true);
                             }}
-                            class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
                           />
                         </div>
                       </div>
@@ -761,28 +762,29 @@ export function EnvironmentUpdatePage() {
                       {/* General Action Buttons */}
                       <div class="mt-6 flex items-center justify-between">
                         <div class="flex items-center gap-x-3">
-                          <button
+                          <Button
                             type="submit"
-                            class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+                            variant="primary"
                           >
                             Save
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
                             onClick={handleGeneralCancel}
-                            class="cursor-pointer rounded-md bg-white hover:bg-gray-50 px-3 py-2 text-sm border border-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+                            variant="secondary"
                           >
                             Cancel
-                          </button>
+                          </Button>
                         </div>
                         <div>
-                          <button
+                          <Button
                             onClick={() => setDeleteEnvironmentModal(true)}
                             type="button"
-                            class="cursor-pointer rounded-md bg-red-600 hover:bg-red-500 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+                            variant="none"
+                            className="rounded-md bg-red-600 hover:bg-red-500 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
                           >
                             Delete
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     </form>
@@ -792,40 +794,37 @@ export function EnvironmentUpdatePage() {
                 {activeSection === 'secrets' && (
                   <div>
                     <h2 class="text-base font-semibold text-gray-900">Environment Secrets</h2>
-                    <p class="mt-1 mb-4 text-sm text-gray-600">Encrypted key-value pairs stored securely for this environment.</p>
+                    <p class="mt-1 mb-6 text-sm text-gray-600">Encrypted key-value pairs stored securely for this environment.</p>
 
                     {/* Add new secret form */}
                     <div class="mb-6">
                       <form onSubmit={handleAddSecret} class="m-0 p-0">
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                           <div>
-                            <label for="secret_key" class="block text-sm font-medium text-gray-700">Key</label>
-                            <input
-                              type="text"
+                            <Label htmlFor="secret_key">Key</Label>
+                            <TextInput
                               id="secret_key"
                               value={secretForm.key}
                               onInput={(e) => setSecretForm({ ...secretForm, key: e.target.value })}
-                              class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
                               placeholder="API_KEY"
                             />
                           </div>
                           <div>
-                            <label for="secret_value" class="block text-sm font-medium text-gray-700">Value</label>
-                            <div class="flex mt-1">
-                              <input
+                            <Label htmlFor="secret_value">Value</Label>
+                            <div class="flex gap-2">
+                              <TextInput
                                 type="password"
                                 id="secret_value"
                                 value={secretForm.value}
                                 onInput={(e) => setSecretForm({ ...secretForm, value: e.target.value })}
-                                class="block w-full rounded-l-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
                                 placeholder="your-secret-value"
                               />
-                              <button
+                              <Button
                                 type="submit"
-                                class="rounded-r-md bg-sky-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-sky-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 cursor-pointer"
+                                variant="primary"
                               >
                                 Add
-                              </button>
+                              </Button>
                             </div>
                           </div>
                         </div>
@@ -894,20 +893,20 @@ export function EnvironmentUpdatePage() {
 
                     {/* Secrets Action Buttons */}
                     <div class="flex items-center gap-x-3">
-                      <button
+                      <Button
                         onClick={handleSecretsSave}
                         type="button"
-                        class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+                        variant="primary"
                       >
                         Save
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
                         onClick={handleSecretsCancel}
-                        class="cursor-pointer rounded-md bg-white hover:bg-gray-50 px-3 py-2 text-sm border border-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+                        variant="secondary"
                       >
                         Cancel
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -965,40 +964,37 @@ export function EnvironmentUpdatePage() {
                       <p class="text-sm text-gray-500">Update your environment secret.</p>
                     </div>
                     <div class="mt-6">
-                      <label for="edit_secret_key" class="block text-sm font-medium text-gray-700">Key</label>
-                      <input
-                        type="text"
+                      <Label htmlFor="edit_secret_key">Key</Label>
+                      <TextInput
                         id="edit_secret_key"
                         value={editingSecret.key}
                         onInput={(e) => setEditingSecret({ ...editingSecret, key: e.target.value })}
-                        class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
                       />
                     </div>
                     <div class="mt-6">
-                      <label for="edit_secret_value" class="block text-sm font-medium text-gray-700">Value</label>
-                      <input
+                      <Label htmlFor="edit_secret_value">Value</Label>
+                      <TextInput
                         type="password"
                         id="edit_secret_value"
                         value={editingSecret.value}
                         onInput={(e) => setEditingSecret({ ...editingSecret, value: e.target.value })}
-                        class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
                       />
                     </div>
                   </div>
-                  <div class="mt-8 flex justify-end">
-                    <button
+                  <div class="mt-8 flex justify-end gap-3">
+                    <Button
                       onClick={() => setEditSecretModal(false)}
                       type="button"
-                      class="mr-3 inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 cursor-pointer"
+                      variant="secondary"
                     >
                       Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="submit"
-                      class="inline-flex justify-center rounded-md bg-sky-500 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 cursor-pointer"
+                      variant="primary"
                     >
                       Save
-                    </button>
+                    </Button>
                   </div>
                 </form>
               </div>
@@ -1049,20 +1045,22 @@ export function EnvironmentUpdatePage() {
                   </div>
                 </div>
                 <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                  <button
+                  <Button
                     onClick={handleDeleteSecret}
                     type="button"
-                    class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-500 sm:ml-3 sm:w-auto cursor-pointer"
+                    variant="none"
+                    className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-500 sm:ml-3 sm:w-auto"
                   >
                     Delete Secret
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() => setDeleteSecretModal(false)}
                     type="button"
-                    class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto cursor-pointer"
+                    variant="secondary"
+                    className="mt-3 w-full sm:mt-0 sm:w-auto"
                   >
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

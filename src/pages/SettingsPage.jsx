@@ -2,6 +2,10 @@ import { useState, useEffect } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { Toast, useToast } from '../components/common/Toast';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { TextInput } from '../components/common/TextInput';
+import { Select } from '../components/common/Select';
+import { Label } from '../components/common/Label';
+import { Button } from '../components/common/Button';
 
 export function SettingsPage() {
   usePageTitle('Settings');
@@ -239,39 +243,37 @@ export function SettingsPage() {
                     
                     {/* Proxy Type Dropdown */}
                     <div class="sm:col-span-4">
-                      <label for="proxy-type" class="block text-sm font-medium text-gray-700">Proxy</label>
-                      <select
+                      <Label htmlFor="proxy-type">Proxy</Label>
+                      <Select
                         id="proxy-type"
                         value={formData.proxyType}
-                        onChange={(e) => handleProxyTypeChange(e.target.value)}
-                        class="mt-1 block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-sky-500 text-sm"
-                      >
-                        <option value="hosted">Hosted Slingshot proxy</option>
-                        <option value="custom">Custom proxy URL</option>
-                      </select>
+                        onChange={handleProxyTypeChange}
+                        options={[
+                          { value: 'hosted', label: 'Hosted Slingshot proxy' },
+                          { value: 'custom', label: 'Custom proxy URL' }
+                        ]}
+                      />
                     </div>
 
                     {/* Custom Proxy URL Input */}
                     {formData.proxyType === 'custom' && (
                       <div class="sm:col-span-4">
-                        <label for="custom-proxy-url" class="block text-sm font-medium text-gray-700">Proxy URL</label>
-                        <div class="mt-1 flex">
-                          <input
-                            type="text"
+                        <Label htmlFor="custom-proxy-url">Proxy URL</Label>
+                        <div class="flex gap-2">
+                          <TextInput
                             id="custom-proxy-url"
                             value={formData.customProxyUrl}
                             onInput={(e) => handleCustomUrlChange(e.target.value)}
                             placeholder="your-proxy-server.com"
-                            class="block w-full rounded-l-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
                           />
-                          <button
+                          <Button
                             type="button"
                             onClick={testProxy}
                             disabled={isTestingProxy || !formData.customProxyUrl.trim()}
-                            class="rounded-r-md bg-sky-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-sky-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 cursor-pointer disabled:bg-gray-300 disabled:cursor-not-allowed"
+                            variant="primary"
                           >
                             {isTestingProxy ? 'Testing...' : 'Test'}
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     )}
@@ -285,21 +287,21 @@ export function SettingsPage() {
             {/* Action Buttons */}
             <div class="mt-6 flex items-center justify-between">
               <div class="flex items-center gap-x-3">
-                <button
+                <Button
                   onClick={handleFormSubmit}
                   type="button"
                   disabled={!canSave}
-                  class="cursor-pointer rounded-md bg-sky-500 hover:bg-sky-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  variant="primary"
                 >
                   Save
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
                   onClick={handleCancel}
-                  class="cursor-pointer rounded-md bg-white hover:bg-gray-50 px-3 py-2 text-sm border border-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+                  variant="secondary"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </div>
           </div>

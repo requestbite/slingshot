@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { apiClient } from '../../api';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
+import { TextInput } from '../common/TextInput';
 
 export function AddEnvironmentModal({ isOpen, onClose, onSuccess }) {
   const [environments, setEnvironments] = useState([]);
@@ -135,11 +136,9 @@ export function AddEnvironmentModal({ isOpen, onClose, onSuccess }) {
 
       <form onSubmit={handleSubmit}>
         <div class="mt-6">
-          <input
+          <TextInput
             ref={nameInputRef}
-            type="text"
             placeholder="Name of environment"
-            class="block w-full rounded-md px-3 py-1.5 text-gray-900 outline focus:outline-2 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-sky-500 text-sm/6"
             value={formData.name}
             onChange={(e) => handleInputChange('name', e.target.value)}
             disabled={isSubmitting}

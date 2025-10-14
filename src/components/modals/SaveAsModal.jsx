@@ -5,6 +5,8 @@ import { useAppContext } from '../../hooks/useAppContext';
 import { Modal } from '../common/Modal';
 import { Select } from '../common/Select';
 import { Button } from '../common/Button';
+import { TextInput } from '../common/TextInput';
+import { Label } from '../common/Label';
 
 export function SaveAsModal({ isOpen, onClose, requestData, collection, onSuccess }) {
   const { collections, selectedCollection, selectCollection, loadCollections, refreshCollectionData } = useAppContext();
@@ -200,25 +202,23 @@ export function SaveAsModal({ isOpen, onClose, requestData, collection, onSucces
           )}
 
           <div class="mt-6">
-            <label for="request-name" class="block text-xs font-medium text-gray-600 mb-1">
+            <Label htmlFor="request-name">
               Request Name
-            </label>
-            <input
-              type="text"
+            </Label>
+            <TextInput
               id="request-name"
               value={name}
               onInput={(e) => setName(e.target.value)}
               placeholder="Name of request"
-              class="block w-full rounded-md px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-sky-500 text-sm"
               disabled={isLoading}
               required
             />
           </div>
 
           <div class="mt-6">
-            <label for="collection-select" class="block text-xs font-medium text-gray-600 mb-1">
+            <Label htmlFor="collection-select">
               Collection
-            </label>
+            </Label>
             <Select
               value={selectedCollectionId}
               onChange={(collectionId) => {
@@ -238,9 +238,9 @@ export function SaveAsModal({ isOpen, onClose, requestData, collection, onSucces
           </div>
 
           <div class="mt-6">
-            <label for="folder-select" class="block text-xs font-medium text-gray-600 mb-1">
+            <Label htmlFor="folder-select">
               Folder
-            </label>
+            </Label>
             <Select
               value={selectedFolderId}
               onChange={(folderId) => setSelectedFolderId(folderId)}

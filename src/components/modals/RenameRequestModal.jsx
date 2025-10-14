@@ -3,6 +3,9 @@ import { useAppContext } from '../../hooks/useAppContext';
 import { apiClient } from '../../api';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
+import { TextInput } from '../common/TextInput';
+import { Label } from '../common/Label';
+import { Select } from '../common/Select';
 
 export function RenameRequestModal({ isOpen, onClose, request, onUpdate }) {
   const { selectedCollection } = useAppContext();
@@ -133,22 +136,15 @@ export function RenameRequestModal({ isOpen, onClose, request, onUpdate }) {
       });
   };
 
-  const renderFolderOption = (folder) => {
-    return (
-      <option key={folder.id} value={folder.id}>
-        {folder.displayName}
-      </option>
-    );
-  };
-
-  const renderFolderTree = (folderTree) => {
-    return folderTree.map(folder => [
-      renderFolderOption(folder),
-      ...renderFolderTree(folder.children)
-    ]).flat();
+  const flattenFolderTree = (folderTree) => {
+    return folderTree.flatMap(folder => [
+      { value: folder.id, label: folder.displayName },
+      ...flattenFolderTree(folder.children)
+    ]);
   };
 
   const folderTree = buildFolderTree();
+  const folderOptions = flattenFolderTree(folderTree);
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Update Request" size="md">
@@ -163,13 +159,11 @@ export function RenameRequestModal({ isOpen, onClose, request, onUpdate }) {
           )}
 
           <div class="mt-6">
-            <label for="name" class="block text-xs font-medium text-gray-600 mb-1">Request Name</label>
-            <input
+            <Label htmlFor="name">Request Name</Label>
+            <TextInput
               ref={nameInputRef}
-              type="text"
               id="name"
               placeholder="Name of request"
-              class="block w-full rounded-md px-3 py-1.5 text-gray-900 outline focus:outline-2 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-sky-500 text-sm/6"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
               disabled={isSubmitting}
@@ -178,17 +172,15 @@ export function RenameRequestModal({ isOpen, onClose, request, onUpdate }) {
           </div>
 
           <div class="mt-6">
-            <label for="folder_id" class="block text-xs font-medium text-gray-600 mb-1">Folder</label>
-            <select
+            <Label htmlFor="folder_id">Folder</Label>
+            <Select
               id="folder_id"
               value={formData.folder_id}
-              onChange={(e) => handleInputChange('folder_id', e.target.value)}
-              class="w-full appearance-none rounded-md bg-white py-2 pl-3 pr-8 text-sm text-gray-900 outline -outline-offset-1 outline-gray-300 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
+              onChange={(value) => handleInputChange('folder_id', value)}
+              options={folderOptions}
               disabled={isSubmitting}
-            >
-              <option value="">No folder</option>
-              {renderFolderTree(folderTree)}
-            </select>
+              placeholder="No folder"
+            />
           </div>
 
           <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">

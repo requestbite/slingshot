@@ -201,24 +201,24 @@ export function CollectionsPage() {
                   <tbody class="divide-y divide-gray-200">
                     {collectionsWithCounts.map((collection) => (
                       <tr key={collection.id}>
-                        <td class="py-4 pl-6 pr-3 text-sm sm:pl-0">
+                        <td class="py-3 pl-6 pr-3 text-sm sm:pl-0">
                           <div class="truncate">
                             <a href="#" onClick={(e) => { e.preventDefault(); handleEditCollection(collection); }} class="text-sky-500 hover:text-sky-700 hover:underline block truncate">
                               {collection.name}
                             </a>
                           </div>
                         </td>
-                        <td class="hidden sm:table-cell py-4 pl-6 pr-3 text-sm sm:pl-0">
+                        <td class="hidden sm:table-cell py-3 pl-6 pr-3 text-sm sm:pl-0">
                           <div class="truncate">
                             {collection.request_count}
                           </div>
                         </td>
-                        <td class="hidden sm:table-cell py-4 pl-6 pr-3 text-sm sm:pl-0">
+                        <td class="hidden sm:table-cell py-3 pl-6 pr-3 text-sm sm:pl-0">
                           <div class="truncate">
                             {collection.secret_count}
                           </div>
                         </td>
-                        <td class="table-cell py-4 pl-3 pr-6 text-right text-sm sm:pr-0">
+                        <td class="table-cell py-3 pl-3 pr-6 text-right text-sm sm:pr-0">
                           <div class="flex justify-end">
                             <Button
                               onClick={(e) => handleContextMenuOpen(e, collection)}
