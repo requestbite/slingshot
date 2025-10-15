@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { parseCurlCommand, validateCurlCommand } from '../../utils/curlParser';
 import { Modal } from '../common/Modal';
+import { Button } from '../common/Button';
 
 export function CurlImportModal({ isOpen, onClose, onImport }) {
   const [curlCommand, setCurlCommand] = useState('');
@@ -78,12 +79,13 @@ export function CurlImportModal({ isOpen, onClose, onImport }) {
     <Modal isOpen={isOpen} onClose={handleClose} title="Import cURL Command" size="md">
       <p class="text-sm text-gray-500 mb-2">Paste your cURL command below to import it into the app.</p>
       <div class="mb-2 text-right">
-        <button
+        <Button
           onClick={handlePasteExample}
-          class="text-xs text-sky-600 hover:text-sky-700 cursor-pointer"
+          variant="link"
+          className="text-xs"
         >
           Paste example
-        </button>
+        </Button>
       </div>
       <div class="w-full">
         <textarea
@@ -107,20 +109,22 @@ export function CurlImportModal({ isOpen, onClose, onImport }) {
       </div>
 
       <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-        <button
+        <Button
           onClick={handleImport}
           type="button"
-          class="inline-flex w-full justify-center rounded-md bg-sky-500 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-400 sm:ml-3 sm:w-auto cursor-pointer"
+          variant="primary"
+          className="w-full sm:ml-3 sm:w-auto"
         >
           Import
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={handleClose}
           type="button"
-          class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto cursor-pointer"
+          variant="secondary"
+          className="mt-3 w-full sm:mt-0 sm:w-auto"
         >
           Cancel
-        </button>
+        </Button>
       </div>
     </Modal>
   );

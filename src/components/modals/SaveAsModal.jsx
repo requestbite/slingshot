@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { apiClient } from '../../api';
 import { useAppContext } from '../../hooks/useAppContext';
@@ -17,6 +17,7 @@ export function SaveAsModal({ isOpen, onClose, requestData, collection, onSucces
   const [folders, setFolders] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const nameInputRef = useRef();
 
   useEffect(() => {
     if (isOpen) {
@@ -30,6 +31,13 @@ export function SaveAsModal({ isOpen, onClose, requestData, collection, onSucces
         const defaultName = generateDefaultName(requestData);
         setName(defaultName);
       }
+
+      // Auto-focus on name input
+      setTimeout(() => {
+        if (nameInputRef.current) {
+          nameInputRef.current.focus();
+        }
+      }, 100);
     }
   }, [isOpen, collection]);
 
@@ -206,6 +214,7 @@ export function SaveAsModal({ isOpen, onClose, requestData, collection, onSucces
               Request Name
             </Label>
             <TextInput
+              ref={nameInputRef}
               id="request-name"
               value={name}
               onInput={(e) => setName(e.target.value)}

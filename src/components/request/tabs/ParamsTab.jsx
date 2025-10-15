@@ -1,4 +1,5 @@
 import { useState } from 'preact/hooks'; import { VariableInput } from '../../common/VariableInput';
+import { TextInput } from '../../common/TextInput';
 
 export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPathParamsChange, onEnterKeyPress, selectedEnvironment }) {
   const handlePathParamChange = (id, field, value) => {
@@ -47,10 +48,8 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
                   />
                 </div>
                 <div class="col-span-5">
-                  <input
-                    type="text"
+                  <TextInput
                     value={param.key}
-                    class="w-full px-2 py-1 text-sm border border-gray-300 rounded bg-gray-50 text-gray-500"
                     disabled
                     title="Path parameter key is defined in the URL"
                   />
@@ -97,21 +96,15 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
                   />
                 </div>
                 <div class="col-span-5">
-                  <input
-                    type="text"
+                  <TextInput
                     value={param.key}
-                    class={`w-full px-2 py-1 text-sm border border-gray-300 rounded bg-gray-50 text-gray-500 ${param.enabled ? '' : 'opacity-50'
-                      }`}
                     disabled
                     title="Query parameters are automatically parsed from URL"
                   />
                 </div>
                 <div class="col-span-6">
-                  <input
-                    type="text"
+                  <TextInput
                     value={param.value}
-                    class={`w-full px-2 py-1 text-sm border border-gray-300 rounded bg-gray-50 text-gray-500 ${param.enabled ? '' : 'opacity-50'
-                      }`}
                     disabled
                     title="Query parameters are automatically parsed from URL"
                   />

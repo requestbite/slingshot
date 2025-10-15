@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import { Modal } from '../common/Modal';
+import { Label } from '../common/Label';
+import { Button } from '../common/Button';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { dracula } from '@uiw/codemirror-theme-dracula';
@@ -117,6 +119,16 @@ export function DocsEditRequest({ isOpen, onClose, request, onSave }) {
         setContent('');
       }
       setError(null);
+
+      // Auto-focus on CodeMirror editor
+      setTimeout(() => {
+        const editors = document.querySelectorAll('.cm-content');
+        if (editors.length > 0) {
+          // Focus the last one (most recently added)
+          const editor = editors[editors.length - 1];
+          editor.focus();
+        }
+      }, 150);
     }
   }, [isOpen, request]);
 
@@ -195,8 +207,8 @@ export function DocsEditRequest({ isOpen, onClose, request, onSave }) {
 
           {/* Schema Editor */}
           <div class="mb-4">
-            <div class="flex items-center justify-between mb-2">
-              <label class="block text-sm font-medium text-gray-700">OpenAPI request body schema</label>
+            <div class="flex items-center justify-between">
+              <Label>OpenAPI request body schema</Label>
 
               {/* Schema validity indicator */}
               <div class="flex items-center text-xs">
@@ -245,13 +257,14 @@ export function DocsEditRequest({ isOpen, onClose, request, onSave }) {
 
             {/* Paste example link */}
             <div class="mt-2 text-left">
-              <button
+              <Button
                 onClick={handlePasteExample}
                 type="button"
-                class="text-xs text-sky-600 hover:text-sky-700 cursor-pointer"
+                variant="link"
+                className="text-xs"
               >
                 Paste example
-              </button>
+              </Button>
             </div>
 
             {/* Validation error message */}
@@ -275,31 +288,24 @@ export function DocsEditRequest({ isOpen, onClose, request, onSave }) {
         )}
 
         <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-          <button
+          <Button
             type="submit"
             disabled={isSaving || !validation.isValid}
-            class="inline-flex w-full justify-center rounded-md bg-sky-500 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-400 sm:ml-3 sm:w-auto cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
+            loading={isSaving}
+            variant="primary"
+            className="w-full sm:ml-3 sm:w-auto"
           >
-            {isSaving ? (
-              <div class="flex items-center">
-                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Saving...</span>
-              </div>
-            ) : (
-              'Save'
-            )}
-          </button>
-          <button
+            Save
+          </Button>
+          <Button
             type="button"
             onClick={handleClose}
             disabled={isSaving}
-            class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto cursor-pointer disabled:opacity-50"
+            variant="secondary"
+            className="mt-3 w-full sm:mt-0 sm:w-auto"
           >
             Cancel
-          </button>
+          </Button>
         </div>
       </form>
     </Modal>

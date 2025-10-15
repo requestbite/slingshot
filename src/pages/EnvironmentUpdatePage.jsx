@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import { useLocation, useRoute } from 'wouter-preact';
 import { DeleteEnvironmentModal } from '../components/modals/DeleteEnvironmentModal';
-import { EncryptionKeyModal } from '../components/modals/EncryptionKeyModal';
 import { Toast, useToast } from '../components/common/Toast';
 import { AuthSection } from '../components/auth/AuthSection';
 import { apiClient } from '../api';
@@ -78,7 +77,6 @@ export function EnvironmentUpdatePage() {
   const [editSecretModal, setEditSecretModal] = useState(false);
   const [deleteEnvironmentModal, setDeleteEnvironmentModal] = useState(false);
   const [deleteSecretModal, setDeleteSecretModal] = useState(false);
-  const [encryptionKeyModal, setEncryptionKeyModal] = useState(false);
 
   // Edit secret state
   const [editingSecret, setEditingSecret] = useState({
@@ -154,14 +152,9 @@ export function EnvironmentUpdatePage() {
         setHasSecretsChanges(false);
       } catch (error) {
         console.error('Failed to load secrets (encryption key needed):', error);
-        // Show encryption key modal if needed
-        if (await apiClient.requiresEncryptionKey()) {
-          setEncryptionKeyModal(true);
-        } else {
-          setToastMessage('Failed to decrypt environment secrets');
-          setToastType('error');
-          showToast();
-        }
+        setToastMessage('Failed to decrypt environment secrets');
+        setToastType('error');
+        showToast();
         // Load empty secrets for now
         setOriginalSecrets([]);
         setPendingSecrets([]);
@@ -175,59 +168,6 @@ export function EnvironmentUpdatePage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleEncryptionKeySuccess = async () => {
-    // Retry loading secrets and auth fields after encryption key is set
-    if (environment) {
-      try {
-        // Reload secrets
-        const secretsData = await apiClient.getDecryptedEnvironmentSecrets(environment.id);
-        const sortedSecrets = secretsData.sort((a, b) => a.key.localeCompare(b.key));
-        setOriginalSecrets(sortedSecrets);
-        setPendingSecrets(sortedSecrets.map(s => ({ ...s, _status: 'existing' })));
-        setHasSecretsChanges(false);
-
-        // Reload and decrypt auth fields
-        const environmentData = await apiClient.getEnvironment(environment.id);
-        if (environmentData) {
-          let decryptedEnvironment = { ...environmentData };
-
-          try {
-            if (environmentData.authConfig?.encrypted_value) {
-              const decryptedAuthConfig = await decryptAuthConfig(environmentData.authConfig);
-              if (decryptedAuthConfig) {
-                decryptedEnvironment.authConfig = decryptedAuthConfig;
-              }
-            }
-
-            if (environmentData.authResponse?.encrypted_value) {
-              const decryptedAuthResponse = await decryptAuthResponse(environmentData.authResponse);
-              if (decryptedAuthResponse) {
-                decryptedEnvironment.authResponse = decryptedAuthResponse;
-              }
-            }
-          } catch (error) {
-            console.error('Failed to decrypt auth fields after key setup:', error);
-          }
-
-          setEnvironment(decryptedEnvironment);
-        }
-      } catch (error) {
-        console.error('Failed to load data after key setup:', error);
-        setToastMessage('Failed to load environment data');
-        setToastType('error');
-        showToast();
-      }
-    }
-  };
-
-  const requireEncryptionKey = async () => {
-    if (await apiClient.requiresEncryptionKey()) {
-      setEncryptionKeyModal(true);
-      return true;
-    }
-    return false;
   };
 
   const handleFormSubmit = async (e) => {
@@ -248,8 +188,6 @@ export function EnvironmentUpdatePage() {
       });
 
       // Process secret changes - collect all current secrets
-      if (await requireEncryptionKey()) return;
-
       const currentSecrets = pendingSecrets
         .filter(secret => secret._status !== 'deleted')
         .map(secret => ({
@@ -411,8 +349,6 @@ export function EnvironmentUpdatePage() {
   const handleSecretsSave = async (e) => {
     e.preventDefault();
 
-    if (await requireEncryptionKey()) return;
-
     try {
       const currentSecrets = pendingSecrets
         .filter(secret => secret._status !== 'deleted')
@@ -473,8 +409,6 @@ export function EnvironmentUpdatePage() {
       });
 
       // Process secret changes - collect all current secrets
-      if (await requireEncryptionKey()) return false;
-
       const currentSecrets = pendingSecrets
         .filter(secret => secret._status !== 'deleted')
         .map(secret => ({
@@ -931,13 +865,6 @@ export function EnvironmentUpdatePage() {
           </div>
         </div>
       </div>
-
-      {/* Encryption Key Modal */}
-      <EncryptionKeyModal
-        isOpen={encryptionKeyModal}
-        onClose={() => setEncryptionKeyModal(false)}
-        onSuccess={handleEncryptionKeySuccess}
-      />
 
       {/* Edit Secret Modal */}
       {editSecretModal && (

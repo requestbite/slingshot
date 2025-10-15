@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { Modal } from '../common/Modal';
 import { MarkdownPreview } from '../common/MarkdownPreview';
 import { TextInput } from '../common/TextInput';
@@ -18,11 +18,19 @@ export function DocsEditCol({
   const [markdown, setMarkdown] = useState(initialMarkdown);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
+  const nameInputRef = useRef();
 
   useEffect(() => {
     if (isOpen) {
       setName(initialName);
       setMarkdown(initialMarkdown);
+
+      // Auto-focus on name input
+      setTimeout(() => {
+        if (nameInputRef.current) {
+          nameInputRef.current.focus();
+        }
+      }, 100);
     }
   }, [isOpen, initialMarkdown, initialName]);
 
@@ -68,6 +76,7 @@ export function DocsEditCol({
           <div class="mb-4">
             <Label htmlFor="collection-name">Name</Label>
             <TextInput
+              ref={nameInputRef}
               id="collection-name"
               value={name}
               onInput={(e) => setName(e.target.value)}
