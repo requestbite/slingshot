@@ -3,6 +3,7 @@ import { useLocation } from 'wouter-preact';
 import LogoHorizontal from '../../assets/logo-horizontal-slingshot.svg';
 import { getLastSlingshotUrl, setLastSlingshotUrl, isValidSlingshotUrl } from '../../utils/slingshotNavigation';
 import { Button } from '../common/Button';
+import { ThemeSwitch } from '../common/ThemeSwitch';
 
 export function TopBar() {
   const [location, setLocation] = useLocation();
@@ -221,8 +222,13 @@ export function TopBar() {
           </a>
         </nav>
 
-        {/* Right Section: Version + Proxy Banner + Mobile Menu */}
+        {/* Right Section: Theme Switch + Version + Proxy Banner + Mobile Menu */}
         <div class="flex items-center space-x-3">
+          {/* Desktop Theme Switch */}
+          <div class="hidden lg:block">
+            <ThemeSwitch />
+          </div>
+
           {/* Desktop Version Link */}
           <a href="https://docs.requestbite.com/changelog/" target="_blank" class="hidden lg:flex text-gray-600 hover:text-gray-400 flex items-center">
             __VERSION_PLACEHOLDER__
@@ -239,6 +245,11 @@ export function TopBar() {
             <span class="hidden xl:inline">{banner.textXl}</span>
             <span class="xl:hidden">{proxyConfig.proxyType === 'custom' ? 'Custom proxy' : banner.text}</span>
           </Button>
+
+          {/* Mobile Theme Switch */}
+          <div class="lg:hidden">
+            <ThemeSwitch />
+          </div>
 
           {/* Mobile Version Link */}
           <a href="https://docs.requestbite.com/changelog/" target="_blank" class="lg:hidden text-gray-600 hover:text-gray-400 flex items-center">
@@ -287,18 +298,21 @@ export function TopBar() {
                 <span class="sr-only">RequestBite</span>
                 <img class="h-8 w-auto" src={LogoHorizontal} alt="RequestBite" />
               </Button>
-              <Button
-                type="button"
-                onClick={() => setIsMobileMenuOpen(false)}
-                variant="ghost"
-                size="sm"
-                className="m-2.5 rounded-md p-2.5 text-gray-700 hover:bg-gray-100"
-              >
-                <span class="sr-only">Close menu</span>
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-              </Button>
+              <div class="flex items-center space-x-1">
+                <ThemeSwitch />
+                <Button
+                  type="button"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  variant="ghost"
+                  size="sm"
+                  className="m-2.5 rounded-md p-2.5 text-gray-700 hover:bg-gray-100"
+                >
+                  <span class="sr-only">Close menu</span>
+                  <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </Button>
+              </div>
             </div>
 
             <div class="mt-6 flow-root text-sm bg-white">
