@@ -113,11 +113,11 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
                   <Button
                     onClick={onClose}
                     type="button"
-                    variant="ghost"
-                    size="sm"
+                    variant="none"
+                    className="cursor-pointer text-gray-400 hover:text-gray-600 p-1 transition-colors focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-gray-300 rounded"
                   >
                     <span class="sr-only">Close</span>
-                    <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                     </svg>
                   </Button>
