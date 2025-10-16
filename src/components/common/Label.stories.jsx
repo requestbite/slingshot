@@ -2,7 +2,7 @@ import { Label } from './Label';
 import { TextInput } from './TextInput';
 
 export default {
-  title: 'Components/Label',
+  title: 'Common/Label',
   component: Label,
   argTypes: {
     children: {
