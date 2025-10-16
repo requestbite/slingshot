@@ -1190,7 +1190,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
                     <path d="M12 16v-4" />
                     <path d="M12 8h.01" />
                   </svg>
-                  Request has unsaved data ( <Button onClick={handleRestore} variant="ghost" size="xs" className="p-0 h-auto">restore</Button>)
+                  Request has unsaved data ( <Button onClick={handleRestore} variant="link" size="xs" className="p-0 h-auto">restore</Button>)
                 </span>
               )}
               <Button

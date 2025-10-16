@@ -7,6 +7,7 @@ import { useAppContext } from '../hooks/useAppContext';
 import { TextInput } from '../components/common/TextInput';
 import { Label } from '../components/common/Label';
 import { Button } from '../components/common/Button';
+import { Modal } from '../components/common/Modal';
 
 export function CollectionUpdatePage() {
   const [, setLocation] = useLocation();
@@ -516,7 +517,7 @@ export function CollectionUpdatePage() {
                   onClick={() => setDeleteCollectionModal(true)}
                   type="button"
                   variant="none"
-                  className="rounded-md bg-red-600 hover:bg-red-500 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+                  className="cursor-pointer rounded-md bg-red-600 hover:bg-red-500 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-red-600"
                 >
                   Delete Collection
                 </Button>
@@ -527,67 +528,44 @@ export function CollectionUpdatePage() {
       </div>
 
       {/* Edit Variable Modal */}
-      {editVariableModal && (
-        <div class="fixed inset-0 bg-gray-500/75 transition-opacity z-50">
-          <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
-            <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
-              <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 w-full sm:max-w-lg sm:p-6">
-                <form onSubmit={handleUpdateVariable}>
-                  <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
-                    <button
-                      onClick={() => setEditVariableModal(false)}
-                      type="button"
-                      class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 cursor-pointer"
-                    >
-                      <span class="sr-only">Close</span>
-                      <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div class="mt-0 sm:text-left">
-                    <h3 class="text-base font-semibold text-gray-900">Edit Variable</h3>
-                    <div class="mt-2">
-                      <p class="text-sm text-gray-500">Update your collection variable.</p>
-                    </div>
-                    <div class="mt-6">
-                      <Label htmlFor="edit_variable_key">Key</Label>
-                      <TextInput
-                        id="edit_variable_key"
-                        value={editingVariable.key}
-                        onInput={(e) => setEditingVariable({ ...editingVariable, key: e.target.value })}
-                      />
-                    </div>
-                    <div class="mt-6">
-                      <Label htmlFor="edit_variable_value">Value</Label>
-                      <TextInput
-                        id="edit_variable_value"
-                        value={editingVariable.value}
-                        onInput={(e) => setEditingVariable({ ...editingVariable, value: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  <div class="mt-8 flex justify-end gap-3">
-                    <Button
-                      onClick={() => setEditVariableModal(false)}
-                      type="button"
-                      variant="secondary"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      variant="primary"
-                    >
-                      Save
-                    </Button>
-                  </div>
-                </form>
-              </div>
-            </div>
+      <Modal isOpen={editVariableModal} onClose={() => setEditVariableModal(false)} title="Edit Variable" size="md">
+        <form onSubmit={handleUpdateVariable}>
+          <p class="text-sm text-gray-500 mb-4 text-center sm:text-left">
+            Update your collection variable.
+          </p>
+          <div class="mt-6">
+            <Label htmlFor="edit_variable_key">Key</Label>
+            <TextInput
+              id="edit_variable_key"
+              value={editingVariable.key}
+              onInput={(e) => setEditingVariable({ ...editingVariable, key: e.target.value })}
+            />
           </div>
-        </div>
-      )}
+          <div class="mt-6">
+            <Label htmlFor="edit_variable_value">Value</Label>
+            <TextInput
+              id="edit_variable_value"
+              value={editingVariable.value}
+              onInput={(e) => setEditingVariable({ ...editingVariable, value: e.target.value })}
+            />
+          </div>
+          <div class="mt-8 flex justify-end gap-3">
+            <Button
+              onClick={() => setEditVariableModal(false)}
+              type="button"
+              variant="secondary"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+            >
+              Save
+            </Button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Delete Collection Modal */}
       <DeleteCollectionModal
