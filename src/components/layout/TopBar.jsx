@@ -2,8 +2,6 @@ import { useState, useEffect, useMemo } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import LogoHorizontal from '../../assets/logo-horizontal-slingshot.svg';
 import { getLastSlingshotUrl, setLastSlingshotUrl, isValidSlingshotUrl } from '../../utils/slingshotNavigation';
-import { Button } from '../common/Button';
-import { ThemeSwitch } from '../common/ThemeSwitch';
 
 export function TopBar() {
   const [location, setLocation] = useLocation();
@@ -126,7 +124,7 @@ export function TopBar() {
   const banner = useMemo(() => getProxyBanner(), [proxyConfig]);
 
   return (
-    <header class="h-[65px] bg-surface-base/75 dark:bg-surface-dark-base/75 backdrop-blur-lg border-b border-neutral-200 dark:border-neutral-dark-200 fixed top-0 left-0 w-full z-10 text-sm">
+    <header class="h-[65px] bg-white/75 backdrop-blur-lg border-b border-gray-300 fixed top-0 left-0 w-full z-10 text-sm">
       <div class="flex items-center justify-between h-full px-4">
         {/* Logo */}
         <a
@@ -146,7 +144,7 @@ export function TopBar() {
 
         {/* Desktop Navigation */}
         <nav class="hidden sm:flex items-center space-x-1">
-          <a href="https://requestbite.com" class="hidden lg:flex text-neutral-600 dark:text-neutral-dark-400 hover:text-neutral-900 dark:hover:text-neutral-dark-900 px-3 py-2 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-dark-200 transition-colors flex items-center">
+          <a href="https://requestbite.com" class="hidden lg:flex text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors flex items-center">
             RequestBite
           </a>
           <a
@@ -156,8 +154,8 @@ export function TopBar() {
               setLocation(getLastSlingshotUrl());
             }}
             class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isSlingshotActive()
-              ? 'text-primary-700 dark:text-primary-dark-400 bg-primary-100 dark:bg-primary-dark-200 hover:bg-primary-200 dark:hover:bg-primary-dark-300'
-              : 'text-neutral-600 dark:text-neutral-dark-400 hover:text-neutral-900 dark:hover:text-neutral-dark-900 hover:bg-neutral-100 dark:hover:bg-neutral-dark-200'
+              ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
           >
             Slingshot
@@ -169,8 +167,8 @@ export function TopBar() {
               setLocation('/environments');
             }}
             class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/environments')
-              ? 'text-primary-700 dark:text-primary-dark-400 bg-primary-100 dark:bg-primary-dark-200 hover:bg-primary-200 dark:hover:bg-primary-dark-300'
-              : 'text-neutral-600 dark:text-neutral-dark-400 hover:text-neutral-900 dark:hover:text-neutral-dark-900 hover:bg-neutral-100 dark:hover:bg-neutral-dark-200'
+              ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
           >
             Environments
@@ -182,8 +180,8 @@ export function TopBar() {
               setLocation('/collections');
             }}
             class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/collections')
-              ? 'text-primary-700 dark:text-primary-dark-400 bg-primary-100 dark:bg-primary-dark-200 hover:bg-primary-200 dark:hover:bg-primary-dark-300'
-              : 'text-neutral-600 dark:text-neutral-dark-400 hover:text-neutral-900 dark:hover:text-neutral-dark-900 hover:bg-neutral-100 dark:hover:bg-neutral-dark-200'
+              ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
           >
             Collections
@@ -195,13 +193,13 @@ export function TopBar() {
               setLocation('/settings');
             }}
             class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/settings')
-              ? 'text-primary-700 dark:text-primary-dark-400 bg-primary-100 dark:bg-primary-dark-200 hover:bg-primary-200 dark:hover:bg-primary-dark-300'
-              : 'text-neutral-600 dark:text-neutral-dark-400 hover:text-neutral-900 dark:hover:text-neutral-dark-900 hover:bg-neutral-100 dark:hover:bg-neutral-dark-200'
+              ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
           >
             Settings
           </a>
-          <a href="https://docs.requestbite.com" target="_blank" class="hidden lg:flex text-neutral-600 dark:text-neutral-dark-400 hover:text-neutral-900 dark:hover:text-neutral-dark-900 px-3 py-2 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-dark-200 transition-colors flex items-center">
+          <a href="https://docs.requestbite.com" target="_blank" class="hidden lg:flex text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors flex items-center">
             Docs
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -222,50 +220,34 @@ export function TopBar() {
           </a>
         </nav>
 
-        {/* Right Section: Theme Switch + Version + Proxy Banner + Mobile Menu */}
+        {/* Right Section: Version + Proxy Banner + Mobile Menu */}
         <div class="flex items-center space-x-3">
-          {/* Desktop Theme Switch */}
-          <div class="hidden lg:block">
-            {
-              // <ThemeSwitch />
-            }
-          </div>
-
           {/* Desktop Version Link */}
-          <a href="https://docs.requestbite.com/changelog/" target="_blank" class="hidden lg:flex text-neutral-600 dark:text-neutral-dark-400 hover:text-neutral-400 dark:hover:text-neutral-dark-600 flex items-center">
+          <a href="https://docs.requestbite.com/changelog/" target="_blank" class="hidden lg:flex text-gray-600 hover:text-gray-400 flex items-center">
             v. 9.9.9
           </a>
 
           {/* Desktop Proxy Status Banner */}
-          <Button
+          <button
             onClick={() => setLocation('/settings')}
-            variant={proxyConfig.proxyType === 'custom' ? 'success' : 'icon'}
-            size="xs"
-            className={`hidden lg:flex ${proxyConfig.proxyType === 'custom' ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-sky-100 text-sky-800 hover:bg-sky-200'}`}
+            class={`hidden lg:flex px-2 py-1 rounded-md text-xs transition-colors cursor-pointer items-center ${banner.bgColor} ${banner.textColor} ${banner.hoverColor}`}
           >
             <WaypointsIcon />
             <span class="hidden xl:inline">{banner.textXl}</span>
             <span class="xl:hidden">{proxyConfig.proxyType === 'custom' ? 'Custom proxy' : banner.text}</span>
-          </Button>
-
-          {/* Mobile Theme Switch */}
-          <div class="lg:hidden">
-            <ThemeSwitch />
-          </div>
+          </button>
 
           {/* Mobile Version Link */}
-          <a href="https://docs.requestbite.com/changelog/" target="_blank" class="lg:hidden text-neutral-600 dark:text-neutral-dark-400 hover:text-neutral-400 dark:hover:text-neutral-dark-600 flex items-center">
+          <a href="https://docs.requestbite.com/changelog/" target="_blank" class="lg:hidden text-gray-600 hover:text-gray-400 flex items-center">
             v. 9.9.9
           </a>
 
           {/* Mobile Hamburger Menu */}
           <div class="block lg:hidden">
-            <Button
+            <button
               onClick={() => setIsMobileMenuOpen(true)}
               type="button"
-              variant="ghost"
-              size="sm"
-              className="text-neutral-600 dark:text-neutral-dark-400 hover:text-neutral-900 dark:hover:text-neutral-dark-900"
+              class="cursor-pointer text-gray-600 hover:text-gray-900"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="currentColor" class="w-6 h-6">
                 <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
@@ -274,7 +256,7 @@ export function TopBar() {
                   <path d="M7.94971 35.9497H39.9497" />
                 </g>
               </svg>
-            </Button>
+            </button>
           </div>
         </div>
       </div>
@@ -289,45 +271,36 @@ export function TopBar() {
           />
 
           {/* Sidebar */}
-          <div class="fixed top-0 right-0 inset-y-0 h-screen w-[calc(100%-75px)] bg-surface-base dark:bg-surface-dark-base shadow-lg z-50 text-left overflow-y-auto">
-            <div class="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-dark-200">
-              <Button
+          <div class="fixed top-0 right-0 inset-y-0 h-screen w-[calc(100%-75px)] bg-white shadow-lg z-50 text-left overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-gray-300">
+              <button
                 onClick={() => setLocation(getLastSlingshotUrl())}
-                variant="ghost"
-                size="sm"
-                className="ml-3 mr-1.5 p-1.5 hover:opacity-80 transition-opacity"
+                class="ml-3 mr-1.5 p-1.5 hover:opacity-80 transition-opacity"
               >
                 <span class="sr-only">RequestBite</span>
                 <img class="h-8 w-auto" src={LogoHorizontal} alt="RequestBite" />
-              </Button>
-              <div class="flex items-center space-x-1">
-                {
-                  // <ThemeSwitch />
-                }
-                <Button
-                  type="button"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  variant="ghost"
-                  size="sm"
-                  className="m-2.5 rounded-md p-2.5 text-neutral-700 dark:text-neutral-dark-700 hover:bg-neutral-100 dark:hover:bg-neutral-dark-200"
-                >
-                  <span class="sr-only">Close menu</span>
-                  <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                  </svg>
-                </Button>
-              </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen(false)}
+                class="m-2.5 rounded-md p-2.5 text-gray-700 cursor-pointer hover:bg-gray-100"
+              >
+                <span class="sr-only">Close menu</span>
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
-            <div class="mt-6 flow-root text-sm bg-surface-base dark:bg-surface-dark-base">
-              <div class="-my-6 divide-y divide-neutral-500/10 dark:divide-neutral-dark-400/10">
+            <div class="mt-6 flow-root text-sm bg-white">
+              <div class="-my-6 divide-y divide-gray-500/10">
                 <div class="space-y-2 py-6">
                   <a
                     href="https://requestbite.com"
-                    class="block px-4 py-2 text-neutral-900 dark:text-neutral-dark-900 hover:bg-neutral-100 dark:hover:bg-neutral-dark-200 cursor-pointer no-underline"
+                    class="block px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
                   >
                     <div>RequestBite</div>
-                    <span class="text-xs text-neutral-500 dark:text-neutral-dark-500 mt-1">RequestBite website</span>
+                    <span class="text-xs text-gray-500 mt-1">RequestBite website</span>
                   </a>
                   <a
                     href={getLastSlingshotUrl()}
@@ -336,10 +309,10 @@ export function TopBar() {
                       setLocation(getLastSlingshotUrl());
                       setIsMobileMenuOpen(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-neutral-900 dark:text-neutral-dark-900 hover:bg-neutral-100 dark:hover:bg-neutral-dark-200 cursor-pointer no-underline"
+                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
                   >
                     <div>Slingshot</div>
-                    <span class="text-xs text-neutral-500 dark:text-neutral-dark-500 mt-1">Send HTTP requests</span>
+                    <span class="text-xs text-gray-500 mt-1">Send HTTP requests</span>
                   </a>
                   <a
                     href="/environments"
@@ -348,10 +321,10 @@ export function TopBar() {
                       setLocation('/environments');
                       setIsMobileMenuOpen(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-neutral-900 dark:text-neutral-dark-900 hover:bg-neutral-100 dark:hover:bg-neutral-dark-200 cursor-pointer no-underline"
+                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
                   >
                     <div>Environments</div>
-                    <span class="text-xs text-neutral-500 dark:text-neutral-dark-500 mt-1">Manage encrypted environments</span>
+                    <span class="text-xs text-gray-500 mt-1">Manage encrypted environments</span>
                   </a>
                   <a
                     href="/collections"
@@ -360,10 +333,10 @@ export function TopBar() {
                       setLocation('/collections');
                       setIsMobileMenuOpen(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-neutral-900 dark:text-neutral-dark-900 hover:bg-neutral-100 dark:hover:bg-neutral-dark-200 cursor-pointer no-underline"
+                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
                   >
                     <div>Collections</div>
-                    <span class="text-xs text-neutral-500 dark:text-neutral-dark-500 mt-1">Manage request collections</span>
+                    <span class="text-xs text-gray-500 mt-1">Manage request collections</span>
                   </a>
                   <a
                     href="/settings"
@@ -372,15 +345,15 @@ export function TopBar() {
                       setLocation('/settings');
                       setIsMobileMenuOpen(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-neutral-900 dark:text-neutral-dark-900 hover:bg-neutral-100 dark:hover:bg-neutral-dark-200 cursor-pointer no-underline"
+                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
                   >
                     <div>Settings</div>
-                    <span class="text-xs text-neutral-500 dark:text-neutral-dark-500 mt-1">Configure app settings</span>
+                    <span class="text-xs text-gray-500 mt-1">Configure app settings</span>
                   </a>
                   <a
                     href="https://docs.requestbite.com"
                     target="_blank"
-                    class="block px-4 py-2 text-neutral-900 dark:text-neutral-dark-900 hover:bg-neutral-100 dark:hover:bg-neutral-dark-200 cursor-pointer"
+                    class="block px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer"
                   >
                     <div class="flex items-center">
                       Docs
@@ -401,22 +374,20 @@ export function TopBar() {
                         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                       </svg>
                     </div>
-                    <span class="text-xs text-neutral-500 dark:text-neutral-dark-500 mt-1">Documentation</span>
+                    <span class="text-xs text-gray-500 mt-1">Documentation</span>
                   </a>
 
                   {/* Mobile Proxy Banner */}
-                  <Button
+                  <button
                     onClick={() => {
                       setLocation('/settings');
                       setIsMobileMenuOpen(false);
                     }}
-                    variant={proxyConfig.proxyType === 'custom' ? 'success' : 'icon'}
-                    size="sm"
-                    className={`mx-4 mt-4 flex items-center ${proxyConfig.proxyType === 'custom' ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-sky-100 text-sky-800 hover:bg-sky-200'}`}
+                    class={`mx-4 mt-4 px-3 py-2 rounded-md text-xs transition-colors cursor-pointer flex items-center ${banner.bgColor} ${banner.textColor} ${banner.hoverColor}`}
                   >
                     <WaypointsIcon />
                     {banner.text}
-                  </Button>
+                  </button>
                 </div>
               </div>
             </div>

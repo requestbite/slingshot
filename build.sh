@@ -12,7 +12,7 @@ TOPBAR_FILE="src/components/layout/TopBar.jsx"
 cp "$TOPBAR_FILE" "$TOPBAR_FILE.backup"
 
 # Replace the version placeholder with the actual version (prefixed with "v. ")
-sed -i "s/__v. 9.9.9__/v. $VERSION/g" "$TOPBAR_FILE"
+sed -i "s/v. 9.9.9/v. $VERSION/g" "$TOPBAR_FILE"
 
 # Run the build
 yarn vite build
