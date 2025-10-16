@@ -1,30 +1,53 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 
 /**
  * ThemeSwitch Component
  *
  * A toggle button that switches between light and dark themes.
  * Shows a sun icon in light mode and a moon icon in dark mode.
+ * Persists theme preference to localStorage and applies the 'dark' class to document.documentElement.
  *
  * @param {Object} props
  * @param {string} [props.className] - Additional CSS classes
  */
 export function ThemeSwitch({ className = '' }) {
-  const [isDark, setIsDark] = useState(false);
+  // Initialize theme from localStorage or system preference
+  const [isDark, setIsDark] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      return savedTheme === 'dark';
+    }
+    // Fall back to system preference if no saved theme
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  // Apply theme on mount and when isDark changes
+  useEffect(() => {
+    const theme = isDark ? 'dark' : 'light';
+
+    // Update document class
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+
+    // Save to localStorage
+    localStorage.setItem('theme', theme);
+
+    // Dispatch custom event for other components to react to theme changes
+    window.dispatchEvent(new CustomEvent('themechange', { detail: { theme } }));
+  }, [isDark]);
 
   const handleToggle = () => {
     setIsDark(!isDark);
-    // TODO: When implementing actual theme switching, add logic here to:
-    // 1. Toggle 'dark' class on document.documentElement
-    // 2. Save preference to localStorage
-    // 3. Dispatch theme change event
   };
 
   return (
     <button
       type="button"
       onClick={handleToggle}
-      className={`inline-flex items-center justify-center w-9 h-9 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 ${className}`}
+      className={`inline-flex cursor-pointer items-center justify-center w-9 h-9 rounded-md text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 dark:text-neutral-dark-400 dark:hover:text-neutral-dark-900 dark:hover:bg-neutral-dark-200 transition-all duration-200 ${className}`}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
@@ -38,11 +61,10 @@ export function ThemeSwitch({ className = '' }) {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={`absolute inset-0 w-5 h-5 transition-all duration-300 ${
-            isDark
+          className={`absolute inset-0 w-5 h-5 transition-all duration-300 ${isDark
               ? 'opacity-0 rotate-90 scale-0'
               : 'opacity-100 rotate-0 scale-100'
-          }`}
+            }`}
         >
           <circle cx="12" cy="12" r="4" />
           <path d="M12 2v2" />
@@ -64,11 +86,10 @@ export function ThemeSwitch({ className = '' }) {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={`absolute inset-0 w-5 h-5 transition-all duration-300 ${
-            isDark
+          className={`absolute inset-0 w-5 h-5 transition-all duration-300 ${isDark
               ? 'opacity-100 rotate-0 scale-100'
               : 'opacity-0 -rotate-90 scale-0'
-          }`}
+            }`}
         >
           <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
         </svg>

@@ -13,7 +13,7 @@ export default {
       colors: {
         // Primary brand color (Sky → Dracula Cyan for dark mode)
         primary: {
-          50:  '#f0f9ff',
+          50: '#f0f9ff',
           100: '#e0f2fe',
           200: '#bae6fd',
           300: '#7dd3fc',
@@ -27,7 +27,7 @@ export default {
 
         // Dark mode overrides for primary
         'primary-dark': {
-          50:  '#1e2029',
+          50: '#1e2029',
           100: '#282a36',  // Dracula background
           200: '#44475a',  // Dracula current line
           300: '#6272a4',  // Dracula comment
@@ -41,7 +41,7 @@ export default {
 
         // Neutral colors (Gray → Dracula Background System for dark mode)
         neutral: {
-          50:  '#f9fafb',
+          50: '#f9fafb',
           100: '#f3f4f6',
           200: '#e5e7eb',
           300: '#d1d5db',
@@ -54,7 +54,7 @@ export default {
         },
 
         'neutral-dark': {
-          50:  '#44475a',  // Dracula current line
+          50: '#44475a',  // Dracula current line
           100: '#3a3c4d',
           200: '#353745',
           300: '#44475a',
@@ -68,7 +68,7 @@ export default {
 
         // Success (Green → Dracula Green for dark mode)
         success: {
-          50:  '#f0fdf4',
+          50: '#f0fdf4',
           100: '#dcfce7',
           200: '#bbf7d0',
           400: '#4ade80',
@@ -78,7 +78,7 @@ export default {
         },
 
         'success-dark': {
-          50:  '#1a2e1f',
+          50: '#1a2e1f',
           100: '#234d2b',
           200: '#2d6c38',
           400: '#50fa7b',  // Dracula green
@@ -89,7 +89,7 @@ export default {
 
         // Error/Danger (Red → Dracula Red for dark mode)
         error: {
-          50:  '#fef2f2',
+          50: '#fef2f2',
           100: '#fee2e2',
           200: '#fecaca',
           400: '#f87171',
@@ -100,7 +100,7 @@ export default {
         },
 
         'error-dark': {
-          50:  '#2e1a1a',
+          50: '#2e1a1a',
           100: '#4d2323',
           200: '#6c2d2d',
           400: '#ff5555',  // Dracula red
@@ -112,18 +112,18 @@ export default {
 
         // Warning (Yellow → Dracula Yellow for dark mode)
         warning: {
-          50:  '#fefce8',
+          50: '#fefce8',
           600: '#ca8a04',
         },
 
         'warning-dark': {
-          50:  '#2e2d1a',
+          50: '#2e2d1a',
           600: '#f1fa8c',  // Dracula yellow
         },
 
         // Info (Blue → Dracula Purple for dark mode)
         info: {
-          50:  '#eff6ff',
+          50: '#eff6ff',
           100: '#dbeafe',
           200: '#bfdbfe',
           300: '#93c5fd',
@@ -134,7 +134,7 @@ export default {
         },
 
         'info-dark': {
-          50:  '#241f30',
+          50: '#241f30',
           100: '#362d4a',
           200: '#483b64',
           300: '#5a4d7e',
@@ -147,7 +147,7 @@ export default {
         // Surface colors
         surface: {
           base: '#ffffff',
-          elevated: '#ffffff',
+          elevated: '#f3f4f6',
         },
 
         'surface-dark': {
