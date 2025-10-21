@@ -200,6 +200,10 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       setHasUnsavedChanges(request.has_draft_edits || false);
       setIsDraftDirty(false);
 
+      // Set active tab based on whether request has params
+      const hasParams = (dataToLoad.queryParams?.length || 0) + (dataToLoad.pathParams?.length || 0) > 0;
+      setActiveTab(hasParams ? 'params' : 'overview');
+
       // Clear the initial load flag after a delay to allow URL parsing to complete
       setTimeout(() => {
         isInitialLoadRef.current = false;
@@ -217,6 +221,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       originalDataRef.current = null;
       setHasUnsavedChanges(false);
       setIsDraftDirty(false);
+      setActiveTab('overview');
     }
   }, [request]);
 
