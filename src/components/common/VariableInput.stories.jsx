@@ -13,6 +13,7 @@ export default {
     value: { control: 'text' },
     placeholder: { control: 'text' },
     disabled: { control: 'boolean' },
+    showResolved: { control: 'boolean' },
     inputType: {
       control: 'select',
       options: ['text', 'url'],
@@ -100,6 +101,7 @@ export const InteractiveAutocomplete = {
   render: () => {
     const Example = () => {
       const [value, setValue] = useState('');
+      const [showResolved, setShowResolved] = useState(false);
 
       return (
         <div class="p-4 max-w-2xl">
@@ -110,11 +112,23 @@ export const InteractiveAutocomplete = {
             Type <kbd class="px-1 py-0.5 bg-gray-100 rounded text-xs">{'{{'}}</kbd> to trigger autocomplete.
             Available variables: baseUrl, apiKey, token, userId, version
           </p>
+          <div class="mb-3">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showResolved}
+                onChange={(e) => setShowResolved(e.target.checked)}
+                class="cursor-pointer"
+              />
+              <span class="text-sm text-gray-700">Show resolved value</span>
+            </label>
+          </div>
           <VariableInput
             value={value}
             onChange={(newValue) => setValue(newValue)}
             placeholder="https://example.com"
             inputType="url"
+            showResolved={showResolved}
           />
           <div class="mt-3 p-3 bg-gray-50 rounded-md">
             <p class="text-xs font-medium text-gray-700">Current value:</p>
@@ -236,11 +250,62 @@ export const NoVariablesAvailable = {
   },
 };
 
+// With showResolved - all variables resolved
+export const WithShowResolvedAllResolved = {
+  args: {
+    value: 'https://{{baseUrl}}/api/users?key={{apiKey}}',
+    placeholder: 'Enter URL...',
+    inputType: 'url',
+    showResolved: true,
+  },
+};
+
+// With showResolved - mixed resolved and unresolved
+export const WithShowResolvedMixed = {
+  decorators: [
+    withMockContext({
+      selectedCollection: {
+        variables: [
+          { key: 'baseUrl', value: 'api.example.com' },
+          { key: 'version', value: 'v1' }
+        ]
+      }
+    })
+  ],
+  args: {
+    value: 'https://{{baseUrl}}/{{version}}/users/{{unknownVar}}',
+    placeholder: 'Enter URL...',
+    inputType: 'url',
+    showResolved: true,
+  },
+};
+
+// With showResolved - long value that gets truncated
+export const WithShowResolvedLongValue = {
+  args: {
+    value: 'https://{{baseUrl}}/api/v1/users/{{userId}}/profiles/{{profileId}}/settings?include={{include}}&format={{format}}&timestamp={{timestamp}}&additional={{additional}}&more={{more}}',
+    placeholder: 'Enter URL...',
+    inputType: 'url',
+    showResolved: true,
+  },
+};
+
+// With showResolved - no variables (should not show resolved text)
+export const WithShowResolvedNoVariables = {
+  args: {
+    value: 'https://api.example.com/users',
+    placeholder: 'Enter URL...',
+    inputType: 'url',
+    showResolved: true,
+  },
+};
+
 // Real-world API endpoint example
 export const RealWorldExample = {
   render: () => {
     const Example = () => {
       const [endpoint, setEndpoint] = useState('https://{{baseUrl}}/api/{{version}}/users');
+      const [showResolved, setShowResolved] = useState(true);
 
       return (
         <div class="p-4 max-w-2xl">
@@ -262,6 +327,18 @@ export const RealWorldExample = {
             </ul>
           </div>
 
+          <div class="mb-3">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showResolved}
+                onChange={(e) => setShowResolved(e.target.checked)}
+                class="cursor-pointer"
+              />
+              <span class="text-sm text-gray-700">Show resolved value</span>
+            </label>
+          </div>
+
           <label class="block text-sm font-medium text-gray-700 mb-2">
             Endpoint URL
           </label>
@@ -270,6 +347,7 @@ export const RealWorldExample = {
             onChange={setEndpoint}
             placeholder="https://api.example.com/endpoint"
             inputType="url"
+            showResolved={showResolved}
           />
 
           <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">

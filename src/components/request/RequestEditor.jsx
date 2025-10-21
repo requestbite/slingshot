@@ -1212,7 +1212,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
             </div>
           </div>
         </div>
-        <div class="flex flex-row items-stretch">
+        <div class="flex flex-row items-start">
           {/* HTTP Method selector dropdown */}
           <div class="method-selector relative w-28 mr-2">
             <select
@@ -1245,6 +1245,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
               className="w-full text-sm font-inter text-gray-900"
               style="min-height: 38px; line-height: 22px; width: 100%; box-sizing: border-box;"
               selectedEnvironment={currentEnvironment}
+              showResolved={true}
               inputType="url"
             />
           </div>

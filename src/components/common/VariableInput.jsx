@@ -16,6 +16,7 @@ export function VariableInput({
   disabled = false,
   selectedEnvironment = null, // Override for current environment selection
   inputType = 'text', // Support for different input types like 'url'
+  showResolved = false, // Show resolved variable values below the input
   ...props
 }) {
   const { selectedCollection, hasManuallySelectedEnvironment } = useAppContext();
@@ -63,6 +64,19 @@ export function VariableInput({
 
     setVariables(vars);
   };
+
+  // Resolve variables in text by replacing {{variable}} with actual values
+  const resolveVariables = useCallback((text) => {
+    if (!text) return '';
+
+    const variableRegex = /\{\{([^}]*)\}\}/g;
+    return text.replace(variableRegex, (match, variableName) => {
+      if (variables.has(variableName)) {
+        return variables.get(variableName);
+      }
+      return match; // Keep unresolved variables as-is
+    });
+  }, [variables]);
 
   // Parse and highlight variables in the text
   const parseAndHighlight = useCallback((text) => {
@@ -391,6 +405,12 @@ export function VariableInput({
             </div>
           ))}
         </div>
+      )}
+
+      {showResolved && value && value.includes('{{') && (
+        <p class="mt-1 text-xs text-gray-500 truncate">
+          {resolveVariables(value)}
+        </p>
       )}
 
       <style jsx>{`
