@@ -95,71 +95,10 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
 
   /**
    * Validate form data against JSON schema
+   * Note: Validation is disabled to allow flexible payload creation
    */
   const validateForm = () => {
-    if (!jsonSchema || !jsonSchema.properties) {
-      setError('Invalid JSON schema provided');
-      return false;
-    }
-
-    // Check required fields
-    const required = jsonSchema.required || [];
-    for (const field of required) {
-      const value = formData[field];
-      if (value === undefined || value === null || value === '') {
-        setError(`Field "${field}" is required`);
-        return false;
-      }
-    }
-
-    // Basic type validation
-    for (const [key, prop] of Object.entries(jsonSchema.properties)) {
-      const value = formData[key];
-
-      // Skip validation for empty optional fields
-      if (!required.includes(key) && (value === '' || value === undefined)) {
-        continue;
-      }
-
-      // Type validation
-      if (prop.type === 'number' || prop.type === 'integer') {
-        const numValue = Number(value);
-        if (isNaN(numValue)) {
-          setError(`Field "${key}" must be a valid number`);
-          return false;
-        }
-
-        // Check minimum/maximum
-        if (prop.minimum !== undefined && numValue < prop.minimum) {
-          setError(`Field "${key}" must be at least ${prop.minimum}`);
-          return false;
-        }
-        if (prop.maximum !== undefined && numValue > prop.maximum) {
-          setError(`Field "${key}" must be at most ${prop.maximum}`);
-          return false;
-        }
-      }
-
-      // String validation
-      if (prop.type === 'string') {
-        if (prop.minLength !== undefined && value.length < prop.minLength) {
-          setError(`Field "${key}" must be at least ${prop.minLength} characters`);
-          return false;
-        }
-        if (prop.maxLength !== undefined && value.length > prop.maxLength) {
-          setError(`Field "${key}" must be at most ${prop.maxLength} characters`);
-          return false;
-        }
-        if (prop.pattern) {
-          const regex = new RegExp(prop.pattern);
-          if (!regex.test(value)) {
-            setError(`Field "${key}" does not match required pattern`);
-            return false;
-          }
-        }
-      }
-    }
-
+    // Allow any form data to be submitted
     return true;
   };
 
@@ -442,7 +381,6 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
             value={fieldValue}
             onChange={(e) => handleFieldChange(fieldName, e.target.value)}
             disabled={isSubmitting || !isEnabled}
-            required={isRequired}
             class={`block w-full rounded-md px-3 py-2 text-gray-900 outline focus:outline-2 -outline-offset-1 outline-gray-300 focus:-outline-offset-2 focus:outline-sky-500 text-sm ${!isEnabled ? 'opacity-50' : ''}`}
           >
             <option value="">Select an option</option>
@@ -628,7 +566,6 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
             onChange={(e) => handleFieldChange(fieldName, e.target.value)}
             placeholder={effectiveProperty.examples?.[0] || ''}
             disabled={isSubmitting || !isEnabled}
-            required={isRequired}
             description={effectiveProperty.description}
             rows={inputType === 'textarea' ? 4 : undefined}
             min={effectiveProperty.minimum}
