@@ -4,6 +4,7 @@ import { Button } from '../common/Button';
 import { TextInput } from '../common/TextInput';
 import { Label } from '../common/Label';
 import { Select } from '../common/Select';
+import { MarkdownPreview } from '../common/MarkdownPreview';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { dracula } from '@uiw/codemirror-theme-dracula';
@@ -262,6 +263,18 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       : property;
 
     /**
+     * Render field description with MarkdownPreview
+     */
+    const renderDescription = (description) => {
+      if (!description) return null;
+      return (
+        <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500 [&_.prose_p]:text-gray-500 [&_.prose_li]:text-gray-500 [&_.prose_*]:text-gray-500">
+          <MarkdownPreview markdown={description} />
+        </div>
+      );
+    };
+
+    /**
      * Render field label with enable checkbox
      */
     const renderFieldLabel = (htmlFor) => {
@@ -358,14 +371,10 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
               class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
             />
             <span class="ml-2 text-sm text-gray-700">
-              {effectiveProperty.description || 'Enabled'}
+              Enabled
             </span>
           </div>
-          {effectiveProperty.description && (
-            <p class="mt-1 text-xs text-gray-500">
-              {effectiveProperty.description}
-            </p>
-          )}
+          {renderDescription(effectiveProperty.description)}
         </div>
       );
     }
@@ -390,11 +399,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
               </option>
             ))}
           </select>
-          {effectiveProperty.description && (
-            <p class="mt-1 text-xs text-gray-500">
-              {effectiveProperty.description}
-            </p>
-          )}
+          {renderDescription(effectiveProperty.description)}
         </div>
       );
     }
@@ -467,11 +472,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           <p class="mt-1 text-xs text-gray-500">
             Field is an object you can manually construct above.
           </p>
-          {effectiveProperty.description && (
-            <p class="mt-1 text-xs text-gray-500">
-              {effectiveProperty.description}
-            </p>
-          )}
+          {renderDescription(effectiveProperty.description)}
         </div>
       );
     }
@@ -544,11 +545,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           <p class="mt-1 text-xs text-gray-500">
             Field is an array you can manually construct above.
           </p>
-          {effectiveProperty.description && (
-            <p class="mt-1 text-xs text-gray-500">
-              {effectiveProperty.description}
-            </p>
-          )}
+          {renderDescription(effectiveProperty.description)}
         </div>
       );
     }
