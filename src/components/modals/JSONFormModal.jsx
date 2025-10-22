@@ -3,6 +3,11 @@ import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { TextInput } from '../common/TextInput';
 import { Label } from '../common/Label';
+import CodeMirror from '@uiw/react-codemirror';
+import { json } from '@codemirror/lang-json';
+import { dracula } from '@uiw/codemirror-theme-dracula';
+import { EditorView } from '@codemirror/view';
+import { bracketMatching } from '@codemirror/language';
 
 /**
  * JSONFormModal Component
@@ -313,10 +318,34 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
     );
   };
 
+  // Generate JSON preview from current form data
+  const jsonPreview = convertFormData(formData);
+
+  // CodeMirror extensions
+  const getCodeMirrorExtensions = () => {
+    return [
+      json(),
+      bracketMatching(),
+      EditorView.editable.of(false), // Read-only
+      EditorView.theme({
+        "&": {
+          height: "100%",
+        },
+        ".cm-content, .cm-gutter": {
+          minHeight: "100% !important"
+        },
+        ".cm-scroller": {
+          overflow: "auto",
+          height: "100%"
+        }
+      })
+    ];
+  };
+
   // Check if schema is valid
   if (!jsonSchema || !jsonSchema.properties) {
     return (
-      <Modal isOpen={isOpen} onClose={handleClose} title="Schema based form" size="lg">
+      <Modal isOpen={isOpen} onClose={handleClose} title="Schema based form" size="xl">
         <div class="text-sm text-gray-500 mb-4">
           Add JSON data to your request based on the schema-generated form below.
         </div>
@@ -339,16 +368,53 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Schema based form" size="lg">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Schema based form" size="xl">
       <div class="text-sm text-gray-500 mb-4">
         Add JSON data to your request based on the schema-generated form below.
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div class="max-h-[60vh] overflow-y-auto pr-2">
-          {Object.entries(jsonSchema.properties).map(([fieldName, property]) =>
-            renderField(fieldName, property)
-          )}
+        {/* Two-column layout: Form on left, JSON preview on right (hidden on mobile) */}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Left column: Form */}
+          <div class="max-h-[60vh] overflow-y-auto pr-2">
+            {Object.entries(jsonSchema.properties).map(([fieldName, property]) =>
+              renderField(fieldName, property)
+            )}
+          </div>
+
+          {/* Right column: JSON Preview (hidden on mobile) */}
+          <div class="hidden sm:block h-[60vh]">
+            <Label>JSON Preview</Label>
+            <div class="h-[calc(60vh-2rem)]">
+              <CodeMirror
+                value={JSON.stringify(jsonPreview, null, 2)}
+                extensions={getCodeMirrorExtensions()}
+                theme={dracula}
+                readOnly={true}
+                basicSetup={{
+                  lineNumbers: true,
+                  foldGutter: true,
+                  dropCursor: false,
+                  allowMultipleSelections: false,
+                  indentOnInput: false,
+                  bracketMatching: true,
+                  closeBrackets: false,
+                  autocompletion: false,
+                  rectangularSelection: false,
+                  searchKeymap: false,
+                  highlightSelectionMatches: false
+                }}
+                style={{
+                  border: '2px solid #282a36',
+                  borderRadius: '0.375rem',
+                  fontSize: '12px',
+                  fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
+                  height: '100%'
+                }}
+              />
+            </div>
+          </div>
         </div>
 
         {error && (
