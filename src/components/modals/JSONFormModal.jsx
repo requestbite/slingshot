@@ -38,7 +38,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       setError(null);
       // Initialize composition selections (default to index 0)
       const initialSelections = {};
-      // Initialize enabled fields (required fields are always enabled)
+      // Initialize enabled fields (required fields are enabled by default)
       const initialEnabled = {};
       if (jsonSchema.properties) {
         Object.entries(jsonSchema.properties).forEach(([fieldName, property]) => {
@@ -46,7 +46,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           if (composition.hasComposition) {
             initialSelections[fieldName] = 0;
           }
-          // Required fields are always enabled
+          // Required fields are enabled by default (but can be disabled)
           const isRequired = jsonSchema.required?.includes(fieldName);
           initialEnabled[fieldName] = isRequired;
         });
@@ -322,10 +322,9 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
               type="checkbox"
               checked={isEnabled}
               onChange={(e) => handleFieldToggle(fieldName, e.target.checked)}
-              disabled={isRequired}
               class="h-3 w-3 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
             />
-            <span class={`text-xs ${isRequired ? 'text-gray-400' : 'text-gray-600'}`}>
+            <span class="text-xs text-gray-600">
               Enable
             </span>
           </div>
@@ -576,9 +575,9 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   // Check if schema is valid
   if (!jsonSchema || !jsonSchema.properties) {
     return (
-      <Modal isOpen={isOpen} onClose={handleClose} title="Schema based form" size="xl">
+      <Modal isOpen={isOpen} onClose={handleClose} title="Create request body payload" size="xl">
         <div class="text-sm text-gray-500 mb-4">
-          Add JSON data to your request based on the schema-generated form below.
+          Create a request body payload by filling out the form. Clicking "Import" will add it to the request editor.
         </div>
         <div class="text-sm text-red-600 bg-red-100 p-3 rounded-md">
           No valid JSON schema provided. Please provide a valid JSON schema with properties.
@@ -599,9 +598,9 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Schema based form" size="xl">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Create request body payload" size="xl">
       <div class="text-sm text-gray-500 mb-4">
-        Add JSON data to your request based on the schema-generated form below.
+        Create a request body payload by filling out the form. Clicking "Import" will add it to the request editor.
       </div>
 
       <form onSubmit={handleSubmit}>
