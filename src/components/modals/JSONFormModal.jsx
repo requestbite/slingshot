@@ -27,6 +27,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [compositionSelections, setCompositionSelections] = useState({});
+  const [enabledFields, setEnabledFields] = useState({});
 
   // Initialize form data when modal opens
   useEffect(() => {
@@ -37,15 +38,21 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       setError(null);
       // Initialize composition selections (default to index 0)
       const initialSelections = {};
+      // Initialize enabled fields (required fields are always enabled)
+      const initialEnabled = {};
       if (jsonSchema.properties) {
         Object.entries(jsonSchema.properties).forEach(([fieldName, property]) => {
           const composition = detectSchemaComposition(property);
           if (composition.hasComposition) {
             initialSelections[fieldName] = 0;
           }
+          // Required fields are always enabled
+          const isRequired = jsonSchema.required?.includes(fieldName);
+          initialEnabled[fieldName] = isRequired;
         });
       }
       setCompositionSelections(initialSelections);
+      setEnabledFields(initialEnabled);
     }
   }, [isOpen, jsonSchema]);
 
@@ -171,43 +178,61 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   };
 
   /**
+   * Handle field enable/disable toggle
+   */
+  const handleFieldToggle = (fieldName, enabled) => {
+    setEnabledFields(prev => ({
+      ...prev,
+      [fieldName]: enabled
+    }));
+  };
+
+  /**
    * Convert form data to proper types based on schema
    */
   const convertFormData = (data) => {
     if (!jsonSchema || !jsonSchema.properties) return data;
 
-    const converted = { ...data };
+    const converted = {};
     Object.entries(jsonSchema.properties).forEach(([key, prop]) => {
-      const value = converted[key];
+      const value = data[key];
+      const isEnabled = enabledFields[key];
 
-      // Skip empty optional fields
-      if (!jsonSchema.required?.includes(key) && (value === '' || value === undefined)) {
-        delete converted[key];
+      // Skip disabled fields
+      if (!isEnabled) {
         return;
       }
 
+      // Check for composition and get effective property
+      const composition = detectSchemaComposition(prop);
+      const selectedIndex = compositionSelections[key] || 0;
+      const effectiveProp = composition.hasComposition
+        ? composition.options[selectedIndex] || {}
+        : prop;
+
       // Convert types
-      if (prop.type === 'number' || prop.type === 'integer') {
-        converted[key] = Number(value);
-      } else if (prop.type === 'boolean') {
+      if (effectiveProp.type === 'number' || effectiveProp.type === 'integer') {
+        converted[key] = value === '' ? 0 : Number(value);
+      } else if (effectiveProp.type === 'boolean') {
         converted[key] = Boolean(value);
-      } else if (prop.type === 'object') {
+      } else if (effectiveProp.type === 'null') {
+        converted[key] = null;
+      } else if (effectiveProp.type === 'object') {
         // If it's a string (JSON), try to parse it
         if (typeof value === 'string') {
           try {
             converted[key] = JSON.parse(value);
           } catch (e) {
-            // If parsing fails, skip this field or use empty object
-            if (jsonSchema.required?.includes(key)) {
-              converted[key] = {};
-            } else {
-              delete converted[key];
-            }
+            // If parsing fails, use empty object
+            converted[key] = {};
           }
         } else if (typeof value === 'object') {
           // Already an object, keep as-is
           converted[key] = value;
         }
+      } else {
+        // String or other types - keep as-is (including empty strings)
+        converted[key] = value;
       }
     });
 
@@ -274,6 +299,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   const renderField = (fieldName, property) => {
     const isRequired = jsonSchema.required?.includes(fieldName) || false;
     const fieldValue = formData[fieldName] || '';
+    const isEnabled = enabledFields[fieldName] || false;
 
     // Check for composition (anyOf, oneOf, allOf)
     const composition = detectSchemaComposition(property);
@@ -281,6 +307,31 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
     const effectiveProperty = composition.hasComposition
       ? composition.options[selectedCompositionIndex] || {}
       : property;
+
+    /**
+     * Render field label with enable checkbox
+     */
+    const renderFieldLabel = (htmlFor) => {
+      return (
+        <div class="flex items-center justify-between mb-1">
+          <Label htmlFor={htmlFor} mandatory={isRequired} className="mb-0">
+            {property.title || fieldName}
+          </Label>
+          <div class="flex items-center gap-1">
+            <input
+              type="checkbox"
+              checked={isEnabled}
+              onChange={(e) => handleFieldToggle(fieldName, e.target.checked)}
+              disabled={isRequired}
+              class="h-3 w-3 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+            />
+            <span class={`text-xs ${isRequired ? 'text-gray-400' : 'text-gray-600'}`}>
+              Enable
+            </span>
+          </div>
+        </div>
+      );
+    };
 
     // Render composition selector if applicable
     const renderCompositionSelector = () => {
@@ -311,11 +362,9 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
     if (effectiveProperty.type === 'null') {
       return (
         <div key={fieldName} class="mb-4">
-          <Label htmlFor={fieldName} mandatory={isRequired}>
-            {property.title || fieldName}
-          </Label>
+          {renderFieldLabel(fieldName)}
           {renderCompositionSelector()}
-          <div class="text-xs text-gray-500 italic p-2 bg-gray-50 rounded border border-gray-200">
+          <div class={`text-xs text-gray-500 italic p-2 bg-gray-50 rounded border border-gray-200 ${!isEnabled ? 'opacity-50' : ''}`}>
             Field is set to null
           </div>
         </div>
@@ -345,26 +394,23 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
     if (effectiveProperty.type === 'boolean') {
       return (
         <div key={fieldName} class="mb-4">
+          {renderFieldLabel(fieldName)}
           {renderCompositionSelector()}
-          <div class="flex items-center">
+          <div class={`flex items-center ${!isEnabled ? 'opacity-50' : ''}`}>
             <input
               id={fieldName}
               type="checkbox"
               checked={fieldValue}
               onChange={(e) => handleFieldChange(fieldName, e.target.checked)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !isEnabled}
               class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
             />
-            <Label
-              htmlFor={fieldName}
-              mandatory={isRequired}
-              className="ml-2 mb-0"
-            >
-              {property.title || fieldName}
-            </Label>
+            <span class="ml-2 text-sm text-gray-700">
+              {effectiveProperty.description || 'Enabled'}
+            </span>
           </div>
           {effectiveProperty.description && (
-            <p class="mt-1 text-xs text-gray-500 ml-6">
+            <p class="mt-1 text-xs text-gray-500">
               {effectiveProperty.description}
             </p>
           )}
@@ -376,17 +422,15 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
     if (effectiveProperty.enum && Array.isArray(effectiveProperty.enum)) {
       return (
         <div key={fieldName} class="mb-4">
-          <Label htmlFor={fieldName} mandatory={isRequired}>
-            {property.title || fieldName}
-          </Label>
+          {renderFieldLabel(fieldName)}
           {renderCompositionSelector()}
           <select
             id={fieldName}
             value={fieldValue}
             onChange={(e) => handleFieldChange(fieldName, e.target.value)}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !isEnabled}
             required={isRequired}
-            class="block w-full rounded-md px-3 py-2 text-gray-900 outline focus:outline-2 -outline-offset-1 outline-gray-300 focus:-outline-offset-2 focus:outline-sky-500 text-sm"
+            class={`block w-full rounded-md px-3 py-2 text-gray-900 outline focus:outline-2 -outline-offset-1 outline-gray-300 focus:-outline-offset-2 focus:outline-sky-500 text-sm ${!isEnabled ? 'opacity-50' : ''}`}
           >
             <option value="">Select an option</option>
             {effectiveProperty.enum.map(option => (
@@ -413,61 +457,62 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
 
       return (
         <div key={fieldName} class="mb-4">
-          <Label htmlFor={fieldName} mandatory={isRequired}>
-            {property.title || fieldName}
-          </Label>
+          {renderFieldLabel(fieldName)}
           {renderCompositionSelector()}
-          <CodeMirror
-            value={objectValue}
-            onChange={(value) => {
-              try {
-                // Try to parse as JSON when user types
-                const parsed = JSON.parse(value);
-                handleFieldChange(fieldName, parsed);
-              } catch (e) {
-                // If invalid JSON, store as string temporarily
-                handleFieldChange(fieldName, value);
-              }
-            }}
-            extensions={[
-              json(),
-              bracketMatching(),
-              EditorView.theme({
-                "&": {
-                  minHeight: "120px",
-                  maxHeight: "120px",
-                },
-                ".cm-content, .cm-gutter": {
-                  minHeight: "120px !important",
-                  maxHeight: "120px !important"
-                },
-                ".cm-scroller": {
-                  overflow: "auto",
-                  maxHeight: "120px"
+          <div class={!isEnabled ? 'opacity-50 pointer-events-none' : ''}>
+            <CodeMirror
+              value={objectValue}
+              onChange={(value) => {
+                if (!isEnabled) return;
+                try {
+                  // Try to parse as JSON when user types
+                  const parsed = JSON.parse(value);
+                  handleFieldChange(fieldName, parsed);
+                } catch (e) {
+                  // If invalid JSON, store as string temporarily
+                  handleFieldChange(fieldName, value);
                 }
-              })
-            ]}
-            theme={dracula}
-            basicSetup={{
-              lineNumbers: true,
-              foldGutter: true,
-              dropCursor: false,
-              allowMultipleSelections: false,
-              indentOnInput: true,
-              bracketMatching: true,
-              closeBrackets: true,
-              autocompletion: true,
-              rectangularSelection: false,
-              searchKeymap: false,
-              highlightSelectionMatches: false
-            }}
-            style={{
-              border: '2px solid #282a36',
-              borderRadius: '0.375rem',
-              fontSize: '12px',
-              fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
-            }}
-          />
+              }}
+              extensions={[
+                json(),
+                bracketMatching(),
+                EditorView.theme({
+                  "&": {
+                    minHeight: "120px",
+                    maxHeight: "120px",
+                  },
+                  ".cm-content, .cm-gutter": {
+                    minHeight: "120px !important",
+                    maxHeight: "120px !important"
+                  },
+                  ".cm-scroller": {
+                    overflow: "auto",
+                    maxHeight: "120px"
+                  }
+                })
+              ]}
+              theme={dracula}
+              basicSetup={{
+                lineNumbers: true,
+                foldGutter: true,
+                dropCursor: false,
+                allowMultipleSelections: false,
+                indentOnInput: true,
+                bracketMatching: true,
+                closeBrackets: true,
+                autocompletion: true,
+                rectangularSelection: false,
+                searchKeymap: false,
+                highlightSelectionMatches: false
+              }}
+              style={{
+                border: '2px solid #282a36',
+                borderRadius: '0.375rem',
+                fontSize: '12px',
+                fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+              }}
+            />
+          </div>
           <p class="mt-1 text-xs text-gray-500">
             Field is an object you can manually construct above.
           </p>
@@ -483,23 +528,23 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
     // Default text input
     return (
       <div key={fieldName} class="mb-4">
-        <Label htmlFor={fieldName} mandatory={isRequired}>
-          {property.title || fieldName}
-        </Label>
+        {renderFieldLabel(fieldName)}
         {renderCompositionSelector()}
-        <TextInput
-          id={fieldName}
-          type={inputType}
-          value={fieldValue}
-          onChange={(e) => handleFieldChange(fieldName, e.target.value)}
-          placeholder={effectiveProperty.examples?.[0] || ''}
-          disabled={isSubmitting}
-          required={isRequired}
-          description={effectiveProperty.description}
-          rows={inputType === 'textarea' ? 4 : undefined}
-          min={effectiveProperty.minimum}
-          max={effectiveProperty.maximum}
-        />
+        <div class={!isEnabled ? 'opacity-50' : ''}>
+          <TextInput
+            id={fieldName}
+            type={inputType}
+            value={fieldValue}
+            onChange={(e) => handleFieldChange(fieldName, e.target.value)}
+            placeholder={effectiveProperty.examples?.[0] || ''}
+            disabled={isSubmitting || !isEnabled}
+            required={isRequired}
+            description={effectiveProperty.description}
+            rows={inputType === 'textarea' ? 4 : undefined}
+            min={effectiveProperty.minimum}
+            max={effectiveProperty.maximum}
+          />
+        </div>
       </div>
     );
   };
