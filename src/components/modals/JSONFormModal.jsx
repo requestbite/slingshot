@@ -50,7 +50,8 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       } else if (prop.type === 'array') {
         data[key] = [];
       } else if (prop.type === 'object') {
-        data[key] = {};
+        // Initialize object as empty JSON string for CodeMirror
+        data[key] = '{}';
       } else {
         data[key] = '';
       }
@@ -164,6 +165,23 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
         converted[key] = Number(value);
       } else if (prop.type === 'boolean') {
         converted[key] = Boolean(value);
+      } else if (prop.type === 'object') {
+        // If it's a string (JSON), try to parse it
+        if (typeof value === 'string') {
+          try {
+            converted[key] = JSON.parse(value);
+          } catch (e) {
+            // If parsing fails, skip this field or use empty object
+            if (jsonSchema.required?.includes(key)) {
+              converted[key] = {};
+            } else {
+              delete converted[key];
+            }
+          }
+        } else if (typeof value === 'object') {
+          // Already an object, keep as-is
+          converted[key] = value;
+        }
       }
     });
 
@@ -286,6 +304,81 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
               </option>
             ))}
           </select>
+          {property.description && (
+            <p class="mt-1 text-xs text-gray-500">
+              {property.description}
+            </p>
+          )}
+        </div>
+      );
+    }
+
+    // Render CodeMirror for object type
+    if (property.type === 'object') {
+      // Convert object to JSON string for display
+      const objectValue = typeof fieldValue === 'object'
+        ? JSON.stringify(fieldValue, null, 2)
+        : fieldValue;
+
+      return (
+        <div key={fieldName} class="mb-4">
+          <Label htmlFor={fieldName} mandatory={isRequired}>
+            {property.title || fieldName}
+          </Label>
+          <CodeMirror
+            value={objectValue}
+            onChange={(value) => {
+              try {
+                // Try to parse as JSON when user types
+                const parsed = JSON.parse(value);
+                handleFieldChange(fieldName, parsed);
+              } catch (e) {
+                // If invalid JSON, store as string temporarily
+                handleFieldChange(fieldName, value);
+              }
+            }}
+            extensions={[
+              json(),
+              bracketMatching(),
+              EditorView.theme({
+                "&": {
+                  minHeight: "120px",
+                  maxHeight: "120px",
+                },
+                ".cm-content, .cm-gutter": {
+                  minHeight: "120px !important",
+                  maxHeight: "120px !important"
+                },
+                ".cm-scroller": {
+                  overflow: "auto",
+                  maxHeight: "120px"
+                }
+              })
+            ]}
+            theme={dracula}
+            basicSetup={{
+              lineNumbers: true,
+              foldGutter: true,
+              dropCursor: false,
+              allowMultipleSelections: false,
+              indentOnInput: true,
+              bracketMatching: true,
+              closeBrackets: true,
+              autocompletion: true,
+              rectangularSelection: false,
+              searchKeymap: false,
+              highlightSelectionMatches: false
+            }}
+            style={{
+              border: '2px solid #282a36',
+              borderRadius: '0.375rem',
+              fontSize: '12px',
+              fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+            }}
+          />
+          <p class="mt-1 text-xs text-gray-500">
+            Field is an object you can manually construct above.
+          </p>
           {property.description && (
             <p class="mt-1 text-xs text-gray-500">
               {property.description}
