@@ -9,6 +9,7 @@ import { CurlExportModal } from '../modals/CurlExportModal';
 import { CurlImportModal } from '../modals/CurlImportModal';
 import { SaveAsModal } from '../modals/SaveAsModal';
 import { CopyRequestModal } from '../modals/CopyRequestModal';
+import { JSONFormModal } from '../modals/JSONFormModal';
 import { VariableInput } from '../common/VariableInput';
 import { generateUUID } from '../../utils/uuid.js';
 import { Toast, useToast } from '../common/Toast';
@@ -17,6 +18,7 @@ import { apiClient } from '../../api';
 import { useAppContext } from '../../hooks/useAppContext';
 import { decryptSecret } from '../../utils/encryption';
 import { Button } from '../common/Button';
+import { parseRequestBodySchema, getRequestBodySchemaForContentType } from '../../utils/schemaParser';
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 
@@ -154,6 +156,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   const [showCurlImportModal, setShowCurlImportModal] = useState(false);
   const [showSaveAsModal, setShowSaveAsModal] = useState(false);
   const [showCopyRequestModal, setShowCopyRequestModal] = useState(false);
+  const [showJSONFormModal, setShowJSONFormModal] = useState(false);
 
   // Toast state
   const [isToastVisible, showToast, hideToast] = useToast();
@@ -1144,6 +1147,15 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
     showToast();
   };
 
+  // Handle JSON form import
+  const handleJSONFormImport = (formData) => {
+    updateRequestData({
+      bodyType: 'raw',
+      contentType: 'application/json',
+      bodyContent: JSON.stringify(formData, null, 2)
+    });
+  };
+
   // Handle update (apply draft changes)
   const handleUpdate = async () => {
     if (!request?.id) return;
@@ -1449,6 +1461,9 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
                 onEnterKeyPress={handleEnterKeyPress}
                 onSendRequest={handleSendRequest}
                 selectedEnvironment={currentEnvironment}
+                request={request}
+                isDocsSidebarVisible={isDocsSidebarVisible}
+                onOpenSchemaEditor={() => setShowJSONFormModal(true)}
               />
             )}
             {activeTab === 'settings' && !selectedCollection && (
@@ -1515,6 +1530,21 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         replaceVariables={replaceVariables}
         onCopySuccess={handleCopyRequestSuccess}
       />
+
+      {/* JSON Form Modal */}
+      {showJSONFormModal && request && (() => {
+        const requestBodySchema = parseRequestBodySchema(request.request_body_schema);
+        const selectedSchema = getRequestBodySchemaForContentType(requestBodySchema, requestData.contentType);
+
+        return (
+          <JSONFormModal
+            isOpen={showJSONFormModal}
+            onClose={() => setShowJSONFormModal(false)}
+            onImport={handleJSONFormImport}
+            jsonSchema={selectedSchema}
+          />
+        );
+      })()}
 
       {/* Toast notification */}
       <Toast

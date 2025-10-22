@@ -15,6 +15,7 @@ import { ContextMenu } from '../../common/ContextMenu';
 import { VariableInput } from '../../common/VariableInput';
 import { useAppContext } from '../../../hooks/useAppContext';
 import { apiClient } from '../../../api';
+import { parseRequestBodySchema, getRequestBodySchemaForContentType } from '../../../utils/schemaParser';
 
 const BODY_TYPES = [
   { value: 'none', label: 'None' },
@@ -226,7 +227,10 @@ export function BodyTab({
   onUrlEncodedDataChange,
   onEnterKeyPress,
   onSendRequest,
-  selectedEnvironment
+  selectedEnvironment,
+  request,
+  isDocsSidebarVisible,
+  onOpenSchemaEditor
 }) {
   const { selectedCollection, hasManuallySelectedEnvironment } = useAppContext();
   const [availableVariables, setAvailableVariables] = useState(new Map());
@@ -234,6 +238,11 @@ export function BodyTab({
 
   // JSON validation state
   const [isValidJson, setIsValidJson] = useState(true);
+
+  // Check if schema-based editor should be shown
+  const requestBodySchema = request ? parseRequestBodySchema(request.request_body_schema) : null;
+  const selectedSchema = requestBodySchema ? getRequestBodySchemaForContentType(requestBodySchema, contentType) : null;
+  const shouldShowSchemaEditor = isDocsSidebarVisible && selectedSchema && contentType === 'application/json';
 
   // Load available variables
   useEffect(() => {
@@ -600,6 +609,16 @@ export function BodyTab({
                   }`}
               >
                 Prettify
+              </button>
+            )}
+
+            {/* Schema-based Editor Button - only show when docs sidebar is visible with JSON schema */}
+            {shouldShowSchemaEditor && (
+              <button
+                onClick={onOpenSchemaEditor}
+                class="px-2 py-1 text-xs font-medium rounded-md cursor-pointer bg-sky-100 hover:bg-sky-200 text-sky-700"
+              >
+                Schema-based editor
               </button>
             )}
 
