@@ -20,6 +20,9 @@ export function AppProvider({ children }) {
     return stored === null ? true : stored === 'true';
   });
 
+  // Callback for updating request body from docs sidebar
+  const [updateRequestBodyCallback, setUpdateRequestBodyCallback] = useState(null);
+
   // Load collections on app start
   useEffect(() => {
     loadCollections();
@@ -137,6 +140,7 @@ export function AppProvider({ children }) {
     hasManuallySelectedEnvironment,
     isLoading,
     isDocsSidebarVisible,
+    updateRequestBodyCallback,
 
     // Actions
     loadCollections,
@@ -148,7 +152,8 @@ export function AppProvider({ children }) {
     setCurrentEnvironment,
     setHasManuallySelectedEnvironment,
     setIsDocsSidebarVisible,
-    refreshCollectionData
+    refreshCollectionData,
+    setUpdateRequestBodyCallback
   };
 
   return (

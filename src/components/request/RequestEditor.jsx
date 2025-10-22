@@ -68,7 +68,7 @@ const getAuthMethodDisplayName = (authField) => {
 };
 
 export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
-  const { selectedCollection, currentEnvironment, hasManuallySelectedEnvironment, loadCollections, isDocsSidebarVisible, setIsDocsSidebarVisible } = useAppContext();
+  const { selectedCollection, currentEnvironment, hasManuallySelectedEnvironment, loadCollections, isDocsSidebarVisible, setIsDocsSidebarVisible, setUpdateRequestBodyCallback } = useAppContext();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -166,6 +166,29 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       onRequestChange(requestData);
     }
   }, [requestData, onRequestChange]);
+
+  // Register callback for updating request body from docs sidebar
+  useEffect(() => {
+    if (setUpdateRequestBodyCallback) {
+      setUpdateRequestBodyCallback(() => (bodyData) => {
+        // Update the request data with the new body content
+        updateRequestData({
+          bodyType: 'raw',
+          contentType: 'application/json',
+          bodyContent: JSON.stringify(bodyData, null, 2)
+        });
+        // Switch to the body tab
+        setActiveTab('body');
+      });
+    }
+
+    // Cleanup: unregister callback when component unmounts
+    return () => {
+      if (setUpdateRequestBodyCallback) {
+        setUpdateRequestBodyCallback(null);
+      }
+    };
+  }, [setUpdateRequestBodyCallback]);
 
   // Load saved response data when request changes
   useEffect(() => {
