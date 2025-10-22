@@ -79,7 +79,8 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       } else if (effectiveProp.type === 'boolean') {
         data[key] = false;
       } else if (effectiveProp.type === 'array') {
-        data[key] = [];
+        // Initialize array as empty JSON string for CodeMirror
+        data[key] = '[]';
       } else if (effectiveProp.type === 'object') {
         // Initialize object as empty JSON string for CodeMirror
         data[key] = '{}';
@@ -228,6 +229,19 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           }
         } else if (typeof value === 'object') {
           // Already an object, keep as-is
+          converted[key] = value;
+        }
+      } else if (effectiveProp.type === 'array') {
+        // If it's a string (JSON), try to parse it
+        if (typeof value === 'string') {
+          try {
+            converted[key] = JSON.parse(value);
+          } catch (e) {
+            // If parsing fails, use empty array
+            converted[key] = [];
+          }
+        } else if (Array.isArray(value)) {
+          // Already an array, keep as-is
           converted[key] = value;
         }
       } else {
@@ -514,6 +528,83 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           </div>
           <p class="mt-1 text-xs text-gray-500">
             Field is an object you can manually construct above.
+          </p>
+          {effectiveProperty.description && (
+            <p class="mt-1 text-xs text-gray-500">
+              {effectiveProperty.description}
+            </p>
+          )}
+        </div>
+      );
+    }
+
+    // Render CodeMirror for array type
+    if (effectiveProperty.type === 'array') {
+      // Convert array to JSON string for display
+      const arrayValue = Array.isArray(fieldValue)
+        ? JSON.stringify(fieldValue, null, 2)
+        : fieldValue;
+
+      return (
+        <div key={fieldName} class="mb-4">
+          {renderFieldLabel(fieldName)}
+          {renderCompositionSelector()}
+          <div class={!isEnabled ? 'opacity-50 pointer-events-none' : ''}>
+            <CodeMirror
+              value={arrayValue}
+              onChange={(value) => {
+                if (!isEnabled) return;
+                try {
+                  // Try to parse as JSON when user types
+                  const parsed = JSON.parse(value);
+                  handleFieldChange(fieldName, parsed);
+                } catch (e) {
+                  // If invalid JSON, store as string temporarily
+                  handleFieldChange(fieldName, value);
+                }
+              }}
+              extensions={[
+                json(),
+                bracketMatching(),
+                EditorView.theme({
+                  "&": {
+                    minHeight: "120px",
+                    maxHeight: "120px",
+                  },
+                  ".cm-content, .cm-gutter": {
+                    minHeight: "120px !important",
+                    maxHeight: "120px !important"
+                  },
+                  ".cm-scroller": {
+                    overflow: "auto",
+                    maxHeight: "120px"
+                  }
+                })
+              ]}
+              theme={dracula}
+              basicSetup={{
+                lineNumbers: true,
+                foldGutter: true,
+                dropCursor: false,
+                allowMultipleSelections: false,
+                indentOnInput: true,
+                bracketMatching: true,
+                closeBrackets: true,
+                autocompletion: true,
+                rectangularSelection: false,
+                searchKeymap: false,
+                highlightSelectionMatches: false
+              }}
+              style={{
+                border: '2px solid #282a36',
+                borderRadius: '0.375rem',
+                fontSize: '12px',
+                fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+              }}
+            />
+          </div>
+          <p class="mt-1 text-xs text-gray-500">
+            Field is an array you can manually construct above.
           </p>
           {effectiveProperty.description && (
             <p class="mt-1 text-xs text-gray-500">
