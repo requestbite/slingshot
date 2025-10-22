@@ -3,11 +3,17 @@ import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { TextInput } from '../common/TextInput';
 import { Label } from '../common/Label';
+import { Select } from '../common/Select';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { dracula } from '@uiw/codemirror-theme-dracula';
 import { EditorView } from '@codemirror/view';
 import { bracketMatching } from '@codemirror/language';
+import {
+  detectSchemaComposition,
+  getCompositionDisplayName,
+  getSchemaOptionDisplayName
+} from '../../utils/schemaParser';
 
 /**
  * JSONFormModal Component
@@ -20,6 +26,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   const [formData, setFormData] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [compositionSelections, setCompositionSelections] = useState({});
 
   // Initialize form data when modal opens
   useEffect(() => {
@@ -28,6 +35,17 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       const initialData = initializeFormData(jsonSchema);
       setFormData(initialData);
       setError(null);
+      // Initialize composition selections (default to index 0)
+      const initialSelections = {};
+      if (jsonSchema.properties) {
+        Object.entries(jsonSchema.properties).forEach(([fieldName, property]) => {
+          const composition = detectSchemaComposition(property);
+          if (composition.hasComposition) {
+            initialSelections[fieldName] = 0;
+          }
+        });
+      }
+      setCompositionSelections(initialSelections);
     }
   }, [isOpen, jsonSchema]);
 
@@ -39,19 +57,27 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
 
     const data = {};
     Object.entries(schema.properties).forEach(([key, prop]) => {
-      if (prop.default !== undefined) {
-        data[key] = prop.default;
-      } else if (prop.type === 'string') {
+      // Check for composition (anyOf, oneOf, allOf) and use first option
+      const composition = detectSchemaComposition(prop);
+      const effectiveProp = composition.hasComposition
+        ? composition.options[0] || {}
+        : prop;
+
+      if (effectiveProp.default !== undefined) {
+        data[key] = effectiveProp.default;
+      } else if (effectiveProp.type === 'string') {
         data[key] = '';
-      } else if (prop.type === 'number' || prop.type === 'integer') {
+      } else if (effectiveProp.type === 'number' || effectiveProp.type === 'integer') {
         data[key] = '';
-      } else if (prop.type === 'boolean') {
+      } else if (effectiveProp.type === 'boolean') {
         data[key] = false;
-      } else if (prop.type === 'array') {
+      } else if (effectiveProp.type === 'array') {
         data[key] = [];
-      } else if (prop.type === 'object') {
+      } else if (effectiveProp.type === 'object') {
         // Initialize object as empty JSON string for CodeMirror
         data[key] = '{}';
+      } else if (effectiveProp.type === 'null') {
+        data[key] = null;
       } else {
         data[key] = '';
       }
@@ -227,35 +253,99 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   };
 
   /**
+   * Handle composition selection change
+   */
+  const handleCompositionChange = (fieldName, selectedIndex) => {
+    setCompositionSelections(prev => ({
+      ...prev,
+      [fieldName]: selectedIndex
+    }));
+
+    // Clear the field value when switching composition options
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: ''
+    }));
+  };
+
+  /**
    * Render a form field based on JSON schema property
    */
   const renderField = (fieldName, property) => {
     const isRequired = jsonSchema.required?.includes(fieldName) || false;
     const fieldValue = formData[fieldName] || '';
 
+    // Check for composition (anyOf, oneOf, allOf)
+    const composition = detectSchemaComposition(property);
+    const selectedCompositionIndex = compositionSelections[fieldName] || 0;
+    const effectiveProperty = composition.hasComposition
+      ? composition.options[selectedCompositionIndex] || {}
+      : property;
+
+    // Render composition selector if applicable
+    const renderCompositionSelector = () => {
+      if (!composition.hasComposition) return null;
+
+      const options = composition.options.map((option, index) => ({
+        value: index.toString(),
+        label: getSchemaOptionDisplayName(option, index)
+      }));
+
+      return (
+        <div class="mb-2">
+          <div class="flex items-center gap-2 text-xs">
+            <span class="text-gray-600">{getCompositionDisplayName(composition.type)}:</span>
+            <Select
+              value={selectedCompositionIndex.toString()}
+              onChange={(value) => handleCompositionChange(fieldName, parseInt(value, 10))}
+              options={options}
+              size="small"
+              className="min-w-0 flex-1"
+            />
+          </div>
+        </div>
+      );
+    };
+
+    // Handle null type - render a simple disabled message
+    if (effectiveProperty.type === 'null') {
+      return (
+        <div key={fieldName} class="mb-4">
+          <Label htmlFor={fieldName} mandatory={isRequired}>
+            {property.title || fieldName}
+          </Label>
+          {renderCompositionSelector()}
+          <div class="text-xs text-gray-500 italic p-2 bg-gray-50 rounded border border-gray-200">
+            Field is set to null
+          </div>
+        </div>
+      );
+    }
+
     // Determine input type based on schema type
     let inputType = 'text';
-    if (property.type === 'number' || property.type === 'integer') {
+    if (effectiveProperty.type === 'number' || effectiveProperty.type === 'integer') {
       inputType = 'number';
-    } else if (property.format === 'email') {
+    } else if (effectiveProperty.format === 'email') {
       inputType = 'email';
-    } else if (property.format === 'uri') {
+    } else if (effectiveProperty.format === 'uri') {
       inputType = 'url';
-    } else if (property.format === 'date') {
+    } else if (effectiveProperty.format === 'date') {
       inputType = 'date';
-    } else if (property.format === 'date-time') {
+    } else if (effectiveProperty.format === 'date-time') {
       inputType = 'datetime-local';
     }
 
     // Use textarea for long text
-    if (property.type === 'string' && property.maxLength && property.maxLength > 100) {
+    if (effectiveProperty.type === 'string' && effectiveProperty.maxLength && effectiveProperty.maxLength > 100) {
       inputType = 'textarea';
     }
 
     // Render checkbox for boolean
-    if (property.type === 'boolean') {
+    if (effectiveProperty.type === 'boolean') {
       return (
         <div key={fieldName} class="mb-4">
+          {renderCompositionSelector()}
           <div class="flex items-center">
             <input
               id={fieldName}
@@ -273,9 +363,9 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
               {property.title || fieldName}
             </Label>
           </div>
-          {property.description && (
+          {effectiveProperty.description && (
             <p class="mt-1 text-xs text-gray-500 ml-6">
-              {property.description}
+              {effectiveProperty.description}
             </p>
           )}
         </div>
@@ -283,12 +373,13 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
     }
 
     // Render select for enum
-    if (property.enum && Array.isArray(property.enum)) {
+    if (effectiveProperty.enum && Array.isArray(effectiveProperty.enum)) {
       return (
         <div key={fieldName} class="mb-4">
           <Label htmlFor={fieldName} mandatory={isRequired}>
             {property.title || fieldName}
           </Label>
+          {renderCompositionSelector()}
           <select
             id={fieldName}
             value={fieldValue}
@@ -298,15 +389,15 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
             class="block w-full rounded-md px-3 py-2 text-gray-900 outline focus:outline-2 -outline-offset-1 outline-gray-300 focus:-outline-offset-2 focus:outline-sky-500 text-sm"
           >
             <option value="">Select an option</option>
-            {property.enum.map(option => (
+            {effectiveProperty.enum.map(option => (
               <option key={option} value={option}>
                 {option}
               </option>
             ))}
           </select>
-          {property.description && (
+          {effectiveProperty.description && (
             <p class="mt-1 text-xs text-gray-500">
-              {property.description}
+              {effectiveProperty.description}
             </p>
           )}
         </div>
@@ -314,7 +405,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
     }
 
     // Render CodeMirror for object type
-    if (property.type === 'object') {
+    if (effectiveProperty.type === 'object') {
       // Convert object to JSON string for display
       const objectValue = typeof fieldValue === 'object'
         ? JSON.stringify(fieldValue, null, 2)
@@ -325,6 +416,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           <Label htmlFor={fieldName} mandatory={isRequired}>
             {property.title || fieldName}
           </Label>
+          {renderCompositionSelector()}
           <CodeMirror
             value={objectValue}
             onChange={(value) => {
@@ -379,9 +471,9 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           <p class="mt-1 text-xs text-gray-500">
             Field is an object you can manually construct above.
           </p>
-          {property.description && (
+          {effectiveProperty.description && (
             <p class="mt-1 text-xs text-gray-500">
-              {property.description}
+              {effectiveProperty.description}
             </p>
           )}
         </div>
@@ -394,18 +486,19 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
         <Label htmlFor={fieldName} mandatory={isRequired}>
           {property.title || fieldName}
         </Label>
+        {renderCompositionSelector()}
         <TextInput
           id={fieldName}
           type={inputType}
           value={fieldValue}
           onChange={(e) => handleFieldChange(fieldName, e.target.value)}
-          placeholder={property.examples?.[0] || ''}
+          placeholder={effectiveProperty.examples?.[0] || ''}
           disabled={isSubmitting}
           required={isRequired}
-          description={property.description}
+          description={effectiveProperty.description}
           rows={inputType === 'textarea' ? 4 : undefined}
-          min={property.minimum}
-          max={property.maximum}
+          min={effectiveProperty.minimum}
+          max={effectiveProperty.maximum}
         />
       </div>
     );
