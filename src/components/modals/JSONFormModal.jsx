@@ -32,6 +32,10 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   const [enabledFields, setEnabledFields] = useState({});
   const [flattenedSchema, setFlattenedSchema] = useState(null);
 
+  // Form display controls
+  const [mandatoryOnTop, setMandatoryOnTop] = useState(true);
+  const [hideOptional, setHideOptional] = useState(false);
+
   // Initialize form data when modal opens
   useEffect(() => {
     if (isOpen && jsonSchema) {
@@ -1099,18 +1103,87 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
     );
   }
 
+  // Check if we should show form display controls
+  const fieldCount = Object.keys(schemaToUse.properties).length;
+  const mandatoryCount = schemaToUse.required?.length || 0;
+  const shouldShowControls = fieldCount >= 10 && mandatoryCount > 0;
+
+  /**
+   * Get fields to display, filtered and sorted based on display controls
+   */
+  const getFieldsToDisplay = () => {
+    let entries = Object.entries(schemaToUse.properties);
+
+    // Filter out optional fields if hideOptional is enabled
+    if (hideOptional) {
+      entries = entries.filter(([fieldName]) =>
+        schemaToUse.required?.includes(fieldName)
+      );
+    }
+
+    // Sort with mandatory fields on top if enabled
+    if (mandatoryOnTop) {
+      entries.sort(([fieldNameA], [fieldNameB]) => {
+        const isRequiredA = schemaToUse.required?.includes(fieldNameA) || false;
+        const isRequiredB = schemaToUse.required?.includes(fieldNameB) || false;
+
+        // If both required or both optional, maintain original order
+        if (isRequiredA === isRequiredB) return 0;
+
+        // Required fields come first
+        return isRequiredA ? -1 : 1;
+      });
+    }
+
+    return entries;
+  };
+
+  const fieldsToDisplay = getFieldsToDisplay();
+
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Create request body payload" size="xl">
       <div class="text-sm text-gray-500 mb-4">
         Create a request body payload by filling out the form. Clicking "Import" will add it to the request editor.
       </div>
 
+      {/* Form display controls */}
+      {shouldShowControls && (
+        <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+              <input
+                id="mandatoryOnTop"
+                type="checkbox"
+                checked={mandatoryOnTop}
+                onChange={(e) => setMandatoryOnTop(e.target.checked)}
+                class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+              />
+              <label htmlFor="mandatoryOnTop" class="text-sm text-gray-700 cursor-pointer">
+                Add mandatory fields on top
+              </label>
+            </div>
+            <div class="flex items-center gap-2">
+              <input
+                id="hideOptional"
+                type="checkbox"
+                checked={hideOptional}
+                onChange={(e) => setHideOptional(e.target.checked)}
+                class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+              />
+              <label htmlFor="hideOptional" class="text-sm text-gray-700 cursor-pointer">
+                Hide optional fields
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit}>
         {/* Two-column layout: Form on left, JSON preview on right (hidden on mobile) */}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Left column: Form */}
           <div>
-            {Object.entries(schemaToUse.properties).map(([fieldName, property]) =>
+            {fieldsToDisplay.map(([fieldName, property]) =>
               renderField(fieldName, property)
             )}
           </div>
