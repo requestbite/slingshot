@@ -95,11 +95,21 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       } else if (effectiveProp.type === 'boolean') {
         data[key] = false;
       } else if (effectiveProp.type === 'array') {
-        // Initialize array as empty JSON string for CodeMirror
-        data[key] = '[]';
+        // If array has defined items schema, initialize as actual array
+        if (effectiveProp.items && (effectiveProp.items.type || effectiveProp.items.properties || effectiveProp.items.enum)) {
+          data[key] = [];
+        } else {
+          // Otherwise, use JSON string for CodeMirror
+          data[key] = '[]';
+        }
       } else if (effectiveProp.type === 'object') {
-        // Initialize object as empty JSON string for CodeMirror
-        data[key] = '{}';
+        // If object has defined properties, initialize as actual object
+        if (effectiveProp.properties) {
+          data[key] = {};
+        } else {
+          // Otherwise, use JSON string for CodeMirror
+          data[key] = '{}';
+        }
       } else if (effectiveProp.type === 'null') {
         data[key] = null;
       } else {
@@ -120,16 +130,63 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
 
   /**
    * Handle form field changes
+   * Supports nested paths like "field.0" for array items or "field.property" for object properties
    */
   const handleFieldChange = (fieldName, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [fieldName]: value
-    }));
+    // Check if this is a nested path
+    if (fieldName.includes('.')) {
+      const parts = fieldName.split('.');
+      const rootField = parts[0];
+      const nestedPath = parts.slice(1);
+
+      setFormData(prev => {
+        const rootValue = prev[rootField];
+        const updated = setNestedValue(rootValue, nestedPath, value);
+        return {
+          ...prev,
+          [rootField]: updated
+        };
+      });
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [fieldName]: value
+      }));
+    }
 
     // Clear error when user starts typing
     if (error) {
       setError(null);
+    }
+  };
+
+  /**
+   * Helper to set nested values in objects/arrays
+   */
+  const setNestedValue = (obj, path, value) => {
+    if (path.length === 1) {
+      const key = path[0];
+      if (Array.isArray(obj)) {
+        const newArray = [...obj];
+        newArray[parseInt(key, 10)] = value;
+        return newArray;
+      } else {
+        return { ...obj, [key]: value };
+      }
+    }
+
+    const key = path[0];
+    const remaining = path.slice(1);
+
+    if (Array.isArray(obj)) {
+      const newArray = [...obj];
+      newArray[parseInt(key, 10)] = setNestedValue(obj[parseInt(key, 10)], remaining, value);
+      return newArray;
+    } else {
+      return {
+        ...obj,
+        [key]: setNestedValue(obj[key] || {}, remaining, value)
+      };
     }
   };
 
@@ -141,6 +198,67 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       ...prev,
       [fieldName]: enabled
     }));
+  };
+
+  /**
+   * Helper to convert a single value based on its schema
+   */
+  const convertValueBySchema = (value, schema) => {
+    if (value === undefined || value === null) {
+      return schema.type === 'null' ? null : value;
+    }
+
+    // Convert types
+    if (schema.type === 'number' || schema.type === 'integer') {
+      return value === '' ? 0 : Number(value);
+    } else if (schema.type === 'boolean') {
+      return Boolean(value);
+    } else if (schema.type === 'null') {
+      return null;
+    } else if (schema.type === 'object') {
+      // If it's a string (JSON), try to parse it
+      if (typeof value === 'string') {
+        try {
+          return JSON.parse(value);
+        } catch (e) {
+          return {};
+        }
+      } else if (typeof value === 'object' && !Array.isArray(value)) {
+        // If object has defined properties, recursively convert nested values
+        if (schema.properties) {
+          const converted = {};
+          Object.entries(value).forEach(([propKey, propValue]) => {
+            if (schema.properties[propKey]) {
+              converted[propKey] = convertValueBySchema(propValue, schema.properties[propKey]);
+            } else {
+              converted[propKey] = propValue;
+            }
+          });
+          return converted;
+        }
+        // Already an object without defined properties, keep as-is
+        return value;
+      }
+    } else if (schema.type === 'array') {
+      // If it's a string (JSON), try to parse it
+      if (typeof value === 'string') {
+        try {
+          return JSON.parse(value);
+        } catch (e) {
+          return [];
+        }
+      } else if (Array.isArray(value)) {
+        // If array has defined items schema, recursively convert array items
+        if (schema.items && (schema.items.type || schema.items.properties || schema.items.enum)) {
+          return value.map(item => convertValueBySchema(item, schema.items));
+        }
+        // Already an array without defined items, keep as-is
+        return value;
+      }
+    }
+
+    // String or other types - keep as-is (including empty strings)
+    return value;
   };
 
   /**
@@ -167,43 +285,8 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
         ? composition.options[selectedIndex] || {}
         : prop;
 
-      // Convert types
-      if (effectiveProp.type === 'number' || effectiveProp.type === 'integer') {
-        converted[key] = value === '' ? 0 : Number(value);
-      } else if (effectiveProp.type === 'boolean') {
-        converted[key] = Boolean(value);
-      } else if (effectiveProp.type === 'null') {
-        converted[key] = null;
-      } else if (effectiveProp.type === 'object') {
-        // If it's a string (JSON), try to parse it
-        if (typeof value === 'string') {
-          try {
-            converted[key] = JSON.parse(value);
-          } catch (e) {
-            // If parsing fails, use empty object
-            converted[key] = {};
-          }
-        } else if (typeof value === 'object') {
-          // Already an object, keep as-is
-          converted[key] = value;
-        }
-      } else if (effectiveProp.type === 'array') {
-        // If it's a string (JSON), try to parse it
-        if (typeof value === 'string') {
-          try {
-            converted[key] = JSON.parse(value);
-          } catch (e) {
-            // If parsing fails, use empty array
-            converted[key] = [];
-          }
-        } else if (Array.isArray(value)) {
-          // Already an array, keep as-is
-          converted[key] = value;
-        }
-      } else {
-        // String or other types - keep as-is (including empty strings)
-        converted[key] = value;
-      }
+      // Convert the value using the helper
+      converted[key] = convertValueBySchema(value, effectiveProp);
     });
 
     return converted;
@@ -261,6 +344,209 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       ...prev,
       [fieldName]: ''
     }));
+  };
+
+  /**
+   * Helper to get default value for a schema property
+   */
+  const getDefaultValueForProperty = (property) => {
+    if (property.default !== undefined) {
+      return property.default;
+    }
+
+    switch (property.type) {
+      case 'string':
+        return '';
+      case 'number':
+      case 'integer':
+        return '';
+      case 'boolean':
+        return false;
+      case 'null':
+        return null;
+      case 'array':
+        return [];
+      case 'object':
+        return {};
+      default:
+        return '';
+    }
+  };
+
+  /**
+   * Render individual field input (used for both top-level and nested fields)
+   */
+  const renderFieldInput = (fieldPath, property, isEnabled, isSubmitting) => {
+    const fieldValue = fieldPath.includes('.')
+      ? getNestedValue(formData, fieldPath.split('.'))
+      : formData[fieldPath];
+
+    // Determine input type based on schema type
+    let inputType = 'text';
+    if (property.type === 'number' || property.type === 'integer') {
+      inputType = 'number';
+    } else if (property.format === 'email') {
+      inputType = 'email';
+    } else if (property.format === 'uri') {
+      inputType = 'url';
+    } else if (property.format === 'date') {
+      inputType = 'date';
+    } else if (property.format === 'date-time') {
+      inputType = 'datetime-local';
+    }
+
+    // Use textarea for long text
+    if (property.type === 'string' && property.maxLength && property.maxLength > 100) {
+      inputType = 'textarea';
+    }
+
+    // Render checkbox for boolean
+    if (property.type === 'boolean') {
+      return (
+        <div class={`flex items-center ${!isEnabled ? 'opacity-50' : ''}`}>
+          <input
+            id={fieldPath}
+            type="checkbox"
+            checked={fieldValue || false}
+            onChange={(e) => handleFieldChange(fieldPath, e.target.checked)}
+            disabled={isSubmitting || !isEnabled}
+            class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+          />
+          <span class="ml-2 text-sm text-gray-700">
+            Enabled
+          </span>
+        </div>
+      );
+    }
+
+    // Render select for enum
+    if (property.enum && Array.isArray(property.enum)) {
+      const enumOptions = [
+        { value: '', label: 'Select an option' },
+        ...property.enum.map(option => ({
+          value: option,
+          label: option
+        }))
+      ];
+
+      return (
+        <Select
+          id={fieldPath}
+          value={fieldValue || ''}
+          onChange={(value) => handleFieldChange(fieldPath, value)}
+          options={enumOptions}
+          disabled={isSubmitting || !isEnabled}
+        />
+      );
+    }
+
+    // Default text input
+    return (
+      <TextInput
+        id={fieldPath}
+        type={inputType}
+        value={fieldValue || ''}
+        onChange={(e) => handleFieldChange(fieldPath, e.target.value)}
+        placeholder={property.examples?.[0] || ''}
+        disabled={isSubmitting || !isEnabled}
+        rows={inputType === 'textarea' ? 4 : undefined}
+        min={property.minimum}
+        max={property.maximum}
+      />
+    );
+  };
+
+  /**
+   * Helper to get nested value from object using path array
+   */
+  const getNestedValue = (obj, path) => {
+    let current = obj;
+    for (const key of path) {
+      if (current == null) return undefined;
+      current = Array.isArray(current) ? current[parseInt(key, 10)] : current[key];
+    }
+    return current;
+  };
+
+  /**
+   * Render array field with add/remove functionality for defined item schemas
+   */
+  const renderArrayWithItems = (fieldName, property, itemsSchema, isEnabled, isSubmitting) => {
+    const arrayValue = formData[fieldName] || [];
+
+    const handleAddItem = () => {
+      const newItem = getDefaultValueForProperty(itemsSchema);
+      handleFieldChange(fieldName, [...arrayValue, newItem]);
+    };
+
+    const handleRemoveItem = (index) => {
+      const newArray = arrayValue.filter((_, i) => i !== index);
+      handleFieldChange(fieldName, newArray);
+    };
+
+    return (
+      <div class={!isEnabled ? 'opacity-50' : ''}>
+        <div class="space-y-2">
+          {arrayValue.map((item, index) => (
+            <div key={index} class="flex items-start gap-2 p-3 bg-gray-50 rounded border border-gray-200">
+              <div class="flex-1">
+                {renderFieldInput(`${fieldName}.${index}`, itemsSchema, isEnabled, isSubmitting)}
+              </div>
+              <button
+                type="button"
+                onClick={() => handleRemoveItem(index)}
+                disabled={isSubmitting || !isEnabled}
+                class="mt-1 text-red-600 hover:text-red-800 disabled:opacity-50"
+                title="Remove item"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={handleAddItem}
+          disabled={isSubmitting || !isEnabled}
+          class="mt-2 text-sm text-sky-600 hover:text-sky-800 disabled:opacity-50 flex items-center gap-1"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add item
+        </button>
+      </div>
+    );
+  };
+
+  /**
+   * Render object field with individual property fields
+   */
+  const renderObjectWithProperties = (fieldName, property, objectProperties, isEnabled, isSubmitting) => {
+    const objectValue = formData[fieldName] || {};
+
+    return (
+      <div class={`space-y-3 p-3 bg-gray-50 rounded border border-gray-200 ${!isEnabled ? 'opacity-50' : ''}`}>
+        {Object.entries(objectProperties).map(([propName, propSchema]) => {
+          const propPath = `${fieldName}.${propName}`;
+          return (
+            <div key={propName}>
+              <Label htmlFor={propPath} className="mb-1">
+                {propSchema.title || propName}
+              </Label>
+              {renderFieldInput(propPath, propSchema, isEnabled, isSubmitting)}
+              {propSchema.description && (
+                <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
+                  <MarkdownPreview markdown={propSchema.description} />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   /**
@@ -457,9 +743,22 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       );
     }
 
-    // Render CodeMirror for object type
+    // Render object type
     if (effectiveProperty.type === 'object') {
-      // Convert object to JSON string for display
+      // If object has defined properties, render structured fields
+      if (effectiveProperty.properties) {
+        return (
+          <div key={fieldName} class="mb-4">
+            {renderFieldLabel(fieldName)}
+            {renderParentDescription()}
+            {renderCompositionSelector()}
+            {renderObjectWithProperties(fieldName, effectiveProperty, effectiveProperty.properties, isEnabled, isSubmitting)}
+            {renderEffectiveDescription()}
+          </div>
+        );
+      }
+
+      // Otherwise, render CodeMirror for freeform object
       const objectValue = typeof fieldValue === 'object'
         ? JSON.stringify(fieldValue, null, 2)
         : fieldValue;
@@ -531,9 +830,22 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       );
     }
 
-    // Render CodeMirror for array type
+    // Render array type
     if (effectiveProperty.type === 'array') {
-      // Convert array to JSON string for display
+      // If array has defined items schema, render structured list
+      if (effectiveProperty.items && (effectiveProperty.items.type || effectiveProperty.items.properties || effectiveProperty.items.enum)) {
+        return (
+          <div key={fieldName} class="mb-4">
+            {renderFieldLabel(fieldName)}
+            {renderParentDescription()}
+            {renderCompositionSelector()}
+            {renderArrayWithItems(fieldName, effectiveProperty, effectiveProperty.items, isEnabled, isSubmitting)}
+            {renderEffectiveDescription()}
+          </div>
+        );
+      }
+
+      // Otherwise, render CodeMirror for freeform array
       const arrayValue = Array.isArray(fieldValue)
         ? JSON.stringify(fieldValue, null, 2)
         : fieldValue;
