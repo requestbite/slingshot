@@ -54,6 +54,15 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       }
       setCompositionSelections(initialSelections);
       setEnabledFields(initialEnabled);
+
+      // Auto-focus on first form field
+      setTimeout(() => {
+        // Try to focus first input, textarea, select, or CodeMirror editor
+        const firstInput = document.querySelector('input[type="text"], input[type="number"], input[type="email"], input[type="url"], input[type="date"], input[type="datetime-local"], textarea, select, .cm-content');
+        if (firstInput) {
+          firstInput.focus();
+        }
+      }, 150);
     }
   }, [isOpen, jsonSchema]);
 
@@ -623,14 +632,13 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       EditorView.editable.of(false), // Read-only
       EditorView.theme({
         "&": {
-          height: "100%",
+          minHeight: "168px",
         },
         ".cm-content, .cm-gutter": {
-          minHeight: "100% !important"
+          minHeight: "168px !important"
         },
         ".cm-scroller": {
-          overflow: "auto",
-          height: "100%"
+          overflow: "auto"
         }
       })
     ];
@@ -671,16 +679,16 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
         {/* Two-column layout: Form on left, JSON preview on right (hidden on mobile) */}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Left column: Form */}
-          <div class="max-h-[60vh] overflow-y-auto pr-2">
+          <div>
             {Object.entries(jsonSchema.properties).map(([fieldName, property]) =>
               renderField(fieldName, property)
             )}
           </div>
 
           {/* Right column: JSON Preview (hidden on mobile) */}
-          <div class="hidden sm:block h-[60vh]">
+          <div class="hidden sm:block">
             <Label>JSON Preview</Label>
-            <div class="h-[calc(60vh-2rem)]">
+            <div>
               <CodeMirror
                 value={JSON.stringify(jsonPreview, null, 2)}
                 extensions={getCodeMirrorExtensions()}
@@ -703,8 +711,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                   border: '2px solid #282a36',
                   borderRadius: '0.375rem',
                   fontSize: '12px',
-                  fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
-                  height: '100%'
+                  fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
                 }}
               />
             </div>
