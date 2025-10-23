@@ -263,9 +263,38 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       : property;
 
     /**
-     * Render field description with MarkdownPreview
+     * Render parent field description (for composition fields)
+     * This is shown directly under the field label
      */
-    const renderDescription = (description) => {
+    const renderParentDescription = () => {
+      if (!composition.hasComposition) return null;
+      if (!property.description) return null;
+
+      return (
+        <div class="mt-1 mb-2 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500 [&_.prose_p]:text-gray-500 [&_.prose_li]:text-gray-500 [&_.prose_*]:text-gray-500">
+          <MarkdownPreview markdown={property.description} />
+        </div>
+      );
+    };
+
+    /**
+     * Render effective property description (for composition options)
+     * This is shown below the input field
+     */
+    const renderEffectiveDescription = () => {
+      // For composition fields, only show the effective property description
+      // The parent description is shown above via renderParentDescription
+      if (composition.hasComposition) {
+        if (!effectiveProperty.description) return null;
+        return (
+          <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500 [&_.prose_p]:text-gray-500 [&_.prose_li]:text-gray-500 [&_.prose_*]:text-gray-500">
+            <MarkdownPreview markdown={effectiveProperty.description} />
+          </div>
+        );
+      }
+
+      // For non-composition fields, show the property description
+      const description = property.description;
       if (!description) return null;
       return (
         <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500 [&_.prose_p]:text-gray-500 [&_.prose_li]:text-gray-500 [&_.prose_*]:text-gray-500">
@@ -328,10 +357,12 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       return (
         <div key={fieldName} class="mb-4">
           {renderFieldLabel(fieldName)}
+          {renderParentDescription()}
           {renderCompositionSelector()}
           <div class={`text-xs text-gray-500 italic p-2 bg-gray-50 rounded border border-gray-200 ${!isEnabled ? 'opacity-50' : ''}`}>
             Field is set to null
           </div>
+          {renderEffectiveDescription()}
         </div>
       );
     }
@@ -360,6 +391,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       return (
         <div key={fieldName} class="mb-4">
           {renderFieldLabel(fieldName)}
+          {renderParentDescription()}
           {renderCompositionSelector()}
           <div class={`flex items-center ${!isEnabled ? 'opacity-50' : ''}`}>
             <input
@@ -374,32 +406,36 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
               Enabled
             </span>
           </div>
-          {renderDescription(effectiveProperty.description)}
+          {renderEffectiveDescription()}
         </div>
       );
     }
 
     // Render select for enum
     if (effectiveProperty.enum && Array.isArray(effectiveProperty.enum)) {
+      const enumOptions = [
+        { value: '', label: 'Select an option' },
+        ...effectiveProperty.enum.map(option => ({
+          value: option,
+          label: option
+        }))
+      ];
+
       return (
         <div key={fieldName} class="mb-4">
           {renderFieldLabel(fieldName)}
+          {renderParentDescription()}
           {renderCompositionSelector()}
-          <select
-            id={fieldName}
-            value={fieldValue}
-            onChange={(e) => handleFieldChange(fieldName, e.target.value)}
-            disabled={isSubmitting || !isEnabled}
-            class={`block w-full rounded-md px-3 py-2 text-gray-900 outline focus:outline-2 -outline-offset-1 outline-gray-300 focus:-outline-offset-2 focus:outline-sky-500 text-sm ${!isEnabled ? 'opacity-50' : ''}`}
-          >
-            <option value="">Select an option</option>
-            {effectiveProperty.enum.map(option => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-          {renderDescription(effectiveProperty.description)}
+          <div class={!isEnabled ? 'opacity-50' : ''}>
+            <Select
+              id={fieldName}
+              value={fieldValue}
+              onChange={(value) => handleFieldChange(fieldName, value)}
+              options={enumOptions}
+              disabled={isSubmitting || !isEnabled}
+            />
+          </div>
+          {renderEffectiveDescription()}
         </div>
       );
     }
@@ -414,6 +450,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       return (
         <div key={fieldName} class="mb-4">
           {renderFieldLabel(fieldName)}
+          {renderParentDescription()}
           {renderCompositionSelector()}
           <div class={!isEnabled ? 'opacity-50 pointer-events-none' : ''}>
             <CodeMirror
@@ -472,7 +509,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           <p class="mt-1 text-xs text-gray-500">
             Field is an object you can manually construct above.
           </p>
-          {renderDescription(effectiveProperty.description)}
+          {renderEffectiveDescription()}
         </div>
       );
     }
@@ -487,6 +524,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       return (
         <div key={fieldName} class="mb-4">
           {renderFieldLabel(fieldName)}
+          {renderParentDescription()}
           {renderCompositionSelector()}
           <div class={!isEnabled ? 'opacity-50 pointer-events-none' : ''}>
             <CodeMirror
@@ -545,7 +583,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           <p class="mt-1 text-xs text-gray-500">
             Field is an array you can manually construct above.
           </p>
-          {renderDescription(effectiveProperty.description)}
+          {renderEffectiveDescription()}
         </div>
       );
     }
@@ -554,6 +592,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
     return (
       <div key={fieldName} class="mb-4">
         {renderFieldLabel(fieldName)}
+        {renderParentDescription()}
         {renderCompositionSelector()}
         <div class={!isEnabled ? 'opacity-50' : ''}>
           <TextInput
@@ -563,12 +602,12 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
             onChange={(e) => handleFieldChange(fieldName, e.target.value)}
             placeholder={effectiveProperty.examples?.[0] || ''}
             disabled={isSubmitting || !isEnabled}
-            description={effectiveProperty.description}
             rows={inputType === 'textarea' ? 4 : undefined}
             min={effectiveProperty.minimum}
             max={effectiveProperty.maximum}
           />
         </div>
+        {renderEffectiveDescription()}
       </div>
     );
   };

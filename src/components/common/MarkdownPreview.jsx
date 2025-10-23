@@ -1,7 +1,13 @@
 import { micromark } from 'micromark';
 
 export function MarkdownPreview({ markdown = '' }) {
-  const htmlContent = micromark(markdown);
+  let htmlContent = micromark(markdown);
+
+  // Add target="_blank" and rel="noopener noreferrer" to all links
+  htmlContent = htmlContent.replace(
+    /<a href=/g,
+    '<a target="_blank" rel="noopener noreferrer" href='
+  );
 
   return (
     <div

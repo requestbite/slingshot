@@ -297,13 +297,6 @@ export function getCompositionDisplayName(compositionType) {
  * @returns {string} Display name for the option
  */
 export function getSchemaOptionDisplayName(schema, index) {
-  if (schema.title) return schema.title;
-  if (schema.description) {
-    // Use first 30 characters of description
-    return schema.description.length > 30
-      ? schema.description.substring(0, 30) + '...'
-      : schema.description;
-  }
   if (schema.type) return `${schema.type} (Option ${index + 1})`;
   return `Option ${index + 1}`;
 }
