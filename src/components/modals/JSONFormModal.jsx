@@ -73,6 +73,22 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   }, [isOpen, jsonSchema]);
 
   /**
+   * Check if a schema is structured (has defined type or composition)
+   */
+  const isStructuredSchema = (schema) => {
+    if (!schema) return false;
+
+    // Check for direct type or properties or enum
+    if (schema.type || schema.properties || schema.enum) {
+      return true;
+    }
+
+    // Check for composition (anyOf, oneOf, allOf)
+    const composition = detectSchemaComposition(schema);
+    return composition.hasComposition;
+  };
+
+  /**
    * Initialize form data with default values from JSON schema
    */
   const initializeFormData = (schema) => {
@@ -96,7 +112,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
         data[key] = false;
       } else if (effectiveProp.type === 'array') {
         // If array has defined items schema, initialize as actual array
-        if (effectiveProp.items && (effectiveProp.items.type || effectiveProp.items.properties || effectiveProp.items.enum)) {
+        if (effectiveProp.items && isStructuredSchema(effectiveProp.items)) {
           data[key] = [];
         } else {
           // Otherwise, use JSON string for CodeMirror
@@ -248,9 +264,16 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           return [];
         }
       } else if (Array.isArray(value)) {
-        // If array has defined items schema, recursively convert array items
-        if (schema.items && (schema.items.type || schema.items.properties || schema.items.enum)) {
-          return value.map(item => convertValueBySchema(item, schema.items));
+        // If array has defined items schema (including composition), recursively convert array items
+        if (schema.items && isStructuredSchema(schema.items)) {
+          return value.map(item => {
+            // Check for composition in items
+            const itemComposition = detectSchemaComposition(schema.items);
+            const effectiveItemSchema = itemComposition.hasComposition
+              ? itemComposition.options[0] || {}
+              : schema.items;
+            return convertValueBySchema(item, effectiveItemSchema);
+          });
         }
         // Already an array without defined items, keep as-is
         return value;
@@ -350,11 +373,17 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
    * Helper to get default value for a schema property
    */
   const getDefaultValueForProperty = (property) => {
-    if (property.default !== undefined) {
-      return property.default;
+    // Check for composition and use first option
+    const composition = detectSchemaComposition(property);
+    const effectiveProperty = composition.hasComposition
+      ? composition.options[0] || {}
+      : property;
+
+    if (effectiveProperty.default !== undefined) {
+      return effectiveProperty.default;
     }
 
-    switch (property.type) {
+    switch (effectiveProperty.type) {
       case 'string':
         return '';
       case 'number':
@@ -367,6 +396,10 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       case 'array':
         return [];
       case 'object':
+        // If object has properties, initialize with empty object
+        if (effectiveProperty.properties) {
+          return {};
+        }
         return {};
       default:
         return '';
@@ -381,78 +414,151 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       ? getNestedValue(formData, fieldPath.split('.'))
       : formData[fieldPath];
 
+    // Check for composition (anyOf, oneOf, allOf) at nested level
+    const composition = detectSchemaComposition(property);
+    const hasComposition = composition.hasComposition;
+
+    // For nested composition fields, we need to track selection per field path
+    // For simplicity, we'll use the first option by default for nested fields
+    const effectiveProperty = hasComposition
+      ? composition.options[0] || {}
+      : property;
+
+    // If nested field has composition, render composition selector
+    const renderNestedCompositionSelector = () => {
+      if (!hasComposition) return null;
+
+      // For nested fields with composition, show a simple selector
+      // Note: This is a simplified version - you could extend this with state management
+      // to allow users to switch between composition options for each array item
+      const options = composition.options.map((option, index) => ({
+        value: index.toString(),
+        label: getSchemaOptionDisplayName(option, index)
+      }));
+
+      return (
+        <div class="mb-1">
+          <div class="flex items-center gap-2 text-xs">
+            <span class="text-gray-600">{getCompositionDisplayName(composition.type)}:</span>
+            <Select
+              value="0"
+              onChange={(value) => {
+                // TODO: Could implement per-item composition selection if needed
+                // For now, we just use the first option
+              }}
+              options={options}
+              size="small"
+              className="min-w-0 flex-1"
+              disabled={true}
+            />
+          </div>
+        </div>
+      );
+    };
+
     // Determine input type based on schema type
     let inputType = 'text';
-    if (property.type === 'number' || property.type === 'integer') {
+    if (effectiveProperty.type === 'number' || effectiveProperty.type === 'integer') {
       inputType = 'number';
-    } else if (property.format === 'email') {
+    } else if (effectiveProperty.format === 'email') {
       inputType = 'email';
-    } else if (property.format === 'uri') {
+    } else if (effectiveProperty.format === 'uri') {
       inputType = 'url';
-    } else if (property.format === 'date') {
+    } else if (effectiveProperty.format === 'date') {
       inputType = 'date';
-    } else if (property.format === 'date-time') {
+    } else if (effectiveProperty.format === 'date-time') {
       inputType = 'datetime-local';
     }
 
     // Use textarea for long text
-    if (property.type === 'string' && property.maxLength && property.maxLength > 100) {
+    if (effectiveProperty.type === 'string' && effectiveProperty.maxLength && effectiveProperty.maxLength > 100) {
       inputType = 'textarea';
     }
 
     // Render checkbox for boolean
-    if (property.type === 'boolean') {
+    if (effectiveProperty.type === 'boolean') {
       return (
-        <div class={`flex items-center ${!isEnabled ? 'opacity-50' : ''}`}>
-          <input
-            id={fieldPath}
-            type="checkbox"
-            checked={fieldValue || false}
-            onChange={(e) => handleFieldChange(fieldPath, e.target.checked)}
-            disabled={isSubmitting || !isEnabled}
-            class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
-          />
-          <span class="ml-2 text-sm text-gray-700">
-            Enabled
-          </span>
-        </div>
+        <>
+          {renderNestedCompositionSelector()}
+          <div class={`flex items-center ${!isEnabled ? 'opacity-50' : ''}`}>
+            <input
+              id={fieldPath}
+              type="checkbox"
+              checked={fieldValue || false}
+              onChange={(e) => handleFieldChange(fieldPath, e.target.checked)}
+              disabled={isSubmitting || !isEnabled}
+              class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+            />
+            <span class="ml-2 text-sm text-gray-700">
+              Enabled
+            </span>
+          </div>
+        </>
       );
     }
 
     // Render select for enum
-    if (property.enum && Array.isArray(property.enum)) {
+    if (effectiveProperty.enum && Array.isArray(effectiveProperty.enum)) {
       const enumOptions = [
         { value: '', label: 'Select an option' },
-        ...property.enum.map(option => ({
+        ...effectiveProperty.enum.map(option => ({
           value: option,
           label: option
         }))
       ];
 
       return (
-        <Select
-          id={fieldPath}
-          value={fieldValue || ''}
-          onChange={(value) => handleFieldChange(fieldPath, value)}
-          options={enumOptions}
-          disabled={isSubmitting || !isEnabled}
-        />
+        <>
+          {renderNestedCompositionSelector()}
+          <Select
+            id={fieldPath}
+            value={fieldValue || ''}
+            onChange={(value) => handleFieldChange(fieldPath, value)}
+            options={enumOptions}
+            disabled={isSubmitting || !isEnabled}
+          />
+        </>
+      );
+    }
+
+    // Handle object type with properties
+    if (effectiveProperty.type === 'object' && effectiveProperty.properties) {
+      return (
+        <>
+          {renderNestedCompositionSelector()}
+          <div class="space-y-2">
+            {Object.entries(effectiveProperty.properties).map(([propName, propSchema]) => {
+              const nestedPath = `${fieldPath}.${propName}`;
+              return (
+                <div key={propName} class="pl-2 border-l-2 border-gray-200">
+                  <Label htmlFor={nestedPath} className="text-xs mb-1">
+                    {propSchema.title || propName}
+                  </Label>
+                  {renderFieldInput(nestedPath, propSchema, isEnabled, isSubmitting)}
+                </div>
+              );
+            })}
+          </div>
+        </>
       );
     }
 
     // Default text input
     return (
-      <TextInput
-        id={fieldPath}
-        type={inputType}
-        value={fieldValue || ''}
-        onChange={(e) => handleFieldChange(fieldPath, e.target.value)}
-        placeholder={property.examples?.[0] || ''}
-        disabled={isSubmitting || !isEnabled}
-        rows={inputType === 'textarea' ? 4 : undefined}
-        min={property.minimum}
-        max={property.maximum}
-      />
+      <>
+        {renderNestedCompositionSelector()}
+        <TextInput
+          id={fieldPath}
+          type={inputType}
+          value={fieldValue || ''}
+          onChange={(e) => handleFieldChange(fieldPath, e.target.value)}
+          placeholder={effectiveProperty.examples?.[0] || ''}
+          disabled={isSubmitting || !isEnabled}
+          rows={inputType === 'textarea' ? 4 : undefined}
+          min={effectiveProperty.minimum}
+          max={effectiveProperty.maximum}
+        />
+      </>
     );
   };
 
@@ -832,8 +938,8 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
 
     // Render array type
     if (effectiveProperty.type === 'array') {
-      // If array has defined items schema, render structured list
-      if (effectiveProperty.items && (effectiveProperty.items.type || effectiveProperty.items.properties || effectiveProperty.items.enum)) {
+      // If array has defined items schema (including composition), render structured list
+      if (effectiveProperty.items && isStructuredSchema(effectiveProperty.items)) {
         return (
           <div key={fieldName} class="mb-4">
             {renderFieldLabel(fieldName)}
