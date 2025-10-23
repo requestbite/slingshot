@@ -1,5 +1,6 @@
 import { useState } from 'preact/hooks';
 import { Select } from './Select';
+import { MarkdownPreview } from './MarkdownPreview';
 import {
   detectSchemaComposition,
   getCompositionDisplayName,
@@ -57,7 +58,7 @@ export function SchemaTree({
     }));
 
     return (
-      <div class="ml-6 mb-2">
+      <div class="ml-4 my-2">
         <div class="flex items-center gap-2 text-xs">
           <span class="text-gray-600">{getCompositionDisplayName(composition.type)}:</span>
           <Select
@@ -96,14 +97,46 @@ export function SchemaTree({
   };
 
   const renderDescription = () => {
+    const parentDescription = schema.description;
+    const effectiveDescription = effectiveSchema.description;
+
+    // If composition field, show parent description first, then effective description
+    if (composition.hasComposition) {
+      const hasParentDesc = parentDescription && parentDescription.trim();
+      const hasEffectiveDesc = effectiveDescription && effectiveDescription.trim();
+
+      if (!hasParentDesc && !hasEffectiveDesc) {
+        return <div class="h-1"></div>;
+      }
+
+      return (
+        <div>
+          {hasParentDesc && (
+            <div class="text-xs text-gray-600 leading-relaxed [&_.prose]:text-xs [&_.prose]:text-gray-600 [&_.prose_p]:text-gray-600 [&_.prose_li]:text-gray-600 [&_.prose_*]:text-gray-600">
+              <MarkdownPreview markdown={parentDescription} />
+            </div>
+          )}
+          {hasParentDesc && hasEffectiveDesc && (
+            <div class="h-2"></div>
+          )}
+          {hasEffectiveDesc && (
+            <div class="text-xs text-gray-600 leading-relaxed [&_.prose]:text-xs [&_.prose]:text-gray-600 [&_.prose_p]:text-gray-600 [&_.prose_li]:text-gray-600 [&_.prose_*]:text-gray-600">
+              <MarkdownPreview markdown={effectiveDescription} />
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Non-composition field: show description as before
     const description = effectiveSchema.description;
-    if (!description) return (
-      <div class="h-1"></div>
-    );
+    if (!description || !description.trim()) {
+      return <div class="h-1"></div>;
+    }
 
     return (
-      <div class="text-xs text-gray-600 leading-relaxed">
-        {description}
+      <div class="text-xs text-gray-600 leading-relaxed [&_.prose]:text-xs [&_.prose]:text-gray-600 [&_.prose_p]:text-gray-600 [&_.prose_li]:text-gray-600 [&_.prose_*]:text-gray-600">
+        <MarkdownPreview markdown={description} />
       </div>
     );
   };

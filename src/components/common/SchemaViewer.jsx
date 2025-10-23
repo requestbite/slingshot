@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import { Select } from './Select';
 import { SchemaTreeRoot } from './SchemaTree';
+import { MarkdownPreview } from './MarkdownPreview';
 import { getStatusCodeDisplayName } from '../../utils/exampleParser';
 
 // Component for viewing parameters schema (headers, query, path)
@@ -213,8 +214,8 @@ export function ResponseSchemasViewer({ responseSchemas, className = '' }) {
       )}
 
       {selectedResponse && selectedResponse.description && (
-        <div class="text-xs text-gray-600 italic pb-1">
-          {selectedResponse.description}
+        <div class="text-xs text-gray-600 pb-1 [&_.prose]:text-xs [&_.prose]:text-gray-600 [&_.prose_p]:text-gray-600 [&_.prose_li]:text-gray-600 [&_.prose_*]:text-gray-600">
+          <MarkdownPreview markdown={selectedResponse.description} />
         </div>
       )}
 

@@ -557,7 +557,7 @@ export function BodyTab({
   return (
     <>
       {/* Request Type Toggle */}
-      <div class="mb-2 overflow-x-auto scrollbar-hide">
+      <div class="mb-4 overflow-x-auto scrollbar-hide">
         <div class="flex items-center flex-nowrap min-w-max">
           {BODY_TYPES.map(type => (
             <label key={type.value} class="inline-flex items-center mr-4 whitespace-nowrap">
