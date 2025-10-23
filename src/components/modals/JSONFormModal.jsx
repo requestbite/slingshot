@@ -632,13 +632,16 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       EditorView.editable.of(false), // Read-only
       EditorView.theme({
         "&": {
+          height: "100%",
           minHeight: "168px",
         },
         ".cm-content, .cm-gutter": {
-          minHeight: "168px !important"
+          minHeight: "168px !important",
+          height: "100%"
         },
         ".cm-scroller": {
-          overflow: "auto"
+          overflow: "auto",
+          height: "100%"
         }
       })
     ];
@@ -686,9 +689,9 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           </div>
 
           {/* Right column: JSON Preview (hidden on mobile) */}
-          <div class="hidden sm:block">
+          <div class="hidden sm:flex sm:flex-col h-full">
             <Label>JSON Preview</Label>
-            <div>
+            <div class="flex-1 min-h-0">
               <CodeMirror
                 value={JSON.stringify(jsonPreview, null, 2)}
                 extensions={getCodeMirrorExtensions()}
@@ -711,7 +714,8 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                   border: '2px solid #282a36',
                   borderRadius: '0.375rem',
                   fontSize: '12px',
-                  fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+                  fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
+                  height: '100%'
                 }}
               />
             </div>
