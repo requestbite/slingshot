@@ -3,6 +3,156 @@
  */
 
 /**
+ * Deep merge two schemas according to JSON Schema allOf semantics
+ * @param {Object} schema1 - First schema
+ * @param {Object} schema2 - Second schema
+ * @returns {Object} Merged schema
+ */
+function mergeSchemas(schema1, schema2) {
+  // Handle null/undefined
+  if (!schema1) return schema2;
+  if (!schema2) return schema1;
+
+  const result = { ...schema1 };
+
+  for (const [key, value] of Object.entries(schema2)) {
+    if (key === 'properties') {
+      // Deep merge properties - recursively flatten any allOf in property schemas
+      const mergedProps = { ...(result.properties || {}) };
+      for (const [propName, propSchema] of Object.entries(value)) {
+        if (mergedProps[propName]) {
+          // If property exists in both, merge them
+          mergedProps[propName] = mergeSchemas(
+            flattenAllOf(mergedProps[propName]),
+            flattenAllOf(propSchema)
+          );
+        } else {
+          // New property from schema2
+          mergedProps[propName] = flattenAllOf(propSchema);
+        }
+      }
+      result.properties = mergedProps;
+    } else if (key === 'required') {
+      // Union required fields (remove duplicates)
+      const existingRequired = result.required || [];
+      const newRequired = value || [];
+      result.required = [...new Set([...existingRequired, ...newRequired])];
+    } else if (key === 'definitions' || key === 'dependencies' || key === '$defs') {
+      // Deep merge definitions/dependencies/$defs
+      result[key] = {
+        ...(result[key] || {}),
+        ...value
+      };
+    } else if (key === 'type') {
+      // Handle type conflicts - if both specify type, they should match
+      if (result.type && result.type !== value) {
+        console.warn(`Type conflict in allOf merge: ${result.type} vs ${value}`);
+      }
+      result.type = value;
+    } else if (key === 'enum') {
+      // Intersect enum values (only values in both)
+      if (result.enum && Array.isArray(result.enum) && Array.isArray(value)) {
+        result.enum = result.enum.filter(v => value.includes(v));
+      } else {
+        result.enum = value;
+      }
+    } else if (key === 'minimum' || key === 'exclusiveMinimum') {
+      // Take the maximum of minimums
+      if (result[key] !== undefined) {
+        result[key] = Math.max(result[key], value);
+      } else {
+        result[key] = value;
+      }
+    } else if (key === 'maximum' || key === 'exclusiveMaximum') {
+      // Take the minimum of maximums
+      if (result[key] !== undefined) {
+        result[key] = Math.min(result[key], value);
+      } else {
+        result[key] = value;
+      }
+    } else if (key === 'minLength') {
+      // Take the maximum of minLengths
+      if (result.minLength !== undefined) {
+        result.minLength = Math.max(result.minLength, value);
+      } else {
+        result.minLength = value;
+      }
+    } else if (key === 'maxLength') {
+      // Take the minimum of maxLengths
+      if (result.maxLength !== undefined) {
+        result.maxLength = Math.min(result.maxLength, value);
+      } else {
+        result.maxLength = value;
+      }
+    } else if (key === 'minItems') {
+      // Take the maximum of minItems
+      if (result.minItems !== undefined) {
+        result.minItems = Math.max(result.minItems, value);
+      } else {
+        result.minItems = value;
+      }
+    } else if (key === 'maxItems') {
+      // Take the minimum of maxItems
+      if (result.maxItems !== undefined) {
+        result.maxItems = Math.min(result.maxItems, value);
+      } else {
+        result.maxItems = value;
+      }
+    } else if (key === 'items') {
+      // Merge items schemas
+      if (result.items) {
+        result.items = mergeSchemas(flattenAllOf(result.items), flattenAllOf(value));
+      } else {
+        result.items = flattenAllOf(value);
+      }
+    } else if (result[key] !== undefined && typeof result[key] === 'object' && typeof value === 'object') {
+      // For other objects, do a shallow merge
+      result[key] = { ...result[key], ...value };
+    } else if (result[key] === undefined) {
+      // New key from schema2
+      result[key] = value;
+    }
+    // For conflicting primitive values, schema2 takes precedence (already in result)
+  }
+
+  return result;
+}
+
+/**
+ * Flattens allOf schema composition by merging all schemas in the allOf array
+ * @param {Object} schema - Schema that may contain allOf
+ * @returns {Object} Flattened schema
+ */
+export function flattenAllOf(schema) {
+  if (!schema || typeof schema !== 'object') {
+    return schema;
+  }
+
+  // If no allOf, return as-is (but check properties for nested allOf)
+  if (!schema.allOf || !Array.isArray(schema.allOf)) {
+    // Still need to recursively flatten nested allOf in properties
+    if (schema.properties) {
+      const flattenedProps = {};
+      for (const [propName, propSchema] of Object.entries(schema.properties)) {
+        flattenedProps[propName] = flattenAllOf(propSchema);
+      }
+      return { ...schema, properties: flattenedProps };
+    }
+    return schema;
+  }
+
+  // Start with base schema (without allOf)
+  const { allOf, ...baseSchema } = schema;
+
+  // Merge all schemas in allOf array
+  const merged = allOf.reduce((acc, subSchema) => {
+    return mergeSchemas(acc, flattenAllOf(subSchema)); // Recursive to handle nested allOf
+  }, baseSchema);
+
+  return merged;
+}
+
+/**
  * Parses parameters schema from the parameters_schema field
  * @param {string|null} parametersSchemaJson - JSON string from parameters_schema field
  * @returns {Object} Organized parameters by type (headers, query, path)
@@ -43,7 +193,15 @@ export function parseRequestBodySchema(requestBodySchemaJson) {
 
     // Detect new structure (has 'content' property)
     if (parsed && parsed.content !== undefined) {
-      return parsed;
+      // Flatten allOf in each content type schema
+      const flattenedContent = {};
+      for (const [contentType, contentData] of Object.entries(parsed.content)) {
+        flattenedContent[contentType] = {
+          ...contentData,
+          schema: contentData.schema ? flattenAllOf(contentData.schema) : contentData.schema
+        };
+      }
+      return { ...parsed, content: flattenedContent };
     }
 
     // Legacy structure - convert to new format with default content type
@@ -51,7 +209,7 @@ export function parseRequestBodySchema(requestBodySchemaJson) {
       return {
         content: {
           'application/json': {
-            schema: parsed,
+            schema: flattenAllOf(parsed),
             examples: {}
           }
         }
@@ -126,10 +284,18 @@ export function parseResponseSchemas(responseSchemasJson) {
 
       // Detect new structure (has 'content' property)
       if (responseData.content !== undefined) {
+        // Flatten allOf in each content type schema
+        const flattenedContent = {};
+        for (const [contentType, contentData] of Object.entries(responseData.content)) {
+          flattenedContent[contentType] = {
+            ...contentData,
+            schema: contentData.schema ? flattenAllOf(contentData.schema) : contentData.schema
+          };
+        }
         result[statusCode] = {
           description: responseData.description || '',
           headers: responseData.headers || {},
-          content: responseData.content || {}
+          content: flattenedContent
         };
       }
       // Legacy structure (has 'schema' property directly)
@@ -140,7 +306,7 @@ export function parseResponseSchemas(responseSchemasJson) {
           headers: {},
           content: {
             [responseData.contentType || 'application/json']: {
-              schema: responseData.schema,
+              schema: flattenAllOf(responseData.schema),
               examples: {}
             }
           }
@@ -233,11 +399,14 @@ export function convertParametersToSchema(parameters) {
   const required = [];
 
   for (const [name, paramSchema] of Object.entries(parameters)) {
-    properties[name] = {
+    const baseProperty = {
       type: paramSchema.type || paramSchema.schema?.type || 'string',
       description: paramSchema.description || '',
       ...paramSchema.schema
     };
+
+    // Flatten allOf in the property schema
+    properties[name] = flattenAllOf(baseProperty);
 
     if (paramSchema.required) {
       required.push(name);
@@ -252,7 +421,8 @@ export function convertParametersToSchema(parameters) {
 }
 
 /**
- * Detects if a schema contains composition keywords (anyOf, oneOf, allOf)
+ * Detects if a schema contains composition keywords (anyOf, oneOf)
+ * Note: allOf is auto-flattened and not returned as a composition
  * @param {Object} schema - JSON schema object
  * @returns {Object} Information about detected composition
  */
@@ -269,9 +439,8 @@ export function detectSchemaComposition(schema) {
     return { hasComposition: true, type: 'oneOf', options: schema.oneOf };
   }
 
-  if (schema.allOf) {
-    return { hasComposition: true, type: 'allOf', options: schema.allOf };
-  }
+  // allOf is no longer treated as a composition - it's auto-flattened
+  // during parsing via flattenAllOf()
 
   return { hasComposition: false };
 }

@@ -13,7 +13,8 @@ import { bracketMatching } from '@codemirror/language';
 import {
   detectSchemaComposition,
   getCompositionDisplayName,
-  getSchemaOptionDisplayName
+  getSchemaOptionDisplayName,
+  flattenAllOf
 } from '../../utils/schemaParser';
 
 /**
@@ -29,26 +30,31 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   const [error, setError] = useState(null);
   const [compositionSelections, setCompositionSelections] = useState({});
   const [enabledFields, setEnabledFields] = useState({});
+  const [flattenedSchema, setFlattenedSchema] = useState(null);
 
   // Initialize form data when modal opens
   useEffect(() => {
     if (isOpen && jsonSchema) {
-      // Initialize form with default values from schema
-      const initialData = initializeFormData(jsonSchema);
+      // Flatten allOf instances in the schema first
+      const flattened = flattenAllOf(jsonSchema);
+      setFlattenedSchema(flattened);
+
+      // Initialize form with default values from flattened schema
+      const initialData = initializeFormData(flattened);
       setFormData(initialData);
       setError(null);
       // Initialize composition selections (default to index 0)
       const initialSelections = {};
       // Initialize enabled fields (required fields are enabled by default)
       const initialEnabled = {};
-      if (jsonSchema.properties) {
-        Object.entries(jsonSchema.properties).forEach(([fieldName, property]) => {
+      if (flattened.properties) {
+        Object.entries(flattened.properties).forEach(([fieldName, property]) => {
           const composition = detectSchemaComposition(property);
           if (composition.hasComposition) {
             initialSelections[fieldName] = 0;
           }
           // Required fields are enabled by default (but can be disabled)
-          const isRequired = jsonSchema.required?.includes(fieldName);
+          const isRequired = flattened.required?.includes(fieldName);
           initialEnabled[fieldName] = isRequired;
         });
       }
@@ -141,10 +147,11 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
    * Convert form data to proper types based on schema
    */
   const convertFormData = (data) => {
-    if (!jsonSchema || !jsonSchema.properties) return data;
+    const schemaToUse = flattenedSchema || jsonSchema;
+    if (!schemaToUse || !schemaToUse.properties) return data;
 
     const converted = {};
-    Object.entries(jsonSchema.properties).forEach(([key, prop]) => {
+    Object.entries(schemaToUse.properties).forEach(([key, prop]) => {
       const value = data[key];
       const isEnabled = enabledFields[key];
 
@@ -260,7 +267,8 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
    * Render a form field based on JSON schema property
    */
   const renderField = (fieldName, property) => {
-    const isRequired = jsonSchema.required?.includes(fieldName) || false;
+    const schemaToUse = flattenedSchema || jsonSchema;
+    const isRequired = schemaToUse?.required?.includes(fieldName) || false;
     const fieldValue = formData[fieldName] || '';
     const isEnabled = enabledFields[fieldName] || false;
 
@@ -648,7 +656,8 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   };
 
   // Check if schema is valid
-  if (!jsonSchema || !jsonSchema.properties) {
+  const schemaToUse = flattenedSchema || jsonSchema;
+  if (!schemaToUse || !schemaToUse.properties) {
     return (
       <Modal isOpen={isOpen} onClose={handleClose} title="Create request body payload" size="xl">
         <div class="text-sm text-gray-500 mb-4">
@@ -683,7 +692,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Left column: Form */}
           <div>
-            {Object.entries(jsonSchema.properties).map(([fieldName, property]) =>
+            {Object.entries(schemaToUse.properties).map(([fieldName, property]) =>
               renderField(fieldName, property)
             )}
           </div>
