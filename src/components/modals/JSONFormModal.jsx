@@ -526,6 +526,26 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   const renderFieldLabelWithCheckbox = (fieldPath, title, isRequired = false, property = null) => {
     const fieldEnabled = enabledFields[fieldPath] !== undefined ? enabledFields[fieldPath] : isRequired;
 
+    const handleToggle = (isChecked) => {
+      setEnabledFields(prev => ({
+        ...prev,
+        [fieldPath]: isChecked
+      }));
+
+      // If enabling a single-enum field, set its value
+      if (isChecked && property) {
+        const composition = detectSchemaComposition(property);
+        const effectiveProperty = composition.hasComposition
+          ? composition.options[0] || {}
+          : property;
+
+        if (effectiveProperty.enum && Array.isArray(effectiveProperty.enum) && effectiveProperty.enum.length === 1) {
+          const singleValue = effectiveProperty.enum[0];
+          handleFieldChange(fieldPath, singleValue);
+        }
+      }
+    };
+
     return (
       <div class="flex items-center justify-between mb-1">
         <Label htmlFor={fieldPath} mandatory={isRequired} className="mb-0">
@@ -535,29 +555,13 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           <input
             type="checkbox"
             checked={fieldEnabled}
-            onChange={(e) => {
-              const isChecked = e.target.checked;
-              setEnabledFields(prev => ({
-                ...prev,
-                [fieldPath]: isChecked
-              }));
-
-              // If enabling a single-enum field, set its value
-              if (isChecked && property) {
-                const composition = detectSchemaComposition(property);
-                const effectiveProperty = composition.hasComposition
-                  ? composition.options[0] || {}
-                  : property;
-
-                if (effectiveProperty.enum && Array.isArray(effectiveProperty.enum) && effectiveProperty.enum.length === 1) {
-                  const singleValue = effectiveProperty.enum[0];
-                  handleFieldChange(fieldPath, singleValue);
-                }
-              }
-            }}
+            onChange={(e) => handleToggle(e.target.checked)}
             class="h-3 w-3 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
           />
-          <span class="text-xs text-gray-600">
+          <span
+            class="text-xs text-gray-600 cursor-pointer"
+            onClick={() => handleToggle(!fieldEnabled)}
+          >
             Enable
           </span>
         </div>
@@ -1307,7 +1311,10 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
               onChange={(e) => handleFieldToggle(fieldName, e.target.checked)}
               class="h-3 w-3 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
             />
-            <span class="text-xs text-gray-600">
+            <span
+              class="text-xs text-gray-600 cursor-pointer"
+              onClick={() => handleFieldToggle(fieldName, !isEnabled)}
+            >
               Enable
             </span>
           </div>
@@ -1675,7 +1682,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   const schemaToUse = flattenedSchema || jsonSchema;
   if (!schemaToUse || !schemaToUse.properties) {
     return (
-      <Modal isOpen={isOpen} onClose={handleClose} title="Create request body payload" size="xl">
+      <Modal isOpen={isOpen} onClose={handleClose} title="Create request body payload" size="2xl">
         <div class="text-sm text-gray-500 mb-4">
           Create a request body payload by filling out the form. Clicking "Import" will add it to the request editor.
         </div>
@@ -1743,7 +1750,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       {/* Form display controls */}
       {shouldShowControls && (
         <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-          <div class="flex flex-col gap-2">
+          <div class="flex gap-4">
             <div class="flex items-center gap-2">
               <input
                 id="mandatoryOnTop"
@@ -1752,7 +1759,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                 onChange={(e) => setMandatoryOnTop(e.target.checked)}
                 class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
               />
-              <label htmlFor="mandatoryOnTop" class="text-sm text-gray-700 cursor-pointer">
+              <label htmlFor="mandatoryOnTop" class="text-xs text-gray-700 cursor-pointer">
                 Add mandatory fields on top
               </label>
             </div>
@@ -1764,7 +1771,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                 onChange={(e) => setHideOptional(e.target.checked)}
                 class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
               />
-              <label htmlFor="hideOptional" class="text-sm text-gray-700 cursor-pointer">
+              <label htmlFor="hideOptional" class="text-xs text-gray-700 cursor-pointer">
                 Hide optional fields
               </label>
             </div>
