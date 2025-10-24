@@ -117,6 +117,43 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   };
 
   /**
+   * Initialize enabled fields recursively for nested required fields
+   */
+  const initializeEnabledFields = (schema, path = '', enabled = {}) => {
+    if (!schema || typeof schema !== 'object') return enabled;
+
+    // Get effective schema (handle composition)
+    const composition = detectSchemaComposition(schema);
+    const effectiveSchema = composition.hasComposition
+      ? composition.options[0] || {}
+      : schema;
+
+    // If this field itself should be enabled
+    if (path) {
+      // For nested fields, default to true if required, false otherwise
+      // This will be overridden by parent logic if needed
+      enabled[path] = true; // We'll set this properly when we know the context
+    }
+
+    // Recursively initialize for properties
+    if (effectiveSchema.properties) {
+      const required = effectiveSchema.required || [];
+      Object.entries(effectiveSchema.properties).forEach(([propName, propSchema]) => {
+        const propPath = path ? `${path}.${propName}` : propName;
+        const isRequired = required.includes(propName);
+
+        // Set enabled state for this property
+        enabled[propPath] = isRequired;
+
+        // Recursively initialize nested properties
+        initializeEnabledFields(propSchema, propPath, enabled);
+      });
+    }
+
+    return enabled;
+  };
+
+  /**
    * Initialize form data with default values from JSON schema
    */
   const initializeFormData = (schema) => {
@@ -432,6 +469,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
 
   /**
    * Helper to get default value for a schema property
+   * Recursively initializes nested required fields with their default values
    */
   const getDefaultValueForProperty = (property) => {
     // Check for composition and use first option
@@ -462,9 +500,19 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       case 'array':
         return [];
       case 'object':
-        // If object has properties, initialize with empty object
+        // If object has properties, initialize required fields with defaults
         if (effectiveProperty.properties) {
-          return {};
+          const obj = {};
+          const required = effectiveProperty.required || [];
+
+          // Initialize all required fields with their default values
+          required.forEach(requiredField => {
+            if (effectiveProperty.properties[requiredField]) {
+              obj[requiredField] = getDefaultValueForProperty(effectiveProperty.properties[requiredField]);
+            }
+          });
+
+          return obj;
         }
         return {};
       default:
@@ -475,7 +523,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   /**
    * Render label with enable checkbox for any field (top-level or nested)
    */
-  const renderFieldLabelWithCheckbox = (fieldPath, title, isRequired = false) => {
+  const renderFieldLabelWithCheckbox = (fieldPath, title, isRequired = false, property = null) => {
     const fieldEnabled = enabledFields[fieldPath] !== undefined ? enabledFields[fieldPath] : isRequired;
 
     return (
@@ -488,10 +536,24 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
             type="checkbox"
             checked={fieldEnabled}
             onChange={(e) => {
+              const isChecked = e.target.checked;
               setEnabledFields(prev => ({
                 ...prev,
-                [fieldPath]: e.target.checked
+                [fieldPath]: isChecked
               }));
+
+              // If enabling a single-enum field, set its value
+              if (isChecked && property) {
+                const composition = detectSchemaComposition(property);
+                const effectiveProperty = composition.hasComposition
+                  ? composition.options[0] || {}
+                  : property;
+
+                if (effectiveProperty.enum && Array.isArray(effectiveProperty.enum) && effectiveProperty.enum.length === 1) {
+                  const singleValue = effectiveProperty.enum[0];
+                  handleFieldChange(fieldPath, singleValue);
+                }
+              }
             }}
             class="h-3 w-3 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
           />
@@ -691,7 +753,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
 
                 return (
                   <div key={propName}>
-                    {renderFieldLabelWithCheckbox(nestedPath, propSchema.title || propName, isRequired)}
+                    {renderFieldLabelWithCheckbox(nestedPath, propSchema.title || propName, isRequired, propSchema)}
                     {renderFieldInput(nestedPath, propSchema, propEnabled && isEnabled, isSubmitting)}
                   </div>
                 );
@@ -929,6 +991,13 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
         ...newSelections
       }));
 
+      // Initialize enabled fields for the new array item's required fields
+      const newEnabledFields = initializeEnabledFields(itemsSchema, itemPath);
+      setEnabledFields(prev => ({
+        ...prev,
+        ...newEnabledFields
+      }));
+
       handleFieldChange(fieldPath, [...currentArray, newItem]);
     };
 
@@ -985,7 +1054,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                 type="button"
                 onClick={() => handleRemoveItem(index)}
                 disabled={isSubmitting || !isEnabled}
-                class="mt-1 text-red-600 hover:text-red-800 disabled:opacity-50"
+                class="cursor-pointer mt-1 text-red-600 hover:text-red-800 disabled:opacity-50"
                 title="Remove item"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1028,6 +1097,13 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       setCompositionSelections(prev => ({
         ...prev,
         ...newSelections
+      }));
+
+      // Initialize enabled fields for the new array item's required fields
+      const newEnabledFields = initializeEnabledFields(itemsSchema, itemPath);
+      setEnabledFields(prev => ({
+        ...prev,
+        ...newEnabledFields
       }));
 
       handleFieldChange(fieldName, [...arrayValue, newItem]);
@@ -1087,7 +1163,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                 type="button"
                 onClick={() => handleRemoveItem(index)}
                 disabled={isSubmitting || !isEnabled}
-                class="mt-1 text-red-600 hover:text-red-800 disabled:opacity-50"
+                class="cursor-pointer mt-1 text-red-600 hover:text-red-800 disabled:opacity-50"
                 title="Remove item"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1130,7 +1206,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
 
           return (
             <div key={propName}>
-              {renderFieldLabelWithCheckbox(propPath, propSchema.title || propName, isRequired)}
+              {renderFieldLabelWithCheckbox(propPath, propSchema.title || propName, isRequired, propSchema)}
               {renderFieldInput(propPath, propSchema, propEnabled && isEnabled, isSubmitting)}
             </div>
           );
