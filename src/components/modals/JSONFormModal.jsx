@@ -494,6 +494,23 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       );
     };
 
+    // Handle null type - render a simple disabled message
+    if (effectiveProperty.type === 'null') {
+      return (
+        <>
+          {renderNestedCompositionSelector()}
+          <div class={`text-xs text-gray-500 italic p-2 bg-gray-50 rounded border border-gray-200 ${!isEnabled ? 'opacity-50' : ''}`}>
+            Field is set to null
+          </div>
+          {effectiveProperty.description && (
+            <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
+              <MarkdownPreview markdown={effectiveProperty.description} />
+            </div>
+          )}
+        </>
+      );
+    }
+
     // Determine input type based on schema type
     let inputType = 'text';
     if (effectiveProperty.type === 'number' || effectiveProperty.type === 'integer') {
@@ -531,6 +548,11 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
               Enabled
             </span>
           </div>
+          {effectiveProperty.description && (
+            <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
+              <MarkdownPreview markdown={effectiveProperty.description} />
+            </div>
+          )}
         </>
       );
     }
@@ -555,28 +577,210 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
             options={enumOptions}
             disabled={isSubmitting || !isEnabled}
           />
+          {effectiveProperty.description && (
+            <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
+              <MarkdownPreview markdown={effectiveProperty.description} />
+            </div>
+          )}
         </>
       );
     }
 
-    // Handle object type with properties
-    if (effectiveProperty.type === 'object' && effectiveProperty.properties) {
+    // Handle object type
+    if (effectiveProperty.type === 'object') {
+      // If object has defined properties, render structured fields
+      if (effectiveProperty.properties) {
+        return (
+          <>
+            {renderNestedCompositionSelector()}
+            <div class={`space-y-3 p-3 bg-gray-50 rounded border border-gray-200 ${!isEnabled ? 'opacity-50' : ''}`}>
+              {Object.entries(effectiveProperty.properties).map(([propName, propSchema]) => {
+                const nestedPath = `${fieldPath}.${propName}`;
+                return (
+                  <div key={propName}>
+                    <Label htmlFor={nestedPath} className="mb-1">
+                      {propSchema.title || propName}
+                    </Label>
+                    {renderFieldInput(nestedPath, propSchema, isEnabled, isSubmitting)}
+                    {propSchema.description && (
+                      <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
+                        <MarkdownPreview markdown={propSchema.description} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {effectiveProperty.description && (
+              <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
+                <MarkdownPreview markdown={effectiveProperty.description} />
+              </div>
+            )}
+          </>
+        );
+      }
+
+      // Otherwise, render CodeMirror for freeform object
+      const objectValue = typeof fieldValue === 'object'
+        ? JSON.stringify(fieldValue, null, 2)
+        : fieldValue;
+
       return (
         <>
           {renderNestedCompositionSelector()}
-          <div class="space-y-2">
-            {Object.entries(effectiveProperty.properties).map(([propName, propSchema]) => {
-              const nestedPath = `${fieldPath}.${propName}`;
-              return (
-                <div key={propName} class="pl-2 border-l-2 border-gray-200">
-                  <Label htmlFor={nestedPath} className="text-xs mb-1">
-                    {propSchema.title || propName}
-                  </Label>
-                  {renderFieldInput(nestedPath, propSchema, isEnabled, isSubmitting)}
-                </div>
-              );
-            })}
+          <div class={!isEnabled ? 'opacity-50 pointer-events-none' : ''}>
+            <CodeMirror
+              value={objectValue}
+              onChange={(value) => {
+                if (!isEnabled) return;
+                try {
+                  // Try to parse as JSON when user types
+                  const parsed = JSON.parse(value);
+                  handleFieldChange(fieldPath, parsed);
+                } catch (e) {
+                  // If invalid JSON, store as string temporarily
+                  handleFieldChange(fieldPath, value);
+                }
+              }}
+              extensions={[
+                json(),
+                bracketMatching(),
+                EditorView.theme({
+                  "&": {
+                    minHeight: "120px",
+                    maxHeight: "120px",
+                  },
+                  ".cm-content, .cm-gutter": {
+                    minHeight: "120px !important",
+                    maxHeight: "120px !important"
+                  },
+                  ".cm-scroller": {
+                    overflow: "auto",
+                    maxHeight: "120px"
+                  }
+                })
+              ]}
+              theme={dracula}
+              basicSetup={{
+                lineNumbers: true,
+                foldGutter: true,
+                dropCursor: false,
+                allowMultipleSelections: false,
+                indentOnInput: true,
+                bracketMatching: true,
+                closeBrackets: true,
+                autocompletion: true,
+                rectangularSelection: false,
+                searchKeymap: false,
+                highlightSelectionMatches: false
+              }}
+              style={{
+                border: '2px solid #282a36',
+                borderRadius: '0.375rem',
+                fontSize: '12px',
+                fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+              }}
+            />
           </div>
+          <p class="mt-1 text-xs text-gray-500">
+            Field is an object you can manually construct above.
+          </p>
+          {effectiveProperty.description && (
+            <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
+              <MarkdownPreview markdown={effectiveProperty.description} />
+            </div>
+          )}
+        </>
+      );
+    }
+
+    // Handle array type
+    if (effectiveProperty.type === 'array') {
+      // If array has defined items schema, render structured list
+      if (effectiveProperty.items && isStructuredSchema(effectiveProperty.items)) {
+        return (
+          <>
+            {renderNestedCompositionSelector()}
+            {renderNestedArrayWithItems(fieldPath, effectiveProperty, effectiveProperty.items, isEnabled, isSubmitting)}
+            {effectiveProperty.description && (
+              <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
+                <MarkdownPreview markdown={effectiveProperty.description} />
+              </div>
+            )}
+          </>
+        );
+      }
+
+      // Otherwise, render CodeMirror for freeform array
+      const arrayValue = Array.isArray(fieldValue)
+        ? JSON.stringify(fieldValue, null, 2)
+        : fieldValue;
+
+      return (
+        <>
+          {renderNestedCompositionSelector()}
+          <div class={!isEnabled ? 'opacity-50 pointer-events-none' : ''}>
+            <CodeMirror
+              value={arrayValue}
+              onChange={(value) => {
+                if (!isEnabled) return;
+                try {
+                  // Try to parse as JSON when user types
+                  const parsed = JSON.parse(value);
+                  handleFieldChange(fieldPath, parsed);
+                } catch (e) {
+                  // If invalid JSON, store as string temporarily
+                  handleFieldChange(fieldPath, value);
+                }
+              }}
+              extensions={[
+                json(),
+                bracketMatching(),
+                EditorView.theme({
+                  "&": {
+                    minHeight: "120px",
+                    maxHeight: "120px",
+                  },
+                  ".cm-content, .cm-gutter": {
+                    minHeight: "120px !important",
+                    maxHeight: "120px !important"
+                  },
+                  ".cm-scroller": {
+                    overflow: "auto",
+                    maxHeight: "120px"
+                  }
+                })
+              ]}
+              theme={dracula}
+              basicSetup={{
+                lineNumbers: true,
+                foldGutter: true,
+                dropCursor: false,
+                allowMultipleSelections: false,
+                indentOnInput: true,
+                bracketMatching: true,
+                closeBrackets: true,
+                autocompletion: true,
+                rectangularSelection: false,
+                searchKeymap: false,
+                highlightSelectionMatches: false
+              }}
+              style={{
+                border: '2px solid #282a36',
+                borderRadius: '0.375rem',
+                fontSize: '12px',
+                fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+              }}
+            />
+          </div>
+          <p class="mt-1 text-xs text-gray-500">
+            Field is an array you can manually construct above.
+          </p>
+          {effectiveProperty.description && (
+            <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
+              <MarkdownPreview markdown={effectiveProperty.description} />
+            </div>
+          )}
         </>
       );
     }
@@ -596,6 +800,11 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           min={effectiveProperty.minimum}
           max={effectiveProperty.maximum}
         />
+        {effectiveProperty.description && (
+          <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
+            <MarkdownPreview markdown={effectiveProperty.description} />
+          </div>
+        )}
       </>
     );
   };
@@ -610,6 +819,109 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       current = Array.isArray(current) ? current[parseInt(key, 10)] : current[key];
     }
     return current;
+  };
+
+  /**
+   * Render nested array field with add/remove functionality
+   */
+  const renderNestedArrayWithItems = (fieldPath, property, itemsSchema, isEnabled, isSubmitting) => {
+    const arrayValue = fieldPath.includes('.')
+      ? getNestedValue(formData, fieldPath.split('.'))
+      : formData[fieldPath];
+
+    const currentArray = arrayValue || [];
+
+    const handleAddItem = () => {
+      const newItem = getDefaultValueForProperty(itemsSchema);
+      const newIndex = currentArray.length;
+
+      // Initialize composition selections for the new array item
+      const itemPath = `${fieldPath}.${newIndex}`;
+      const newSelections = initializeCompositionSelections(itemsSchema, itemPath);
+      setCompositionSelections(prev => ({
+        ...prev,
+        ...newSelections
+      }));
+
+      handleFieldChange(fieldPath, [...currentArray, newItem]);
+    };
+
+    const handleRemoveItem = (index) => {
+      const newArray = currentArray.filter((_, i) => i !== index);
+
+      // Clean up composition selections for removed items
+      setCompositionSelections(prev => {
+        const updated = { ...prev };
+
+        // Remove selections for items at and after the removed index
+        Object.keys(updated).forEach(key => {
+          if (key.startsWith(`${fieldPath}.`)) {
+            const match = key.match(new RegExp(`^${fieldPath.replace(/\./g, '\\.')}\\.(\\d+)`));
+            if (match) {
+              const itemIndex = parseInt(match[1], 10);
+              if (itemIndex >= index) {
+                delete updated[key];
+              }
+            }
+          }
+        });
+
+        // Re-add selections for remaining items with updated indices
+        Object.entries(prev).forEach(([key, value]) => {
+          if (key.startsWith(`${fieldPath}.`)) {
+            const match = key.match(new RegExp(`^${fieldPath.replace(/\./g, '\\.')}\\.(\\d+)(\\..*)?$`));
+            if (match) {
+              const itemIndex = parseInt(match[1], 10);
+              const suffix = match[2] || '';
+              if (itemIndex > index) {
+                const newKey = `${fieldPath}.${itemIndex - 1}${suffix}`;
+                updated[newKey] = value;
+              }
+            }
+          }
+        });
+
+        return updated;
+      });
+
+      handleFieldChange(fieldPath, newArray);
+    };
+
+    return (
+      <div class={!isEnabled ? 'opacity-50' : ''}>
+        <div class="space-y-2">
+          {currentArray.map((item, index) => (
+            <div key={index} class="flex items-start gap-2 p-3 bg-gray-50 rounded border border-gray-200">
+              <div class="flex-1">
+                {renderFieldInput(`${fieldPath}.${index}`, itemsSchema, isEnabled, isSubmitting)}
+              </div>
+              <button
+                type="button"
+                onClick={() => handleRemoveItem(index)}
+                disabled={isSubmitting || !isEnabled}
+                class="mt-1 text-red-600 hover:text-red-800 disabled:opacity-50"
+                title="Remove item"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={handleAddItem}
+          disabled={isSubmitting || !isEnabled}
+          class="mt-2 text-sm text-sky-600 hover:text-sky-800 disabled:opacity-50 flex items-center gap-1"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add item
+        </button>
+      </div>
+    );
   };
 
   /**
