@@ -47,16 +47,12 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       const initialData = initializeFormData(flattened);
       setFormData(initialData);
       setError(null);
-      // Initialize composition selections (default to index 0)
-      const initialSelections = {};
+      // Initialize composition selections recursively (default to index 0)
+      const initialSelections = initializeCompositionSelections(flattened);
       // Initialize enabled fields (required fields are enabled by default)
       const initialEnabled = {};
       if (flattened.properties) {
         Object.entries(flattened.properties).forEach(([fieldName, property]) => {
-          const composition = detectSchemaComposition(property);
-          if (composition.hasComposition) {
-            initialSelections[fieldName] = 0;
-          }
           // Required fields are enabled by default (but can be disabled)
           const isRequired = flattened.required?.includes(fieldName);
           initialEnabled[fieldName] = isRequired;
@@ -90,6 +86,34 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
     // Check for composition (anyOf, oneOf, allOf)
     const composition = detectSchemaComposition(schema);
     return composition.hasComposition;
+  };
+
+  /**
+   * Initialize composition selections recursively for nested schemas
+   */
+  const initializeCompositionSelections = (schema, path = '', selections = {}) => {
+    if (!schema || typeof schema !== 'object') return selections;
+
+    const composition = detectSchemaComposition(schema);
+    if (composition.hasComposition) {
+      selections[path] = 0;
+    }
+
+    // Recursively initialize for properties
+    if (schema.properties) {
+      Object.entries(schema.properties).forEach(([propName, propSchema]) => {
+        const propPath = path ? `${path}.${propName}` : propName;
+        initializeCompositionSelections(propSchema, propPath, selections);
+      });
+    }
+
+    // Recursively initialize for array items
+    if (schema.items) {
+      const itemPath = path ? `${path}.[item]` : '[item]';
+      initializeCompositionSelections(schema.items, itemPath, selections);
+    }
+
+    return selections;
   };
 
   /**
@@ -222,20 +246,30 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
 
   /**
    * Helper to convert a single value based on its schema
+   * @param {*} value - The value to convert
+   * @param {Object} schema - The schema to use for conversion
+   * @param {string} fieldPath - The path to this field (for composition selection lookup)
    */
-  const convertValueBySchema = (value, schema) => {
+  const convertValueBySchema = (value, schema, fieldPath = '') => {
     if (value === undefined || value === null) {
       return schema.type === 'null' ? null : value;
     }
 
+    // Check for composition and use the selected option
+    const composition = detectSchemaComposition(schema);
+    const selectedIndex = compositionSelections[fieldPath] || 0;
+    const effectiveSchema = composition.hasComposition
+      ? composition.options[selectedIndex] || {}
+      : schema;
+
     // Convert types
-    if (schema.type === 'number' || schema.type === 'integer') {
+    if (effectiveSchema.type === 'number' || effectiveSchema.type === 'integer') {
       return value === '' ? 0 : Number(value);
-    } else if (schema.type === 'boolean') {
+    } else if (effectiveSchema.type === 'boolean') {
       return Boolean(value);
-    } else if (schema.type === 'null') {
+    } else if (effectiveSchema.type === 'null') {
       return null;
-    } else if (schema.type === 'object') {
+    } else if (effectiveSchema.type === 'object') {
       // If it's a string (JSON), try to parse it
       if (typeof value === 'string') {
         try {
@@ -245,11 +279,12 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
         }
       } else if (typeof value === 'object' && !Array.isArray(value)) {
         // If object has defined properties, recursively convert nested values
-        if (schema.properties) {
+        if (effectiveSchema.properties) {
           const converted = {};
           Object.entries(value).forEach(([propKey, propValue]) => {
-            if (schema.properties[propKey]) {
-              converted[propKey] = convertValueBySchema(propValue, schema.properties[propKey]);
+            if (effectiveSchema.properties[propKey]) {
+              const propPath = fieldPath ? `${fieldPath}.${propKey}` : propKey;
+              converted[propKey] = convertValueBySchema(propValue, effectiveSchema.properties[propKey], propPath);
             } else {
               converted[propKey] = propValue;
             }
@@ -259,7 +294,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
         // Already an object without defined properties, keep as-is
         return value;
       }
-    } else if (schema.type === 'array') {
+    } else if (effectiveSchema.type === 'array') {
       // If it's a string (JSON), try to parse it
       if (typeof value === 'string') {
         try {
@@ -269,14 +304,10 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
         }
       } else if (Array.isArray(value)) {
         // If array has defined items schema (including composition), recursively convert array items
-        if (schema.items && isStructuredSchema(schema.items)) {
-          return value.map(item => {
-            // Check for composition in items
-            const itemComposition = detectSchemaComposition(schema.items);
-            const effectiveItemSchema = itemComposition.hasComposition
-              ? itemComposition.options[0] || {}
-              : schema.items;
-            return convertValueBySchema(item, effectiveItemSchema);
+        if (effectiveSchema.items && isStructuredSchema(effectiveSchema.items)) {
+          return value.map((item, index) => {
+            const itemPath = fieldPath ? `${fieldPath}.${index}` : `${index}`;
+            return convertValueBySchema(item, effectiveSchema.items, itemPath);
           });
         }
         // Already an array without defined items, keep as-is
@@ -305,15 +336,8 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
         return;
       }
 
-      // Check for composition and get effective property
-      const composition = detectSchemaComposition(prop);
-      const selectedIndex = compositionSelections[key] || 0;
-      const effectiveProp = composition.hasComposition
-        ? composition.options[selectedIndex] || {}
-        : prop;
-
-      // Convert the value using the helper
-      converted[key] = convertValueBySchema(value, effectiveProp);
+      // Convert the value using the helper (with field path for composition lookup)
+      converted[key] = convertValueBySchema(value, prop, key);
     });
 
     return converted;
@@ -358,19 +382,35 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   };
 
   /**
-   * Handle composition selection change
+   * Handle composition selection change (supports nested paths)
    */
-  const handleCompositionChange = (fieldName, selectedIndex) => {
+  const handleCompositionChange = (fieldPath, selectedIndex) => {
     setCompositionSelections(prev => ({
       ...prev,
-      [fieldName]: selectedIndex
+      [fieldPath]: selectedIndex
     }));
 
     // Clear the field value when switching composition options
-    setFormData(prev => ({
-      ...prev,
-      [fieldName]: ''
-    }));
+    // For nested paths, we need to update the nested value
+    if (fieldPath.includes('.')) {
+      const parts = fieldPath.split('.');
+      const rootField = parts[0];
+      const nestedPath = parts.slice(1);
+
+      setFormData(prev => {
+        const rootValue = prev[rootField];
+        const updated = setNestedValue(rootValue, nestedPath, '');
+        return {
+          ...prev,
+          [rootField]: updated
+        };
+      });
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [fieldPath]: ''
+      }));
+    }
   };
 
   /**
@@ -422,19 +462,16 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
     const composition = detectSchemaComposition(property);
     const hasComposition = composition.hasComposition;
 
-    // For nested composition fields, we need to track selection per field path
-    // For simplicity, we'll use the first option by default for nested fields
+    // Get the selected composition index from state
+    const selectedCompositionIndex = compositionSelections[fieldPath] || 0;
     const effectiveProperty = hasComposition
-      ? composition.options[0] || {}
+      ? composition.options[selectedCompositionIndex] || {}
       : property;
 
     // If nested field has composition, render composition selector
     const renderNestedCompositionSelector = () => {
       if (!hasComposition) return null;
 
-      // For nested fields with composition, show a simple selector
-      // Note: This is a simplified version - you could extend this with state management
-      // to allow users to switch between composition options for each array item
       const options = composition.options.map((option, index) => ({
         value: index.toString(),
         label: getSchemaOptionDisplayName(option, index)
@@ -445,15 +482,12 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           <div class="flex items-center gap-2 text-xs">
             <span class="text-gray-600">{getCompositionDisplayName(composition.type)}:</span>
             <Select
-              value="0"
-              onChange={(value) => {
-                // TODO: Could implement per-item composition selection if needed
-                // For now, we just use the first option
-              }}
+              value={selectedCompositionIndex.toString()}
+              onChange={(value) => handleCompositionChange(fieldPath, parseInt(value, 10))}
               options={options}
               size="small"
               className="min-w-0 flex-1"
-              disabled={true}
+              disabled={isSubmitting || !isEnabled}
             />
           </div>
         </div>
@@ -586,11 +620,58 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
 
     const handleAddItem = () => {
       const newItem = getDefaultValueForProperty(itemsSchema);
+      const newIndex = arrayValue.length;
+
+      // Initialize composition selections for the new array item
+      const itemPath = `${fieldName}.${newIndex}`;
+      const newSelections = initializeCompositionSelections(itemsSchema, itemPath);
+      setCompositionSelections(prev => ({
+        ...prev,
+        ...newSelections
+      }));
+
       handleFieldChange(fieldName, [...arrayValue, newItem]);
     };
 
     const handleRemoveItem = (index) => {
       const newArray = arrayValue.filter((_, i) => i !== index);
+
+      // Clean up composition selections for removed items
+      // Also need to renumber remaining items
+      setCompositionSelections(prev => {
+        const updated = { ...prev };
+
+        // Remove selections for items at and after the removed index
+        Object.keys(updated).forEach(key => {
+          if (key.startsWith(`${fieldName}.`)) {
+            const match = key.match(new RegExp(`^${fieldName}\\.(\\d+)`));
+            if (match) {
+              const itemIndex = parseInt(match[1], 10);
+              if (itemIndex >= index) {
+                delete updated[key];
+              }
+            }
+          }
+        });
+
+        // Re-add selections for remaining items with updated indices
+        Object.entries(prev).forEach(([key, value]) => {
+          if (key.startsWith(`${fieldName}.`)) {
+            const match = key.match(new RegExp(`^${fieldName}\\.(\\d+)(\\..*)?$`));
+            if (match) {
+              const itemIndex = parseInt(match[1], 10);
+              const suffix = match[2] || '';
+              if (itemIndex > index) {
+                const newKey = `${fieldName}.${itemIndex - 1}${suffix}`;
+                updated[newKey] = value;
+              }
+            }
+          }
+        });
+
+        return updated;
+      });
+
       handleFieldChange(fieldName, newArray);
     };
 
