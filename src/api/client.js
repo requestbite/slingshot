@@ -632,6 +632,44 @@ export class SlingshotApiClient {
   }
 
   /**
+   * Clears only response data for a request (preserves drafts)
+   * @param {string} id - Request ID
+   * @returns {Promise<import('../types/index.js').Request>} Updated request
+   */
+  async clearRequestResponse(id) {
+    const existing = await db.requests.get(id);
+    if (!existing) {
+      throw new Error('Request not found');
+    }
+
+    const updates = {
+      // Clear response fields only
+      response_data: null,
+      response_type: null,
+      response_headers: null,
+      response_status: null,
+      response_status_text: null,
+      response_time: null,
+      response_size: null,
+      response_raw_time: null,
+      response_raw_size: null,
+      response_is_binary: false,
+      response_binary_data: null,
+      response_cancelled: false,
+      response_success: null,
+      response_error_type: null,
+      response_error_title: null,
+      response_error_message: null,
+      response_received_at: null,
+      streaming_chunks: null,
+      streaming_metadata: null
+    };
+
+    await db.requests.update(id, updates);
+    return await db.requests.get(id);
+  }
+
+  /**
    * Clears all response and draft data for a request
    * @param {string} id - Request ID
    * @returns {Promise<import('../types/index.js').Request>} Updated request

@@ -153,6 +153,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   const originalDataRef = useRef(null);
   const currentRequestDataRef = useRef(requestData);
   const isInitialLoadRef = useRef(false);
+  const previousRequestIdRef = useRef(null);
 
   // Modal state
   const [showCurlModal, setShowCurlModal] = useState(false);
@@ -209,6 +210,10 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   // Update requestData when request prop changes
   useEffect(() => {
     if (request) {
+      // Check if this is a different request (not just an update to the current request)
+      const isDifferentRequest = previousRequestIdRef.current !== request.id;
+      previousRequestIdRef.current = request.id;
+
       // Set initial load flag to prevent URL parsing from triggering change detection
       isInitialLoadRef.current = true;
 
@@ -229,15 +234,25 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       setHasUnsavedChanges(request.has_draft_edits || false);
       setIsDraftDirty(false);
 
-      // Set active tab based on whether request has params
-      const hasParams = (dataToLoad.queryParams?.length || 0) + (dataToLoad.pathParams?.length || 0) > 0;
-      setActiveTab(hasParams ? 'params' : 'overview');
+      // Only set active tab if this is a different request
+      if (isDifferentRequest) {
+        // Set active tab based on whether request has params
+        const hasParams = (dataToLoad.queryParams?.length || 0) + (dataToLoad.pathParams?.length || 0) > 0;
+        setActiveTab(hasParams ? 'params' : 'overview');
+      } else {
+        // Same request being updated - check if Body tab should be disabled
+        const isBodyDisabled = ['GET', 'HEAD', 'OPTIONS'].includes(dataToLoad.method);
+        if (isBodyDisabled) {
+          setActiveTab(prev => prev === 'body' ? 'overview' : prev);
+        }
+      }
 
       // Clear the initial load flag after a delay to allow URL parsing to complete
       setTimeout(() => {
         isInitialLoadRef.current = false;
       }, 1000);
     } else {
+      previousRequestIdRef.current = null;
       isInitialLoadRef.current = false;
 
       // Reset to default values when no request is selected
@@ -1182,35 +1197,23 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
     }
   };
 
-  // Handle clear response (clears all response and draft data)
+  // Handle clear response (clears only response data, preserves drafts and active tab)
   const handleClearResponse = async () => {
     if (!request?.id) return;
 
     try {
-      const updatedRequest = await apiClient.clearRequestResponseAndDrafts(request.id);
+      // Use the new API method that only clears response fields
+      await apiClient.clearRequestResponse(request.id);
 
-      // Clear the local response state to show WelcomeMessage
+      // Clear only the local response state to show WelcomeMessage
       setResponse(null);
       setIsStreaming(false);
       setStreamedContent('');
       setStreamedChunks([]);
       setStreamingMetadata(null);
 
-      // Clear any draft changes
-      setHasUnsavedChanges(false);
-      setIsDraftDirty(false);
-
-      // Reload the original data
-      const originalData = getEffectiveRequestData(updatedRequest);
-      setRequestData(prev => ({
-        ...prev,
-        ...originalData
-      }));
-
-      // Trigger context refresh to update the request object
-      if (onRequestChange) {
-        onRequestChange(updatedRequest);
-      }
+      // DO NOT clear draft state or reload requestData
+      // DO NOT call onRequestChange to avoid triggering tab changes
     } catch (error) {
       console.error('Failed to clear response:', error);
     }
