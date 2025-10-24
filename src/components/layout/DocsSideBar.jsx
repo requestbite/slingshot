@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
+import { Suspense, lazy } from 'preact/compat';
 import { MarkdownPreview } from '../common/MarkdownPreview';
 import { DocsEditCol } from '../modals/DocsEditCol';
 import { DocsDeleteAllModal } from '../modals/DocsDeleteAllModal';
@@ -9,8 +10,10 @@ import { DocsEditParams } from '../modals/DocsEditParams';
 import { DocsEditResponse } from '../modals/DocsEditResponse';
 import { DocsEditRequest } from '../modals/DocsEditRequest';
 import { DocsEditAuth } from '../modals/DocsEditAuth';
-import { JSONFormModal } from '../modals/JSONFormModal';
 import { ExampleViewer } from '../common/ExampleViewer';
+
+// Dynamic import for JSONFormModal
+const JSONFormModal = lazy(() => import('../modals/JSONFormModal').then(m => ({ default: m.JSONFormModal })));
 import { SchemaViewer } from '../common/SchemaViewer';
 import { Select } from '../common/Select';
 import { ContextMenu } from '../common/ContextMenu';
@@ -1811,12 +1814,14 @@ export function DocsSideBar({ onClose: _onClose }) {
         const selectedSchema = getRequestBodySchemaForContentType(requestBodySchema, selectedRequestBodyContentType);
 
         return (
-          <JSONFormModal
-            isOpen={showJSONFormModal}
-            onClose={() => setShowJSONFormModal(false)}
-            onImport={handleJSONFormImport}
-            jsonSchema={selectedSchema}
-          />
+          <Suspense fallback={null}>
+            <JSONFormModal
+              isOpen={showJSONFormModal}
+              onClose={() => setShowJSONFormModal(false)}
+              onImport={handleJSONFormImport}
+              jsonSchema={selectedSchema}
+            />
+          </Suspense>
         );
       })()}
     </>

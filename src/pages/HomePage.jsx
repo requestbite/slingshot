@@ -1,11 +1,16 @@
-import { RequestEditor } from '../components/request/RequestEditor';
+import { Suspense, lazy } from 'preact/compat';
 import { usePageTitle } from '../hooks/usePageTitle';
+
+// Dynamic import for RequestEditor
+const RequestEditor = lazy(() => import('../components/request/RequestEditor').then(m => ({ default: m.RequestEditor })));
 
 export function HomePage({ sharedRequestData }) {
   usePageTitle('Slingshot'); // Sets default "RequestBite Slingshot" title
   return (
     <div class="h-full">
-      <RequestEditor sharedRequestData={sharedRequestData} />
+      <Suspense fallback={<div class="flex items-center justify-center h-full"><div class="text-gray-500">Loading...</div></div>}>
+        <RequestEditor sharedRequestData={sharedRequestData} />
+      </Suspense>
     </div>
   );
 }

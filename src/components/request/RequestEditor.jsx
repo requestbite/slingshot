@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
+import { Suspense, lazy } from 'preact/compat';
 import { useLocation } from 'wouter-preact';
 import { ParamsTab } from './tabs/ParamsTab';
 import { HeadersTab } from './tabs/HeadersTab';
@@ -9,8 +10,10 @@ import { CurlExportModal } from '../modals/CurlExportModal';
 import { CurlImportModal } from '../modals/CurlImportModal';
 import { SaveAsModal } from '../modals/SaveAsModal';
 import { CopyRequestModal } from '../modals/CopyRequestModal';
-import { JSONFormModal } from '../modals/JSONFormModal';
 import { VariableInput } from '../common/VariableInput';
+
+// Dynamic import for JSONFormModal
+const JSONFormModal = lazy(() => import('../modals/JSONFormModal').then(m => ({ default: m.JSONFormModal })));
 import { generateUUID } from '../../utils/uuid.js';
 import { Toast, useToast } from '../common/Toast';
 import { requestSubmitter } from '../../utils/requestSubmitter';
@@ -1537,12 +1540,14 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         const selectedSchema = getRequestBodySchemaForContentType(requestBodySchema, requestData.contentType);
 
         return (
-          <JSONFormModal
-            isOpen={showJSONFormModal}
-            onClose={() => setShowJSONFormModal(false)}
-            onImport={handleJSONFormImport}
-            jsonSchema={selectedSchema}
-          />
+          <Suspense fallback={null}>
+            <JSONFormModal
+              isOpen={showJSONFormModal}
+              onClose={() => setShowJSONFormModal(false)}
+              onImport={handleJSONFormImport}
+              jsonSchema={selectedSchema}
+            />
+          </Suspense>
         );
       })()}
 

@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'preact/hooks';
+import { Suspense, lazy } from 'preact/compat';
 import { useRoute } from 'wouter-preact';
-import { RequestEditor } from '../components/request/RequestEditor';
 import { useAppContext } from '../hooks/useAppContext';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { apiClient } from '../api';
+
+// Dynamic import for RequestEditor
+const RequestEditor = lazy(() => import('../components/request/RequestEditor').then(m => ({ default: m.RequestEditor })));
 
 export function RequestPage() {
   const [match, params] = useRoute('/:collectionId/:requestId');
@@ -91,10 +94,12 @@ export function RequestPage() {
 
   return (
     <div class="h-full flex flex-col">
-      <RequestEditor
-        request={request}
-        onRequestChange={handleRequestChange}
-      />
+      <Suspense fallback={<div class="flex items-center justify-center h-full"><div class="text-gray-500">Loading...</div></div>}>
+        <RequestEditor
+          request={request}
+          onRequestChange={handleRequestChange}
+        />
+      </Suspense>
     </div>
   );
 }
