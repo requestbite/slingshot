@@ -5,6 +5,7 @@
 
 import { generateUUID } from './uuid.js';
 import { load as loadYAML } from 'js-yaml';
+import { flattenAllOf } from './schemaParser.js';
 
 /**
  * Processes OpenAPI/Swagger specification and extracts collection data
@@ -470,9 +471,38 @@ function extractRequestBody(operation, spec) {
     contentType = 'application/xml';
   }
 
-  // Generate default body from selected content type's first example
+  // Generate default body: prefer examples from spec, otherwise generate from schema
   const selectedMediaType = content[selectedContentType];
-  const body = generateExampleFromSchema(selectedMediaType?.schema, spec);
+  let body = '';
+
+  // First, try to use an example from the OpenAPI spec
+  const selectedContentData = requestBodySchemaData.content[selectedContentType];
+  if (selectedContentData && selectedContentData.examples) {
+    const exampleKeys = Object.keys(selectedContentData.examples);
+    if (exampleKeys.length > 0) {
+      // Use the first available example
+      const firstExampleValue = selectedContentData.examples[exampleKeys[0]].value;
+      if (firstExampleValue !== null && firstExampleValue !== undefined) {
+        try {
+          body = typeof firstExampleValue === 'string'
+            ? firstExampleValue
+            : JSON.stringify(firstExampleValue, null, 2);
+        } catch (_error) {
+          // If JSON.stringify fails, generate from schema
+          body = generateExampleFromSchema(selectedMediaType?.schema, spec);
+        }
+      } else {
+        // No valid example value, generate from schema
+        body = generateExampleFromSchema(selectedMediaType?.schema, spec);
+      }
+    } else {
+      // No examples, generate from schema
+      body = generateExampleFromSchema(selectedMediaType?.schema, spec);
+    }
+  } else {
+    // No examples data, generate from schema
+    body = generateExampleFromSchema(selectedMediaType?.schema, spec);
+  }
 
   return {
     requestType,
@@ -583,6 +613,23 @@ function generateExampleFromResolvedSchema(schema) {
   // Use provided example
   if (schema.example !== undefined) {
     return schema.example;
+  }
+
+  // Handle composition keywords
+  // allOf: Flatten and merge all schemas (should be rare in resolved schemas)
+  if (schema.allOf && Array.isArray(schema.allOf)) {
+    const flattened = flattenAllOf(schema);
+    return generateExampleFromResolvedSchema(flattened);
+  }
+
+  // anyOf: Pick the first alternative
+  if (schema.anyOf && Array.isArray(schema.anyOf) && schema.anyOf.length > 0) {
+    return generateExampleFromResolvedSchema(schema.anyOf[0]);
+  }
+
+  // oneOf: Pick the first alternative
+  if (schema.oneOf && Array.isArray(schema.oneOf) && schema.oneOf.length > 0) {
+    return generateExampleFromResolvedSchema(schema.oneOf[0]);
   }
 
   // Generate based on type
@@ -768,6 +815,23 @@ function generateExample(schema, spec, visited) {
   // Use provided example
   if (schema.example !== undefined) {
     return schema.example;
+  }
+
+  // Handle composition keywords
+  // allOf: Flatten and merge all schemas
+  if (schema.allOf && Array.isArray(schema.allOf)) {
+    const flattened = flattenAllOf(schema);
+    return generateExample(flattened, spec, visited);
+  }
+
+  // anyOf: Pick the first alternative
+  if (schema.anyOf && Array.isArray(schema.anyOf) && schema.anyOf.length > 0) {
+    return generateExample(schema.anyOf[0], spec, visited);
+  }
+
+  // oneOf: Pick the first alternative
+  if (schema.oneOf && Array.isArray(schema.oneOf) && schema.oneOf.length > 0) {
+    return generateExample(schema.oneOf[0], spec, visited);
   }
 
   // Generate based on type
