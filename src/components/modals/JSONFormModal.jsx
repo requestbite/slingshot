@@ -130,9 +130,8 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
 
     // If this field itself should be enabled
     if (path) {
-      // For nested fields, default to true if required, false otherwise
-      // This will be overridden by parent logic if needed
-      enabled[path] = true; // We'll set this properly when we know the context
+      // For nested fields, always default to false (disabled)
+      enabled[path] = false;
     }
 
     // Recursively initialize for properties
@@ -140,10 +139,9 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       const required = effectiveSchema.required || [];
       Object.entries(effectiveSchema.properties).forEach(([propName, propSchema]) => {
         const propPath = path ? `${path}.${propName}` : propName;
-        const isRequired = required.includes(propName);
 
-        // Set enabled state for this property
-        enabled[propPath] = isRequired;
+        // Set enabled state for this property (always false for nested fields)
+        enabled[propPath] = false;
 
         // Recursively initialize nested properties
         initializeEnabledFields(propSchema, propPath, enabled);
@@ -753,7 +751,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
               {Object.entries(effectiveProperty.properties).map(([propName, propSchema]) => {
                 const nestedPath = `${fieldPath}.${propName}`;
                 const isRequired = required.includes(propName);
-                const propEnabled = enabledFields[nestedPath] !== undefined ? enabledFields[nestedPath] : isRequired;
+                const propEnabled = enabledFields[nestedPath] !== undefined ? enabledFields[nestedPath] : false;
 
                 return (
                   <div key={propName}>
@@ -1206,7 +1204,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
         {Object.entries(objectProperties).map(([propName, propSchema]) => {
           const propPath = `${fieldName}.${propName}`;
           const isRequired = required.includes(propName);
-          const propEnabled = enabledFields[propPath] !== undefined ? enabledFields[propPath] : isRequired;
+          const propEnabled = enabledFields[propPath] !== undefined ? enabledFields[propPath] : false;
 
           return (
             <div key={propName}>
