@@ -166,6 +166,9 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   const [isToastVisible, showToast, hideToast] = useToast();
   const [toastMessage, setToastMessage] = useState('Request updated!');
 
+  // Resolved URL state (for displaying the final URL that will be sent)
+  const [fullyResolvedUrl, setFullyResolvedUrl] = useState('');
+
   // Update parent when request data changes (but not during initial load or when editing existing requests)
   useEffect(() => {
     // Only call onRequestChange for new requests, not when editing existing ones
@@ -357,6 +360,15 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       return () => clearTimeout(timeoutId);
     }
   }, [requestData.url]);
+
+  // Update fully resolved URL whenever URL, params, or environment changes
+  useEffect(() => {
+    const updateResolvedUrl = async () => {
+      const resolved = await computeFullyResolvedUrl();
+      setFullyResolvedUrl(resolved);
+    };
+    updateResolvedUrl();
+  }, [requestData.url, requestData.queryParams, requestData.pathParams, currentEnvironment, selectedCollection]);
 
   const parseUrlParameters = (url) => {
     if (!url) {
@@ -643,6 +655,56 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       const value = variables.get(variableName.trim());
       return value !== undefined ? value : match; // Keep original if variable not found
     });
+  };
+
+  // Compute the fully resolved URL (with variables, path params, and query params)
+  const computeFullyResolvedUrl = async () => {
+    const effectiveUrl = getEffectiveUrl();
+    if (!effectiveUrl) return '';
+
+    try {
+      // Get all available variables for replacement
+      const variables = await getAvailableVariables();
+
+      // Replace variables in URL
+      let resolvedUrl = replaceVariables(effectiveUrl, variables);
+
+      // Replace path parameters with their values
+      requestData.pathParams.forEach(param => {
+        if (param.enabled && param.value) {
+          const resolvedValue = replaceVariables(param.value, variables);
+          const pattern = new RegExp(`:${param.key}\\b`, 'g');
+          resolvedUrl = resolvedUrl.replace(pattern, resolvedValue);
+        }
+      });
+
+      // Build complete URL with query parameters
+      try {
+        const url = new URL(resolvedUrl.startsWith('http') ? resolvedUrl : `http://${resolvedUrl}`);
+
+        // Clear all existing query parameters first
+        url.search = '';
+
+        // Add only enabled query parameters
+        const enabledQueryParams = requestData.queryParams.filter(p => p.enabled && p.key);
+        enabledQueryParams.forEach(param => {
+          const resolvedValue = replaceVariables(param.value, variables);
+          if (resolvedValue !== undefined && resolvedValue !== null) {
+            url.searchParams.set(param.key, resolvedValue);
+          } else {
+            url.searchParams.set(param.key, '');
+          }
+        });
+
+        return url.toString();
+      } catch (error) {
+        // If URL parsing fails, return the partially resolved URL
+        return resolvedUrl;
+      }
+    } catch (error) {
+      console.error('Failed to compute resolved URL:', error);
+      return effectiveUrl;
+    }
   };
 
   // Helper function to check if a data chunk is a timeout response
@@ -1293,6 +1355,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
               selectedEnvironment={currentEnvironment}
               showResolved={true}
               inputType="url"
+              fullyResolvedUrl={fullyResolvedUrl}
             />
           </div>
 

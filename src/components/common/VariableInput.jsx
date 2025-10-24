@@ -17,6 +17,7 @@ export function VariableInput({
   selectedEnvironment = null, // Override for current environment selection
   inputType = 'text', // Support for different input types like 'url'
   showResolved = false, // Show resolved variable values below the input
+  fullyResolvedUrl = null, // Fully resolved URL with variables, path params, and query params
   ...props
 }) {
   const { selectedCollection, hasManuallySelectedEnvironment } = useAppContext();
@@ -407,9 +408,9 @@ export function VariableInput({
         </div>
       )}
 
-      {showResolved && value && value.includes('{{') && (
+      {showResolved && (fullyResolvedUrl || (value && value.includes('{{'))) && (
         <p class="mt-1 text-xs text-gray-500 truncate">
-          {resolveVariables(value)}
+          {fullyResolvedUrl || resolveVariables(value)}
         </p>
       )}
 
