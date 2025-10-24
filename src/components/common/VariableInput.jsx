@@ -408,11 +408,18 @@ export function VariableInput({
         </div>
       )}
 
-      {showResolved && (fullyResolvedUrl || (value && value.includes('{{'))) && (
-        <p class="mt-1 text-xs text-gray-500 truncate">
-          {fullyResolvedUrl || resolveVariables(value)}
-        </p>
-      )}
+      {(() => {
+        const hasVariables = value && value.includes('{{');
+        const hasPathParams = value && (/:[a-zA-Z_]/.test(value) || /\{(?!\{)/.test(value));
+        const hasQueryParams = value && value.includes('?');
+        const shouldShow = showResolved && (hasVariables || hasPathParams || hasQueryParams) && (fullyResolvedUrl || value);
+
+        return shouldShow && (
+          <p class="mt-1 text-xs text-gray-500 truncate">
+            {fullyResolvedUrl || resolveVariables(value)}
+          </p>
+        );
+      })()}
 
       <style jsx>{`
         .variable-input {
