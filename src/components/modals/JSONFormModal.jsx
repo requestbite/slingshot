@@ -132,6 +132,9 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
 
       if (effectiveProp.default !== undefined) {
         data[key] = effectiveProp.default;
+      } else if (effectiveProp.enum && Array.isArray(effectiveProp.enum) && effectiveProp.enum.length === 1) {
+        // Single-option enum: auto-set the only value
+        data[key] = effectiveProp.enum[0];
       } else if (effectiveProp.type === 'string') {
         data[key] = '';
       } else if (effectiveProp.type === 'number' || effectiveProp.type === 'integer') {
@@ -208,6 +211,11 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
    * Helper to set nested values in objects/arrays
    */
   const setNestedValue = (obj, path, value) => {
+    // Handle undefined/null obj
+    if (!obj) {
+      obj = {};
+    }
+
     if (path.length === 1) {
       const key = path[0];
       if (Array.isArray(obj)) {
@@ -281,9 +289,18 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
         // If object has defined properties, recursively convert nested values
         if (effectiveSchema.properties) {
           const converted = {};
+          const required = effectiveSchema.required || [];
           Object.entries(value).forEach(([propKey, propValue]) => {
             if (effectiveSchema.properties[propKey]) {
               const propPath = fieldPath ? `${fieldPath}.${propKey}` : propKey;
+              const isRequired = required.includes(propKey);
+              const propEnabled = enabledFields[propPath] !== undefined ? enabledFields[propPath] : isRequired;
+
+              // Skip disabled nested fields
+              if (!propEnabled) {
+                return;
+              }
+
               converted[propKey] = convertValueBySchema(propValue, effectiveSchema.properties[propKey], propPath);
             } else {
               converted[propKey] = propValue;
@@ -427,6 +444,11 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       return effectiveProperty.default;
     }
 
+    // Handle single-option enum
+    if (effectiveProperty.enum && Array.isArray(effectiveProperty.enum) && effectiveProperty.enum.length === 1) {
+      return effectiveProperty.enum[0];
+    }
+
     switch (effectiveProperty.type) {
       case 'string':
         return '';
@@ -451,9 +473,40 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   };
 
   /**
+   * Render label with enable checkbox for any field (top-level or nested)
+   */
+  const renderFieldLabelWithCheckbox = (fieldPath, title, isRequired = false) => {
+    const fieldEnabled = enabledFields[fieldPath] !== undefined ? enabledFields[fieldPath] : isRequired;
+
+    return (
+      <div class="flex items-center justify-between mb-1">
+        <Label htmlFor={fieldPath} mandatory={isRequired} className="mb-0">
+          {title}
+        </Label>
+        <div class="flex items-center gap-1">
+          <input
+            type="checkbox"
+            checked={fieldEnabled}
+            onChange={(e) => {
+              setEnabledFields(prev => ({
+                ...prev,
+                [fieldPath]: e.target.checked
+              }));
+            }}
+            class="h-3 w-3 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+          />
+          <span class="text-xs text-gray-600">
+            Enable
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  /**
    * Render individual field input (used for both top-level and nested fields)
    */
-  const renderFieldInput = (fieldPath, property, isEnabled, isSubmitting) => {
+  const renderFieldInput = (fieldPath, property, isEnabled, isSubmitting, showEnableCheckbox = false) => {
     const fieldValue = fieldPath.includes('.')
       ? getNestedValue(formData, fieldPath.split('.'))
       : formData[fieldPath];
@@ -467,6 +520,21 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
     const effectiveProperty = hasComposition
       ? composition.options[selectedCompositionIndex] || {}
       : property;
+
+    // Helper to check if we should render the description (avoiding duplicates for composition fields)
+    const shouldRenderDescription = () => {
+      if (!effectiveProperty.description) return false;
+
+      // If this is a composition field, check for duplicate descriptions
+      if (hasComposition) {
+        const parentDesc = property.description?.trim();
+        const effectiveDesc = effectiveProperty.description?.trim();
+        // Don't render if they're the same (would be duplicate)
+        return parentDesc !== effectiveDesc;
+      }
+
+      return true;
+    };
 
     // If nested field has composition, render composition selector
     const renderNestedCompositionSelector = () => {
@@ -502,7 +570,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           <div class={`text-xs text-gray-500 italic p-2 bg-gray-50 rounded border border-gray-200 ${!isEnabled ? 'opacity-50' : ''}`}>
             Field is set to null
           </div>
-          {effectiveProperty.description && (
+          {shouldRenderDescription() && (
             <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
               <MarkdownPreview markdown={effectiveProperty.description} />
             </div>
@@ -548,7 +616,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
               Enabled
             </span>
           </div>
-          {effectiveProperty.description && (
+          {shouldRenderDescription() && (
             <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
               <MarkdownPreview markdown={effectiveProperty.description} />
             </div>
@@ -559,6 +627,27 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
 
     // Render select for enum
     if (effectiveProperty.enum && Array.isArray(effectiveProperty.enum)) {
+      // If only one option, just show it as text
+      if (effectiveProperty.enum.length === 1) {
+        const singleValue = effectiveProperty.enum[0];
+        return (
+          <>
+            {renderNestedCompositionSelector()}
+            <TextInput
+              id={fieldPath}
+              value={singleValue}
+              disabled={true}
+              className={!isEnabled ? 'opacity-50' : ''}
+            />
+            {shouldRenderDescription() && (
+              <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
+                <MarkdownPreview markdown={effectiveProperty.description} />
+              </div>
+            )}
+          </>
+        );
+      }
+
       const enumOptions = [
         { value: '', label: 'Select an option' },
         ...effectiveProperty.enum.map(option => ({
@@ -577,7 +666,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
             options={enumOptions}
             disabled={isSubmitting || !isEnabled}
           />
-          {effectiveProperty.description && (
+          {shouldRenderDescription() && (
             <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
               <MarkdownPreview markdown={effectiveProperty.description} />
             </div>
@@ -590,28 +679,25 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
     if (effectiveProperty.type === 'object') {
       // If object has defined properties, render structured fields
       if (effectiveProperty.properties) {
+        const required = effectiveProperty.required || [];
         return (
           <>
             {renderNestedCompositionSelector()}
             <div class={`space-y-3 p-3 bg-gray-50 rounded border border-gray-200 ${!isEnabled ? 'opacity-50' : ''}`}>
               {Object.entries(effectiveProperty.properties).map(([propName, propSchema]) => {
                 const nestedPath = `${fieldPath}.${propName}`;
+                const isRequired = required.includes(propName);
+                const propEnabled = enabledFields[nestedPath] !== undefined ? enabledFields[nestedPath] : isRequired;
+
                 return (
                   <div key={propName}>
-                    <Label htmlFor={nestedPath} className="mb-1">
-                      {propSchema.title || propName}
-                    </Label>
-                    {renderFieldInput(nestedPath, propSchema, isEnabled, isSubmitting)}
-                    {propSchema.description && (
-                      <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
-                        <MarkdownPreview markdown={propSchema.description} />
-                      </div>
-                    )}
+                    {renderFieldLabelWithCheckbox(nestedPath, propSchema.title || propName, isRequired)}
+                    {renderFieldInput(nestedPath, propSchema, propEnabled && isEnabled, isSubmitting)}
                   </div>
                 );
               })}
             </div>
-            {effectiveProperty.description && (
+            {shouldRenderDescription() && (
               <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
                 <MarkdownPreview markdown={effectiveProperty.description} />
               </div>
@@ -685,7 +771,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           <p class="mt-1 text-xs text-gray-500">
             Field is an object you can manually construct above.
           </p>
-          {effectiveProperty.description && (
+          {shouldRenderDescription() && (
             <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
               <MarkdownPreview markdown={effectiveProperty.description} />
             </div>
@@ -702,7 +788,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           <>
             {renderNestedCompositionSelector()}
             {renderNestedArrayWithItems(fieldPath, effectiveProperty, effectiveProperty.items, isEnabled, isSubmitting)}
-            {effectiveProperty.description && (
+            {shouldRenderDescription() && (
               <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
                 <MarkdownPreview markdown={effectiveProperty.description} />
               </div>
@@ -776,7 +862,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           <p class="mt-1 text-xs text-gray-500">
             Field is an array you can manually construct above.
           </p>
-          {effectiveProperty.description && (
+          {shouldRenderDescription() && (
             <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
               <MarkdownPreview markdown={effectiveProperty.description} />
             </div>
@@ -800,7 +886,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           min={effectiveProperty.minimum}
           max={effectiveProperty.maximum}
         />
-        {effectiveProperty.description && (
+        {shouldRenderDescription() && (
           <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
             <MarkdownPreview markdown={effectiveProperty.description} />
           </div>
@@ -909,17 +995,19 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
             </div>
           ))}
         </div>
-        <button
+        <Button
           type="button"
           onClick={handleAddItem}
           disabled={isSubmitting || !isEnabled}
-          class="mt-2 text-sm text-sky-600 hover:text-sky-800 disabled:opacity-50 flex items-center gap-1"
+          variant="icon"
+          size="xs"
+          className="my-2"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           Add item
-        </button>
+        </Button>
       </div>
     );
   };
@@ -1009,17 +1097,19 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
             </div>
           ))}
         </div>
-        <button
+        <Button
           type="button"
           onClick={handleAddItem}
           disabled={isSubmitting || !isEnabled}
-          class="mt-2 text-sm text-sky-600 hover:text-sky-800 disabled:opacity-50 flex items-center gap-1"
+          variant="icon"
+          size="xs"
+          className="my-2"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           Add item
-        </button>
+        </Button>
       </div>
     );
   };
@@ -1029,22 +1119,19 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
    */
   const renderObjectWithProperties = (fieldName, property, objectProperties, isEnabled, isSubmitting) => {
     const objectValue = formData[fieldName] || {};
+    const required = property.required || [];
 
     return (
       <div class={`space-y-3 p-3 bg-gray-50 rounded border border-gray-200 ${!isEnabled ? 'opacity-50' : ''}`}>
         {Object.entries(objectProperties).map(([propName, propSchema]) => {
           const propPath = `${fieldName}.${propName}`;
+          const isRequired = required.includes(propName);
+          const propEnabled = enabledFields[propPath] !== undefined ? enabledFields[propPath] : isRequired;
+
           return (
             <div key={propName}>
-              <Label htmlFor={propPath} className="mb-1">
-                {propSchema.title || propName}
-              </Label>
-              {renderFieldInput(propPath, propSchema, isEnabled, isSubmitting)}
-              {propSchema.description && (
-                <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500">
-                  <MarkdownPreview markdown={propSchema.description} />
-                </div>
-              )}
+              {renderFieldLabelWithCheckbox(propPath, propSchema.title || propName, isRequired)}
+              {renderFieldInput(propPath, propSchema, propEnabled && isEnabled, isSubmitting)}
             </div>
           );
         })}
@@ -1076,6 +1163,18 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       if (!composition.hasComposition) return null;
       if (!property.description) return null;
 
+      // If parent and effective descriptions are the same, only show it once here
+      const parentDesc = property.description?.trim();
+      const effectiveDesc = effectiveProperty.description?.trim();
+      if (parentDesc === effectiveDesc) {
+        return (
+          <div class="mt-1 mb-2 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500 [&_.prose_p]:text-gray-500 [&_.prose_li]:text-gray-500 [&_.prose_*]:text-gray-500">
+            <MarkdownPreview markdown={property.description} />
+          </div>
+        );
+      }
+
+      // Descriptions are different, show parent here
       return (
         <div class="mt-1 mb-2 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500 [&_.prose_p]:text-gray-500 [&_.prose_li]:text-gray-500 [&_.prose_*]:text-gray-500">
           <MarkdownPreview markdown={property.description} />
@@ -1088,10 +1187,17 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
      * This is shown below the input field
      */
     const renderEffectiveDescription = () => {
-      // For composition fields, only show the effective property description
-      // The parent description is shown above via renderParentDescription
+      // For composition fields, only show the effective property description if it's different from parent
       if (composition.hasComposition) {
         if (!effectiveProperty.description) return null;
+
+        // Check if descriptions are the same - if so, don't show it again
+        const parentDesc = property.description?.trim();
+        const effectiveDesc = effectiveProperty.description?.trim();
+        if (parentDesc === effectiveDesc) {
+          return null; // Already shown in renderParentDescription
+        }
+
         return (
           <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500 [&_.prose_p]:text-gray-500 [&_.prose_li]:text-gray-500 [&_.prose_*]:text-gray-500">
             <MarkdownPreview markdown={effectiveProperty.description} />
@@ -1219,6 +1325,25 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
 
     // Render select for enum
     if (effectiveProperty.enum && Array.isArray(effectiveProperty.enum)) {
+      // If only one option, just show it as text
+      if (effectiveProperty.enum.length === 1) {
+        const singleValue = effectiveProperty.enum[0];
+        return (
+          <div key={fieldName} class="mb-4">
+            {renderFieldLabel(fieldName)}
+            {renderParentDescription()}
+            {renderCompositionSelector()}
+            <TextInput
+              id={fieldName}
+              value={singleValue}
+              disabled={true}
+              className={!isEnabled ? 'opacity-50' : ''}
+            />
+            {renderEffectiveDescription()}
+          </div>
+        );
+      }
+
       const enumOptions = [
         { value: '', label: 'Select an option' },
         ...effectiveProperty.enum.map(option => ({
