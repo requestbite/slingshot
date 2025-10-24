@@ -618,7 +618,7 @@ export function BodyTab({
                 onClick={onOpenSchemaEditor}
                 class="px-2 py-1 text-xs font-medium rounded-md cursor-pointer bg-sky-100 hover:bg-sky-200 text-sky-700"
               >
-                Schema-based editor
+                Open in editor
               </button>
             )}
 

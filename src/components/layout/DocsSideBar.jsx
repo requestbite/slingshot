@@ -479,7 +479,7 @@ export function DocsSideBar({ onClose: _onClose }) {
 
   const requestBodyContextMenuItems = [
     {
-      label: 'Create payload',
+      label: 'Open in editor',
       onClick: () => {
         setShowRequestBodyContextMenu(false);
         setShowJSONFormModal(true);
