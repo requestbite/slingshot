@@ -1742,7 +1742,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   const fieldsToDisplay = getFieldsToDisplay();
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Create request body payload" size="xl">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Create request body payload" size="2xl">
       <div class="text-sm text-gray-500 mb-4">
         Create a request body payload by filling out the form. Clicking "Import" will add it to the request editor.
       </div>
