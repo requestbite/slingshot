@@ -466,6 +466,7 @@ export function getCompositionDisplayName(compositionType) {
  * @returns {string} Display name for the option
  */
 export function getSchemaOptionDisplayName(schema, index) {
-  if (schema.type) return `${schema.type} (Option ${index + 1})`;
-  return `Option ${index + 1}`;
+  const optionLabel = schema.title || `Option ${index + 1}`;
+  if (schema.type) return `${schema.type} (${optionLabel})`;
+  return optionLabel;
 }
