@@ -1,14 +1,46 @@
 import { useState } from 'preact/hooks';
 import { usePageTitle } from '../hooks/usePageTitle';
-import { TextInput } from '../components/common/TextInput';
+import { SearchAutocomplete } from '../components/common/SearchAutocomplete';
 
 export function ApiCatalogPage() {
   usePageTitle('API Catalog');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // TODO: Replace with actual API data from your backend
+  const mockApiData = [
+    { id: 1, name: 'Users API', description: 'Manage user accounts and profiles', endpoint: '/api/users' },
+    { id: 2, name: 'Authentication API', description: 'Handle login, logout, and token management', endpoint: '/api/auth' },
+    { id: 3, name: 'Products API', description: 'Product catalog and inventory management', endpoint: '/api/products' },
+    { id: 4, name: 'Orders API', description: 'Order processing and tracking', endpoint: '/api/orders' },
+    { id: 5, name: 'Payments API', description: 'Payment processing and transactions', endpoint: '/api/payments' },
+    { id: 6, name: 'Analytics API', description: 'Usage analytics and reporting', endpoint: '/api/analytics' },
+    { id: 7, name: 'Notifications API', description: 'Email and push notification services', endpoint: '/api/notifications' },
+    { id: 8, name: 'File Storage API', description: 'Upload and manage files and media', endpoint: '/api/storage' },
+    { id: 9, name: 'Search API', description: 'Full-text search across resources', endpoint: '/api/search' },
+    { id: 10, name: 'Webhooks API', description: 'Manage webhook subscriptions and events', endpoint: '/api/webhooks' },
+  ];
+
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
+
+  const handleApiSelect = (api) => {
+    console.log('Selected API:', api);
+    // TODO: Implement navigation or action when API is selected
+    // For example: navigate to API detail page, or populate a form
+  };
+
+  const renderApiItem = (api) => (
+    <div class="flex flex-col gap-1">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-gray-900">{api.name}</span>
+        <span class="text-xs text-gray-500 font-mono">{api.endpoint}</span>
+      </div>
+      {api.description && (
+        <span class="text-xs text-gray-600">{api.description}</span>
+      )}
+    </div>
+  );
 
   return (
     <div class="h-full bg-gray-100 overflow-y-auto">
@@ -33,13 +65,17 @@ export function ApiCatalogPage() {
                 <path d="m21 21-4.3-4.3" />
               </svg>
             </div>
-            <TextInput
-              type="text"
+            <SearchAutocomplete
               value={searchQuery}
               onChange={handleSearchChange}
+              onSelect={handleApiSelect}
+              items={mockApiData}
+              renderItem={renderApiItem}
               placeholder="Search APIs..."
               clearable={true}
               className="pl-10"
+              emptyMessage="No APIs found"
+              minChars={1}
             />
           </div>
         </div>
