@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useState, useRef, useEffect } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { SearchAutocomplete } from '../components/common/SearchAutocomplete';
@@ -7,6 +7,14 @@ export function ApiCatalogPage() {
   usePageTitle('API Catalog');
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef(null);
+
+  // Auto-focus the search input when the page loads
+  useEffect(() => {
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, []);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -69,6 +77,7 @@ export function ApiCatalogPage() {
               </svg>
             </div>
             <SearchAutocomplete
+              ref={searchInputRef}
               value={searchQuery}
               onChange={handleSearchChange}
               onSelect={handleApiSelect}

@@ -1,7 +1,11 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
+import { Suspense, lazy } from 'preact/compat';
 import { useRoute, useLocation } from 'wouter-preact';
 import { usePageTitle } from '../hooks/usePageTitle';
-import { Button } from '../components/common/Button';
+import { ContextMenu } from '../components/common/ContextMenu';
+
+// Dynamic import for URL import modal
+const URLImportModal = lazy(() => import('../components/import/URLImportModal').then(m => ({ default: m.URLImportModal })));
 
 export function ApiCatalogDetailsPage() {
   const [, params] = useRoute('/catalog/:uuid');
@@ -9,6 +13,10 @@ export function ApiCatalogDetailsPage() {
   const [apiData, setApiData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showImportContextMenu, setShowImportContextMenu] = useState(false);
+  const [showURLImportModal, setShowURLImportModal] = useState(false);
+  const [importUrl, setImportUrl] = useState('');
+  const importButtonRef = useRef();
 
   usePageTitle(apiData?.name || 'API Details');
 
@@ -44,8 +52,20 @@ export function ApiCatalogDetailsPage() {
     }
   };
 
-  const handleBackToCatalog = () => {
-    setLocation('/catalog');
+  const handleImportYaml = () => {
+    if (apiData?.openApiYamlUrl) {
+      setImportUrl(apiData.openApiYamlUrl);
+      setShowImportContextMenu(false);
+      setShowURLImportModal(true);
+    }
+  };
+
+  const handleImportJson = () => {
+    if (apiData?.openApiJsonUrl) {
+      setImportUrl(apiData.openApiJsonUrl);
+      setShowImportContextMenu(false);
+      setShowURLImportModal(true);
+    }
   };
 
   return (
@@ -88,15 +108,22 @@ export function ApiCatalogDetailsPage() {
                 ) : null}
               </div>
               <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-                <Button
-                  onClick={handleBackToCatalog}
-                  type="button"
-                  variant="secondary"
-                  size="md"
-                  className="block text-center"
+                <button
+                  ref={importButtonRef}
+                  onClick={() => setShowImportContextMenu(true)}
+                  disabled={isLoading || error}
+                  class="rounded-md bg-sky-100 hover:bg-sky-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer"
                 >
-                  Back to Catalog
-                </Button>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                    <path d="M12 15V3" />
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <path d="m7 10 5 5 5-5" />
+                  </svg>
+                  Import
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </button>
               </div>
             </div>
 
@@ -213,6 +240,60 @@ export function ApiCatalogDetailsPage() {
           </div>
         </div>
       </div>
+
+      {/* Import Context Menu */}
+      <ContextMenu
+        isOpen={showImportContextMenu}
+        onClose={() => setShowImportContextMenu(false)}
+        trigger={importButtonRef.current}
+        width={200}
+        position="below"
+        items={[
+          {
+            label: 'Import YAML spec',
+            onClick: handleImportYaml,
+            disabled: !apiData?.openApiYamlUrl,
+            icon: (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14,2 14,8 20,8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10,9 9,9 8,9" />
+              </svg>
+            )
+          },
+          {
+            label: 'Import JSON spec',
+            onClick: handleImportJson,
+            disabled: !apiData?.openApiJsonUrl,
+            icon: (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14,2 14,8 20,8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10,9 9,9 8,9" />
+              </svg>
+            )
+          }
+        ]}
+      />
+
+      {/* URL Import Modal */}
+      {showURLImportModal && (
+        <Suspense fallback={null}>
+          <URLImportModal
+            isOpen={showURLImportModal}
+            onClose={() => setShowURLImportModal(false)}
+            onSuccess={(collection) => {
+              console.log('Collection imported successfully:', collection);
+            }}
+            collectionName={apiData?.name}
+            importUrl={importUrl}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

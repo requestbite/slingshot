@@ -10,7 +10,7 @@ import { TextInput } from '../common/TextInput';
 import { Button } from '../common/Button';
 import { Label } from '../common/Label';
 
-export function URLImportModal({ isOpen, importUrl, onClose, onSuccess }) {
+export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     name: '',
     url: ''
@@ -29,7 +29,10 @@ export function URLImportModal({ isOpen, importUrl, onClose, onSuccess }) {
   // Initialize form data when modal opens and auto-focus name input
   useEffect(() => {
     if (isOpen) {
-      setFormData({ name: '', url: importUrl || '' });
+      setFormData({
+        name: collectionName || '',
+        url: importUrl || ''
+      });
       setErrors({});
 
       // Auto-focus on name input
@@ -39,7 +42,7 @@ export function URLImportModal({ isOpen, importUrl, onClose, onSuccess }) {
         }
       }, 100);
     }
-  }, [isOpen, importUrl]);
+  }, [isOpen, importUrl, collectionName]);
 
   const showErrorToast = (message) => {
     setToastMessage(message);
