@@ -161,6 +161,19 @@ export function TopBar() {
             Slingshot
           </a>
           <a
+            href="/catalog"
+            onClick={(e) => {
+              e.preventDefault();
+              setLocation('/catalog');
+            }}
+            class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/catalog')
+              ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+          >
+            Catalog
+          </a>
+          <a
             href="/environments"
             onClick={(e) => {
               e.preventDefault();
@@ -313,6 +326,18 @@ export function TopBar() {
                   >
                     <div>Slingshot</div>
                     <span class="text-xs text-gray-500 mt-1">Send HTTP requests</span>
+                  </a>
+                  <a
+                    href="/catalog"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setLocation('/catalog');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
+                  >
+                    <div>Catalog</div>
+                    <span class="text-xs text-gray-500 mt-1">Browse and manage APIs</span>
                   </a>
                   <a
                     href="/environments"

@@ -12,6 +12,7 @@ const CollectionPage = lazy(() => import('./pages/CollectionPage').then(m => ({ 
 const RequestPage = lazy(() => import('./pages/RequestPage').then(m => ({ default: m.RequestPage })));
 const CollectionsPage = lazy(() => import('./pages/CollectionsPage').then(m => ({ default: m.CollectionsPage })));
 const CollectionUpdatePage = lazy(() => import('./pages/CollectionUpdatePage').then(m => ({ default: m.CollectionUpdatePage })));
+const ApiCatalogPage = lazy(() => import('./pages/ApiCatalogPage').then(m => ({ default: m.ApiCatalogPage })));
 const EnvironmentsPage = lazy(() => import('./pages/EnvironmentsPage').then(m => ({ default: m.EnvironmentsPage })));
 const EnvironmentUpdatePage = lazy(() => import('./pages/EnvironmentUpdatePage').then(m => ({ default: m.EnvironmentUpdatePage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
@@ -308,8 +309,8 @@ export function App() {
     
     // Check if current route should use min-h-screen instead of h-screen
     // These are the routes that use AppLayout (not FullPageLayout)
-    const isAppLayoutRoute = location === '/' || 
-                           (location.match(/^\/[^/]+$/) && !location.startsWith('/collections') && !location.startsWith('/environments') && !location.startsWith('/settings')) ||
+    const isAppLayoutRoute = location === '/' ||
+                           (location.match(/^\/[^/]+$/) && !location.startsWith('/collections') && !location.startsWith('/catalog') && !location.startsWith('/environments') && !location.startsWith('/settings')) ||
                            (location.match(/^\/[^/]+\/[^/]+$/) && !location.startsWith('/collections/') && !location.startsWith('/environments/'));
     
     const containerClass = isAppLayoutRoute ? 
@@ -331,6 +332,11 @@ export function App() {
             <Route path="/collections">
               <FullPageLayout>
                 <CollectionsPage />
+              </FullPageLayout>
+            </Route>
+            <Route path="/catalog">
+              <FullPageLayout>
+                <ApiCatalogPage />
               </FullPageLayout>
             </Route>
             <Route path="/environments/:uuid/secrets">
