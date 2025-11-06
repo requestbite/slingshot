@@ -1,9 +1,11 @@
 import { useState } from 'preact/hooks';
+import { useLocation } from 'wouter-preact';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { SearchAutocomplete } from '../components/common/SearchAutocomplete';
 
 export function ApiCatalogPage() {
   usePageTitle('API Catalog');
+  const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearchChange = (e) => {
@@ -29,8 +31,9 @@ export function ApiCatalogPage() {
   };
 
   const handleApiSelect = (api) => {
-    console.log('Selected API:', api);
-    // TODO: Implement navigation or action when API is selected
+    if (api && api.id) {
+      setLocation(`/catalog/${api.id}`);
+    }
   };
 
   const renderApiItem = (api) => (

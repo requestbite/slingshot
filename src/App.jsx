@@ -13,6 +13,7 @@ const RequestPage = lazy(() => import('./pages/RequestPage').then(m => ({ defaul
 const CollectionsPage = lazy(() => import('./pages/CollectionsPage').then(m => ({ default: m.CollectionsPage })));
 const CollectionUpdatePage = lazy(() => import('./pages/CollectionUpdatePage').then(m => ({ default: m.CollectionUpdatePage })));
 const ApiCatalogPage = lazy(() => import('./pages/ApiCatalogPage').then(m => ({ default: m.ApiCatalogPage })));
+const ApiCatalogDetailsPage = lazy(() => import('./pages/ApiCatalogDetailsPage').then(m => ({ default: m.ApiCatalogDetailsPage })));
 const EnvironmentsPage = lazy(() => import('./pages/EnvironmentsPage').then(m => ({ default: m.EnvironmentsPage })));
 const EnvironmentUpdatePage = lazy(() => import('./pages/EnvironmentUpdatePage').then(m => ({ default: m.EnvironmentUpdatePage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
@@ -311,7 +312,7 @@ export function App() {
     // These are the routes that use AppLayout (not FullPageLayout)
     const isAppLayoutRoute = location === '/' ||
                            (location.match(/^\/[^/]+$/) && !location.startsWith('/collections') && !location.startsWith('/catalog') && !location.startsWith('/environments') && !location.startsWith('/settings')) ||
-                           (location.match(/^\/[^/]+\/[^/]+$/) && !location.startsWith('/collections/') && !location.startsWith('/environments/'));
+                           (location.match(/^\/[^/]+\/[^/]+$/) && !location.startsWith('/collections/') && !location.startsWith('/catalog/') && !location.startsWith('/environments/'));
     
     const containerClass = isAppLayoutRoute ? 
       "min-h-screen flex flex-col bg-gray-50" : 
@@ -332,6 +333,11 @@ export function App() {
             <Route path="/collections">
               <FullPageLayout>
                 <CollectionsPage />
+              </FullPageLayout>
+            </Route>
+            <Route path="/catalog/:uuid">
+              <FullPageLayout>
+                <ApiCatalogDetailsPage />
               </FullPageLayout>
             </Route>
             <Route path="/catalog">
