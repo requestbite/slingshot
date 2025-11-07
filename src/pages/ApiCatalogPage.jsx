@@ -24,7 +24,7 @@ export function ApiCatalogPage() {
   const handleApiSearch = async (query) => {
     try {
       const response = await fetch(
-        `https://api-catalog.fredrik-berglund.workers.dev/v1/apis/search?q=${encodeURIComponent(query)}&resolveIds=true&fullDesc=false`
+        `${import.meta.env.VITE_CATALOG_API}/v1/apis/search?q=${encodeURIComponent(query)}&resolveIds=true&fullDesc=false`
       );
 
       if (!response.ok) {

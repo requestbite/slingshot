@@ -33,7 +33,7 @@ export function ApiCatalogDetailsPage() {
       setError(null);
 
       const response = await fetch(
-        `https://api-catalog.fredrik-berglund.workers.dev/v1/apis/${uuid}`
+        `${import.meta.env.VITE_CATALOG_API}/v1/apis/${uuid}`
       );
 
       if (!response.ok) {
