@@ -155,15 +155,17 @@ export function ApiCatalogPage() {
                       title={category.name}
                       description={
                         <div>
-                          <div class="mb-2 line-clamp-3">{category.description}</div>
+                          <div class="line-clamp-3 mb-2">{category.description}</div>
                           <div class="text-xs text-gray-500">APIs: {category.apis}</div>
                         </div>
                       }
                       icon={
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="m16 18 6-6-6-6" />
-                          <path d="m8 6-6 6 6 6" />
-                        </svg>
+                        <div class="border border-sky-700 rounded-full p-1 flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-700">
+                            <path d="m16 18 6-6-6-6" />
+                            <path d="m8 6-6 6 6 6" />
+                          </svg>
+                        </div>
                       }
                     />
                   ))}
