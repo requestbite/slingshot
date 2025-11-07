@@ -8,6 +8,8 @@ export function ApiCatalogPage() {
   usePageTitle('API Catalog');
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const searchInputRef = useRef(null);
 
   // Auto-focus the search input when the page loads
@@ -15,6 +17,31 @@ export function ApiCatalogPage() {
     if (searchInputRef.current) {
       searchInputRef.current.focus();
     }
+  }, []);
+
+  // Load categories from the API
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setIsLoadingCategories(true);
+        const response = await fetch(
+          `${import.meta.env.VITE_CATALOG_API}/v1/categories`
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch categories (status ${response.status})`);
+        }
+
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+
+    loadCategories();
   }, []);
 
   const handleSearchChange = (e) => {
@@ -111,17 +138,41 @@ export function ApiCatalogPage() {
 
             {/* Content Section */}
             <div class="px-6 pb-6">
-              <ClickableCard
-                href="/catalog/example-api"
-                title="Stripe Payment API"
-                description="Accept payments, send payouts, and manage your business online with a complete payments platform designed for developers."
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m16 18 6-6-6-6" />
-                    <path d="m8 6-6 6 6 6" />
+              {isLoadingCategories ? (
+                <div class="flex items-center justify-center py-8 text-gray-500">
+                  <svg class="animate-spin w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                }
-              />
+                  <span>Loading categories...</span>
+                </div>
+              ) : categories.length > 0 ? (
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {categories.map((category) => (
+                    <ClickableCard
+                      key={category.id}
+                      href={`/catalog/category/${category.key}`}
+                      title={category.name}
+                      description={
+                        <div>
+                          <div class="mb-2">{category.description}</div>
+                          <div class="text-xs text-gray-500">APIs: {category.apis}</div>
+                        </div>
+                      }
+                      icon={
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="m16 18 6-6-6-6" />
+                          <path d="m8 6-6 6 6 6" />
+                        </svg>
+                      }
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div class="text-center py-8 text-gray-500">
+                  No categories found
+                </div>
+              )}
             </div>
           </div>
         </div>
