@@ -155,7 +155,7 @@ export function ApiCatalogPage() {
                       title={category.name}
                       description={
                         <div>
-                          <div class="mb-2">{category.description}</div>
+                          <div class="mb-2 line-clamp-3">{category.description}</div>
                           <div class="text-xs text-gray-500">APIs: {category.apis}</div>
                         </div>
                       }
