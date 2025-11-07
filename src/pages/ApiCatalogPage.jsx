@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { SearchAutocomplete } from '../components/common/SearchAutocomplete';
+import { ClickableCard } from '../components/common/ClickableCard';
 
 export function ApiCatalogPage() {
   usePageTitle('API Catalog');
@@ -106,6 +107,21 @@ export function ApiCatalogPage() {
                   Browse and manage your API catalog.
                 </p>
               </div>
+            </div>
+
+            {/* Content Section */}
+            <div class="px-6 pb-6">
+              <ClickableCard
+                href="/catalog/example-api"
+                title="Stripe Payment API"
+                description="Accept payments, send payouts, and manage your business online with a complete payments platform designed for developers."
+                icon={
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m16 18 6-6-6-6" />
+                    <path d="m8 6-6 6 6 6" />
+                  </svg>
+                }
+              />
             </div>
           </div>
         </div>
