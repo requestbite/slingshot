@@ -1,3 +1,5 @@
+import { Link } from 'wouter-preact';
+
 /**
  * ClickableCard Component
  *
@@ -29,7 +31,7 @@ export function ClickableCard({
   };
 
   return (
-    <a
+    <Link
       href={href}
       onClick={handleClick}
       class={`block bg-white rounded-lg border border-gray-300 p-4 transition-colors hover:bg-gray-50 cursor-pointer ${className}`}
@@ -52,6 +54,6 @@ export function ClickableCard({
           )}
         </div>
       </div>
-    </a>
+    </Link>
   );
 }
