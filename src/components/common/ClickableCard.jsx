@@ -48,9 +48,9 @@ export function ClickableCard({
             {title}
           </h3>
           {description && (
-            <p class="mt-1 text-xs text-gray-600 line-clamp-2">
+            <div class="mt-1 text-xs text-gray-600 line-clamp-2">
               {description}
-            </p>
+            </div>
           )}
         </div>
       </div>
