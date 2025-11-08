@@ -335,7 +335,7 @@ export function App() {
                 <CollectionsPage />
               </FullPageLayout>
             </Route>
-            <Route path="/catalog/category/:key">
+            <Route path="/catalog/category/:key/:page?">
               <FullPageLayout>
                 <ApiCatalogPage />
               </FullPageLayout>

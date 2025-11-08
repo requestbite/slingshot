@@ -8,16 +8,18 @@ import { Button } from '../components/common/Button';
 export function ApiCatalogPage() {
   usePageTitle('API Catalog');
   const [, setLocation] = useLocation();
-  const [match, params] = useRoute('/catalog/category/:key');
+  const [match, params] = useRoute('/catalog/category/:key/:page?');
   const [searchQuery, setSearchQuery] = useState('');
   const [categories, setCategories] = useState([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [categoryApis, setCategoryApis] = useState([]);
   const [isLoadingApis, setIsLoadingApis] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
   const [paginationDetails, setPaginationDetails] = useState(null);
   const [categoryInfo, setCategoryInfo] = useState(null);
   const searchInputRef = useRef(null);
+
+  // Get current page from URL, default to 1
+  const currentPage = params?.page ? parseInt(params.page, 10) : 1;
 
   // Auto-focus the search input when the page loads
   useEffect(() => {
@@ -61,7 +63,7 @@ export function ApiCatalogPage() {
       try {
         setIsLoadingApis(true);
         const response = await fetch(
-          `${import.meta.env.VITE_CATALOG_API}/v1/categories/${params.key}/apis?limit=10&page=${currentPage}&resolveIds=true`
+          `${import.meta.env.VITE_CATALOG_API}/v1/categories/${params.key}/apis?limit=20&page=${currentPage}&resolveIds=true`
         );
 
         if (!response.ok) {
@@ -124,7 +126,12 @@ export function ApiCatalogPage() {
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+      const newPage = currentPage - 1;
+      if (newPage === 1) {
+        setLocation(`/catalog/category/${params.key}`);
+      } else {
+        setLocation(`/catalog/category/${params.key}/${newPage}`);
+      }
     }
   };
 
@@ -132,12 +139,12 @@ export function ApiCatalogPage() {
     if (paginationDetails) {
       const totalPages = Math.ceil(paginationDetails.entries / paginationDetails.limit);
       if (currentPage < totalPages) {
-        setCurrentPage(currentPage + 1);
+        setLocation(`/catalog/category/${params.key}/${currentPage + 1}`);
       }
     } else {
-      // Fallback: only allow next page if we got a full page of results (10 items)
-      if (categoryApis.length === 10) {
-        setCurrentPage(currentPage + 1);
+      // Fallback: only allow next page if we got a full page of results (20 items)
+      if (categoryApis.length === 20) {
+        setLocation(`/catalog/category/${params.key}/${currentPage + 1}`);
       }
     }
   };
@@ -267,7 +274,7 @@ export function ApiCatalogPage() {
                         variant="secondary"
                         size="sm"
                         onClick={handleNextPage}
-                        disabled={paginationDetails ? currentPage >= Math.ceil(paginationDetails.entries / paginationDetails.limit) : categoryApis.length < 10}
+                        disabled={paginationDetails ? currentPage >= Math.ceil(paginationDetails.entries / paginationDetails.limit) : categoryApis.length < 20}
                       >
                         Next
                       </Button>
