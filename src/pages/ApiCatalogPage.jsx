@@ -15,6 +15,8 @@ export function ApiCatalogPage() {
   const [categoryApis, setCategoryApis] = useState([]);
   const [isLoadingApis, setIsLoadingApis] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [paginationDetails, setPaginationDetails] = useState(null);
+  const [categoryInfo, setCategoryInfo] = useState(null);
   const searchInputRef = useRef(null);
 
   // Auto-focus the search input when the page loads
@@ -67,10 +69,14 @@ export function ApiCatalogPage() {
         }
 
         const data = await response.json();
-        setCategoryApis(data);
+        setCategoryApis(data.apis || []);
+        setPaginationDetails(data.paginationDetails || null);
+        setCategoryInfo(data.category || null);
       } catch (error) {
         console.error('Error loading category APIs:', error);
         setCategoryApis([]);
+        setPaginationDetails(null);
+        setCategoryInfo(null);
       } finally {
         setIsLoadingApis(false);
       }
@@ -123,9 +129,16 @@ export function ApiCatalogPage() {
   };
 
   const handleNextPage = () => {
-    // Only allow next page if we got a full page of results (10 items)
-    if (categoryApis.length === 10) {
-      setCurrentPage(currentPage + 1);
+    if (paginationDetails) {
+      const totalPages = Math.ceil(paginationDetails.entries / paginationDetails.limit);
+      if (currentPage < totalPages) {
+        setCurrentPage(currentPage + 1);
+      }
+    } else {
+      // Fallback: only allow next page if we got a full page of results (10 items)
+      if (categoryApis.length === 10) {
+        setCurrentPage(currentPage + 1);
+      }
     }
   };
 
@@ -187,10 +200,10 @@ export function ApiCatalogPage() {
                     </Button>
                   </div>
                   <h1 class="text-base/7 font-semibold text-gray-900">
-                    {params.key.charAt(0).toUpperCase() + params.key.slice(1)} APIs
+                    {categoryInfo ? `${categoryInfo.name} APIs` : `${params.key.charAt(0).toUpperCase() + params.key.slice(1)} APIs`}
                   </h1>
                   <p class="mt-1 text-sm/6 text-gray-600">
-                    Browse APIs in the {params.key} category.
+                    {categoryInfo ? categoryInfo.description : `Browse APIs in the ${params.key} category.`}
                   </p>
                 </div>
               </div>
@@ -236,14 +249,25 @@ export function ApiCatalogPage() {
                       >
                         Previous
                       </Button>
-                      <span class="text-sm text-gray-600">
-                        Page {currentPage}
-                      </span>
+                      {paginationDetails ? (
+                        <div class="text-sm text-gray-600 flex flex-col items-center gap-1">
+                          <span>
+                            Page {paginationDetails.page} of {Math.ceil(paginationDetails.entries / paginationDetails.limit)}
+                          </span>
+                          <span class="text-xs text-gray-500">
+                            {((paginationDetails.page - 1) * paginationDetails.limit) + 1}-{Math.min(paginationDetails.page * paginationDetails.limit, paginationDetails.entries)} of {paginationDetails.entries} APIs
+                          </span>
+                        </div>
+                      ) : (
+                        <span class="text-sm text-gray-600">
+                          Page {currentPage}
+                        </span>
+                      )}
                       <Button
                         variant="secondary"
                         size="sm"
                         onClick={handleNextPage}
-                        disabled={categoryApis.length < 10}
+                        disabled={paginationDetails ? currentPage >= Math.ceil(paginationDetails.entries / paginationDetails.limit) : categoryApis.length < 10}
                       >
                         Next
                       </Button>
