@@ -337,7 +337,7 @@ export function TopBar() {
                     class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
                   >
                     <div>Catalog</div>
-                    <span class="text-xs text-gray-500 mt-1">Browse and manage APIs</span>
+                    <span class="text-xs text-gray-500 mt-1">RequestBite's API catalog</span>
                   </a>
                   <a
                     href="/environments"

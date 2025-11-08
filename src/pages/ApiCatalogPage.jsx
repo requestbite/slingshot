@@ -128,10 +128,10 @@ export function ApiCatalogPage() {
             <div class="sm:flex sm:items-start p-6">
               <div class="sm:flex-auto">
                 <h1 class="text-base/7 font-semibold text-gray-900">
-                  API Catalog
+                  REST API Catalog
                 </h1>
                 <p class="mt-1 text-sm/6 text-gray-600">
-                  Browse and manage your API catalog.
+                  Explore the vast number of REST APIs in the RequestBite API catalog.
                 </p>
               </div>
             </div>
