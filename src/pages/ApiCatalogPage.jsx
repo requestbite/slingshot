@@ -1,15 +1,20 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
-import { useLocation } from 'wouter-preact';
+import { useLocation, useRoute } from 'wouter-preact';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { SearchAutocomplete } from '../components/common/SearchAutocomplete';
 import { ClickableCard } from '../components/common/ClickableCard';
+import { Button } from '../components/common/Button';
 
 export function ApiCatalogPage() {
   usePageTitle('API Catalog');
   const [, setLocation] = useLocation();
+  const [match, params] = useRoute('/catalog/category/:key');
   const [searchQuery, setSearchQuery] = useState('');
   const [categories, setCategories] = useState([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [categoryApis, setCategoryApis] = useState([]);
+  const [isLoadingApis, setIsLoadingApis] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const searchInputRef = useRef(null);
 
   // Auto-focus the search input when the page loads
@@ -43,6 +48,36 @@ export function ApiCatalogPage() {
 
     loadCategories();
   }, []);
+
+  // Load APIs for a specific category
+  useEffect(() => {
+    if (!match || !params?.key) {
+      return;
+    }
+
+    const loadCategoryApis = async () => {
+      try {
+        setIsLoadingApis(true);
+        const response = await fetch(
+          `${import.meta.env.VITE_CATALOG_API}/v1/categories/${params.key}/apis?limit=10&page=${currentPage}&resolveIds=true`
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch category APIs (status ${response.status})`);
+        }
+
+        const data = await response.json();
+        setCategoryApis(data);
+      } catch (error) {
+        console.error('Error loading category APIs:', error);
+        setCategoryApis([]);
+      } finally {
+        setIsLoadingApis(false);
+      }
+    };
+
+    loadCategoryApis();
+  }, [match, params?.key, currentPage]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -81,6 +116,153 @@ export function ApiCatalogPage() {
     </div>
   );
 
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    // Only allow next page if we got a full page of results (10 items)
+    if (categoryApis.length === 10) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // If we're on a category page, show the category APIs
+  if (match && params?.key) {
+    return (
+      <div class="h-full bg-gray-100 overflow-y-auto">
+        <div class="min-h-full pt-[83px] pb-6">
+          {/* Search Bar */}
+          <div class="max-w-3xl mx-auto px-4 mb-[18px]">
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="text-gray-400"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.3-4.3" />
+                </svg>
+              </div>
+              <SearchAutocomplete
+                ref={searchInputRef}
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onSelect={handleApiSelect}
+                onSearch={handleApiSearch}
+                renderItem={renderApiItem}
+                placeholder="Search APIs..."
+                clearable={true}
+                className="pl-10"
+                emptyMessage="No APIs found"
+                minChars={1}
+                debounceMs={500}
+              />
+            </div>
+          </div>
+
+          {/* Main Container */}
+          <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-white rounded-lg border border-gray-300">
+              {/* Header Section */}
+              <div class="sm:flex sm:items-start p-6">
+                <div class="sm:flex-auto">
+                  <div class="mb-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setLocation('/catalog')}
+                    >
+                      ← Back to Categories
+                    </Button>
+                  </div>
+                  <h1 class="text-base/7 font-semibold text-gray-900">
+                    {params.key.charAt(0).toUpperCase() + params.key.slice(1)} APIs
+                  </h1>
+                  <p class="mt-1 text-sm/6 text-gray-600">
+                    Browse APIs in the {params.key} category.
+                  </p>
+                </div>
+              </div>
+
+              {/* Content Section */}
+              <div class="px-6 pb-6">
+                {isLoadingApis ? (
+                  <div class="flex items-center justify-center py-8 text-gray-500">
+                    <svg class="animate-spin w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span>Loading APIs...</span>
+                  </div>
+                ) : categoryApis.length > 0 ? (
+                  <div>
+                    <div class="space-y-3">
+                      {categoryApis.map((api) => (
+                        <ClickableCard
+                          key={api.id}
+                          href={`/catalog/${api.id}`}
+                          title={api.name}
+                          description={api.description || 'No description available'}
+                          icon={
+                            <div class="border border-sky-700 rounded-full p-1 flex items-center justify-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-700">
+                                <path d="m16 18 6-6-6-6" />
+                                <path d="m8 6-6 6 6 6" />
+                              </svg>
+                            </div>
+                          }
+                        />
+                      ))}
+                    </div>
+
+                    {/* Pagination Controls */}
+                    <div class="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={handlePreviousPage}
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </Button>
+                      <span class="text-sm text-gray-600">
+                        Page {currentPage}
+                      </span>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleNextPage}
+                        disabled={categoryApis.length < 10}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div class="text-center py-8 text-gray-500">
+                    No APIs found in this category
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Default view - show categories
   return (
     <div class="h-full bg-gray-100 overflow-y-auto">
       <div class="min-h-full pt-[83px] pb-6">
