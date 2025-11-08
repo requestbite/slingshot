@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
-import { useLocation, useRoute } from 'wouter-preact';
+import { useLocation, useRoute, Link } from 'wouter-preact';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { SearchAutocomplete } from '../components/common/SearchAutocomplete';
 import { ClickableCard } from '../components/common/ClickableCard';
@@ -124,6 +124,66 @@ export function ApiCatalogPage() {
     </div>
   );
 
+  // Helper component to render check/cross icon
+  const SpecIcon = ({ available }) => (
+    available ? (
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-green-600 inline">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    ) : (
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-red-600 inline">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    )
+  );
+
+  // Helper function to render API details
+  const renderApiDetails = (api) => (
+    <div class="flex flex-col gap-2">
+      <div class="line-clamp-2 text-xs text-gray-600">{api.description || 'No description available'}</div>
+      <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+        {api.version && (
+          <span>Version: <span class="text-gray-700">{api.version}</span></span>
+        )}
+        {(api.openApiYamlUrl !== undefined || api.openApiJsonUrl !== undefined) && (
+          <>
+            <span>Has YAML spec: <SpecIcon available={!!api.openApiYamlUrl} /></span>
+            <span>Has JSON spec: <SpecIcon available={!!api.openApiJsonUrl} /></span>
+          </>
+        )}
+        {api.source && (
+          <span>
+            Source: {api.source === 'apis.guru' ? (
+              <a href="https://apis.guru" target="_blank" rel="noopener noreferrer" class="text-sky-700 hover:text-sky-800 underline">
+                {api.source}
+              </a>
+            ) : (
+              <span class="text-gray-700">{api.source}</span>
+            )}
+          </span>
+        )}
+      </div>
+      <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+        {api.categories && api.categories.length > 0 && (
+          <span>
+            Categories: {api.categories.map((cat, idx) => (
+              <span key={cat.key}>
+                <Link href={`/catalog/category/${cat.key}`} class="text-sky-700 hover:text-sky-800 underline">
+                  {cat.name}
+                </Link>
+                {idx < api.categories.length - 1 && ' / '}
+              </span>
+            ))}
+          </span>
+        )}
+        {api.serviceName?.name && (
+          <span>Service: <span class="text-gray-700">{api.serviceName.name}</span></span>
+        )}
+      </div>
+    </div>
+  );
+
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       const newPage = currentPage - 1;
@@ -233,7 +293,7 @@ export function ApiCatalogPage() {
                           key={api.id}
                           href={`/catalog/${api.id}`}
                           title={api.name}
-                          description={api.description || 'No description available'}
+                          description={renderApiDetails(api)}
                           icon={
                             <div class="border border-sky-700 rounded-full p-1 flex items-center justify-center">
                               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-700">
