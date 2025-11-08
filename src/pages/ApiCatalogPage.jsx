@@ -4,6 +4,7 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import { SearchAutocomplete } from '../components/common/SearchAutocomplete';
 import { ClickableCard } from '../components/common/ClickableCard';
 import { Button } from '../components/common/Button';
+import { BreadCrumbs } from '../components/common/BreadCrumbs';
 
 export function ApiCatalogPage() {
   usePageTitle('API Catalog');
@@ -257,15 +258,13 @@ export function ApiCatalogPage() {
               {/* Header Section */}
               <div class="sm:flex sm:items-start p-6">
                 <div class="sm:flex-auto">
-                  <div class="mb-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setLocation('/catalog')}
-                    >
-                      ← Back to Categories
-                    </Button>
-                  </div>
+                  <BreadCrumbs
+                    items={[
+                      { name: 'Home', href: '/catalog' },
+                      { name: categoryInfo ? categoryInfo.name : params.key.charAt(0).toUpperCase() + params.key.slice(1) }
+                    ]}
+                    className="mb-3"
+                  />
                   <h1 class="text-base/7 font-semibold text-gray-900">
                     {categoryInfo ? `${categoryInfo.name} APIs` : `${params.key.charAt(0).toUpperCase() + params.key.slice(1)} APIs`}
                   </h1>

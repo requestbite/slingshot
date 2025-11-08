@@ -1,3 +1,5 @@
+import { Link } from 'wouter-preact';
+
 /**
  * BreadCrumbs Component
  *
@@ -44,7 +46,7 @@ export function BreadCrumbs({ items, className = '' }) {
               {isFirst ? (
                 // Home icon for first item
                 isClickable ? (
-                  <a
+                  <Link
                     href={item.href}
                     class="text-gray-500 hover:text-gray-700 transition-colors"
                     aria-label="Home"
@@ -63,7 +65,7 @@ export function BreadCrumbs({ items, className = '' }) {
                       <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                       <polyline points="9 22 9 12 15 12 15 22" />
                     </svg>
-                  </a>
+                  </Link>
                 ) : (
                   <span class="text-gray-500" aria-label="Home">
                     <svg
@@ -85,12 +87,12 @@ export function BreadCrumbs({ items, className = '' }) {
               ) : (
                 // Regular text for other items
                 isClickable ? (
-                  <a
+                  <Link
                     href={item.href}
                     class="text-gray-500 hover:text-gray-700 hover:underline transition-colors"
                   >
                     {item.name}
-                  </a>
+                  </Link>
                 ) : (
                   <span class={isLast ? 'text-gray-900 font-medium' : 'text-gray-500'}>
                     {item.name}
