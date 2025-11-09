@@ -270,6 +270,7 @@ export function ApiCatalogPage() {
                   </h1>
                   <p class="mt-1 text-sm/6 text-gray-600">
                     {categoryInfo ? categoryInfo.description : `Browse APIs in the ${params.key} category.`}
+                    {paginationDetails && ` This category contains a total of ${paginationDetails.entries} APIs.`}
                   </p>
                 </div>
               </div>
@@ -291,13 +292,14 @@ export function ApiCatalogPage() {
                         <ClickableCard
                           key={api.id}
                           href={`/catalog/${api.id}`}
-                          title={api.name}
+                          title={api.name || "Untitled API"}
                           description={renderApiDetails(api)}
                           icon={
-                            <div class="border border-sky-700 rounded-full p-1 flex items-center justify-center">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-700">
-                                <path d="m16 18 6-6-6-6" />
-                                <path d="m8 6-6 6 6 6" />
+                            <div class="flex items-center justify-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                                <path d="M2 12h20" />
                               </svg>
                             </div>
                           }
