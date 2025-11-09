@@ -112,7 +112,7 @@ export function ApiCatalogPage() {
 
   const handleApiSelect = (api) => {
     if (api && api.id) {
-      setLocation(`/catalog/${api.id}`);
+      setLocation(`/catalog/api/${api.id}`);
     }
   };
 
@@ -265,7 +265,7 @@ export function ApiCatalogPage() {
                     ]}
                     className="mb-3"
                   />
-                  <h1 class="text-base/7 font-semibold text-gray-900">
+                  <h1 class="pt-2 text-base/7 font-semibold text-gray-900">
                     {categoryInfo ? `${categoryInfo.name} APIs` : `${params.key.charAt(0).toUpperCase() + params.key.slice(1)} APIs`}
                   </h1>
                   <p class="mt-1 text-sm/6 text-gray-600">
@@ -291,7 +291,7 @@ export function ApiCatalogPage() {
                       {categoryApis.map((api) => (
                         <ClickableCard
                           key={api.id}
-                          href={`/catalog/${api.id}`}
+                          href={`/catalog/api/${api.id}`}
                           title={api.name || "Untitled API"}
                           description={renderApiDetails(api)}
                           icon={

@@ -11,7 +11,7 @@ import { MarkdownPreview } from '../components/common/MarkdownPreview';
 const URLImportModal = lazy(() => import('../components/import/URLImportModal').then(m => ({ default: m.URLImportModal })));
 
 export function ApiCatalogDetailsPage() {
-  const [, params] = useRoute('/catalog/:uuid');
+  const [, params] = useRoute('/catalog/api/:uuid');
   const [, setLocation] = useLocation();
   const [apiData, setApiData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -97,7 +97,7 @@ export function ApiCatalogDetailsPage() {
 
   const handleApiSelect = (api) => {
     if (api && api.id) {
-      setLocation(`/catalog/${api.id}`);
+      setLocation(`/catalog/api/${api.id}`);
     }
   };
 
@@ -154,43 +154,25 @@ export function ApiCatalogDetailsPage() {
         <div class="max-w-4xl mx-auto px-4">
           <div class="bg-white rounded-lg border border-gray-300">
             {/* Header Section */}
-            <div class="sm:flex sm:items-start p-6">
-              <div class="sm:flex-auto">
-                {isLoading ? (
-                  <div>
+            <div class="p-6">
+              {/* Breadcrumbs and Import Button Row */}
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  {isLoading ? (
                     <BreadCrumbs
                       items={[
                         { name: 'Home', href: '/catalog' },
                         { name: '...' }
                       ]}
-                      className="mb-3"
                     />
-                    <div class="flex items-center space-x-3 text-gray-500">
-                      <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      <span>Loading API details...</span>
-                    </div>
-                  </div>
-                ) : error ? (
-                  <div>
+                  ) : error ? (
                     <BreadCrumbs
                       items={[
                         { name: 'Home', href: '/catalog' },
                         { name: 'Error' }
                       ]}
-                      className="mb-3"
                     />
-                    <h1 class="text-base/7 font-semibold text-gray-900">
-                      Error Loading API
-                    </h1>
-                    <p class="mt-1 text-sm/6 text-red-600">
-                      {error}
-                    </p>
-                  </div>
-                ) : apiData ? (
-                  <div>
+                  ) : apiData ? (
                     <BreadCrumbs
                       items={[
                         { name: 'Home', href: '/catalog' },
@@ -200,53 +182,73 @@ export function ApiCatalogDetailsPage() {
                         }] : []),
                         { name: apiData.name || 'Untitled API' }
                       ]}
-                      className="mb-6"
                     />
-                    <div class={`flex ${apiData.logoUrl ? 'flex-col sm:flex-row gap-8' : ''}`}>
-                      {apiData.logoUrl && (
-                        <div class="flex-shrink-0">
-                          <img
-                            src={apiData.logoUrl}
-                            alt={`${apiData.name || 'Untitled API'} logo`}
-                            class="w-36 h-auto sm:w-20 mt-3"
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                            }}
-                          />
-                        </div>
-                      )}
-                      <div class="flex-1">
-                        <h1 class="text-base/7 font-semibold text-gray-900">
-                          {apiData.name || 'Untitled API'}
-                        </h1>
-                        {apiData.description && (
-                          <div class="mt-1 text-sm/6 text-gray-600">
-                            <MarkdownPreview markdown={apiData.description} />
-                          </div>
-                        )}
-                      </div>
+                  ) : null}
+                </div>
+                <div class="ml-4">
+                  <button
+                    ref={importButtonRef}
+                    onClick={() => setShowImportContextMenu(true)}
+                    disabled={isLoading || error}
+                    class="rounded-md bg-sky-100 hover:bg-sky-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                      <path d="M12 15V3" />
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <path d="m7 10 5 5 5-5" />
+                    </svg>
+                    Import
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* API Title and Description - Full Width */}
+              {isLoading ? (
+                <div class="flex items-center space-x-3 text-gray-500">
+                  <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  <span>Loading API details...</span>
+                </div>
+              ) : error ? (
+                <div>
+                  <h1 class="text-base/7 font-semibold text-gray-900">
+                    Error Loading API
+                  </h1>
+                  <p class="mt-1 text-sm/6 text-red-600">
+                    {error}
+                  </p>
+                </div>
+              ) : apiData ? (
+                <div class={`flex ${apiData.logoUrl ? 'flex-col sm:flex-row gap-8' : ''}`}>
+                  {apiData.logoUrl && (
+                    <div class="flex-shrink-0">
+                      <img
+                        src={apiData.logoUrl}
+                        alt={`${apiData.name || 'Untitled API'} logo`}
+                        class="w-36 h-auto sm:w-20 mt-3"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
                     </div>
+                  )}
+                  <div class="flex-1">
+                    <h1 class="text-base/7 font-semibold text-gray-900">
+                      {apiData.name || 'Untitled API'}
+                    </h1>
+                    {apiData.description && (
+                      <div class="mt-1 text-sm/6 text-gray-600">
+                        <MarkdownPreview markdown={apiData.description} />
+                      </div>
+                    )}
                   </div>
-                ) : null}
-              </div>
-              <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-                <button
-                  ref={importButtonRef}
-                  onClick={() => setShowImportContextMenu(true)}
-                  disabled={isLoading || error}
-                  class="rounded-md bg-sky-100 hover:bg-sky-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
-                    <path d="M12 15V3" />
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <path d="m7 10 5 5 5-5" />
-                  </svg>
-                  Import
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
-                    <path d="m6 9 6 6 6-6" />
-                  </svg>
-                </button>
-              </div>
+                </div>
+              ) : null}
             </div>
 
             {/* Content Section */}
@@ -274,11 +276,13 @@ export function ApiCatalogDetailsPage() {
                               <span key={typeof category === 'object' ? category.id : category}>
                                 <Link
                                   href={`/catalog/category/${typeof category === 'object' ? category.key : category}`}
-                                  class="text-sky-700 hover:text-sky-800 underline"
+                                  class="text-sky-500 hover:text-sky-700 hover:underline"
                                 >
                                   {typeof category === 'object' ? category.name : category}
                                 </Link>
-                                {idx < apiData.categories.length - 1 && ', '}
+                                {idx < apiData.categories.length - 1 && (
+                                  <span class="ml-2">&middot;</span>
+                                )}
                               </span>
                             ))}
                           </div>
