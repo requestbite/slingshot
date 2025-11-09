@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { Suspense, lazy } from 'preact/compat';
-import { useRoute, useLocation } from 'wouter-preact';
+import { useRoute, useLocation, Link } from 'wouter-preact';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { ContextMenu } from '../components/common/ContextMenu';
 import { BreadCrumbs } from '../components/common/BreadCrumbs';
@@ -200,16 +200,32 @@ export function ApiCatalogDetailsPage() {
                         }] : []),
                         { name: apiData.name || 'Untitled API' }
                       ]}
-                      className="mb-3"
+                      className="mb-6"
                     />
-                    <h1 class="text-base/7 font-semibold text-gray-900">
-                      {apiData.name || 'Untitled API'}
-                    </h1>
-                    {apiData.description && (
-                      <div class="mt-1 text-sm/6 text-gray-600">
-                        <MarkdownPreview markdown={apiData.description} />
+                    <div class={`flex ${apiData.logoUrl ? 'flex-col sm:flex-row gap-8' : ''}`}>
+                      {apiData.logoUrl && (
+                        <div class="flex-shrink-0">
+                          <img
+                            src={apiData.logoUrl}
+                            alt={`${apiData.name || 'Untitled API'} logo`}
+                            class="w-36 h-auto sm:w-20 mt-3"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+                      <div class="flex-1">
+                        <h1 class="text-base/7 font-semibold text-gray-900">
+                          {apiData.name || 'Untitled API'}
+                        </h1>
+                        {apiData.description && (
+                          <div class="mt-1 text-sm/6 text-gray-600">
+                            <MarkdownPreview markdown={apiData.description} />
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
                 ) : null}
               </div>
@@ -235,17 +251,9 @@ export function ApiCatalogDetailsPage() {
 
             {/* Content Section */}
             {!isLoading && !error && apiData && (
-              <div class="py-6 sm:px-6">
+              <div class="pb-6 sm:px-6">
                 <div class="px-6 sm:p-0">
                   <dl class="divide-y divide-gray-200">
-                    {/* API ID */}
-                    <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt class="text-sm font-medium text-gray-500">API ID</dt>
-                      <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0 font-mono">
-                        {apiData.id}
-                      </dd>
-                    </div>
-
                     {/* Version */}
                     {apiData.version && (
                       <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
@@ -256,58 +264,24 @@ export function ApiCatalogDetailsPage() {
                       </div>
                     )}
 
-                    {/* Service Name */}
-                    {apiData.serviceName && (
-                      <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Service Name</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
-                          {typeof apiData.serviceName === 'object' ? apiData.serviceName.name : apiData.serviceName}
-                        </dd>
-                      </div>
-                    )}
-
                     {/* Categories */}
                     {apiData.categories && apiData.categories.length > 0 && (
                       <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
                         <dt class="text-sm font-medium text-gray-500">Categories</dt>
                         <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
                           <div class="flex flex-wrap gap-2">
-                            {apiData.categories.map((category) => (
-                              <span
-                                key={typeof category === 'object' ? category.id : category}
-                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-100 text-sky-800"
-                              >
-                                {typeof category === 'object' ? category.name : category}
+                            {apiData.categories.map((category, idx) => (
+                              <span key={typeof category === 'object' ? category.id : category}>
+                                <Link
+                                  href={`/catalog/category/${typeof category === 'object' ? category.key : category}`}
+                                  class="text-sky-700 hover:text-sky-800 underline"
+                                >
+                                  {typeof category === 'object' ? category.name : category}
+                                </Link>
+                                {idx < apiData.categories.length - 1 && ', '}
                               </span>
                             ))}
                           </div>
-                        </dd>
-                      </div>
-                    )}
-
-                    {/* Source */}
-                    {apiData.source && (
-                      <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Source</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
-                          {apiData.source}
-                        </dd>
-                      </div>
-                    )}
-
-                    {/* Logo */}
-                    {apiData.logoUrl && (
-                      <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Logo</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
-                          <img
-                            src={apiData.logoUrl}
-                            alt={`${apiData.name} logo`}
-                            class="h-12 w-auto"
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                            }}
-                          />
                         </dd>
                       </div>
                     )}
