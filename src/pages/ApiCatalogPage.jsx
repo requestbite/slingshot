@@ -399,9 +399,14 @@ export function ApiCatalogPage() {
             {/* Header Section */}
             <div class="sm:flex sm:items-start p-6">
               <div class="sm:flex-auto">
-                <h1 class="text-base/7 font-semibold text-gray-900">
-                  REST API Catalog
-                </h1>
+                <div class="flex items-center gap-2">
+                  <h1 class="text-base/7 font-semibold text-gray-900">
+                    REST API Catalog
+                  </h1>
+                  <span class="px-2 py-1 rounded-md text-xs font-medium bg-orange-100 text-orange-800">
+                    Beta
+                  </span>
+                </div>
                 <p class="mt-1 text-sm/6 text-gray-600">
                   Explore the vast number of REST APIs in the RequestBite API catalog.
                 </p>
@@ -432,8 +437,8 @@ export function ApiCatalogPage() {
                         </div>
                       }
                       icon={
-                        <div class="border border-sky-700 rounded-full p-1 flex items-center justify-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-700">
+                        <div class="flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500">
                             <path d="m16 18 6-6-6-6" />
                             <path d="m8 6-6 6 6 6" />
                           </svg>
