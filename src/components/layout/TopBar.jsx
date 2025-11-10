@@ -279,12 +279,12 @@ export function TopBar() {
         <>
           {/* Overlay */}
           <div
-            class="fixed inset-0 h-screen w-screen bg-black opacity-50 z-40"
+            class="fixed inset-0 h-screen w-screen bg-gray-500/75 z-[60] animate-fade-in"
             onClick={() => setIsMobileMenuOpen(false)}
           />
 
           {/* Sidebar */}
-          <div class="fixed top-0 right-0 inset-y-0 h-screen w-[calc(100%-75px)] bg-white shadow-lg z-50 text-left overflow-y-auto">
+          <div class="fixed top-0 right-0 inset-y-0 h-screen w-[calc(100%-75px)] bg-white shadow-lg z-[80] text-left overflow-y-auto animate-slide-in-right">
             <div class="flex items-center justify-between border-b border-gray-300">
               <button
                 onClick={() => setLocation(getLastSlingshotUrl())}
