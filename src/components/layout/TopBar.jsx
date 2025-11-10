@@ -124,7 +124,7 @@ export function TopBar() {
   const banner = useMemo(() => getProxyBanner(), [proxyConfig]);
 
   return (
-    <header class="h-[65px] bg-white/75 backdrop-blur-lg border-b border-gray-300 fixed top-0 left-0 w-full z-10 text-sm">
+    <header class="h-[65px] bg-white/75 backdrop-blur-lg border-b border-gray-300 fixed top-0 left-0 w-full z-20 text-sm">
       <div class="flex items-center justify-between h-full px-4">
         {/* Logo */}
         <a
@@ -166,7 +166,7 @@ export function TopBar() {
               e.preventDefault();
               setLocation('/catalog');
             }}
-            class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/catalog')
+            class={`hidden md:flex px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/catalog')
               ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}

@@ -119,9 +119,9 @@ export function ApiCatalogPage() {
   const renderApiItem = (api) => (
     <div class="flex flex-col gap-1">
       <div class="font-medium text-gray-900">{api.name}</div>
-      {api.description && (
-        <div class="text-xs text-gray-600">{api.description}</div>
-      )}
+      <div class="text-xs text-gray-600">
+        {api.description || 'No description available.'}
+      </div>
     </div>
   );
 
@@ -142,7 +142,7 @@ export function ApiCatalogPage() {
   // Helper function to render API details
   const renderApiDetails = (api) => (
     <div class="flex flex-col gap-2">
-      <div class="line-clamp-2 text-xs text-gray-600">{api.description || 'No description available'}</div>
+      <div class="line-clamp-2 text-xs text-gray-600">{api.description || 'No description available.'}</div>
       <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
         {api.version && (
           <span>Version: <span class="text-gray-700">{api.version}</span></span>

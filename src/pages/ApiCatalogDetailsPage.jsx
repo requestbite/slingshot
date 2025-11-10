@@ -97,6 +97,10 @@ export function ApiCatalogDetailsPage() {
 
   const handleApiSelect = (api) => {
     if (api && api.id) {
+      setSearchQuery('');
+      if (searchInputRef.current) {
+        searchInputRef.current.blur();
+      }
       setLocation(`/catalog/api/${api.id}`);
     }
   };
@@ -104,9 +108,9 @@ export function ApiCatalogDetailsPage() {
   const renderApiItem = (api) => (
     <div class="flex flex-col gap-1">
       <div class="font-medium text-gray-900">{api.name}</div>
-      {api.description && (
-        <div class="text-xs text-gray-600">{api.description}</div>
-      )}
+      <div class="text-xs text-gray-600">
+        {api.description || 'No description available.'}
+      </div>
     </div>
   );
 
@@ -241,11 +245,9 @@ export function ApiCatalogDetailsPage() {
                     <h1 class="text-base/7 font-semibold text-gray-900">
                       {apiData.name || 'Untitled API'}
                     </h1>
-                    {apiData.description && (
-                      <div class="mt-1 text-sm/6 text-gray-600">
-                        <MarkdownPreview markdown={apiData.description} />
-                      </div>
-                    )}
+                    <div class="mt-1 text-sm/6 text-gray-600">
+                      <MarkdownPreview markdown={apiData.description || 'No description available.'} />
+                    </div>
                   </div>
                 </div>
               ) : null}
@@ -319,6 +321,23 @@ export function ApiCatalogDetailsPage() {
                     )}
                   </dl>
                 </div>
+
+                {/* Source Attribution */}
+                {apiData.source === 'apis.guru' && (
+                  <div class="px-6 sm:p-0 mt-4 pt-4">
+                    <p class="text-gray-500">
+                      API specs supplied by{' '}
+                      <a
+                        href="https://apis.guru"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-sky-500 hover:text-sky-700 hover:underline"
+                      >
+                        APIs.guru
+                      </a>.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
