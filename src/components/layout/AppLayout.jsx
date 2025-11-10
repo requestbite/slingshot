@@ -6,7 +6,7 @@ import { useAppContext } from '../../hooks/useAppContext';
 export function AppLayout({ children, showDocsSidebar = false }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDocsSidebarOpen, setIsDocsSidebarOpen] = useState(false);
-  const { selectedCollection, isDocsSidebarVisible } = useAppContext();
+  const { selectedCollection, isDocsSidebarVisible, isMobileMenuOpen } = useAppContext();
 
   // Show docs sidebar if explicitly requested OR if a collection is selected
   // Visibility is controlled separately for large screen toggling
@@ -27,8 +27,8 @@ export function AppLayout({ children, showDocsSidebar = false }) {
         </svg>
       </button>
 
-      {/* Docs Sidebar Toggle Button for Mobile/Tablet - only show when docs sidebar is visible (tab says Hide docs) */}
-      {shouldShowDocsSidebar && isDocsSidebarVisible && (
+      {/* Docs Sidebar Toggle Button for Mobile/Tablet - only show when docs sidebar is visible (tab says Hide docs) and mobile menu is closed */}
+      {shouldShowDocsSidebar && isDocsSidebarVisible && !isMobileMenuOpen && (
         <button
           onClick={() => setIsDocsSidebarOpen(true)}
           class={`fixed top-1/2 -right-1 transform -translate-y-1/2 z-50 bg-sky-100 hover:bg-sky-200 text-sky-700 p-2 rounded-l-lg shadow-lg cursor-pointer transition-all duration-200 hover:-translate-x-1 ${isDocsSidebarOpen ? 'hidden' : 'docs-toggle-responsive'

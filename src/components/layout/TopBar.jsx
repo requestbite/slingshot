@@ -2,11 +2,12 @@ import { useState, useEffect, useMemo } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import LogoHorizontal from '../../assets/logo-horizontal-slingshot.svg';
 import { getLastSlingshotUrl, setLastSlingshotUrl, isValidSlingshotUrl } from '../../utils/slingshotNavigation';
+import { useAppContext } from '../../hooks/useAppContext';
 
 export function TopBar() {
   const [location, setLocation] = useLocation();
   const [proxyConfig, setProxyConfig] = useState({ proxyType: 'hosted', customProxyUrl: '' });
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isMobileMenuOpen, setIsMobileMenuOpen } = useAppContext();
 
   const isActive = (path) => {
     if (path === '/' && location === '/') return true;

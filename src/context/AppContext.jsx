@@ -20,6 +20,9 @@ export function AppProvider({ children }) {
     return stored === null ? true : stored === 'true';
   });
 
+  // Mobile menu state
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   // Callback for updating request body from docs sidebar
   const [updateRequestBodyCallback, setUpdateRequestBodyCallback] = useState(null);
 
@@ -140,6 +143,7 @@ export function AppProvider({ children }) {
     hasManuallySelectedEnvironment,
     isLoading,
     isDocsSidebarVisible,
+    isMobileMenuOpen,
     updateRequestBodyCallback,
 
     // Actions
@@ -152,6 +156,7 @@ export function AppProvider({ children }) {
     setCurrentEnvironment,
     setHasManuallySelectedEnvironment,
     setIsDocsSidebarVisible,
+    setIsMobileMenuOpen,
     refreshCollectionData,
     setUpdateRequestBodyCallback
   };
