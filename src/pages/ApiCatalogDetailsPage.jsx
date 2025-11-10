@@ -160,7 +160,7 @@ export function ApiCatalogDetailsPage() {
             {/* Header Section */}
             <div class="p-6">
               {/* Breadcrumbs and Import Button Row */}
-              <div class="flex items-start justify-between">
+              <div class="flex flex-col-reverse sm:flex-row sm:items-start sm:justify-between gap-3">
                 <div class="flex-1">
                   {isLoading ? (
                     <BreadCrumbs
@@ -189,7 +189,7 @@ export function ApiCatalogDetailsPage() {
                     />
                   ) : null}
                 </div>
-                <div class="ml-4">
+                <div class="sm:ml-4">
                   <button
                     ref={importButtonRef}
                     onClick={() => setShowImportContextMenu(true)}
@@ -242,7 +242,7 @@ export function ApiCatalogDetailsPage() {
                     </div>
                   )}
                   <div class="flex-1">
-                    <h1 class="text-base/7 font-semibold text-gray-900">
+                    <h1 class="text-base/7 font-semibold text-gray-900 pt-4 sm:pt-0">
                       {apiData.name || 'Untitled API'}
                     </h1>
                     <div class="mt-1 text-sm/6 text-gray-600">
