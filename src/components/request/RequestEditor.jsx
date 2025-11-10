@@ -1359,8 +1359,8 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
             />
           </div>
 
-          {/* Send and Code buttons */}
-          <div class="flex flex-none">
+          {/* Send and Code buttons - Hidden below 500px */}
+          <div class="hidden sm:flex flex-none">
             <Button
               onClick={handleSendRequest}
               disabled={isSubmitting}
@@ -1375,7 +1375,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
               type="button"
               variant="utility"
               size="md"
-              className="hidden ml-2 sm:block"
+              className="ml-2"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-code-icon lucide-code">
                 <path d="m16 18 6-6-6-6" />
@@ -1444,6 +1444,14 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
                 className="px-4 py-2 rounded-t-md"
               >
                 Import cURL
+              </Button>
+              <Button type="button"
+                onClick={() => setShowCurlModal(true)}
+                variant="ghost"
+                size="xs"
+                className="sm:hidden px-4 py-2 rounded-t-md"
+              >
+                Export cURL
               </Button>
               <Button type="button"
                 onClick={() => setShowCopyRequestModal(true)}
