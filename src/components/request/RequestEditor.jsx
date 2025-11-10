@@ -1343,7 +1343,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
           </div>
 
           {/* URL input */}
-          <div class="flex-1 mr-2" style="min-width: 0;">
+          <div class="flex-1 sm:mr-2" style="min-width: 0;">
             <VariableInput
               key={`url-${currentEnvironment?.id || 'none'}`}
               value={requestData.url}
