@@ -64,7 +64,7 @@ export function ApiCatalogPage() {
       try {
         setIsLoadingApis(true);
         const response = await fetch(
-          `${import.meta.env.VITE_CATALOG_API}/v1/categories/${params.key}/apis?limit=20&page=${currentPage}&resolveIds=true`
+          `${import.meta.env.VITE_CATALOG_API}/v1/categories/key/${params.key}/apis?limit=20&page=${currentPage}`
         );
 
         if (!response.ok) {
