@@ -427,7 +427,7 @@ export function ApiCatalogPage() {
                 </div>
               ) : categories.length > 0 ? (
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {categories.map((category) => (
+                  {categories.filter((category) => category.apis > 0).map((category) => (
                     <ClickableCard
                       key={category.id}
                       href={`/catalog/category/${category.key}`}
