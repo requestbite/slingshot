@@ -1,9 +1,25 @@
 import { useState } from 'preact/hooks';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { ScreenshotEditor } from '../components/common/ScreenshotEditor';
+import { Label } from '../components/common/Label';
+import { TextInput } from '../components/common/TextInput';
+import { Select } from '../components/common/Select';
 
 export function ScreenshotMakerPage() {
   usePageTitle('Screenshot Maker');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Editor configuration state
+  const [width, setWidth] = useState(1500);
+  const [margin, setMargin] = useState(60);
+  const [borderRadius, setBorderRadius] = useState(8);
+  const [shadowBlur, setShadowBlur] = useState(40);
+  const [shadowOffsetX, setShadowOffsetX] = useState(0);
+  const [shadowOffsetY, setShadowOffsetY] = useState(10);
+  const [shadowColor, setShadowColor] = useState('rgba(0,0,0,0.3)');
+  const [gradientStartColor, setGradientStartColor] = useState('#667eea');
+  const [gradientEndColor, setGradientEndColor] = useState('#764ba2');
+  const [gradientDirection, setGradientDirection] = useState('horizontal');
 
   return (
     <div class="h-full bg-gray-100 overflow-y-auto">
@@ -29,8 +45,121 @@ export function ScreenshotMakerPage() {
               <div class="bg-white rounded-lg border border-gray-300">
                 <div class="flex grow flex-col gap-y-5 overflow-y-auto px-6 py-4">
                   <nav class="flex flex-1 flex-col">
-                    <div class="text-xs mb-2 text-gray-500">TODO: Sidebar Section</div>
-                    <p class="text-sm text-gray-700">TODO: Sidebar content</p>
+                    <h3 class="text-sm font-semibold text-gray-900 mb-4">Settings</h3>
+
+                    <div class="space-y-4">
+                      {/* Canvas Width */}
+                      <div>
+                        <Label htmlFor="width">Width: {width}px</Label>
+                        <input
+                          id="width"
+                          type="range"
+                          min="500"
+                          max="2000"
+                          step="50"
+                          value={width}
+                          onInput={(e) => setWidth(Number(e.target.value))}
+                          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+
+                      {/* Margin */}
+                      <div>
+                        <Label htmlFor="margin">Margin: {margin}px</Label>
+                        <input
+                          id="margin"
+                          type="range"
+                          min="0"
+                          max="200"
+                          step="10"
+                          value={margin}
+                          onInput={(e) => setMargin(Number(e.target.value))}
+                          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+
+                      {/* Border Radius */}
+                      <div>
+                        <Label htmlFor="borderRadius">Radius: {borderRadius}px</Label>
+                        <input
+                          id="borderRadius"
+                          type="range"
+                          min="0"
+                          max="50"
+                          step="1"
+                          value={borderRadius}
+                          onInput={(e) => setBorderRadius(Number(e.target.value))}
+                          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+
+                      {/* Shadow Blur */}
+                      <div>
+                        <Label htmlFor="shadowBlur">Shadow Blur: {shadowBlur}px</Label>
+                        <input
+                          id="shadowBlur"
+                          type="range"
+                          min="0"
+                          max="100"
+                          step="5"
+                          value={shadowBlur}
+                          onInput={(e) => setShadowBlur(Number(e.target.value))}
+                          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+
+                      {/* Shadow Offset Y */}
+                      <div>
+                        <Label htmlFor="shadowOffsetY">Shadow Y: {shadowOffsetY}px</Label>
+                        <input
+                          id="shadowOffsetY"
+                          type="range"
+                          min="-50"
+                          max="50"
+                          step="1"
+                          value={shadowOffsetY}
+                          onInput={(e) => setShadowOffsetY(Number(e.target.value))}
+                          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+
+                      {/* Gradient Start Color */}
+                      <div>
+                        <Label htmlFor="gradientStart">Gradient Start</Label>
+                        <input
+                          id="gradientStart"
+                          type="color"
+                          value={gradientStartColor}
+                          onInput={(e) => setGradientStartColor(e.target.value)}
+                          class="w-full h-10 rounded cursor-pointer"
+                        />
+                      </div>
+
+                      {/* Gradient End Color */}
+                      <div>
+                        <Label htmlFor="gradientEnd">Gradient End</Label>
+                        <input
+                          id="gradientEnd"
+                          type="color"
+                          value={gradientEndColor}
+                          onInput={(e) => setGradientEndColor(e.target.value)}
+                          class="w-full h-10 rounded cursor-pointer"
+                        />
+                      </div>
+
+                      {/* Gradient Direction */}
+                      <div>
+                        <Label htmlFor="gradientDirection">Direction</Label>
+                        <Select
+                          id="gradientDirection"
+                          value={gradientDirection}
+                          onChange={(e) => setGradientDirection(e.target.value)}
+                        >
+                          <option value="horizontal">Horizontal</option>
+                          <option value="vertical">Vertical</option>
+                        </Select>
+                      </div>
+                    </div>
                   </nav>
                 </div>
               </div>
@@ -49,8 +178,121 @@ export function ScreenshotMakerPage() {
                 <div class="fixed left-0 top-0 bottom-0 right-[75px] bg-white z-[70] md:hidden overflow-y-auto">
                   <div class="p-6">
                     <nav class="flex flex-1 flex-col">
-                      <div class="text-xs mb-2 text-gray-500">TODO: Sidebar Section</div>
-                      <p class="text-sm text-gray-700">TODO: Sidebar content</p>
+                      <h3 class="text-sm font-semibold text-gray-900 mb-4">Settings</h3>
+
+                      <div class="space-y-4">
+                        {/* Canvas Width */}
+                        <div>
+                          <Label htmlFor="width-mobile">Width: {width}px</Label>
+                          <input
+                            id="width-mobile"
+                            type="range"
+                            min="500"
+                            max="2000"
+                            step="50"
+                            value={width}
+                            onInput={(e) => setWidth(Number(e.target.value))}
+                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                          />
+                        </div>
+
+                        {/* Margin */}
+                        <div>
+                          <Label htmlFor="margin-mobile">Margin: {margin}px</Label>
+                          <input
+                            id="margin-mobile"
+                            type="range"
+                            min="0"
+                            max="200"
+                            step="10"
+                            value={margin}
+                            onInput={(e) => setMargin(Number(e.target.value))}
+                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                          />
+                        </div>
+
+                        {/* Border Radius */}
+                        <div>
+                          <Label htmlFor="borderRadius-mobile">Radius: {borderRadius}px</Label>
+                          <input
+                            id="borderRadius-mobile"
+                            type="range"
+                            min="0"
+                            max="50"
+                            step="1"
+                            value={borderRadius}
+                            onInput={(e) => setBorderRadius(Number(e.target.value))}
+                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                          />
+                        </div>
+
+                        {/* Shadow Blur */}
+                        <div>
+                          <Label htmlFor="shadowBlur-mobile">Shadow Blur: {shadowBlur}px</Label>
+                          <input
+                            id="shadowBlur-mobile"
+                            type="range"
+                            min="0"
+                            max="100"
+                            step="5"
+                            value={shadowBlur}
+                            onInput={(e) => setShadowBlur(Number(e.target.value))}
+                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                          />
+                        </div>
+
+                        {/* Shadow Offset Y */}
+                        <div>
+                          <Label htmlFor="shadowOffsetY-mobile">Shadow Y: {shadowOffsetY}px</Label>
+                          <input
+                            id="shadowOffsetY-mobile"
+                            type="range"
+                            min="-50"
+                            max="50"
+                            step="1"
+                            value={shadowOffsetY}
+                            onInput={(e) => setShadowOffsetY(Number(e.target.value))}
+                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                          />
+                        </div>
+
+                        {/* Gradient Start Color */}
+                        <div>
+                          <Label htmlFor="gradientStart-mobile">Gradient Start</Label>
+                          <input
+                            id="gradientStart-mobile"
+                            type="color"
+                            value={gradientStartColor}
+                            onInput={(e) => setGradientStartColor(e.target.value)}
+                            class="w-full h-10 rounded cursor-pointer"
+                          />
+                        </div>
+
+                        {/* Gradient End Color */}
+                        <div>
+                          <Label htmlFor="gradientEnd-mobile">Gradient End</Label>
+                          <input
+                            id="gradientEnd-mobile"
+                            type="color"
+                            value={gradientEndColor}
+                            onInput={(e) => setGradientEndColor(e.target.value)}
+                            class="w-full h-10 rounded cursor-pointer"
+                          />
+                        </div>
+
+                        {/* Gradient Direction */}
+                        <div>
+                          <Label htmlFor="gradientDirection-mobile">Direction</Label>
+                          <Select
+                            id="gradientDirection-mobile"
+                            value={gradientDirection}
+                            onChange={(e) => setGradientDirection(e.target.value)}
+                          >
+                            <option value="horizontal">Horizontal</option>
+                            <option value="vertical">Vertical</option>
+                          </Select>
+                        </div>
+                      </div>
                     </nav>
                   </div>
                 </div>
@@ -60,11 +302,22 @@ export function ScreenshotMakerPage() {
             {/* Content Area */}
             <div class="flex-1 min-w-0 overflow-hidden">
               <div class="bg-white rounded-lg border border-gray-300 p-6 w-full max-w-full overflow-hidden">
-                <h2 class="text-base font-semibold text-gray-900">TODO: Content Title</h2>
-                <p class="mt-1 text-sm text-gray-600 mb-6">TODO: Content description</p>
+                <h2 class="text-base font-semibold text-gray-900">Screenshot Editor</h2>
+                <p class="mt-1 text-sm text-gray-600 mb-6">Upload an image and customize its appearance with gradient backgrounds and styling.</p>
 
                 <div>
-                  <p class="text-sm text-gray-500">TODO: Main content area</p>
+                  <ScreenshotEditor
+                    width={width}
+                    margin={margin}
+                    borderRadius={borderRadius}
+                    shadowBlur={shadowBlur}
+                    shadowOffsetX={shadowOffsetX}
+                    shadowOffsetY={shadowOffsetY}
+                    shadowColor={shadowColor}
+                    gradientStartColor={gradientStartColor}
+                    gradientEndColor={gradientEndColor}
+                    gradientDirection={gradientDirection}
+                  />
                 </div>
               </div>
             </div>
