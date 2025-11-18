@@ -4,6 +4,7 @@ import { ScreenshotEditor } from '../components/common/ScreenshotEditor';
 import { Label } from '../components/common/Label';
 import { TextInput } from '../components/common/TextInput';
 import { Select } from '../components/common/Select';
+import { Slider } from '../components/common/Slider';
 
 export function ScreenshotMakerPage() {
   usePageTitle('Screenshot Maker');
@@ -44,81 +45,71 @@ export function ScreenshotMakerPage() {
               <div class="bg-white rounded-lg border border-gray-300">
                 <div class="flex grow flex-col gap-y-5 overflow-y-auto px-6 py-4">
                   <nav class="flex flex-1 flex-col">
-                    <h3 class="text-sm font-semibold text-gray-900 mb-4">Settings</h3>
+                    <h3 class="text-xs text-gray-500 mb-4">Settings</h3>
 
                     <div class="space-y-4">
                       {/* Canvas Width */}
                       <div>
                         <Label htmlFor="width">Width: {width}px</Label>
-                        <input
+                        <Slider
                           id="width"
-                          type="range"
-                          min="500"
-                          max="2000"
-                          step="50"
+                          min={500}
+                          max={2000}
+                          step={50}
                           value={width}
                           onInput={(e) => setWidth(Number(e.target.value))}
-                          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                         />
                       </div>
 
                       {/* Margin */}
                       <div>
                         <Label htmlFor="margin">Margin: {margin}px</Label>
-                        <input
+                        <Slider
                           id="margin"
-                          type="range"
-                          min="0"
-                          max="200"
-                          step="10"
+                          min={0}
+                          max={200}
+                          step={10}
                           value={margin}
                           onInput={(e) => setMargin(Number(e.target.value))}
-                          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                         />
                       </div>
 
                       {/* Border Radius */}
                       <div>
                         <Label htmlFor="borderRadius">Radius: {borderRadius}px</Label>
-                        <input
+                        <Slider
                           id="borderRadius"
-                          type="range"
-                          min="0"
-                          max="50"
-                          step="1"
+                          min={0}
+                          max={50}
+                          step={1}
                           value={borderRadius}
                           onInput={(e) => setBorderRadius(Number(e.target.value))}
-                          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                         />
                       </div>
 
                       {/* Shadow Blur */}
                       <div>
                         <Label htmlFor="shadowBlur">Shadow Blur: {shadowBlur}px</Label>
-                        <input
+                        <Slider
                           id="shadowBlur"
-                          type="range"
-                          min="0"
-                          max="100"
-                          step="5"
+                          min={0}
+                          max={100}
+                          step={5}
                           value={shadowBlur}
                           onInput={(e) => setShadowBlur(Number(e.target.value))}
-                          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                         />
                       </div>
 
                       {/* Shadow Offset Y */}
                       <div>
                         <Label htmlFor="shadowOffsetY">Shadow Y: {shadowOffsetY}px</Label>
-                        <input
+                        <Slider
                           id="shadowOffsetY"
-                          type="range"
-                          min="-50"
-                          max="50"
-                          step="1"
+                          min={-50}
+                          max={50}
+                          step={1}
                           value={shadowOffsetY}
                           onInput={(e) => setShadowOffsetY(Number(e.target.value))}
-                          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                         />
                       </div>
 
@@ -191,75 +182,65 @@ export function ScreenshotMakerPage() {
                         {/* Canvas Width */}
                         <div>
                           <Label htmlFor="width-mobile">Width: {width}px</Label>
-                          <input
+                          <Slider
                             id="width-mobile"
-                            type="range"
-                            min="500"
-                            max="2000"
-                            step="50"
+                            min={500}
+                            max={2000}
+                            step={50}
                             value={width}
                             onInput={(e) => setWidth(Number(e.target.value))}
-                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                           />
                         </div>
 
                         {/* Margin */}
                         <div>
                           <Label htmlFor="margin-mobile">Margin: {margin}px</Label>
-                          <input
+                          <Slider
                             id="margin-mobile"
-                            type="range"
-                            min="0"
-                            max="200"
-                            step="10"
+                            min={0}
+                            max={200}
+                            step={10}
                             value={margin}
                             onInput={(e) => setMargin(Number(e.target.value))}
-                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                           />
                         </div>
 
                         {/* Border Radius */}
                         <div>
                           <Label htmlFor="borderRadius-mobile">Radius: {borderRadius}px</Label>
-                          <input
+                          <Slider
                             id="borderRadius-mobile"
-                            type="range"
-                            min="0"
-                            max="50"
-                            step="1"
+                            min={0}
+                            max={50}
+                            step={1}
                             value={borderRadius}
                             onInput={(e) => setBorderRadius(Number(e.target.value))}
-                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                           />
                         </div>
 
                         {/* Shadow Blur */}
                         <div>
                           <Label htmlFor="shadowBlur-mobile">Shadow Blur: {shadowBlur}px</Label>
-                          <input
+                          <Slider
                             id="shadowBlur-mobile"
-                            type="range"
-                            min="0"
-                            max="100"
-                            step="5"
+                            min={0}
+                            max={100}
+                            step={5}
                             value={shadowBlur}
                             onInput={(e) => setShadowBlur(Number(e.target.value))}
-                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                           />
                         </div>
 
                         {/* Shadow Offset Y */}
                         <div>
                           <Label htmlFor="shadowOffsetY-mobile">Shadow Y: {shadowOffsetY}px</Label>
-                          <input
+                          <Slider
                             id="shadowOffsetY-mobile"
-                            type="range"
-                            min="-50"
-                            max="50"
-                            step="1"
+                            min={-50}
+                            max={50}
+                            step={1}
                             value={shadowOffsetY}
                             onInput={(e) => setShadowOffsetY(Number(e.target.value))}
-                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                           />
                         </div>
 
