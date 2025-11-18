@@ -22,7 +22,7 @@ export function ScreenshotMakerPage() {
   const [enableMidColor, setEnableMidColor] = useState(true);
   const [gradientMiddleColor, setGradientMiddleColor] = useState('#c1639d');
   const [gradientEndColor, setGradientEndColor] = useState('#f7bb79');
-  const [gradientDirection, setGradientDirection] = useState('left');
+  const [gradientDirection, setGradientDirection] = useState('top-left');
 
   return (
     <div class="h-full bg-gray-100 overflow-y-auto">
