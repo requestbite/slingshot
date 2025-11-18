@@ -258,11 +258,10 @@ export function ScreenshotEditor({
     <div class={`w-full ${className}`}>
       {!selectedImage ? (
         <div
-          class={`relative border-2 border-dashed rounded-lg p-12 text-center transition-colors cursor-pointer ${
-            isDragging
+          class={`relative border-2 border-dashed rounded-lg p-12 text-center transition-colors cursor-pointer ${isDragging
               ? 'border-sky-500 bg-sky-50'
               : 'border-gray-300 bg-gray-50 hover:border-gray-400'
-          }`}
+            }`}
           onDragEnter={handleDragEnter}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -333,7 +332,7 @@ export function ScreenshotEditor({
             </div>
           </div>
 
-          <div class="relative bg-gray-100 rounded-lg p-4 overflow-auto">
+          <div class="relative overflow-auto">
             <canvas
               ref={canvasRef}
               class="max-w-full h-auto mx-auto block"

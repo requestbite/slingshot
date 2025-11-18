@@ -29,9 +29,8 @@ export function ScreenshotMakerPage() {
           {/* Sidebar Toggle Button for Mobile - only show when sidebar is hidden */}
           <button
             onClick={() => setIsSidebarOpen(true)}
-            class={`fixed top-1/2 -left-1 transform -translate-y-1/2 z-50 bg-sky-100 hover:bg-sky-200 text-sky-700 p-2 rounded-r-lg shadow-lg cursor-pointer transition-all duration-200 hover:translate-x-1 ${
-              isSidebarOpen ? 'hidden' : 'block md:hidden'
-            }`}
+            class={`fixed top-1/2 -left-1 transform -translate-y-1/2 z-50 bg-sky-100 hover:bg-sky-200 text-sky-700 p-2 rounded-r-lg shadow-lg cursor-pointer transition-all duration-200 hover:translate-x-1 ${isSidebarOpen ? 'hidden' : 'block md:hidden'
+              }`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="m6 17 5-5-5-5" />
@@ -319,8 +318,9 @@ export function ScreenshotMakerPage() {
             <div class="flex-1 min-w-0 overflow-hidden">
               <div class="bg-white rounded-lg border border-gray-300 p-6 w-full max-w-full overflow-hidden">
                 <h2 class="text-base font-semibold text-gray-900">Screenshot Editor</h2>
-                <p class="mt-1 text-sm text-gray-600 mb-6">Upload an image and customize its appearance with gradient backgrounds and styling.</p>
-
+                <p class="mt-1 text-sm text-gray-600 mb-6">
+                  Style your screenshots like we do! Nothing is sent to any server - your browser does the job!
+                </p>
                 <div>
                   <ScreenshotEditor
                     width={width}
