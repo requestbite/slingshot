@@ -37,6 +37,7 @@ export function ScreenshotEditor({
   const [selectedImage, setSelectedImage] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState('');
+  const [imageKey, setImageKey] = useState(0);
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -57,6 +58,7 @@ export function ScreenshotEditor({
       const img = new Image();
       img.onload = () => {
         setSelectedImage(img);
+        setImageKey(prev => prev + 1);
       };
       img.src = e.target.result;
     };
@@ -187,6 +189,7 @@ export function ScreenshotEditor({
     ctx.restore();
   }, [
     selectedImage,
+    imageKey,
     width,
     margin,
     borderRadius,
@@ -278,6 +281,7 @@ export function ScreenshotEditor({
                 onClick={() => {
                   setSelectedImage(null);
                   setFileName('');
+                  setImageKey(0);
                 }}
               >
                 Remove
