@@ -1,13 +1,16 @@
-import { useState, useEffect, useMemo } from 'preact/hooks';
+import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import LogoHorizontal from '../../assets/logo-horizontal-slingshot.svg';
 import { getLastSlingshotUrl, setLastSlingshotUrl, isValidSlingshotUrl } from '../../utils/slingshotNavigation';
 import { useAppContext } from '../../hooks/useAppContext';
+import { ContextMenu } from '../common/ContextMenu';
 
 export function TopBar() {
   const [location, setLocation] = useLocation();
   const [proxyConfig, setProxyConfig] = useState({ proxyType: 'hosted', customProxyUrl: '' });
   const { isMobileMenuOpen, setIsMobileMenuOpen } = useAppContext();
+  const [showToolsMenu, setShowToolsMenu] = useState(false);
+  const toolsButtonRef = useRef();
 
   const isActive = (path) => {
     if (path === '/' && location === '/') return true;
@@ -213,25 +216,27 @@ export function TopBar() {
           >
             Settings
           </a>
-          <a href="https://docs.requestbite.com" target="_blank" class="hidden lg:flex text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors flex items-center">
-            Docs
+          <button
+            ref={toolsButtonRef}
+            onClick={() => setShowToolsMenu(true)}
+            class="hidden lg:flex text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors items-center cursor-pointer"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
+              width="18"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               stroke-width="2"
               stroke-linecap="round"
               stroke-linejoin="round"
-              class="ml-1"
             >
-              <path d="M15 3h6v6" />
-              <path d="M10 14 21 3" />
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <circle cx="12" cy="12" r="1" />
+              <circle cx="12" cy="5" r="1" />
+              <circle cx="12" cy="19" r="1" />
             </svg>
-          </a>
+          </button>
         </nav>
 
         {/* Right Section: Version + Proxy Banner + Mobile Menu */}
@@ -402,6 +407,20 @@ export function TopBar() {
                     </div>
                     <span class="text-xs text-gray-500 mt-1">Documentation</span>
                   </a>
+                  <a
+                    href="/toos/screenshot-editor"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setLocation('/tools/screenshot-editor');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
+                  >
+                    <div class="flex items-center">
+                      Screenshot Editor
+                    </div>
+                    <span class="text-xs text-gray-500 mt-1">Edit your sceenshots like us</span>
+                  </a>
 
                   {/* Mobile Proxy Banner */}
                   <button
@@ -420,6 +439,42 @@ export function TopBar() {
           </div>
         </>
       )}
+
+      {/* Tools Menu */}
+      <ContextMenu
+        isOpen={showToolsMenu}
+        onClose={() => setShowToolsMenu(false)}
+        trigger={toolsButtonRef.current}
+        width={200}
+        position="below"
+        items={[
+          {
+            label: 'Documentation',
+            onClick: () => {
+              window.open('https://docs.requestbite.com', '_blank');
+            },
+            icon: (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h6v6" />
+                <path d="M10 14 21 3" />
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              </svg>
+            )
+          },
+          {
+            label: 'Screenshot Editor',
+            onClick: () => {
+              setLocation('/tools/screenshot-editor');
+            },
+            icon: (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                <circle cx="12" cy="13" r="3" />
+              </svg>
+            )
+          }
+        ]}
+      />
     </header>
   );
 }

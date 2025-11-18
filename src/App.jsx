@@ -56,21 +56,21 @@ export function App() {
         const timeoutPromise = new Promise((_, reject) => {
           setTimeout(() => reject(new Error('Worker initialization timeout')), 2000);
         });
-        
+
         const workerInitialized = await Promise.race([initPromise, timeoutPromise]);
-        
+
         if (workerInitialized) {
           console.log('[App] SharedWorker initialized for cross-tab encryption key sharing');
-          
+
           // Listen for key events from other tabs
           encryptionWorkerManager.addEventListener('KEY_STORED', () => {
             console.log('[App] Encryption key shared from another tab');
           });
-          
+
           encryptionWorkerManager.addEventListener('KEY_CLEARED', () => {
             console.log('[App] Encryption key cleared from another tab');
           });
-          
+
           encryptionWorkerManager.addEventListener('INACTIVITY_TIMEOUT', () => {
             console.log('[App] Encryption key cleared due to inactivity');
           });
@@ -308,15 +308,15 @@ export function App() {
   // Component to handle route-specific styling
   function AppContent() {
     const [location] = useLocation();
-    
+
     // Check if current route should use min-h-screen instead of h-screen
     // These are the routes that use AppLayout (not FullPageLayout)
     const isAppLayoutRoute = location === '/' ||
-                           (location.match(/^\/[^/]+$/) && !location.startsWith('/collections') && !location.startsWith('/catalog') && !location.startsWith('/environments') && !location.startsWith('/settings') && !location.startsWith('/tools')) ||
-                           (location.match(/^\/[^/]+\/[^/]+$/) && !location.startsWith('/collections/') && !location.startsWith('/catalog/') && !location.startsWith('/environments/') && !location.startsWith('/tools/'));
-    
-    const containerClass = isAppLayoutRoute ? 
-      "min-h-screen flex flex-col bg-gray-50" : 
+      (location.match(/^\/[^/]+$/) && !location.startsWith('/collections') && !location.startsWith('/catalog') && !location.startsWith('/environments') && !location.startsWith('/settings') && !location.startsWith('/tools')) ||
+      (location.match(/^\/[^/]+\/[^/]+$/) && !location.startsWith('/collections/') && !location.startsWith('/catalog/') && !location.startsWith('/environments/') && !location.startsWith('/tools/'));
+
+    const containerClass = isAppLayoutRoute ?
+      "min-h-screen flex flex-col bg-gray-50" :
       "h-screen flex flex-col bg-gray-50";
 
     return (
@@ -376,7 +376,7 @@ export function App() {
                 <SettingsPage />
               </FullPageLayout>
             </Route>
-            <Route path="/tools/screenshot-maker">
+            <Route path="/tools/screenshot-editor">
               <FullPageLayout>
                 <ScreenshotMakerPage />
               </FullPageLayout>
