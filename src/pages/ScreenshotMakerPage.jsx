@@ -11,15 +11,15 @@ export function ScreenshotMakerPage() {
 
   // Editor configuration state
   const [width, setWidth] = useState(1500);
-  const [margin, setMargin] = useState(60);
-  const [borderRadius, setBorderRadius] = useState(8);
+  const [margin, setMargin] = useState(80);
+  const [borderRadius, setBorderRadius] = useState(20);
   const [shadowBlur, setShadowBlur] = useState(40);
   const [shadowOffsetX, setShadowOffsetX] = useState(0);
   const [shadowOffsetY, setShadowOffsetY] = useState(10);
   const [shadowColor, setShadowColor] = useState('rgba(0,0,0,0.3)');
   const [gradientStartColor, setGradientStartColor] = useState('#667eea');
   const [gradientEndColor, setGradientEndColor] = useState('#764ba2');
-  const [gradientDirection, setGradientDirection] = useState('horizontal');
+  const [gradientDirection, setGradientDirection] = useState('left');
 
   return (
     <div class="h-full bg-gray-100 overflow-y-auto">
@@ -153,11 +153,19 @@ export function ScreenshotMakerPage() {
                         <Select
                           id="gradientDirection"
                           value={gradientDirection}
-                          onChange={(e) => setGradientDirection(e.target.value)}
-                        >
-                          <option value="horizontal">Horizontal</option>
-                          <option value="vertical">Vertical</option>
-                        </Select>
+                          onChange={(value) => setGradientDirection(value)}
+                          options={[
+                            { value: 'top', label: 'From top' },
+                            { value: 'bottom', label: 'From bottom' },
+                            { value: 'left', label: 'From left' },
+                            { value: 'right', label: 'From right' },
+                            { value: 'top-left', label: 'From top left' },
+                            { value: 'top-right', label: 'From top right' },
+                            { value: 'bottom-left', label: 'From bottom left' },
+                            { value: 'bottom-right', label: 'From bottom right' }
+                          ]}
+                          placeholder=""
+                        />
                       </div>
                     </div>
                   </nav>
@@ -286,11 +294,19 @@ export function ScreenshotMakerPage() {
                           <Select
                             id="gradientDirection-mobile"
                             value={gradientDirection}
-                            onChange={(e) => setGradientDirection(e.target.value)}
-                          >
-                            <option value="horizontal">Horizontal</option>
-                            <option value="vertical">Vertical</option>
-                          </Select>
+                            onChange={(value) => setGradientDirection(value)}
+                            options={[
+                              { value: 'top', label: 'From top' },
+                              { value: 'bottom', label: 'From bottom' },
+                              { value: 'left', label: 'From left' },
+                              { value: 'right', label: 'From right' },
+                              { value: 'top-left', label: 'From top left' },
+                              { value: 'top-right', label: 'From top right' },
+                              { value: 'bottom-left', label: 'From bottom left' },
+                              { value: 'bottom-right', label: 'From bottom right' }
+                            ]}
+                            placeholder=""
+                          />
                         </div>
                       </div>
                     </nav>

@@ -10,28 +10,28 @@ import { Button } from './Button';
  *
  * @param {Object} props
  * @param {number} [props.width=1500] - Canvas width in pixels
- * @param {number} [props.margin=60] - Padding around the image in pixels
- * @param {number} [props.borderRadius=8] - Border radius of the image in pixels
+ * @param {number} [props.margin=80] - Padding around the image in pixels
+ * @param {number} [props.borderRadius=20] - Border radius of the image in pixels
  * @param {number} [props.shadowBlur=40] - Shadow blur radius in pixels
  * @param {number} [props.shadowOffsetX=0] - Shadow horizontal offset in pixels
  * @param {number} [props.shadowOffsetY=10] - Shadow vertical offset in pixels
  * @param {string} [props.shadowColor='rgba(0,0,0,0.3)'] - Shadow color
  * @param {string} [props.gradientStartColor='#667eea'] - Gradient start color
  * @param {string} [props.gradientEndColor='#764ba2'] - Gradient end color
- * @param {string} [props.gradientDirection='horizontal'] - 'horizontal' or 'vertical'
+ * @param {string} [props.gradientDirection='left'] - Gradient direction: 'top', 'bottom', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right'
  * @param {string} [props.className] - Additional CSS classes
  */
 export function ScreenshotEditor({
   width = 1500,
-  margin = 60,
-  borderRadius = 8,
+  margin = 80,
+  borderRadius = 20,
   shadowBlur = 40,
   shadowOffsetX = 0,
   shadowOffsetY = 10,
   shadowColor = 'rgba(0,0,0,0.3)',
   gradientStartColor = '#667eea',
   gradientEndColor = '#764ba2',
-  gradientDirection = 'horizontal',
+  gradientDirection = 'left',
   className = ''
 }) {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -110,6 +110,14 @@ export function ScreenshotEditor({
   useEffect(() => {
     if (!selectedImage || !canvasRef.current) return;
 
+    // Ensure image is fully loaded before rendering
+    if (!selectedImage.complete) {
+      selectedImage.onload = () => {
+        setImageKey(prev => prev + 1);
+      };
+      return;
+    }
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
@@ -126,9 +134,35 @@ export function ScreenshotEditor({
     ctx.clearRect(0, 0, width, canvasHeight);
 
     // Draw gradient background
-    const gradient = gradientDirection === 'horizontal'
-      ? ctx.createLinearGradient(0, 0, width, 0)
-      : ctx.createLinearGradient(0, 0, 0, canvasHeight);
+    let gradient;
+    switch (gradientDirection) {
+      case 'top':
+        gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
+        break;
+      case 'bottom':
+        gradient = ctx.createLinearGradient(0, canvasHeight, 0, 0);
+        break;
+      case 'left':
+        gradient = ctx.createLinearGradient(0, 0, width, 0);
+        break;
+      case 'right':
+        gradient = ctx.createLinearGradient(width, 0, 0, 0);
+        break;
+      case 'top-left':
+        gradient = ctx.createLinearGradient(0, 0, width, canvasHeight);
+        break;
+      case 'top-right':
+        gradient = ctx.createLinearGradient(width, 0, 0, canvasHeight);
+        break;
+      case 'bottom-left':
+        gradient = ctx.createLinearGradient(0, canvasHeight, width, 0);
+        break;
+      case 'bottom-right':
+        gradient = ctx.createLinearGradient(width, canvasHeight, 0, 0);
+        break;
+      default:
+        gradient = ctx.createLinearGradient(0, 0, width, 0);
+    }
 
     gradient.addColorStop(0, gradientStartColor);
     gradient.addColorStop(1, gradientEndColor);
