@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { Button } from './Button';
+import { ContextMenu } from './ContextMenu';
 
 /**
  * ScreenshotEditor Component
@@ -40,8 +41,10 @@ export function ScreenshotEditor({
   const [baseFileName, setBaseFileName] = useState('');
   const [imageKey, setImageKey] = useState(0);
   const [canvasHeight, setCanvasHeight] = useState(0);
+  const [showExportContextMenu, setShowExportContextMenu] = useState(false);
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
+  const exportButtonRef = useRef(null);
 
   // Handle file selection
   const handleFileSelect = (file) => {
@@ -245,9 +248,10 @@ export function ScreenshotEditor({
   ]);
 
   // Handle PNG download
-  const handleDownload = () => {
+  const handleDownloadPNG = () => {
     if (!canvasRef.current) return;
 
+    setShowExportContextMenu(false);
     canvasRef.current.toBlob((blob) => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -264,6 +268,7 @@ export function ScreenshotEditor({
   const handleDownloadWebP = () => {
     if (!canvasRef.current) return;
 
+    setShowExportContextMenu(false);
     canvasRef.current.toBlob((blob) => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -345,20 +350,21 @@ export function ScreenshotEditor({
               >
                 Remove
               </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleDownload}
+              <button
+                ref={exportButtonRef}
+                onClick={() => setShowExportContextMenu(true)}
+                class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer"
               >
-                Download PNG
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleDownloadWebP}
-              >
-                Download WebP
-              </Button>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                  <path d="M12 15V3" />
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <path d="m7 10 5 5 5-5" />
+                </svg>
+                Export
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </button>
             </div>
           </div>
 
@@ -371,6 +377,43 @@ export function ScreenshotEditor({
           </div>
         </div>
       )}
+
+      {/* Export Context Menu */}
+      <ContextMenu
+        isOpen={showExportContextMenu}
+        onClose={() => setShowExportContextMenu(false)}
+        trigger={exportButtonRef.current}
+        width={200}
+        position="below"
+        items={[
+          {
+            label: 'Download PNG',
+            onClick: handleDownloadPNG,
+            icon: (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14,2 14,8 20,8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10,9 9,9 8,9" />
+              </svg>
+            )
+          },
+          {
+            label: 'Download WebP',
+            onClick: handleDownloadWebP,
+            icon: (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14,2 14,8 20,8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10,9 9,9 8,9" />
+              </svg>
+            )
+          }
+        ]}
+      />
     </div>
   );
 }
