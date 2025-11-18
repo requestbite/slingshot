@@ -133,20 +133,18 @@ export function ScreenshotEditor({
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, canvasHeight);
 
-    // Save context state
-    ctx.save();
+    // Draw image with border radius
+    const x = margin;
+    const y = margin;
 
-    // Apply shadow
+    // First, draw the shadow by drawing a rounded rectangle with shadow enabled
+    ctx.save();
     ctx.shadowColor = shadowColor;
     ctx.shadowBlur = shadowBlur;
     ctx.shadowOffsetX = shadowOffsetX;
     ctx.shadowOffsetY = shadowOffsetY;
 
-    // Draw image with border radius
-    const x = margin;
-    const y = margin;
-
-    // Create rounded rectangle clipping path
+    // Create rounded rectangle path for shadow
     ctx.beginPath();
     ctx.moveTo(x + borderRadius, y);
     ctx.lineTo(x + imageWidth - borderRadius, y);
@@ -159,9 +157,26 @@ export function ScreenshotEditor({
     ctx.quadraticCurveTo(x, y, x + borderRadius, y);
     ctx.closePath();
 
-    // Fill the clipping path with white to show shadow
+    // Fill with white to create the shadow effect
     ctx.fillStyle = '#ffffff';
     ctx.fill();
+    ctx.restore();
+
+    // Now draw the image with clipping (no shadow this time)
+    ctx.save();
+
+    // Create the same rounded rectangle path for clipping
+    ctx.beginPath();
+    ctx.moveTo(x + borderRadius, y);
+    ctx.lineTo(x + imageWidth - borderRadius, y);
+    ctx.quadraticCurveTo(x + imageWidth, y, x + imageWidth, y + borderRadius);
+    ctx.lineTo(x + imageWidth, y + imageHeight - borderRadius);
+    ctx.quadraticCurveTo(x + imageWidth, y + imageHeight, x + imageWidth - borderRadius, y + imageHeight);
+    ctx.lineTo(x + borderRadius, y + imageHeight);
+    ctx.quadraticCurveTo(x, y + imageHeight, x, y + imageHeight - borderRadius);
+    ctx.lineTo(x, y + borderRadius);
+    ctx.quadraticCurveTo(x, y, x + borderRadius, y);
+    ctx.closePath();
 
     // Clip to the rounded rectangle
     ctx.clip();
@@ -169,7 +184,6 @@ export function ScreenshotEditor({
     // Draw the image
     ctx.drawImage(selectedImage, x, y, imageWidth, imageHeight);
 
-    // Restore context state
     ctx.restore();
   }, [
     selectedImage,
