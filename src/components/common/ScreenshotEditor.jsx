@@ -17,8 +17,9 @@ import { ContextMenu } from './ContextMenu';
  * @param {number} [props.shadowOffsetX=0] - Shadow horizontal offset in pixels
  * @param {number} [props.shadowOffsetY=10] - Shadow vertical offset in pixels
  * @param {string} [props.shadowColor='rgba(0,0,0,0.3)'] - Shadow color
- * @param {string} [props.gradientStartColor='#667eea'] - Gradient start color
- * @param {string} [props.gradientEndColor='#764ba2'] - Gradient end color
+ * @param {string} [props.gradientStartColor='#5256cd'] - Gradient start color
+ * @param {string} [props.gradientMiddleColor] - Optional gradient middle color (creates 3-stop gradient)
+ * @param {string} [props.gradientEndColor='#f7bb79'] - Gradient end color
  * @param {string} [props.gradientDirection='left'] - Gradient direction: 'top', 'bottom', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right'
  * @param {string} [props.className] - Additional CSS classes
  */
@@ -30,8 +31,9 @@ export function ScreenshotEditor({
   shadowOffsetX = 0,
   shadowOffsetY = 10,
   shadowColor = 'rgba(0,0,0,0.3)',
-  gradientStartColor = '#667eea',
-  gradientEndColor = '#764ba2',
+  gradientStartColor = '#5256cd',
+  gradientMiddleColor = null,
+  gradientEndColor = '#f7bb79',
   gradientDirection = 'left',
   className = ''
 }) {
@@ -176,6 +178,9 @@ export function ScreenshotEditor({
     }
 
     gradient.addColorStop(0, gradientStartColor);
+    if (gradientMiddleColor) {
+      gradient.addColorStop(0.5, gradientMiddleColor);
+    }
     gradient.addColorStop(1, gradientEndColor);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, canvasHeight);
@@ -243,6 +248,7 @@ export function ScreenshotEditor({
     shadowOffsetY,
     shadowColor,
     gradientStartColor,
+    gradientMiddleColor,
     gradientEndColor,
     gradientDirection
   ]);

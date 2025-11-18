@@ -18,8 +18,10 @@ export function ScreenshotMakerPage() {
   const [shadowOffsetX, setShadowOffsetX] = useState(0);
   const [shadowOffsetY, setShadowOffsetY] = useState(10);
   const [shadowColor, setShadowColor] = useState('rgba(0,0,0,0.3)');
-  const [gradientStartColor, setGradientStartColor] = useState('#667eea');
-  const [gradientEndColor, setGradientEndColor] = useState('#764ba2');
+  const [gradientStartColor, setGradientStartColor] = useState('#5256cd');
+  const [enableMidColor, setEnableMidColor] = useState(true);
+  const [gradientMiddleColor, setGradientMiddleColor] = useState('#c1639d');
+  const [gradientEndColor, setGradientEndColor] = useState('#f7bb79');
   const [gradientDirection, setGradientDirection] = useState('left');
 
   return (
@@ -124,6 +126,33 @@ export function ScreenshotMakerPage() {
                           class="w-full h-10 rounded cursor-pointer"
                         />
                       </div>
+
+                      {/* Enable Mid-Color Checkbox */}
+                      <div>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={enableMidColor}
+                            onChange={(e) => setEnableMidColor(e.target.checked)}
+                            class="rounded cursor-pointer"
+                          />
+                          <span class="text-sm font-medium text-gray-700">Enable Mid-Color</span>
+                        </label>
+                      </div>
+
+                      {/* Gradient Middle Color */}
+                      {enableMidColor && (
+                        <div>
+                          <Label htmlFor="gradientMiddle">Gradient Middle</Label>
+                          <input
+                            id="gradientMiddle"
+                            type="color"
+                            value={gradientMiddleColor}
+                            onInput={(e) => setGradientMiddleColor(e.target.value)}
+                            class="w-full h-10 rounded cursor-pointer"
+                          />
+                        </div>
+                      )}
 
                       {/* Gradient End Color */}
                       <div>
@@ -256,6 +285,33 @@ export function ScreenshotMakerPage() {
                           />
                         </div>
 
+                        {/* Enable Mid-Color Checkbox */}
+                        <div>
+                          <label class="flex items-center space-x-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={enableMidColor}
+                              onChange={(e) => setEnableMidColor(e.target.checked)}
+                              class="rounded cursor-pointer"
+                            />
+                            <span class="text-sm font-medium text-gray-700">Enable Mid-Color</span>
+                          </label>
+                        </div>
+
+                        {/* Gradient Middle Color */}
+                        {enableMidColor && (
+                          <div>
+                            <Label htmlFor="gradientMiddle-mobile">Gradient Middle</Label>
+                            <input
+                              id="gradientMiddle-mobile"
+                              type="color"
+                              value={gradientMiddleColor}
+                              onInput={(e) => setGradientMiddleColor(e.target.value)}
+                              class="w-full h-10 rounded cursor-pointer"
+                            />
+                          </div>
+                        )}
+
                         {/* Gradient End Color */}
                         <div>
                           <Label htmlFor="gradientEnd-mobile">Gradient End</Label>
@@ -312,6 +368,7 @@ export function ScreenshotMakerPage() {
                     shadowOffsetY={shadowOffsetY}
                     shadowColor={shadowColor}
                     gradientStartColor={gradientStartColor}
+                    gradientMiddleColor={enableMidColor ? gradientMiddleColor : null}
                     gradientEndColor={gradientEndColor}
                     gradientDirection={gradientDirection}
                   />
