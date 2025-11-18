@@ -7,7 +7,7 @@ import { Select } from '../components/common/Select';
 import { Slider } from '../components/common/Slider';
 
 export function ScreenshotMakerPage() {
-  usePageTitle('Screenshot Maker');
+  usePageTitle('Screenshot Editor');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Editor configuration state
