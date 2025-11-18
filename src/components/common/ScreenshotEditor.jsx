@@ -38,6 +38,7 @@ export function ScreenshotEditor({
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState('');
   const [imageKey, setImageKey] = useState(0);
+  const [canvasHeight, setCanvasHeight] = useState(0);
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -124,11 +125,12 @@ export function ScreenshotEditor({
     // Calculate canvas dimensions
     const imageWidth = width - (margin * 2);
     const imageHeight = (selectedImage.height / selectedImage.width) * imageWidth;
-    const canvasHeight = imageHeight + (margin * 2);
+    const canvasHeight = Math.round(imageHeight + (margin * 2));
 
     // Set canvas dimensions
     canvas.width = width;
     canvas.height = canvasHeight;
+    setCanvasHeight(canvasHeight);
 
     // Clear canvas
     ctx.clearRect(0, 0, width, canvasHeight);
@@ -305,7 +307,7 @@ export function ScreenshotEditor({
             <div class="flex-1">
               <p class="text-sm font-medium text-gray-900">{fileName}</p>
               <p class="text-xs text-gray-500 mt-1">
-                Canvas: {width}px × {canvasRef.current?.height || 0}px
+                Canvas: {width}px × {canvasHeight}px
               </p>
             </div>
             <div class="flex space-x-2">
@@ -316,6 +318,7 @@ export function ScreenshotEditor({
                   setSelectedImage(null);
                   setFileName('');
                   setImageKey(0);
+                  setCanvasHeight(0);
                 }}
               >
                 Remove
