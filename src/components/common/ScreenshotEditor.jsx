@@ -37,6 +37,7 @@ export function ScreenshotEditor({
   const [selectedImage, setSelectedImage] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState('');
+  const [baseFileName, setBaseFileName] = useState('');
   const [imageKey, setImageKey] = useState(0);
   const [canvasHeight, setCanvasHeight] = useState(0);
   const canvasRef = useRef(null);
@@ -47,12 +48,17 @@ export function ScreenshotEditor({
     if (!file) return;
 
     // Validate file type
-    if (!file.type.match(/^image\/(png|jpeg|jpg)$/)) {
-      alert('Please select a PNG or JPEG image file.');
+    if (!file.type.match(/^image\/(png|jpeg|jpg|webp)$/)) {
+      alert('Please select a PNG, JPEG, or WebP image file.');
       return;
     }
 
     setFileName(file.name);
+
+    // Extract base filename without extension
+    const lastDotIndex = file.name.lastIndexOf('.');
+    const baseName = lastDotIndex > 0 ? file.name.substring(0, lastDotIndex) : file.name;
+    setBaseFileName(baseName);
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -238,7 +244,7 @@ export function ScreenshotEditor({
     gradientDirection
   ]);
 
-  // Handle download
+  // Handle PNG download
   const handleDownload = () => {
     if (!canvasRef.current) return;
 
@@ -246,12 +252,28 @@ export function ScreenshotEditor({
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `screenshot-${Date.now()}.png`;
+      link.download = `${baseFileName || 'screenshot'}-edited.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     }, 'image/png');
+  };
+
+  // Handle WebP download
+  const handleDownloadWebP = () => {
+    if (!canvasRef.current) return;
+
+    canvasRef.current.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${baseFileName || 'screenshot'}-edited.webp`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 'image/webp', 0.95); // 0.95 quality for good balance between size and quality
   };
 
   return (
@@ -271,7 +293,7 @@ export function ScreenshotEditor({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/png,image/jpeg,image/jpg"
+            accept="image/png,image/jpeg,image/jpg,image/webp"
             onChange={handleFileInputChange}
             class="hidden"
           />
@@ -296,7 +318,7 @@ export function ScreenshotEditor({
               Drop your image here, or click to select
             </p>
             <p class="mt-1 text-xs text-gray-500">
-              PNG or JPEG files only
+              PNG, JPEG, or WebP files
             </p>
           </div>
         </div>
@@ -316,6 +338,7 @@ export function ScreenshotEditor({
                 onClick={() => {
                   setSelectedImage(null);
                   setFileName('');
+                  setBaseFileName('');
                   setImageKey(0);
                   setCanvasHeight(0);
                 }}
@@ -328,6 +351,13 @@ export function ScreenshotEditor({
                 onClick={handleDownload}
               >
                 Download PNG
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleDownloadWebP}
+              >
+                Download WebP
               </Button>
             </div>
           </div>
