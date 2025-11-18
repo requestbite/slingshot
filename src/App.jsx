@@ -17,6 +17,7 @@ const ApiCatalogDetailsPage = lazy(() => import('./pages/ApiCatalogDetailsPage')
 const EnvironmentsPage = lazy(() => import('./pages/EnvironmentsPage').then(m => ({ default: m.EnvironmentsPage })));
 const EnvironmentUpdatePage = lazy(() => import('./pages/EnvironmentUpdatePage').then(m => ({ default: m.EnvironmentUpdatePage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const ScreenshotMakerPage = lazy(() => import('./pages/ScreenshotMakerPage').then(m => ({ default: m.ScreenshotMakerPage })));
 const AuthCallback = lazy(() => import('./components/auth/AuthCallback').then(m => ({ default: m.AuthCallback })));
 // Dynamic imports for modals that are only used conditionally
 const URLImportModal = lazy(() => import('./components/import/URLImportModal').then(m => ({ default: m.URLImportModal })));
@@ -311,8 +312,8 @@ export function App() {
     // Check if current route should use min-h-screen instead of h-screen
     // These are the routes that use AppLayout (not FullPageLayout)
     const isAppLayoutRoute = location === '/' ||
-                           (location.match(/^\/[^/]+$/) && !location.startsWith('/collections') && !location.startsWith('/catalog') && !location.startsWith('/environments') && !location.startsWith('/settings')) ||
-                           (location.match(/^\/[^/]+\/[^/]+$/) && !location.startsWith('/collections/') && !location.startsWith('/catalog/') && !location.startsWith('/environments/'));
+                           (location.match(/^\/[^/]+$/) && !location.startsWith('/collections') && !location.startsWith('/catalog') && !location.startsWith('/environments') && !location.startsWith('/settings') && !location.startsWith('/tools')) ||
+                           (location.match(/^\/[^/]+\/[^/]+$/) && !location.startsWith('/collections/') && !location.startsWith('/catalog/') && !location.startsWith('/environments/') && !location.startsWith('/tools/'));
     
     const containerClass = isAppLayoutRoute ? 
       "min-h-screen flex flex-col bg-gray-50" : 
@@ -373,6 +374,11 @@ export function App() {
             <Route path="/settings">
               <FullPageLayout>
                 <SettingsPage />
+              </FullPageLayout>
+            </Route>
+            <Route path="/tools/screenshot-maker">
+              <FullPageLayout>
+                <ScreenshotMakerPage />
               </FullPageLayout>
             </Route>
             <Route path="/auth/callback">
