@@ -112,7 +112,13 @@ export function ApiCatalogPage() {
 
   const handleApiSelect = (api) => {
     if (api && api.id) {
-      setLocation(`/catalog/api/${api.id}`);
+      // Use new URL format if provider, serviceName, and version are available
+      if (api.provider?.key && api.serviceName?.key && api.version) {
+        setLocation(`/catalog/api/${api.provider.key}/${api.serviceName.key}/${api.version}`);
+      } else {
+        // Fallback to UUID format
+        setLocation(`/catalog/api/${api.id}`);
+      }
     }
   };
 
@@ -288,23 +294,30 @@ export function ApiCatalogPage() {
                 ) : categoryApis.length > 0 ? (
                   <div>
                     <div class="space-y-3">
-                      {categoryApis.map((api) => (
-                        <ClickableCard
-                          key={api.id}
-                          href={`/catalog/api/${api.id}`}
-                          title={api.name || "Untitled API"}
-                          description={renderApiDetails(api)}
-                          icon={
-                            <div class="flex items-center justify-center">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500">
-                                <circle cx="12" cy="12" r="10" />
-                                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-                                <path d="M2 12h20" />
-                              </svg>
-                            </div>
-                          }
-                        />
-                      ))}
+                      {categoryApis.map((api) => {
+                        // Generate URL using new format if data is available, otherwise fallback to UUID
+                        const apiUrl = (api.provider?.key && api.serviceName?.key && api.version)
+                          ? `/catalog/api/${api.provider.key}/${api.serviceName.key}/${api.version}`
+                          : `/catalog/api/${api.id}`;
+
+                        return (
+                          <ClickableCard
+                            key={api.id}
+                            href={apiUrl}
+                            title={api.name || "Untitled API"}
+                            description={renderApiDetails(api)}
+                            icon={
+                              <div class="flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500">
+                                  <circle cx="12" cy="12" r="10" />
+                                  <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                                  <path d="M2 12h20" />
+                                </svg>
+                              </div>
+                            }
+                          />
+                        );
+                      })}
                     </div>
 
                     {/* Pagination Controls */}

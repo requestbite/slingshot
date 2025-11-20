@@ -341,7 +341,7 @@ export function App() {
                 <ApiCatalogPage />
               </FullPageLayout>
             </Route>
-            <Route path="/catalog/api/:uuid">
+            <Route path="/catalog/api/:param1/:param2?/:param3?">
               <FullPageLayout>
                 <ApiCatalogDetailsPage />
               </FullPageLayout>

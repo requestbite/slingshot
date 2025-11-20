@@ -11,7 +11,7 @@ import { MarkdownPreview } from '../components/common/MarkdownPreview';
 const URLImportModal = lazy(() => import('../components/import/URLImportModal').then(m => ({ default: m.URLImportModal })));
 
 export function ApiCatalogDetailsPage() {
-  const [, params] = useRoute('/catalog/api/:uuid');
+  const [, params] = useRoute('/catalog/api/:param1/:param2?/:param3?');
   const [, setLocation] = useLocation();
   const [apiData, setApiData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,18 +26,51 @@ export function ApiCatalogDetailsPage() {
   usePageTitle(apiData?.name || 'Untitled API');
 
   useEffect(() => {
-    if (params?.uuid) {
-      loadApiDetails(params.uuid);
+    if (params?.param1) {
+      // Determine if this is new format (3 params) or old format (1 UUID param)
+      if (params.param2 && params.param3) {
+        // New format: /catalog/api/{providerKey}/{serviceKey}/{apiVersion}
+        loadApiDetailsByKeys(params.param1, params.param2, params.param3);
+      } else {
+        // Old format: /catalog/api/{uuid}
+        loadApiDetailsByUuid(params.param1);
+      }
     }
-  }, [params?.uuid]);
+  }, [params?.param1, params?.param2, params?.param3]);
 
-  const loadApiDetails = async (uuid) => {
+  const loadApiDetailsByUuid = async (uuid) => {
     try {
       setIsLoading(true);
       setError(null);
 
       const response = await fetch(
         `${import.meta.env.VITE_CATALOG_API}/v1/apis/${uuid}?resolveIds=true`
+      );
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('API not found');
+        }
+        throw new Error(`Failed to fetch API details (status ${response.status})`);
+      }
+
+      const data = await response.json();
+      setApiData(data);
+    } catch (err) {
+      console.error('Error loading API details:', err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadApiDetailsByKeys = async (providerKey, serviceKey, apiVersion) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await fetch(
+        `${import.meta.env.VITE_CATALOG_API}/v1/apis/resolveapi?providerKey=${encodeURIComponent(providerKey)}&serviceKey=${encodeURIComponent(serviceKey)}&apiVersion=${encodeURIComponent(apiVersion)}&resolveIds=true`
       );
 
       if (!response.ok) {
@@ -101,7 +134,13 @@ export function ApiCatalogDetailsPage() {
       if (searchInputRef.current) {
         searchInputRef.current.blur();
       }
-      setLocation(`/catalog/api/${api.id}`);
+      // Use new URL format if provider, serviceName, and version are available
+      if (api.provider?.key && api.serviceName?.key && api.version) {
+        setLocation(`/catalog/api/${api.provider.key}/${api.serviceName.key}/${api.version}`);
+      } else {
+        // Fallback to UUID format
+        setLocation(`/catalog/api/${api.id}`);
+      }
     }
   };
 
