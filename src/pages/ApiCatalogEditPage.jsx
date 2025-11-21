@@ -4,8 +4,6 @@ import { TextInput } from '../components/common/TextInput';
 import { Label } from '../components/common/Label';
 import { Button } from '../components/common/Button';
 import { Alert } from '../components/common/Alert';
-import { Toast, useToast } from '../components/common/Toast';
-import { Portal } from '../components/common/Portal';
 import { fetchFromURL, detectContentFormat } from '../utils/urlImporter';
 
 export function ApiCatalogEditPage() {
@@ -15,12 +13,7 @@ export function ApiCatalogEditPage() {
   const [openapiUrl, setOpenapiUrl] = useState('');
   const [isTestingUrl, setIsTestingUrl] = useState(false);
   const [testError, setTestError] = useState(null);
-  const [testSuccess, setTestSuccess] = useState(null);
-
-  // Toast state
-  const [isToastVisible, showToast, hideToast] = useToast();
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastType, setToastType] = useState('success');
+  const [testSuccessMessage, setTestSuccessMessage] = useState(null);
 
   // Validate URL format
   const isValidUrl = (url) => {
@@ -38,14 +31,14 @@ export function ApiCatalogEditPage() {
     setOpenapiUrl(e.target.value);
     // Clear test results when URL changes
     setTestError(null);
-    setTestSuccess(null);
+    setTestSuccessMessage(null);
   };
 
   // Handle Test button click
   const handleTestUrl = async () => {
     // Clear previous test results
     setTestError(null);
-    setTestSuccess(null);
+    setTestSuccessMessage(null);
     setIsTestingUrl(true);
 
     try {
@@ -88,11 +81,8 @@ export function ApiCatalogEditPage() {
         return;
       }
 
-      // Success - show toast
-      setTestSuccess({ title, apiVersion, openapiVersion });
-      setToastMessage(`Found version ${apiVersion} of API "${title}"`);
-      setToastType('success');
-      showToast();
+      // Success - set success message
+      setTestSuccessMessage(`Found version ${apiVersion} of API "${title}"`);
 
     } catch (error) {
       console.error('URL test error:', error);
@@ -110,94 +100,91 @@ export function ApiCatalogEditPage() {
 
   const isUrlValid = isValidUrl(openapiUrl);
   const canTest = isUrlValid && !isTestingUrl;
-  const canProceed = testSuccess !== null; // Enable when test succeeds
+  const canProceed = testSuccessMessage !== null; // Enable when test succeeds
 
   return (
-    <>
-      <div class="h-full bg-gray-100 overflow-y-auto">
-        <div class="min-h-full pt-[83px] pb-6">
-          {/* Main Container */}
-          <div class="max-w-4xl mx-auto px-4">
-            <div class="bg-white rounded-lg border border-gray-300">
-              {/* Header Section */}
-              <div class="sm:flex sm:items-start p-6">
-                <div class="sm:flex-auto">
-                  <h1 class="text-base/7 font-semibold text-gray-900">
-                    Edit Catalog
-                  </h1>
-                  <p class="mt-1 text-sm/6 text-gray-600">
-                    Use this wizard to add or edit a catalog entry.
-                  </p>
-                </div>
+    <div class="h-full bg-gray-100 overflow-y-auto">
+      <div class="min-h-full pt-[83px] pb-6">
+        {/* Main Container */}
+        <div class="max-w-4xl mx-auto px-4">
+          <div class="bg-white rounded-lg border border-gray-300">
+            {/* Header Section */}
+            <div class="sm:flex sm:items-start p-6">
+              <div class="sm:flex-auto">
+                <h1 class="text-base/7 font-semibold text-gray-900">
+                  Edit Catalog
+                </h1>
+                <p class="mt-1 text-sm/6 text-gray-600">
+                  Use this wizard to add or edit a catalog entry.
+                </p>
               </div>
+            </div>
 
-              {/* Content Section */}
-              <div class="py-6 sm:px-6">
-                <div class="space-y-8">
-                  <div class="border-b border-gray-900/10 pb-8">
-                    <div class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
+            {/* Content Section */}
+            <div class="py-6 px-6">
+              <div class="space-y-8">
+                <div class="border-b border-gray-900/10 pb-8">
+                  <div class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
 
-                      {/* OpenAPI URL Input */}
-                      <div class="sm:col-span-4">
-                        <Label htmlFor="openapi-url">URL to OpenAPI spec</Label>
-                        <div class="flex gap-2">
-                          <TextInput
-                            id="openapi-url"
-                            type="url"
-                            value={openapiUrl}
-                            onInput={handleUrlChange}
-                            placeholder="https://api.example.com/openapi.json"
-                          />
-                          <Button
-                            type="button"
-                            onClick={handleTestUrl}
-                            disabled={!canTest}
-                            variant="primary"
-                          >
-                            {isTestingUrl ? 'Testing...' : 'Test'}
-                          </Button>
-                        </div>
-
-                        {/* Test Error Alert */}
-                        {testError && (
-                          <div class="mt-3">
-                            <Alert type="caution">
-                              {testError}
-                            </Alert>
-                          </div>
-                        )}
+                    {/* OpenAPI URL Input */}
+                    <div class="sm:col-span-4">
+                      <Label htmlFor="openapi-url">URL to OpenAPI spec</Label>
+                      <div class="flex gap-2">
+                        <TextInput
+                          id="openapi-url"
+                          type="url"
+                          value={openapiUrl}
+                          onInput={handleUrlChange}
+                          placeholder="https://api.example.com/openapi.json"
+                        />
+                        <Button
+                          type="button"
+                          onClick={handleTestUrl}
+                          disabled={!canTest}
+                          variant="primary"
+                        >
+                          {isTestingUrl ? 'Testing...' : 'Test'}
+                        </Button>
                       </div>
 
+                      {/* Test Error Alert */}
+                      {testError && (
+                        <div class="mt-3">
+                          <Alert type="caution">
+                            {testError}
+                          </Alert>
+                        </div>
+                      )}
+
+                      {/* Test Success Alert */}
+                      {testSuccessMessage && (
+                        <div class="mt-3">
+                          <Alert type="tip">
+                            {testSuccessMessage}
+                          </Alert>
+                        </div>
+                      )}
                     </div>
+
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Action Buttons */}
-              <div class="mt-6 px-6 pb-6 flex items-center justify-end">
-                <Button
-                  onClick={handleNext}
-                  type="button"
-                  disabled={!canProceed}
-                  variant="primary"
-                >
-                  Next
-                </Button>
-              </div>
+            {/* Action Buttons */}
+            <div class="mt-6 px-6 pb-6 flex items-center justify-end">
+              <Button
+                onClick={handleNext}
+                type="button"
+                disabled={!canProceed}
+                variant="primary"
+              >
+                Next
+              </Button>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Toast Notification */}
-      <Portal>
-        <Toast
-          message={toastMessage}
-          isVisible={isToastVisible}
-          onClose={hideToast}
-          type={toastType}
-        />
-      </Portal>
-    </>
+    </div>
   );
 }
