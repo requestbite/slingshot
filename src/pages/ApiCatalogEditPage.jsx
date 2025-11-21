@@ -57,7 +57,7 @@ export function ApiCatalogEditPage() {
       const format = detectContentFormat(content);
 
       if (format !== 'openapi') {
-        setTestError('The provided URL does not seem to point to a valid OpenAPI spec');
+        setTestError('The provided URL does not seem to point to a valid OpenAPI spec.');
         return;
       }
 
@@ -77,16 +77,38 @@ export function ApiCatalogEditPage() {
       const apiVersion = spec.info?.version;
 
       if (!openapiVersion || !title || !apiVersion) {
-        setTestError('The provided URL does not seem to point to a valid OpenAPI spec');
+        setTestError('The provided URL does not seem to point to a valid OpenAPI spec.');
         return;
       }
 
-      // Success - set success message
-      setTestSuccessMessage(`Found version ${apiVersion} of API "${title}"`);
+      // Check if URL is already in the catalog
+      try {
+        const catalogResponse = await fetch(
+          `${import.meta.env.VITE_CATALOG_API}/v1/apis/specurl?url=${encodeURIComponent(openapiUrl)}`
+        );
+
+        if (catalogResponse.status === 200) {
+          // URL already exists in catalog
+          setTestError('The provided OpenAPI spec URL is already added to the catalog.');
+          return;
+        } else if (catalogResponse.status === 404) {
+          // URL not in catalog - success!
+          setTestSuccessMessage(`Found version ${apiVersion} of API "${title}"`);
+        } else {
+          // Unexpected status code
+          console.error('Unexpected catalog API response status:', catalogResponse.status);
+          setTestError('Unable to verify if the URL is in the catalog. Please try again.');
+          return;
+        }
+      } catch (catalogError) {
+        console.error('Error checking catalog:', catalogError);
+        setTestError('Unable to verify if the URL is in the catalog. Please try again.');
+        return;
+      }
 
     } catch (error) {
       console.error('URL test error:', error);
-      setTestError('The provided URL does not seem to point to a valid OpenAPI spec');
+      setTestError('The provided URL does not seem to point to a valid OpenAPI spec.');
     } finally {
       setIsTestingUrl(false);
     }
