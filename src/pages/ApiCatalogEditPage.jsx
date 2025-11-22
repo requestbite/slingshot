@@ -34,6 +34,61 @@ export function ApiCatalogEditPage() {
     setTestSuccessMessage(null);
   };
 
+  // Generate UUID v4
+  const generateUUID = () => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
+
+  // Sanitize string to only contain 0-9, a-z, -, .
+  const sanitize = (str, toLowerCase = false) => {
+    if (!str) return '';
+    let sanitized = toLowerCase ? str.toLowerCase() : str;
+    sanitized = sanitized.replace(/[^0-9a-z.\-]/gi, '');
+    return sanitized;
+  };
+
+  // Generate provider from server URL (extract top-level domain)
+  const generateProvider = (serverUrl) => {
+    if (!serverUrl) return generateUUID();
+
+    try {
+      // Parse the URL to get the hostname
+      const url = new URL(serverUrl);
+      const hostname = url.hostname;
+
+      // Extract top-level domain (last two parts of the domain)
+      const parts = hostname.split('.');
+      const topLevelDomain = parts.length >= 2
+        ? parts.slice(-2).join('.')
+        : hostname;
+
+      // Sanitize (keep only 0-9, a-z, -, .)
+      const provider = sanitize(topLevelDomain);
+
+      // If empty after sanitization, generate UUID
+      return provider || generateUUID();
+    } catch {
+      // If URL parsing fails, generate UUID
+      return generateUUID();
+    }
+  };
+
+  // Generate service name from API name
+  const generateServiceName = (name) => {
+    if (!name) return generateUUID();
+
+    // Replace spaces with dashes, make lowercase, and sanitize
+    let serviceName = name.replace(/\s+/g, '-').toLowerCase();
+    serviceName = sanitize(serviceName);
+
+    // If empty after sanitization, generate UUID
+    return serviceName || generateUUID();
+  };
+
   // Handle Test button click
   const handleTestUrl = async () => {
     // Clear previous test results
@@ -75,11 +130,19 @@ export function ApiCatalogEditPage() {
       const openapiVersion = spec.openapi || spec.swagger;
       const title = spec.info?.title;
       const apiVersion = spec.info?.version;
+      const description = spec.info?.description || null;
+      const externalDocsUrl = spec.externalDocs?.url || null;
+      const serverUrl = spec.servers?.[0]?.url;
 
-      if (!openapiVersion || !title || !apiVersion) {
-        setTestError('The provided URL does not seem to point to a valid OpenAPI spec.');
+      // Check for mandatory fields
+      if (!openapiVersion || !title || !apiVersion || !serverUrl) {
+        setTestError('Mandatory details are missing to add the API (perhaps corrupt OpenAPI spec).');
         return;
       }
+
+      // Generate provider and serviceName
+      let provider = generateProvider(serverUrl);
+      let serviceName = generateServiceName(title);
 
       // Check if URL is already in the catalog
       try {
@@ -91,20 +154,66 @@ export function ApiCatalogEditPage() {
           // URL already exists in catalog
           setTestError('The provided OpenAPI spec URL is already added to the catalog.');
           return;
-        } else if (catalogResponse.status === 404) {
-          // URL not in catalog - success!
-          setTestSuccessMessage(`Found version ${apiVersion} of API "${title}"`);
-        } else {
+        } else if (catalogResponse.status !== 404) {
           // Unexpected status code
           console.error('Unexpected catalog API response status:', catalogResponse.status);
           setTestError('Unable to verify if the URL is in the catalog. Please try again.');
           return;
         }
+        // 404 is OK - URL not in catalog yet
       } catch (catalogError) {
         console.error('Error checking catalog:', catalogError);
         setTestError('Unable to verify if the URL is in the catalog. Please try again.');
         return;
       }
+
+      // Check for provider/service collision
+      try {
+        const providerServicesResponse = await fetch(
+          `${import.meta.env.VITE_CATALOG_API}/v1/providers/key/${provider}/services`
+        );
+
+        if (providerServicesResponse.status === 200) {
+          // Provider exists, check for service name collision
+          const providerData = await providerServicesResponse.json();
+          const existingServiceKeys = providerData.services?.map(s => s.key) || [];
+
+          if (existingServiceKeys.includes(serviceName)) {
+            // Collision detected, generate UUID for serviceName
+            serviceName = generateUUID();
+          }
+        } else if (providerServicesResponse.status !== 404) {
+          // Unexpected status code
+          console.error('Unexpected provider services API response status:', providerServicesResponse.status);
+          setTestError('Unable to verify provider/service information. Please try again.');
+          return;
+        }
+        // 404 is OK - provider doesn't exist yet
+      } catch (providerError) {
+        console.error('Error checking provider services:', providerError);
+        setTestError('Unable to verify provider/service information. Please try again.');
+        return;
+      }
+
+      // Create draft entry for localStorage
+      const apiCatDraftEntry = {
+        name: title,
+        version: apiVersion,
+        description: description,
+        url: openapiUrl,
+        urlExtDoc: externalDocsUrl,
+        provider: provider,
+        serviceName: serviceName,
+        categories: [],
+        source: 'API provider',
+        region: null
+      };
+
+      // Store in localStorage
+      localStorage.setItem('api-catalog-draft-entry', JSON.stringify(apiCatDraftEntry));
+
+      // Success message
+      setTestSuccessMessage(`Found version ${apiVersion} of API "${title}"`);
 
     } catch (error) {
       console.error('URL test error:', error);
