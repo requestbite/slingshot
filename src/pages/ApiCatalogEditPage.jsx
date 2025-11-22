@@ -1,5 +1,6 @@
 import { useState } from 'preact/hooks';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { useLocation } from 'wouter-preact';
 import { TextInput } from '../components/common/TextInput';
 import { Label } from '../components/common/Label';
 import { Button } from '../components/common/Button';
@@ -36,7 +37,7 @@ export function ApiCatalogEditPage() {
 
   // Generate UUID v4
   const generateUUID = () => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
       const r = Math.random() * 16 | 0;
       const v = c === 'x' ? r : (r & 0x3 | 0x8);
       return v.toString(16);
@@ -213,7 +214,7 @@ export function ApiCatalogEditPage() {
       localStorage.setItem('api-catalog-draft-entry', JSON.stringify(apiCatDraftEntry));
 
       // Success message
-      setTestSuccessMessage(`Found version ${apiVersion} of API "${title}"`);
+      setTestSuccessMessage(`Found version ${apiVersion} of API "${title}". You may now proceed to add it to the catalog.`);
 
     } catch (error) {
       console.error('URL test error:', error);
@@ -224,9 +225,9 @@ export function ApiCatalogEditPage() {
   };
 
   // Handle Next button click
+  const [, navigate] = useLocation();
   const handleNext = () => {
-    // Next functionality will be added later
-    console.log('Proceeding to next step');
+    navigate('/catalog/edit/new');
   };
 
   const isUrlValid = isValidUrl(openapiUrl);
