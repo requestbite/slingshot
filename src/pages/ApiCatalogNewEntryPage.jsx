@@ -161,27 +161,29 @@ export function ApiCatalogNewEntryPage() {
 
                     {/* Name */}
                     <div class="sm:col-span-4">
-                      <Label htmlFor="name">Name</Label>
+                      <Label htmlFor="name" mandatory={true}>Name</Label>
                       <TextInput
                         id="name"
                         type="text"
                         value={formData.name}
                         onInput={(e) => updateField('name', e.target.value)}
+                        description="Required name for the catalog entry."
                       />
                     </div>
 
                     {/* Version (read-only) */}
-                    <div class="sm:col-span-2">
-                      <Label htmlFor="version">Version</Label>
+                    <div class="sm:col-span-4">
+                      <Label htmlFor="version" mandatory={true}>Version</Label>
                       <TextInput
                         id="version"
                         type="text"
                         value={formData.version}
                         disabled={true}
+                        description="Fetched from OpenAPI spec. Cannot be updated."
                       />
                     </div>
 
-                    {/* Description - Two column section */}
+                    {/* Description - Two column section (full width) */}
                     <div class="sm:col-span-6">
                       <Label htmlFor="description">Description</Label>
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -194,6 +196,7 @@ export function ApiCatalogNewEntryPage() {
                             onInput={(e) => updateField('description', e.target.value)}
                             rows={10}
                             placeholder="Enter description in Markdown format..."
+                            description="Optional description in Common Markdown format."
                           />
                         </div>
                         {/* Right: Markdown Preview */}
@@ -204,8 +207,8 @@ export function ApiCatalogNewEntryPage() {
                     </div>
 
                     {/* Category */}
-                    <div class="sm:col-span-3">
-                      <Label htmlFor="category">Category</Label>
+                    <div class="sm:col-span-4">
+                      <Label htmlFor="category" mandatory={true}>Category</Label>
                       <Select
                         id="category"
                         value={formData.categories[0] || ''}
@@ -217,8 +220,8 @@ export function ApiCatalogNewEntryPage() {
                     </div>
 
                     {/* Region */}
-                    <div class="sm:col-span-3">
-                      <Label htmlFor="region">Region</Label>
+                    <div class="sm:col-span-4">
+                      <Label htmlFor="region" mandatory={true}>Region</Label>
                       <Select
                         id="region"
                         value={formData.region || ''}
@@ -238,34 +241,37 @@ export function ApiCatalogNewEntryPage() {
                         value={formData.urlExtDoc || ''}
                         onInput={(e) => updateField('urlExtDoc', e.target.value)}
                         placeholder="https://docs.example.com"
+                        description="Optional URL to external documentation for API."
                       />
                     </div>
 
                     {/* Provider (read-only) */}
-                    <div class="sm:col-span-3">
-                      <Label htmlFor="provider">Provider</Label>
+                    <div class="sm:col-span-4">
+                      <Label htmlFor="provider" mandatory={true}>Provider</Label>
                       <TextInput
                         id="provider"
                         type="text"
                         value={formData.provider}
                         disabled={true}
+                        description="Generated from OpenAPI spec. Cannot be updated."
                       />
                     </div>
 
                     {/* Service (read-only) */}
-                    <div class="sm:col-span-3">
-                      <Label htmlFor="service">Service</Label>
+                    <div class="sm:col-span-4">
+                      <Label htmlFor="service" mandatory={true}>Service</Label>
                       <TextInput
                         id="service"
                         type="text"
                         value={formData.serviceName}
                         disabled={true}
+                        description="Generated from OpenAPI spec. Cannot be updated."
                       />
                     </div>
 
                     {/* Source */}
-                    <div class="sm:col-span-3">
-                      <Label htmlFor="source">Source</Label>
+                    <div class="sm:col-span-4">
+                      <Label htmlFor="source" mandatory={true}>Source</Label>
                       <Select
                         id="source"
                         value={formData.source}
