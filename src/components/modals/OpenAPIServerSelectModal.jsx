@@ -112,11 +112,11 @@ export function OpenAPIServerSelectModal({ isOpen, servers = [], onClose, onConf
     <Modal
       isOpen={isOpen}
       onClose={handleCancel}
-      title="API URLs"
+      title="API Server URLs"
       size="md"
     >
       <div class="text-sm text-gray-500 mb-6">
-        The OpenAPI spec lists multiple API base URLs. Select the one you want to use.
+        Please select the base URL for the API that you want to use.
       </div>
 
       <div class="space-y-4">
@@ -130,7 +130,7 @@ export function OpenAPIServerSelectModal({ isOpen, servers = [], onClose, onConf
             value={selectedServerIndex}
             onChange={handleServerChange}
             options={serverOptions}
-            placeholder="Select a server URL..."
+            placeholder="Select a server URL"
           />
         </div>
 
@@ -172,6 +172,9 @@ export function OpenAPIServerSelectModal({ isOpen, servers = [], onClose, onConf
             <Label>
               Resolved URL
             </Label>
+            <div class="text-xs text-gray-500 mb-2">
+              This URL will used for the baseUrl collection variable.
+            </div>
             <div class="text-sm font-mono bg-gray-50 p-3 rounded-md border border-gray-200 break-all">
               {resolvedUrl}
             </div>
@@ -195,7 +198,7 @@ export function OpenAPIServerSelectModal({ isOpen, servers = [], onClose, onConf
             onClick={handleCancel}
             className="mt-3 w-full sm:mt-0 sm:w-auto"
           >
-            Cancel import
+            Cancel
           </Button>
         </div>
       </div>

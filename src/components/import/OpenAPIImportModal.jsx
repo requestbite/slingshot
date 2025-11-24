@@ -185,10 +185,19 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
 
       // Parse to check for multiple servers
       try {
-        const spec = JSON.parse(content);
+        let spec;
+
+        // Try parsing as JSON first
+        try {
+          spec = JSON.parse(content);
+        } catch (_jsonError) {
+          // If JSON fails, try YAML
+          const { load: loadYAML } = await import('js-yaml');
+          spec = loadYAML(content);
+        }
 
         // If OpenAPI 3.x and has multiple servers, show server selection modal
-        if (spec.openapi && spec.servers && spec.servers.length > 1) {
+        if (spec && spec.openapi && spec.servers && spec.servers.length > 1) {
           setParsedSpec(spec);
           setFileContent(content);
           setSpecCollectionName(formData.name);
@@ -197,7 +206,7 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
           return;
         }
       } catch (_parseError) {
-        // Not JSON, might be YAML - continue with normal processing
+        // Parsing failed, continue with normal processing
       }
 
       // Process without server selection
