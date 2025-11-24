@@ -68,20 +68,32 @@ export function RenameFolderModal({ isOpen, onClose, folder, onUpdate }) {
     }
   };
 
-  const validateForm = () => {
+  const validateForm = async () => {
     if (!formData.name.trim()) {
       setError('Folder name is required');
       return false;
     }
 
-    // Check for duplicate names in the same parent folder
-    const siblingsInSameParent = folders.filter(f =>
-      f.parent_folder_id === formData.parent_folder_id && f.id !== folder.id
-    );
+    // Normalize parent_folder_id: empty string should be treated as null for comparison
+    const targetParentId = formData.parent_folder_id || null;
 
-    if (siblingsInSameParent.some(f => f.name.toLowerCase() === formData.name.trim().toLowerCase())) {
-      setError('A folder with this name already exists in the selected location');
-      return false;
+    // Check for duplicate names in the same parent folder
+    // We need to check against ALL folders in the collection, not just the filtered list,
+    // because we need to validate against root folders too
+    try {
+      const allFolders = await apiClient.getFoldersByCollection(folder.collection_id);
+      const siblingsInSameParent = allFolders.filter(f => {
+        // Normalize the comparison folder's parent_folder_id too
+        const fParentId = f.parent_folder_id || null;
+        return fParentId === targetParentId && f.id !== folder.id;
+      });
+
+      if (siblingsInSameParent.some(f => f.name.toLowerCase() === formData.name.trim().toLowerCase())) {
+        setError('A folder with this name already exists in the selected location');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error checking for duplicates:', error);
     }
 
     return true;
@@ -90,7 +102,8 @@ export function RenameFolderModal({ isOpen, onClose, folder, onUpdate }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    const isValid = await validateForm();
+    if (!isValid) return;
 
     setIsSubmitting(true);
 
@@ -146,7 +159,13 @@ export function RenameFolderModal({ isOpen, onClose, folder, onUpdate }) {
   };
 
   const folderTree = buildFolderTree();
-  const folderOptions = flattenFolderTree(folderTree);
+  const flattenedFolders = flattenFolderTree(folderTree);
+
+  // Only show "Root folder" option if the current folder has a parent (is in a subfolder)
+  // This prevents moving root folders to root again (which would be a no-op)
+  const folderOptions = folder && folder.parent_folder_id
+    ? [{ value: '', label: 'Root folder' }, ...flattenedFolders]
+    : flattenedFolders;
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Update Folder" size="md">
@@ -181,7 +200,7 @@ export function RenameFolderModal({ isOpen, onClose, folder, onUpdate }) {
               onChange={(value) => handleInputChange('parent_folder_id', value)}
               options={folderOptions}
               disabled={isSubmitting}
-              placeholder="No parent folder"
+              placeholder={folder && folder.parent_folder_id ? "Select a parent folder" : "No parent folder"}
             />
           </div>
 

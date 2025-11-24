@@ -144,7 +144,10 @@ export function RenameRequestModal({ isOpen, onClose, request, onUpdate }) {
   };
 
   const folderTree = buildFolderTree();
-  const folderOptions = flattenFolderTree(folderTree);
+  const folderOptions = [
+    { value: '', label: 'Root folder' },
+    ...flattenFolderTree(folderTree)
+  ];
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Update Request" size="md">
@@ -179,7 +182,7 @@ export function RenameRequestModal({ isOpen, onClose, request, onUpdate }) {
               onChange={(value) => handleInputChange('folder_id', value)}
               options={folderOptions}
               disabled={isSubmitting}
-              placeholder="No folder"
+              placeholder="Select a folder"
             />
           </div>
 
