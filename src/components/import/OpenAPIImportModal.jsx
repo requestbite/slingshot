@@ -7,6 +7,7 @@ import { Modal } from '../common/Modal';
 import { TextInput } from '../common/TextInput';
 import { Button } from '../common/Button';
 import { Label } from '../common/Label';
+import { OpenAPIServerSelectModal } from '../modals/OpenAPIServerSelectModal';
 
 export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -19,6 +20,12 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
   const nameInputRef = useRef();
   const [, setLocation] = useLocation();
   const { addCollection, selectCollection } = useAppContext();
+
+  // Server selection state
+  const [showServerSelectModal, setShowServerSelectModal] = useState(false);
+  const [parsedSpec, setParsedSpec] = useState(null);
+  const [fileContent, setFileContent] = useState('');
+  const [specCollectionName, setSpecCollectionName] = useState('');
 
   // Initialize form data when modal opens and auto-focus name input
   useEffect(() => {
@@ -86,6 +93,79 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
     });
   };
 
+  // Helper function to process the import and create collection
+  const processImport = async (content, collectionName, serverSelection = null) => {
+    // Process OpenAPI spec with dynamic import
+    const { processOpenAPISpec } = await import('../../utils/openApiProcessor');
+    const processedData = await processOpenAPISpec(content, collectionName, serverSelection);
+
+    // Create collection using our API client
+    const collection = await apiClient.createCollection({
+      name: processedData.collectionName,
+      description: processedData.description || '',
+      variables: processedData.variables || [],
+      security_schemes: processedData.securitySchemes || null
+    });
+
+    // Create individual variable records for collection management UI
+    for (const variable of processedData.variables || []) {
+      await apiClient.createSecret({
+        collection_id: collection.id,
+        key: variable.key,
+        value: variable.value,
+        description: variable.description || ''
+      });
+    }
+
+    // Create folders and requests
+    const folderMap = new Map();
+
+    // Create folders first
+    for (const folderName of processedData.folders) {
+      const folder = await apiClient.createFolder({
+        name: folderName,
+        collection_id: collection.id
+      });
+      folderMap.set(folderName, folder.id);
+    }
+
+    // Create requests
+    for (const requestData of processedData.requests) {
+      const folderId = requestData.folderName ? folderMap.get(requestData.folderName) : null;
+
+      await apiClient.createRequest({
+        collection_id: collection.id,
+        folder_id: folderId,
+        name: requestData.name,
+        method: requestData.method,
+        url: requestData.url,
+        headers: requestData.headers || [],
+        params: requestData.params || [],
+        path_params: requestData.pathParams || [],
+        request_type: requestData.requestType || 'none',
+        content_type: requestData.contentType || 'json',
+        body: requestData.body || '',
+        // Include OpenAPI metadata
+        description: requestData.description,
+        summary: requestData.summary,
+        operation_id: requestData.operation_id,
+        tags: requestData.tags,
+        parameters_schema: requestData.parameters_schema,
+        request_body_schema: requestData.request_body_schema,
+        response_schemas: requestData.response_schemas
+      });
+    }
+
+    // Success - add to context, navigate to collection, and notify parent
+    addCollection(collection);
+    selectCollection(collection);
+    setLocation(`/${collection.id}`);
+
+    if (onSuccess) onSuccess(collection);
+    onClose();
+    resetForm();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -101,77 +181,27 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
 
     try {
       // Read file content
-      const fileContent = await readFileContent(formData.file);
+      const content = await readFileContent(formData.file);
 
-      // Process OpenAPI spec with dynamic import
-      const { processOpenAPISpec } = await import('../../utils/openApiProcessor');
-      const processedData = await processOpenAPISpec(fileContent, formData.name);
+      // Parse to check for multiple servers
+      try {
+        const spec = JSON.parse(content);
 
-      // Create collection using our API client
-      const collection = await apiClient.createCollection({
-        name: processedData.collectionName,
-        description: processedData.description || '',
-        variables: processedData.variables || [],
-        security_schemes: processedData.securitySchemes || null
-      });
-
-      // Create individual variable records for collection management UI
-      for (const variable of processedData.variables || []) {
-        await apiClient.createSecret({
-          collection_id: collection.id,
-          key: variable.key,
-          value: variable.value,
-          description: variable.description || ''
-        });
+        // If OpenAPI 3.x and has multiple servers, show server selection modal
+        if (spec.openapi && spec.servers && spec.servers.length > 1) {
+          setParsedSpec(spec);
+          setFileContent(content);
+          setSpecCollectionName(formData.name);
+          setShowServerSelectModal(true);
+          setIsLoading(false);
+          return;
+        }
+      } catch (_parseError) {
+        // Not JSON, might be YAML - continue with normal processing
       }
 
-      // Create folders and requests
-      const folderMap = new Map();
-
-      // Create folders first
-      for (const folderName of processedData.folders) {
-        const folder = await apiClient.createFolder({
-          name: folderName,
-          collection_id: collection.id
-        });
-        folderMap.set(folderName, folder.id);
-      }
-
-      // Create requests
-      for (const requestData of processedData.requests) {
-        const folderId = requestData.folderName ? folderMap.get(requestData.folderName) : null;
-
-        await apiClient.createRequest({
-          collection_id: collection.id,
-          folder_id: folderId,
-          name: requestData.name,
-          method: requestData.method,
-          url: requestData.url,
-          headers: requestData.headers || [],
-          params: requestData.params || [],
-          path_params: requestData.pathParams || [],
-          request_type: requestData.requestType || 'none',
-          content_type: requestData.contentType || 'json',
-          body: requestData.body || '',
-          // Include OpenAPI metadata
-          description: requestData.description,
-          summary: requestData.summary,
-          operation_id: requestData.operation_id,
-          tags: requestData.tags,
-          parameters_schema: requestData.parameters_schema,
-          request_body_schema: requestData.request_body_schema,
-          response_schemas: requestData.response_schemas
-        });
-      }
-
-      // Success - add to context, navigate to collection, and notify parent
-      addCollection(collection);
-      selectCollection(collection);
-      setLocation(`/${collection.id}`);
-
-      if (onSuccess) onSuccess(collection);
-      onClose();
-      resetForm();
+      // Process without server selection
+      await processImport(content, formData.name, null);
 
     } catch (error) {
       console.error('OpenAPI import error:', error);
@@ -181,6 +211,30 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleServerSelectionConfirm = async (serverSelection) => {
+    setShowServerSelectModal(false);
+    setIsLoading(true);
+
+    try {
+      await processImport(fileContent, specCollectionName, serverSelection);
+    } catch (error) {
+      console.error('OpenAPI import error:', error);
+      setErrors({
+        general: error.message || 'Failed to import OpenAPI specification. Please check the file format and try again.'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleServerSelectionCancel = () => {
+    setShowServerSelectModal(false);
+    setParsedSpec(null);
+    setFileContent('');
+    setSpecCollectionName('');
+    setIsLoading(false);
   };
 
   const resetForm = () => {
@@ -260,6 +314,16 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
           </Button>
         </div>
       </form>
+
+      {/* Server Selection Modal */}
+      {parsedSpec && (
+        <OpenAPIServerSelectModal
+          isOpen={showServerSelectModal}
+          servers={parsedSpec.servers || []}
+          onClose={handleServerSelectionCancel}
+          onConfirm={handleServerSelectionConfirm}
+        />
+      )}
     </Modal>
   );
 }

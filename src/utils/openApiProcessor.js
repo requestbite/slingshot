@@ -11,9 +11,10 @@ import { flattenAllOf } from './schemaParser.js';
  * Processes OpenAPI/Swagger specification and extracts collection data
  * @param {string} fileContent - Raw file content (JSON or YAML)
  * @param {string} collectionName - Optional collection name override
+ * @param {Object} serverSelection - Optional server selection (serverIndex, variableValues)
  * @returns {Promise<Object>} Processed collection data
  */
-export async function processOpenAPISpec(fileContent, collectionName = '') {
+export async function processOpenAPISpec(fileContent, collectionName = '', serverSelection = null) {
   try {
     // Parse the specification
     const spec = await parseSpecification(fileContent);
@@ -22,10 +23,10 @@ export async function processOpenAPISpec(fileContent, collectionName = '') {
     validateSpecification(spec);
 
     // Extract collection metadata
-    const metadata = extractMetadata(spec, collectionName);
+    const metadata = extractMetadata(spec, collectionName, serverSelection);
 
     // Extract base URL and create variables
-    const variables = extractVariables(spec);
+    const variables = extractVariables(spec, serverSelection);
 
     // Extract security schemes from components
     const securitySchemes = extractSecuritySchemes(spec);
@@ -108,12 +109,32 @@ function validateSpecification(spec) {
 }
 
 /**
+ * Resolves a server URL by substituting variables
+ * @param {string} urlTemplate - URL template with {variable} placeholders
+ * @param {Object} variableValues - Map of variable names to their selected values
+ * @returns {string} Resolved URL
+ */
+function resolveServerUrl(urlTemplate, variableValues) {
+  let resolved = urlTemplate;
+
+  // Replace all {variableName} with their values
+  for (const [varName, value] of Object.entries(variableValues)) {
+    if (value) {
+      resolved = resolved.replace(new RegExp(`\\{${varName}\\}`, 'g'), value);
+    }
+  }
+
+  return resolved;
+}
+
+/**
  * Extracts metadata from the specification
  * @param {Object} spec - Parsed specification
  * @param {string} collectionName - Optional name override
+ * @param {Object} serverSelection - Optional server selection (serverIndex, variableValues)
  * @returns {Object} Collection metadata
  */
-function extractMetadata(spec, collectionName) {
+function extractMetadata(spec, collectionName, serverSelection = null) {
   const info = spec.info || {};
 
   // Use provided name, or fall back to spec title, or generate one
@@ -128,7 +149,15 @@ function extractMetadata(spec, collectionName) {
     // OpenAPI 3.x
     const servers = spec.servers || [];
     if (servers.length > 0) {
-      baseUrl = servers[0].url || '';
+      // Use selected server if provided
+      const serverIndex = serverSelection?.serverIndex ?? 0;
+      const server = servers[serverIndex] || servers[0];
+      baseUrl = server.url || '';
+
+      // Resolve server variables if provided
+      if (serverSelection?.variableValues && server.variables) {
+        baseUrl = resolveServerUrl(baseUrl, serverSelection.variableValues);
+      }
     }
   } else if (spec.swagger) {
     // Swagger 2.0
@@ -151,13 +180,14 @@ function extractMetadata(spec, collectionName) {
 /**
  * Extracts variables from the specification
  * @param {Object} spec - Parsed specification
+ * @param {Object} serverSelection - Optional server selection (serverIndex, variableValues)
  * @returns {Array} Collection variables
  */
-function extractVariables(spec) {
+function extractVariables(spec, serverSelection = null) {
   const variables = [];
 
   // Add baseUrl as a variable if we found one
-  const metadata = extractMetadata(spec, '');
+  const metadata = extractMetadata(spec, '', serverSelection);
   if (metadata.baseUrl) {
     variables.push({
       key: 'baseUrl',
@@ -167,15 +197,20 @@ function extractVariables(spec) {
 
   // Extract server variables from OpenAPI 3.x
   if (spec.openapi && spec.servers) {
-    for (const server of spec.servers) {
-      if (server.variables) {
-        for (const [key, variable] of Object.entries(server.variables)) {
-          variables.push({
-            key,
-            value: variable.default || '',
-            description: variable.description || ''
-          });
-        }
+    // Use selected server if provided, otherwise use first server
+    const serverIndex = serverSelection?.serverIndex ?? 0;
+    const server = spec.servers[serverIndex] || spec.servers[0];
+
+    if (server && server.variables) {
+      for (const [key, variable] of Object.entries(server.variables)) {
+        // Use user-selected value if provided, otherwise use default
+        const value = serverSelection?.variableValues?.[key] || variable.default || '';
+
+        variables.push({
+          key,
+          value,
+          description: variable.description || ''
+        });
       }
     }
   }

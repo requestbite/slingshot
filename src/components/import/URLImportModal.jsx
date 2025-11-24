@@ -9,6 +9,7 @@ import { Modal } from '../common/Modal';
 import { TextInput } from '../common/TextInput';
 import { Button } from '../common/Button';
 import { Label } from '../common/Label';
+import { OpenAPIServerSelectModal } from '../modals/OpenAPIServerSelectModal';
 
 export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -25,6 +26,12 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
   const [isToastVisible, showToast, hideToast] = useToast();
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('error');
+
+  // Server selection state
+  const [showServerSelectModal, setShowServerSelectModal] = useState(false);
+  const [parsedSpec, setParsedSpec] = useState(null);
+  const [specFormat, setSpecFormat] = useState(null);
+  const [specCollectionName, setSpecCollectionName] = useState('');
 
   // Initialize form data when modal opens and auto-focus name input
   useEffect(() => {
@@ -64,6 +71,137 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
     }
   };
 
+  // Helper function to process the import and create collection
+  const processImport = async (content, format, collectionName, serverSelection = null) => {
+    let processedData;
+
+    // Process based on detected format using dynamic imports
+    if (format === 'openapi') {
+      const { processOpenAPISpec } = await import('../../utils/openApiProcessor');
+      processedData = await processOpenAPISpec(content, collectionName, serverSelection);
+    } else if (format === 'postman') {
+      const { processPostmanCollection } = await import('../../utils/postmanImporter');
+      processedData = await processPostmanCollection(content, collectionName);
+    }
+
+    // Create collection using our API client
+    const collection = await apiClient.createCollection({
+      name: processedData.collectionName,
+      description: processedData.description || '',
+      variables: processedData.variables || [],
+      security_schemes: processedData.securitySchemes || null
+    });
+
+    // Create individual variable records for collection management UI
+    for (const variable of processedData.variables || []) {
+      await apiClient.createSecret({
+        collection_id: collection.id,
+        key: variable.key,
+        value: variable.value,
+        description: variable.description || ''
+      });
+    }
+
+    // Create folders and requests
+    const folderMap = new Map();
+
+    if (format === 'postman') {
+      // Use hierarchical folder creation for Postman collections (same as PostmanImportModal)
+      const createFoldersRecursively = async (parentId = null) => {
+        const foldersAtLevel = processedData.folders.filter(f => f.parent_folder_id === parentId);
+
+        for (const folderData of foldersAtLevel) {
+          const folder = await apiClient.createFolder({
+            name: folderData.name,
+            collection_id: collection.id,
+            parent_folder_id: folderData.parent_folder_id ? folderMap.get(folderData.parent_folder_id) : null,
+            description: folderData.description || ''
+          });
+          folderMap.set(folderData.id, folder.id);
+
+          // Create child folders
+          await createFoldersRecursively(folderData.id);
+        }
+      };
+
+      await createFoldersRecursively();
+
+      // Create requests with folderId lookup
+      for (const requestData of processedData.requests) {
+        const folderId = requestData.folderId ? folderMap.get(requestData.folderId) : null;
+
+        await apiClient.createRequest({
+          collection_id: collection.id,
+          folder_id: folderId,
+          name: requestData.name,
+          method: requestData.method,
+          url: requestData.url,
+          headers: requestData.headers || [],
+          params: requestData.params || [],
+          path_params: requestData.pathParams || [],
+          request_type: requestData.requestType || 'none',
+          content_type: requestData.contentType || 'json',
+          body: requestData.body || '',
+          form_data: requestData.formData || [],
+          url_encoded_data: requestData.urlEncodedData || [],
+          // Include OpenAPI metadata
+          description: requestData.description,
+          summary: requestData.summary,
+          operation_id: requestData.operation_id,
+          tags: requestData.tags,
+          parameters_schema: requestData.parameters_schema,
+          request_body_schema: requestData.request_body_schema,
+          response_schemas: requestData.response_schemas
+        });
+      }
+    } else {
+      // Use simple folder creation for OpenAPI specs (same as OpenAPIImportModal)
+      for (const folderName of processedData.folders) {
+        const folder = await apiClient.createFolder({
+          name: folderName,
+          collection_id: collection.id
+        });
+        folderMap.set(folderName, folder.id);
+      }
+
+      // Create requests with folderName lookup
+      for (const requestData of processedData.requests) {
+        const folderId = requestData.folderName ? folderMap.get(requestData.folderName) : null;
+
+        await apiClient.createRequest({
+          collection_id: collection.id,
+          folder_id: folderId,
+          name: requestData.name,
+          method: requestData.method,
+          url: requestData.url,
+          headers: requestData.headers || [],
+          params: requestData.params || [],
+          path_params: requestData.pathParams || [],
+          request_type: requestData.requestType || 'none',
+          content_type: requestData.contentType || 'json',
+          body: requestData.body || '',
+          // Include OpenAPI metadata
+          description: requestData.description,
+          summary: requestData.summary,
+          operation_id: requestData.operation_id,
+          tags: requestData.tags,
+          parameters_schema: requestData.parameters_schema,
+          request_body_schema: requestData.request_body_schema,
+          response_schemas: requestData.response_schemas
+        });
+      }
+    }
+
+    // Success - add to context, navigate to collection, and notify parent
+    addCollection(collection);
+    selectCollection(collection);
+    setLocation(`/${collection.id}`);
+
+    if (onSuccess) onSuccess(collection);
+    onClose();
+    resetForm();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -90,133 +228,27 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
       // Extract default name if user didn't provide one
       const collectionName = formData.name.trim() || extractDefaultName(content, format, formData.url.trim());
 
-      let processedData;
-
-      // Process based on detected format using dynamic imports
+      // For OpenAPI, check if there are multiple servers
       if (format === 'openapi') {
-        const { processOpenAPISpec } = await import('../../utils/openApiProcessor');
-        processedData = await processOpenAPISpec(content, collectionName);
-      } else if (format === 'postman') {
-        const { processPostmanCollection } = await import('../../utils/postmanImporter');
-        processedData = await processPostmanCollection(content, collectionName);
-      }
+        try {
+          const spec = JSON.parse(content);
 
-      // Create collection using our API client
-      const collection = await apiClient.createCollection({
-        name: processedData.collectionName,
-        description: processedData.description || '',
-        variables: processedData.variables || [],
-        security_schemes: processedData.securitySchemes || null
-      });
-
-      // Create individual variable records for collection management UI
-      for (const variable of processedData.variables || []) {
-        await apiClient.createSecret({
-          collection_id: collection.id,
-          key: variable.key,
-          value: variable.value,
-          description: variable.description || ''
-        });
-      }
-
-      // Create folders and requests
-      const folderMap = new Map();
-
-      if (format === 'postman') {
-        // Use hierarchical folder creation for Postman collections (same as PostmanImportModal)
-        const createFoldersRecursively = async (parentId = null) => {
-          const foldersAtLevel = processedData.folders.filter(f => f.parent_folder_id === parentId);
-
-          for (const folderData of foldersAtLevel) {
-            const folder = await apiClient.createFolder({
-              name: folderData.name,
-              collection_id: collection.id,
-              parent_folder_id: folderData.parent_folder_id ? folderMap.get(folderData.parent_folder_id) : null,
-              description: folderData.description || ''
-            });
-            folderMap.set(folderData.id, folder.id);
-
-            // Create child folders
-            await createFoldersRecursively(folderData.id);
+          // If OpenAPI 3.x and has multiple servers, show server selection modal
+          if (spec.openapi && spec.servers && spec.servers.length > 1) {
+            setParsedSpec(spec);
+            setSpecFormat(format);
+            setSpecCollectionName(collectionName);
+            setShowServerSelectModal(true);
+            setIsLoading(false);
+            return;
           }
-        };
-
-        await createFoldersRecursively();
-
-        // Create requests with folderId lookup
-        for (const requestData of processedData.requests) {
-          const folderId = requestData.folderId ? folderMap.get(requestData.folderId) : null;
-
-          await apiClient.createRequest({
-            collection_id: collection.id,
-            folder_id: folderId,
-            name: requestData.name,
-            method: requestData.method,
-            url: requestData.url,
-            headers: requestData.headers || [],
-            params: requestData.params || [],
-            path_params: requestData.pathParams || [],
-            request_type: requestData.requestType || 'none',
-            content_type: requestData.contentType || 'json',
-            body: requestData.body || '',
-            form_data: requestData.formData || [],
-            url_encoded_data: requestData.urlEncodedData || [],
-            // Include OpenAPI metadata
-            description: requestData.description,
-            summary: requestData.summary,
-            operation_id: requestData.operation_id,
-            tags: requestData.tags,
-            parameters_schema: requestData.parameters_schema,
-            request_body_schema: requestData.request_body_schema,
-            response_schemas: requestData.response_schemas
-          });
-        }
-      } else {
-        // Use simple folder creation for OpenAPI specs (same as OpenAPIImportModal)
-        for (const folderName of processedData.folders) {
-          const folder = await apiClient.createFolder({
-            name: folderName,
-            collection_id: collection.id
-          });
-          folderMap.set(folderName, folder.id);
-        }
-
-        // Create requests with folderName lookup
-        for (const requestData of processedData.requests) {
-          const folderId = requestData.folderName ? folderMap.get(requestData.folderName) : null;
-
-          await apiClient.createRequest({
-            collection_id: collection.id,
-            folder_id: folderId,
-            name: requestData.name,
-            method: requestData.method,
-            url: requestData.url,
-            headers: requestData.headers || [],
-            params: requestData.params || [],
-            path_params: requestData.pathParams || [],
-            request_type: requestData.requestType || 'none',
-            content_type: requestData.contentType || 'json',
-            body: requestData.body || '',
-            // Include OpenAPI metadata
-            description: requestData.description,
-            summary: requestData.summary,
-            operation_id: requestData.operation_id,
-            tags: requestData.tags,
-            parameters_schema: requestData.parameters_schema,
-            request_body_schema: requestData.request_body_schema,
-            response_schemas: requestData.response_schemas
-          });
+        } catch (_parseError) {
+          // Not JSON, might be YAML - continue with normal processing
         }
       }
 
-      // Success - add to context, navigate to collection, and notify parent
-      addCollection(collection);
-      selectCollection(collection);
-      setLocation(`/${collection.id}`);
-
-      if (onSuccess) onSuccess(collection);
-      onClose();
-      resetForm();
+      // Process without server selection
+      await processImport(content, format, collectionName, null);
 
     } catch (error) {
       console.error('URL import error:', error);
@@ -224,6 +256,30 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleServerSelectionConfirm = async (serverSelection) => {
+    setShowServerSelectModal(false);
+    setIsLoading(true);
+
+    try {
+      // Convert spec back to string for processing
+      const content = JSON.stringify(parsedSpec);
+      await processImport(content, specFormat, specCollectionName, serverSelection);
+    } catch (error) {
+      console.error('URL import error:', error);
+      showErrorToast(error.message || 'Failed to import from URL. Please check the URL and try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleServerSelectionCancel = () => {
+    setShowServerSelectModal(false);
+    setParsedSpec(null);
+    setSpecFormat(null);
+    setSpecCollectionName('');
+    setIsLoading(false);
   };
 
   const resetForm = () => {
@@ -312,6 +368,16 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
           </div>
         </form>
       </Modal>
+
+      {/* Server Selection Modal */}
+      {parsedSpec && (
+        <OpenAPIServerSelectModal
+          isOpen={showServerSelectModal}
+          servers={parsedSpec.servers || []}
+          onClose={handleServerSelectionCancel}
+          onConfirm={handleServerSelectionConfirm}
+        />
+      )}
 
       {/* Toast Notification */}
       <Portal>
