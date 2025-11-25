@@ -5,6 +5,7 @@ import { SearchAutocomplete } from '../components/common/SearchAutocomplete';
 import { ClickableCard } from '../components/common/ClickableCard';
 import { Button } from '../components/common/Button';
 import { BreadCrumbs } from '../components/common/BreadCrumbs';
+import { Alert } from '../components/common/Alert';
 
 export function ApiCatalogPage() {
   usePageTitle('API Catalog');
@@ -18,9 +19,20 @@ export function ApiCatalogPage() {
   const [paginationDetails, setPaginationDetails] = useState(null);
   const [categoryInfo, setCategoryInfo] = useState(null);
   const searchInputRef = useRef(null);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
   // Get current page from URL, default to 1
   const currentPage = params?.page ? parseInt(params.page, 10) : 1;
+
+  // Check for success submission parameter
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('submitted') === 'true') {
+      setShowSuccessAlert(true);
+      // Clean up URL by removing the parameter
+      window.history.replaceState({}, '', '/catalog');
+    }
+  }, []);
 
   // Auto-focus the search input when the page loads
   useEffect(() => {
@@ -438,6 +450,15 @@ export function ApiCatalogPage() {
                 </Button>
               </div>
             </div>
+
+            {/* Success Alert */}
+            {showSuccessAlert && (
+              <div class="px-6 pb-4">
+                <Alert type="tip">
+                  <strong>Thanks!</strong> You have successfully submitted your proposal to the RequestBite API catalog.
+                </Alert>
+              </div>
+            )}
 
             {/* Content Section */}
             <div class="px-6 pb-6">

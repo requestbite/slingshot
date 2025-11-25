@@ -19,6 +19,8 @@ export function ApiCatalogNewEntryPage() {
   const [loadingRegions, setLoadingRegions] = useState(true);
   const [error, setError] = useState(null);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   // Load draft entry from localStorage
   useEffect(() => {
@@ -91,6 +93,40 @@ export function ApiCatalogNewEntryPage() {
       ...prev,
       [field]: value
     }));
+  };
+
+  // Handle image file selection
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      setImageFile(null);
+      setImagePreview(null);
+      return;
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('Image must be PNG, JPG, JPEG, or WebP format');
+      return;
+    }
+
+    // Validate file size (15MB max)
+    const maxSize = 15 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setError('Image file size must not exceed 15 MB');
+      return;
+    }
+
+    setImageFile(file);
+    setError(null);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   // Validate all mandatory fields are filled
@@ -303,6 +339,33 @@ export function ApiCatalogNewEntryPage() {
                       />
                     </div>
 
+                    {/* Image Upload */}
+                    <div class="sm:col-span-6">
+                      <Label htmlFor="image">API Logo/Icon</Label>
+                      <div class="mt-2">
+                        <input
+                          id="image"
+                          type="file"
+                          accept=".png,.jpg,.jpeg,.webp"
+                          onChange={handleImageChange}
+                          class="block w-full text-sm text-gray-900 border border-gray-300 rounded-md cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:border-sky-600 file:mr-4 file:py-2 file:px-4 file:rounded-l-md file:border-0 file:text-sm file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
+                        />
+                        <p class="mt-1 text-xs text-gray-500">
+                          Optional: Upload a logo or icon for the API (PNG, JPG, JPEG, or WebP, max 15 MB)
+                        </p>
+                      </div>
+                      {imagePreview && (
+                        <div class="mt-3">
+                          <p class="text-xs text-gray-700 mb-2">Preview:</p>
+                          <img
+                            src={imagePreview}
+                            alt="Image preview"
+                            class="max-w-xs max-h-32 rounded border border-gray-300"
+                          />
+                        </div>
+                      )}
+                    </div>
+
                   </div>
                 </div>
               </div>
@@ -316,7 +379,7 @@ export function ApiCatalogNewEntryPage() {
                 disabled={!isFormValid()}
                 variant="primary"
               >
-                Auth & Submit
+                Submit
               </Button>
             </div>
           </div>
@@ -327,6 +390,7 @@ export function ApiCatalogNewEntryPage() {
       <ApiCatalogSubmitModal
         isOpen={isSubmitModalOpen}
         onClose={() => setIsSubmitModalOpen(false)}
+        imageFile={imageFile}
       />
     </div>
   );
