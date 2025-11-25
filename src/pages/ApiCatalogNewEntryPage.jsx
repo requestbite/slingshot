@@ -3,8 +3,10 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import { TextInput } from '../components/common/TextInput';
 import { Label } from '../components/common/Label';
 import { Select } from '../components/common/Select';
+import { Button } from '../components/common/Button';
 import { MarkdownPreview } from '../components/common/MarkdownPreview';
 import { Alert } from '../components/common/Alert';
+import { ApiCatalogSubmitModal } from '../components/modals/ApiCatalogSubmitModal';
 
 export function ApiCatalogNewEntryPage() {
   usePageTitle('Add Catalog Entry');
@@ -16,6 +18,7 @@ export function ApiCatalogNewEntryPage() {
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [loadingRegions, setLoadingRegions] = useState(true);
   const [error, setError] = useState(null);
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
 
   // Load draft entry from localStorage
   useEffect(() => {
@@ -88,6 +91,21 @@ export function ApiCatalogNewEntryPage() {
       ...prev,
       [field]: value
     }));
+  };
+
+  // Validate all mandatory fields are filled
+  const isFormValid = () => {
+    if (!formData) return false;
+
+    return (
+      formData.name && formData.name.trim() !== '' &&
+      formData.version && formData.version.trim() !== '' &&
+      formData.categories && formData.categories.length > 0 &&
+      formData.region !== undefined && // Can be null for "Global"
+      formData.provider && formData.provider.trim() !== '' &&
+      formData.serviceName && formData.serviceName.trim() !== '' &&
+      formData.source && formData.source.trim() !== ''
+    );
   };
 
   if (error) {
@@ -284,9 +302,27 @@ export function ApiCatalogNewEntryPage() {
                 </div>
               </div>
             </div>
+
+            {/* Action Buttons */}
+            <div class="mt-6 px-6 pb-6 flex items-center justify-end">
+              <Button
+                onClick={() => setIsSubmitModalOpen(true)}
+                type="button"
+                disabled={!isFormValid()}
+                variant="primary"
+              >
+                Auth & Submit
+              </Button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Submit Modal */}
+      <ApiCatalogSubmitModal
+        isOpen={isSubmitModalOpen}
+        onClose={() => setIsSubmitModalOpen(false)}
+      />
     </div>
   );
 }

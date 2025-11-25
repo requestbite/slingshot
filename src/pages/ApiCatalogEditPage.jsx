@@ -10,6 +10,9 @@ import { fetchFromURL, detectContentFormat } from '../utils/urlImporter';
 export function ApiCatalogEditPage() {
   usePageTitle('Edit Catalog');
 
+  // Router navigation
+  const [, navigate] = useLocation();
+
   // Form state
   const [openapiUrl, setOpenapiUrl] = useState('');
   const [isTestingUrl, setIsTestingUrl] = useState(false);
@@ -225,7 +228,6 @@ export function ApiCatalogEditPage() {
   };
 
   // Handle Next button click
-  const [, navigate] = useLocation();
   const handleNext = () => {
     navigate('/catalog/edit/new');
   };
