@@ -203,7 +203,10 @@ export function ApiCatalogNewEntryPage() {
 
                     {/* Description - Two column section (full width) */}
                     <div class="sm:col-span-6">
-                      <Label htmlFor="description">Description</Label>
+                      <Label
+                        htmlFor="description"
+                        description="Description in Common Markdown. Fetched from OpenAPI spec."
+                      >Description</Label>
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Left: Textarea */}
                         <div>
@@ -214,7 +217,6 @@ export function ApiCatalogNewEntryPage() {
                             onInput={(e) => updateField('description', e.target.value)}
                             rows={10}
                             placeholder="Enter description in Markdown format..."
-                            description="Optional description in Common Markdown format."
                           />
                         </div>
                         {/* Right: Markdown Preview */}
@@ -234,6 +236,7 @@ export function ApiCatalogNewEntryPage() {
                         options={categoryOptions}
                         disabled={loadingCategories}
                         placeholder="Select a category..."
+                        description="Mandatory category for the API."
                       />
                     </div>
 
@@ -247,6 +250,7 @@ export function ApiCatalogNewEntryPage() {
                         options={regionOptions}
                         disabled={loadingRegions}
                         placeholder="Select a region..."
+                        description='Only pick a region other than "Global" if the API is clearly targeting a specific country.'
                       />
                     </div>
 
@@ -295,6 +299,7 @@ export function ApiCatalogNewEntryPage() {
                         value={formData.source}
                         onChange={(value) => updateField('source', value)}
                         options={sourceOptions}
+                        description="Select if spec is offered by API provider, or if it is a community effort."
                       />
                     </div>
 
