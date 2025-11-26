@@ -20,10 +20,8 @@ export function Alert({ type = 'note', children, className = '' }) {
       iconColor: 'text-lime-600',
       icon: (
         <svg class="size-6 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M15 2.5V8h5.5"></path>
-          <path d="M19 21a2 2 0 0 0 2-2V7.5L15.5 2H6a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2z"></path>
-          <circle cx="10" cy="13" r="2"></circle>
-          <path d="m20 17-1.296-1.296a2.41 2.41 0 0 0-3.408 0L9 22"></path>
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="m9 12 2 2 4-4"></path>
         </svg>
       )
     },
