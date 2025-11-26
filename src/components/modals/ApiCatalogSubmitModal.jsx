@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
@@ -10,6 +10,7 @@ export function ApiCatalogSubmitModal({ isOpen, onClose, imageFile }) {
   const [error, setError] = useState(null);
   const [email, setEmail] = useState('');
   const [, setLocation] = useLocation();
+  const emailInputRef = useRef(null);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -17,6 +18,13 @@ export function ApiCatalogSubmitModal({ isOpen, onClose, imageFile }) {
       setLoading(false);
       setError(null);
       setEmail('');
+
+      // Focus email input after a short delay to ensure modal is rendered
+      setTimeout(() => {
+        if (emailInputRef.current) {
+          emailInputRef.current.focus();
+        }
+      }, 100);
     }
   }, [isOpen]);
 
@@ -114,7 +122,7 @@ export function ApiCatalogSubmitModal({ isOpen, onClose, imageFile }) {
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Submit to API catalog" size="md">
-      <div class="text-sm text-gray-500 mb-6">
+      <div class="text-sm text-gray-600 mb-6">
         By clicking the "Submit" button below, your API proposal will be submitted to the RequestBite API catalog for review.
       </div>
 
@@ -129,6 +137,7 @@ export function ApiCatalogSubmitModal({ isOpen, onClose, imageFile }) {
           placeholder="your.email@example.com"
           disabled={loading}
           description="Get notified when your proposal has been reviewed."
+          ref={emailInputRef}
         />
       </div>
 

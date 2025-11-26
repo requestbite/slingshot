@@ -1,16 +1,21 @@
 import { useState, useEffect } from 'preact/hooks';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { useLocation } from 'wouter-preact';
 import { TextInput } from '../components/common/TextInput';
 import { Label } from '../components/common/Label';
 import { Select } from '../components/common/Select';
 import { Button } from '../components/common/Button';
 import { MarkdownPreview } from '../components/common/MarkdownPreview';
 import { Alert } from '../components/common/Alert';
+import { Modal } from '../components/common/Modal';
 import { ApiCatalogSubmitModal } from '../components/modals/ApiCatalogSubmitModal';
 import { ImageViewer } from '../components/common/ImageViewer';
 
 export function ApiCatalogNewEntryPage() {
   usePageTitle('Add Catalog Entry');
+
+  // Router navigation
+  const [, navigate] = useLocation();
 
   // Form state from localStorage
   const [formData, setFormData] = useState(null);
@@ -20,6 +25,7 @@ export function ApiCatalogNewEntryPage() {
   const [loadingRegions, setLoadingRegions] = useState(true);
   const [error, setError] = useState(null);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [showReadOnlyData, setShowReadOnlyData] = useState(false);
 
@@ -131,6 +137,14 @@ export function ApiCatalogNewEntryPage() {
     );
   };
 
+  // Handle cancel proposal
+  const handleCancelProposal = () => {
+    // Clear draft entry from localStorage
+    localStorage.removeItem('api-catalog-draft-entry');
+    // Navigate to catalog
+    navigate('/catalog');
+  };
+
   if (error) {
     return (
       <div class="h-full bg-gray-100 overflow-y-auto">
@@ -186,10 +200,10 @@ export function ApiCatalogNewEntryPage() {
             <div class="sm:flex sm:items-start p-6">
               <div class="sm:flex-auto">
                 <h1 class="text-base/7 font-semibold text-gray-900">
-                  Add Catalog Entry
+                  API Details
                 </h1>
                 <p class="mt-1 text-sm/6 text-gray-600">
-                  Use the form below to propose a new entry to the API catalog.
+                  Use the form below to describe your API proposal.
                 </p>
               </div>
             </div>
@@ -371,7 +385,14 @@ export function ApiCatalogNewEntryPage() {
             </div>
 
             {/* Action Buttons */}
-            <div class="mt-6 px-6 pb-6 flex items-center justify-end">
+            <div class="mt-6 px-6 pb-6 flex items-center justify-between">
+              <Button
+                onClick={() => setIsCancelModalOpen(true)}
+                type="button"
+                variant="secondary"
+              >
+                Cancel
+              </Button>
               <Button
                 onClick={() => setIsSubmitModalOpen(true)}
                 type="button"
@@ -391,6 +412,33 @@ export function ApiCatalogNewEntryPage() {
         onClose={() => setIsSubmitModalOpen(false)}
         imageFile={imageFile}
       />
+
+      {/* Cancel Confirmation Modal */}
+      <Modal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        title="Cancel API proposal"
+        size="md"
+      >
+        <div class="text-sm text-gray-600 mb-6">
+          By cancelling the proposal process, you will clear the draft entry from your browser and have to start over to propose a new API.
+        </div>
+
+        <div class="mt-6 flex justify-end gap-3">
+          <Button
+            onClick={() => setIsCancelModalOpen(false)}
+            variant="secondary"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleCancelProposal}
+            variant="primary"
+          >
+            Cancel Proposal
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

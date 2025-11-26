@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useLocation } from 'wouter-preact';
 import { TextInput } from '../components/common/TextInput';
@@ -8,7 +8,7 @@ import { Alert } from '../components/common/Alert';
 import { fetchFromURL, detectContentFormat } from '../utils/urlImporter';
 
 export function ApiCatalogEditPage() {
-  usePageTitle('Edit Catalog');
+  usePageTitle('Propose API to Catalog');
 
   // Router navigation
   const [, navigate] = useLocation();
@@ -19,11 +19,39 @@ export function ApiCatalogEditPage() {
   const [testError, setTestError] = useState(null);
   const [testSuccessMessage, setTestSuccessMessage] = useState(null);
 
+  // Ref for input field
+  const urlInputRef = useRef(null);
+
+  // Auto-focus input on mount
+  useEffect(() => {
+    if (urlInputRef.current) {
+      urlInputRef.current.focus();
+    }
+  }, []);
+
+  // Normalize URL by adding https:// if no protocol is present
+  const normalizeUrl = (url) => {
+    const trimmed = url.trim();
+    if (!trimmed) return '';
+
+    // Check if URL already has a protocol
+    if (trimmed.match(/^https?:\/\//i)) {
+      return trimmed;
+    }
+
+    // Add https:// prefix
+    return `https://${trimmed}`;
+  };
+
   // Validate URL format
   const isValidUrl = (url) => {
     if (!url.trim()) return false;
+
+    // Normalize the URL before validating
+    const normalized = normalizeUrl(url);
+
     try {
-      new URL(url);
+      new URL(normalized);
       return true;
     } catch {
       return false;
@@ -36,6 +64,14 @@ export function ApiCatalogEditPage() {
     // Clear test results when URL changes
     setTestError(null);
     setTestSuccessMessage(null);
+  };
+
+  // Handle Enter key press
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && canTest) {
+      e.preventDefault();
+      handleTestUrl();
+    }
   };
 
   // Generate UUID v4
@@ -101,6 +137,12 @@ export function ApiCatalogEditPage() {
     setIsTestingUrl(true);
 
     try {
+      // Normalize the URL
+      const normalizedUrl = normalizeUrl(openapiUrl);
+
+      // Update the input field with normalized URL
+      setOpenapiUrl(normalizedUrl);
+
       // Create a 10-second timeout promise
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Request timed out after 10 seconds')), 10000);
@@ -108,7 +150,7 @@ export function ApiCatalogEditPage() {
 
       // Fetch content from URL with 10-second timeout
       const { content } = await Promise.race([
-        fetchFromURL(openapiUrl),
+        fetchFromURL(normalizedUrl),
         timeoutPromise
       ]);
 
@@ -151,7 +193,7 @@ export function ApiCatalogEditPage() {
       // Check if URL is already in the catalog
       try {
         const catalogResponse = await fetch(
-          `${import.meta.env.VITE_CATALOG_API}/v1/apis/specurl?url=${encodeURIComponent(openapiUrl)}`
+          `${import.meta.env.VITE_CATALOG_API}/v1/apis/specurl?url=${encodeURIComponent(normalizedUrl)}`
         );
 
         if (catalogResponse.status === 200) {
@@ -204,12 +246,12 @@ export function ApiCatalogEditPage() {
         name: title,
         version: apiVersion,
         description: description,
-        url: openapiUrl,
+        url: normalizedUrl,
         urlExtDoc: externalDocsUrl,
         provider: provider,
         serviceName: serviceName,
         categories: [],
-        source: 'API provider',
+        source: 'api-provider',
         region: null
       };
 
@@ -246,18 +288,36 @@ export function ApiCatalogEditPage() {
             <div class="sm:flex sm:items-start p-6">
               <div class="sm:flex-auto">
                 <h1 class="text-base/7 font-semibold text-gray-900">
-                  Edit Catalog
+                  Propose API to Catalog
                 </h1>
                 <p class="mt-1 text-sm/6 text-gray-600">
-                  Use this wizard to add or edit a catalog entry.
+                  Use this wizard to propose a new catalog entry.
                 </p>
               </div>
             </div>
 
             {/* Content Section */}
-            <div class="py-6 px-6">
+            <div class="pb-6 px-6">
               <div class="space-y-8">
                 <div class="border-b border-gray-900/10 pb-8">
+                  {/* Thank You Note */}
+                  <div class="mb-6">
+                    <Alert type="note">
+                      <div class="leading-5">
+                        <p class="font-semibold mb-2">Thank you!</p>
+                        <p class="mb-3">Thank you for wanting to propose a new API (or rather an OpenAPI spec) to the RequestBite API catalog. To propose a new catalog entry, please note the following:</p>
+                        <ul class="list-disc space-y-3 mb-3 ml-5">
+                          <li class="pl-1">You must provide a valid e-mail address to yourself. It will not be stored or published in the catalog. It is only used to notify you about the review process.</li>
+                          <li class="pl-1">Proposed APIs must be for publicly available and stable REST APIs that anyone can use.</li>
+                          <li class="pl-1">Even if the OpenAPI spec is in another language than English, please submit name and description in English.</li>
+                          <li class="pl-1">We reserve the right to reject proposals and to remove APIs from the catalog.</li>
+                        </ul>
+                        <p class="mb-3">Once again, thanks for wanting to help expand the API catalog with a new interesting API.</p>
+                        <p>The RequestBite Team</p>
+                      </div>
+                    </Alert>
+                  </div>
+
                   <div class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
 
                     {/* OpenAPI URL Input */}
@@ -266,10 +326,12 @@ export function ApiCatalogEditPage() {
                       <div class="flex gap-2">
                         <TextInput
                           id="openapi-url"
-                          type="url"
+                          type="text"
                           value={openapiUrl}
                           onInput={handleUrlChange}
-                          placeholder="https://api.example.com/openapi.json"
+                          onKeyPress={handleKeyPress}
+                          placeholder="api.example.com/openapi.json"
+                          ref={urlInputRef}
                         />
                         <Button
                           type="button"
@@ -306,7 +368,7 @@ export function ApiCatalogEditPage() {
             </div>
 
             {/* Action Buttons */}
-            <div class="mt-6 px-6 pb-6 flex items-center justify-end">
+            <div class="px-6 pb-6 flex items-center justify-end">
               <Button
                 onClick={handleNext}
                 type="button"
@@ -318,7 +380,7 @@ export function ApiCatalogEditPage() {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }

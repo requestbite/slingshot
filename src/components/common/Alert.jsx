@@ -1,10 +1,10 @@
 export function Alert({ type = 'note', children, className = '' }) {
   const config = {
     note: {
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-700',
-      borderColor: 'border-blue-600 border-2',
-      iconColor: 'text-blue-600',
+      bgColor: 'bg-sky-100',
+      textColor: 'text-sky-700',
+      borderColor: '',
+      iconColor: 'text-sky-700',
       icon: (
         <svg class="size-6 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
@@ -28,7 +28,7 @@ export function Alert({ type = 'note', children, className = '' }) {
     important: {
       bgColor: 'bg-purple-50',
       textColor: 'text-purple-700',
-      borderColor: 'border-purple-600 border-2',
+      borderColor: '',
       iconColor: 'text-purple-600',
       icon: (
         <svg class="size-6 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
