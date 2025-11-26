@@ -21,6 +21,7 @@ export function ApiCatalogNewEntryPage() {
   const [error, setError] = useState(null);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [imageFile, setImageFile] = useState(null);
+  const [showReadOnlyData, setShowReadOnlyData] = useState(false);
 
   // Load draft entry from localStorage
   useEffect(() => {
@@ -171,8 +172,8 @@ export function ApiCatalogNewEntryPage() {
 
   // Source options
   const sourceOptions = [
-    { value: 'API provider', label: 'API provider' },
-    { value: 'Community', label: 'Community' }
+    { value: 'api-provider', label: 'API provider' },
+    { value: 'community', label: 'Community' }
   ];
 
   return (
@@ -194,10 +195,24 @@ export function ApiCatalogNewEntryPage() {
             </div>
 
             {/* Content Section */}
-            <div class="py-6 px-6">
+            <div class="pt-2 pb-6 px-6">
               <div class="space-y-8">
                 <div class="border-b border-gray-900/10 pb-8">
                   <div class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
+
+                    {/* Logo */}
+                    <div class="sm:col-span-6">
+                      <Label htmlFor="image">Logo</Label>
+                      <div class="mt-2">
+                        <ImageViewer
+                          value={imageFile}
+                          onChange={handleImageChange}
+                        />
+                        <p class="mt-1 text-xs text-gray-500">
+                          Upload a logo or icon for the API (max 15 MB)
+                        </p>
+                      </div>
+                    </div>
 
                     {/* Name */}
                     <div class="sm:col-span-4">
@@ -208,18 +223,6 @@ export function ApiCatalogNewEntryPage() {
                         value={formData.name}
                         onInput={(e) => updateField('name', e.target.value)}
                         description="Required name for the catalog entry."
-                      />
-                    </div>
-
-                    {/* Version (read-only) */}
-                    <div class="sm:col-span-4">
-                      <Label htmlFor="version" mandatory={true}>Version</Label>
-                      <TextInput
-                        id="version"
-                        type="text"
-                        value={formData.version}
-                        disabled={true}
-                        description="Fetched from OpenAPI spec. Cannot be updated."
                       />
                     </div>
 
@@ -289,30 +292,6 @@ export function ApiCatalogNewEntryPage() {
                       />
                     </div>
 
-                    {/* Provider (read-only) */}
-                    <div class="sm:col-span-4">
-                      <Label htmlFor="provider" mandatory={true}>Provider</Label>
-                      <TextInput
-                        id="provider"
-                        type="text"
-                        value={formData.provider}
-                        disabled={true}
-                        description="Generated from OpenAPI spec. Cannot be updated."
-                      />
-                    </div>
-
-                    {/* Service (read-only) */}
-                    <div class="sm:col-span-4">
-                      <Label htmlFor="service" mandatory={true}>Service</Label>
-                      <TextInput
-                        id="service"
-                        type="text"
-                        value={formData.serviceName}
-                        disabled={true}
-                        description="Generated from OpenAPI spec. Cannot be updated."
-                      />
-                    </div>
-
                     {/* Source */}
                     <div class="sm:col-span-4">
                       <Label htmlFor="source" mandatory={true}>Source</Label>
@@ -325,23 +304,70 @@ export function ApiCatalogNewEntryPage() {
                       />
                     </div>
 
-                    {/* Image Upload */}
-                    <div class="sm:col-span-6">
-                      <Label htmlFor="image">Logo</Label>
-                      <div class="mt-2">
-                        <ImageViewer
-                          value={imageFile}
-                          onChange={handleImageChange}
-                        />
-                        <p class="mt-1 text-xs text-gray-500">
-                          Upload a logo or icon for the API (max 15 MB)
-                        </p>
-                      </div>
-                    </div>
-
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Read-Only Data Section */}
+            <div class="px-6">
+              <div class="mb-4">
+                <Button
+                  onClick={() => setShowReadOnlyData(!showReadOnlyData)}
+                  variant="none"
+                  className="flex items-center text-sm font-medium text-gray-700 cursor-pointer"
+                >
+                  <svg
+                    class={`h-4 w-4 mr-1 transition-transform duration-200 ${showReadOnlyData ? 'rotate-90' : ''}`}
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                  </svg>
+                  Read-Only Data
+                </Button>
+              </div>
+
+              {showReadOnlyData && (
+                <div class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
+                  {/* Version (read-only) */}
+                  <div class="sm:col-span-4">
+                    <Label htmlFor="version" mandatory={true}>Version</Label>
+                    <TextInput
+                      id="version"
+                      type="text"
+                      value={formData.version}
+                      disabled={true}
+                      description="Fetched from OpenAPI spec. Cannot be updated."
+                    />
+                  </div>
+
+                  {/* Provider (read-only) */}
+                  <div class="sm:col-span-4">
+                    <Label htmlFor="provider" mandatory={true}>Provider</Label>
+                    <TextInput
+                      id="provider"
+                      type="text"
+                      value={formData.provider}
+                      disabled={true}
+                      description="Generated from OpenAPI spec. Cannot be updated."
+                    />
+                  </div>
+
+                  {/* Service (read-only) */}
+                  <div class="sm:col-span-4">
+                    <Label htmlFor="service" mandatory={true}>Service</Label>
+                    <TextInput
+                      id="service"
+                      type="text"
+                      value={formData.serviceName}
+                      disabled={true}
+                      description="Generated from OpenAPI spec. Cannot be updated."
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}
