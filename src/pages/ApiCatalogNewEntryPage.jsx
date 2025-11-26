@@ -163,7 +163,7 @@ export function ApiCatalogNewEntryPage() {
 
   // Prepare region options
   const regionOptions = [
-    { value: null, label: 'Global' },
+    { value: '', label: 'Global' },
     ...regions.map(region => ({
       value: region.key,
       label: region.name
@@ -270,8 +270,8 @@ export function ApiCatalogNewEntryPage() {
                       <Label htmlFor="region" mandatory={true}>Region</Label>
                       <Select
                         id="region"
-                        value={formData.region || ''}
-                        onChange={(value) => updateField('region', value || null)}
+                        value={formData.region === null || formData.region === undefined ? '' : formData.region}
+                        onChange={(value) => updateField('region', value === '' ? null : value)}
                         options={regionOptions}
                         disabled={loadingRegions}
                         placeholder="Select a region..."

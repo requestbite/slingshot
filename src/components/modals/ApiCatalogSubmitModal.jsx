@@ -2,10 +2,13 @@ import { useState, useEffect } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
+import { TextInput } from '../common/TextInput';
+import { Label } from '../common/Label';
 
 export function ApiCatalogSubmitModal({ isOpen, onClose, imageFile }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [email, setEmail] = useState('');
   const [, setLocation] = useLocation();
 
   // Reset state when modal opens
@@ -13,8 +16,15 @@ export function ApiCatalogSubmitModal({ isOpen, onClose, imageFile }) {
     if (isOpen) {
       setLoading(false);
       setError(null);
+      setEmail('');
     }
   }, [isOpen]);
+
+  // Simple email validation
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   // Handle API proposal submission
   const handleSubmit = async () => {
@@ -57,6 +67,9 @@ export function ApiCatalogSubmitModal({ isOpen, onClose, imageFile }) {
       if (imageFile) {
         formDataToSend.append('image', imageFile);
       }
+
+      // Add email
+      formDataToSend.append('email', email);
 
       // Submit to backend API
       const response = await fetch(
@@ -105,6 +118,20 @@ export function ApiCatalogSubmitModal({ isOpen, onClose, imageFile }) {
         By clicking the "Submit" button below, your API proposal will be submitted to the RequestBite API catalog for review.
       </div>
 
+      {/* Email Input */}
+      <div class="mb-6">
+        <Label htmlFor="email" mandatory={true}>Your email</Label>
+        <TextInput
+          id="email"
+          type="email"
+          value={email}
+          onInput={(e) => setEmail(e.target.value)}
+          placeholder="your.email@example.com"
+          disabled={loading}
+          description="Get notified when your proposal has been reviewed."
+        />
+      </div>
+
       {/* Error Message */}
       {error && (
         <div class="mb-6 rounded-md bg-red-50 p-4">
@@ -125,7 +152,7 @@ export function ApiCatalogSubmitModal({ isOpen, onClose, imageFile }) {
       <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
         <Button
           onClick={handleSubmit}
-          disabled={loading}
+          disabled={loading || !isValidEmail(email)}
           variant="primary"
           className="w-full sm:ml-3 sm:w-auto"
         >
