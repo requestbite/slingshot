@@ -15,6 +15,7 @@ const CollectionUpdatePage = lazy(() => import('./pages/CollectionUpdatePage').t
 const ApiCatalogPage = lazy(() => import('./pages/ApiCatalogPage').then(m => ({ default: m.ApiCatalogPage })));
 const ApiCatalogDetailsPage = lazy(() => import('./pages/ApiCatalogDetailsPage').then(m => ({ default: m.ApiCatalogDetailsPage })));
 const ApiCatalogEditPage = lazy(() => import('./pages/ApiCatalogEditPage').then(m => ({ default: m.ApiCatalogEditPage })));
+const ApiCatalogEditProposalPage = lazy(() => import('./pages/ApiCatalogEditProposalPage').then(m => ({ default: m.ApiCatalogEditProposalPage })));
 const ApiCatalogNewEntryPage = lazy(() => import('./pages/ApiCatalogNewEntryPage').then(m => ({ default: m.ApiCatalogNewEntryPage })));
 const EnvironmentsPage = lazy(() => import('./pages/EnvironmentsPage').then(m => ({ default: m.EnvironmentsPage })));
 const EnvironmentUpdatePage = lazy(() => import('./pages/EnvironmentUpdatePage').then(m => ({ default: m.EnvironmentUpdatePage })));
@@ -336,6 +337,11 @@ export function App() {
             <Route path="/collections">
               <FullPageLayout>
                 <CollectionsPage />
+              </FullPageLayout>
+            </Route>
+            <Route path="/catalog/edit/:uuid">
+              <FullPageLayout>
+                <ApiCatalogEditProposalPage />
               </FullPageLayout>
             </Route>
             <Route path="/catalog/edit/new">

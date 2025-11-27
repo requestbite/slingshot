@@ -11,7 +11,7 @@ import { Modal } from '../components/common/Modal';
 import { ApiCatalogSubmitModal } from '../components/modals/ApiCatalogSubmitModal';
 import { ImageViewer } from '../components/common/ImageViewer';
 
-export function ApiCatalogNewEntryPage() {
+export function ApiCatalogNewEntryPage({ initialImageFile = null }) {
   usePageTitle('Add Catalog Entry');
 
   // Router navigation
@@ -26,7 +26,7 @@ export function ApiCatalogNewEntryPage() {
   const [error, setError] = useState(null);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [imageFile, setImageFile] = useState(null);
+  const [imageFile, setImageFile] = useState(initialImageFile);
   const [showReadOnlyData, setShowReadOnlyData] = useState(false);
 
   // Load draft entry from localStorage
@@ -44,6 +44,13 @@ export function ApiCatalogNewEntryPage() {
       setError('No draft entry found. Please go back and test a URL first.');
     }
   }, []);
+
+  // Handle initialImageFile prop updates
+  useEffect(() => {
+    if (initialImageFile) {
+      setImageFile(initialImageFile);
+    }
+  }, [initialImageFile]);
 
   // Fetch categories
   useEffect(() => {
