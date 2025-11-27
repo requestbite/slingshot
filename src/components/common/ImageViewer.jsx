@@ -1,4 +1,4 @@
-import { useState, useRef } from 'preact/hooks';
+import { useState, useRef, useEffect } from 'preact/hooks';
 
 /**
  * ImageViewer Component
@@ -23,6 +23,26 @@ export function ImageViewer({
   const [fileName, setFileName] = useState('');
   const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
   const fileInputRef = useRef(null);
+
+  // Sync internal state with value prop
+  useEffect(() => {
+    if (value && value instanceof File) {
+      setFileName(value.name);
+      setSelectedImage(value);
+
+      // Create preview URL from the File object
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreviewUrl(e.target.result);
+      };
+      reader.readAsDataURL(value);
+    } else if (value === null) {
+      // Clear state if value is explicitly null
+      setSelectedImage(null);
+      setFileName('');
+      setImagePreviewUrl(null);
+    }
+  }, [value]);
 
   // Handle file selection
   const handleFileSelect = (file) => {
