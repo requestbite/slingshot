@@ -339,14 +339,14 @@ export function App() {
                 <CollectionsPage />
               </FullPageLayout>
             </Route>
-            <Route path="/catalog/edit/:uuid">
-              <FullPageLayout>
-                <ApiCatalogEditProposalPage />
-              </FullPageLayout>
-            </Route>
             <Route path="/catalog/edit/new">
               <FullPageLayout>
                 <ApiCatalogNewEntryPage />
+              </FullPageLayout>
+            </Route>
+            <Route path="/catalog/edit/:uuid">
+              <FullPageLayout>
+                <ApiCatalogEditProposalPage />
               </FullPageLayout>
             </Route>
             <Route path="/catalog/edit">
