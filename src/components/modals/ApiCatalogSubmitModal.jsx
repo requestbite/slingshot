@@ -34,6 +34,14 @@ export function ApiCatalogSubmitModal({ isOpen, onClose, imageFile }) {
     return emailRegex.test(email);
   };
 
+  // Handle keyboard events
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && isValidEmail(email) && !loading) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
   // Handle API proposal submission
   const handleSubmit = async () => {
     setLoading(true);
@@ -134,6 +142,7 @@ export function ApiCatalogSubmitModal({ isOpen, onClose, imageFile }) {
           type="email"
           value={email}
           onInput={(e) => setEmail(e.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder="your.email@example.com"
           disabled={loading}
           description="Get notified when your proposal has been reviewed."
