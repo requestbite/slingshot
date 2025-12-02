@@ -2,7 +2,7 @@
 @plugin "@tailwindcss/typography";
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Twemoji Country Flags', 'Inter', system-ui, sans-serif;
 }
 
 /* Custom class for docs sidebar visibility at exact 1450px breakpoint */
