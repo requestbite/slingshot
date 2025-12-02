@@ -91,7 +91,7 @@ export const SearchAutocomplete = forwardRef((
           .slice(0, maxResults);
 
         setFilteredItems(filtered);
-        setShowDropdown(filtered.length > 0);
+        setShowDropdown(true);
       } else {
         setFilteredItems([]);
         setShowDropdown(false);
@@ -115,7 +115,7 @@ export const SearchAutocomplete = forwardRef((
           const results = await onSearch(value);
           const limited = results.slice(0, maxResults);
           setFilteredItems(limited);
-          setShowDropdown(limited.length > 0);
+          setShowDropdown(true);
           setSelectedIndex(-1);
         } catch (error) {
           console.error('Search error:', error);
@@ -270,7 +270,7 @@ export const SearchAutocomplete = forwardRef((
               Searching...
             </div>
           ) : shouldShowEmptyMessage ? (
-            <div class="px-3 py-2 text-sm text-gray-500 text-center">
+            <div class="px-3 py-2 text-sm text-gray-500 text-center italic">
               {emptyMessage}
             </div>
           ) : (
