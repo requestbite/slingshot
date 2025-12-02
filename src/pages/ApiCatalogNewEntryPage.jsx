@@ -187,7 +187,7 @@ export function ApiCatalogNewEntryPage({ initialImageFile = null }) {
     { value: '', label: 'Global' },
     ...regions.map(region => ({
       value: region.key,
-      label: region.name
+      label: region.flag ? `${region.name} ${region.flag}` : region.name
     }))
   ];
 

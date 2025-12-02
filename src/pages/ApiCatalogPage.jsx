@@ -134,14 +134,21 @@ export function ApiCatalogPage() {
     }
   };
 
-  const renderApiItem = (api) => (
-    <div class="flex flex-col gap-1">
-      <div class="font-medium text-gray-900">{api.name}</div>
-      <div class="text-xs text-gray-600">
-        {api.description || 'No description available.'}
+  const renderApiItem = (api) => {
+    // Build title with region flag if available
+    const apiTitle = api.serviceName?.regionFlag
+      ? `${api.name} ${api.serviceName.regionFlag}`
+      : api.name;
+
+    return (
+      <div class="flex flex-col gap-1">
+        <div class="font-medium text-gray-900">{apiTitle}</div>
+        <div class="text-xs text-gray-600">
+          {api.description || 'No description available.'}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Helper component to render check/cross icon
   const SpecIcon = ({ available }) => (
@@ -312,11 +319,16 @@ export function ApiCatalogPage() {
                           ? `/catalog/api/${api.provider.key}/${api.serviceName.key}/${api.version}`
                           : `/catalog/api/${api.id}`;
 
+                        // Build title with region flag if available
+                        const apiTitle = api.serviceName?.regionFlag
+                          ? `${api.name || "Untitled API"} ${api.serviceName.regionFlag}`
+                          : (api.name || "Untitled API");
+
                         return (
                           <ClickableCard
                             key={api.id}
                             href={apiUrl}
-                            title={api.name || "Untitled API"}
+                            title={apiTitle}
                             description={renderApiDetails(api)}
                             icon={
                               <div class="flex items-center justify-center">
