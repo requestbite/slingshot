@@ -5,6 +5,7 @@ import { SearchAutocomplete } from '../components/common/SearchAutocomplete';
 import { ClickableCard } from '../components/common/ClickableCard';
 import { Button } from '../components/common/Button';
 import { BreadCrumbs } from '../components/common/BreadCrumbs';
+import { Alert } from '../components/common/Alert';
 
 export function ApiCatalogPage() {
   usePageTitle('API Catalog');
@@ -18,9 +19,20 @@ export function ApiCatalogPage() {
   const [paginationDetails, setPaginationDetails] = useState(null);
   const [categoryInfo, setCategoryInfo] = useState(null);
   const searchInputRef = useRef(null);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
   // Get current page from URL, default to 1
   const currentPage = params?.page ? parseInt(params.page, 10) : 1;
+
+  // Check for success submission parameter
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('submitted') === 'true') {
+      setShowSuccessAlert(true);
+      // Clean up URL by removing the parameter
+      window.history.replaceState({}, '', '/catalog');
+    }
+  }, []);
 
   // Auto-focus the search input when the page loads
   useEffect(() => {
@@ -122,14 +134,21 @@ export function ApiCatalogPage() {
     }
   };
 
-  const renderApiItem = (api) => (
-    <div class="flex flex-col gap-1">
-      <div class="font-medium text-gray-900">{api.name}</div>
-      <div class="text-xs text-gray-600">
-        {api.description || 'No description available.'}
+  const renderApiItem = (api) => {
+    // Build title with region flag if available
+    const apiTitle = api.serviceName?.regionFlag
+      ? `${api.name} ${api.serviceName.regionFlag}`
+      : api.name;
+
+    return (
+      <div class="flex flex-col gap-1">
+        <div class="font-medium text-gray-900">{apiTitle}</div>
+        <div class="text-xs text-gray-600">
+          {api.description || 'No description available.'}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Helper component to render check/cross icon
   const SpecIcon = ({ available }) => (
@@ -300,11 +319,16 @@ export function ApiCatalogPage() {
                           ? `/catalog/api/${api.provider.key}/${api.serviceName.key}/${api.version}`
                           : `/catalog/api/${api.id}`;
 
+                        // Build title with region flag if available
+                        const apiTitle = api.serviceName?.regionFlag
+                          ? `${api.name || "Untitled API"} ${api.serviceName.regionFlag}`
+                          : (api.name || "Untitled API");
+
                         return (
                           <ClickableCard
                             key={api.id}
                             href={apiUrl}
-                            title={api.name || "Untitled API"}
+                            title={apiTitle}
                             description={renderApiDetails(api)}
                             icon={
                               <div class="flex items-center justify-center">
@@ -426,7 +450,27 @@ export function ApiCatalogPage() {
                   Explore the vast number of REST APIs in the RequestBite API catalog.
                 </p>
               </div>
+              <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+                <Button
+                  onClick={() => setLocation('/catalog/edit')}
+                  type="button"
+                  variant="primary"
+                  size="md"
+                  className="block text-center"
+                >
+                  Add API
+                </Button>
+              </div>
             </div>
+
+            {/* Success Alert */}
+            {showSuccessAlert && (
+              <div class="px-6 pb-4">
+                <Alert type="tip">
+                  <strong>Thanks!</strong> You have successfully submitted your proposal to the RequestBite API catalog.
+                </Alert>
+              </div>
+            )}
 
             {/* Content Section */}
             <div class="px-6 pb-6">

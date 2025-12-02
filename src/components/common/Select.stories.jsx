@@ -9,6 +9,10 @@ export default {
   argTypes: {
     value: { control: 'text' },
     placeholder: { control: 'text' },
+    description: {
+      control: 'text',
+      description: 'Optional description text displayed below the select',
+    },
     disabled: { control: 'boolean' },
     size: {
       control: 'select',
@@ -89,6 +93,28 @@ export const Environments = {
     value: 'dev',
     options: environmentOptions,
     placeholder: 'Select environment...',
+    size: 'normal',
+  },
+};
+
+// With description
+export const WithDescription = {
+  args: {
+    value: 'GET',
+    options: methodOptions,
+    placeholder: 'Select method...',
+    description: 'Choose the HTTP method for your request',
+    size: 'normal',
+  },
+};
+
+// With long description
+export const WithLongDescription = {
+  args: {
+    value: '',
+    options: environmentOptions,
+    placeholder: 'Select environment...',
+    description: 'Choose the environment where your request will be executed. Development is for testing, Staging mirrors production, and Production is live.',
     size: 'normal',
   },
 };
@@ -199,6 +225,7 @@ export const InForm = {
           value="POST"
           onChange={fn()}
           options={methodOptions}
+          description="The HTTP method to use for the API request"
           size="normal"
         />
       </div>
@@ -212,6 +239,7 @@ export const InForm = {
           onChange={fn()}
           options={environmentOptions}
           placeholder="Select environment..."
+          description="Choose where this request will be executed"
           size="normal"
         />
       </div>

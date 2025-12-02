@@ -144,14 +144,21 @@ export function ApiCatalogDetailsPage() {
     }
   };
 
-  const renderApiItem = (api) => (
-    <div class="flex flex-col gap-1">
-      <div class="font-medium text-gray-900">{api.name}</div>
-      <div class="text-xs text-gray-600">
-        {api.description || 'No description available.'}
+  const renderApiItem = (api) => {
+    // Build title with region flag if available
+    const apiTitle = api.serviceName?.regionFlag
+      ? `${api.name} ${api.serviceName.regionFlag}`
+      : api.name;
+
+    return (
+      <div class="flex flex-col gap-1">
+        <div class="font-medium text-gray-900">{apiTitle}</div>
+        <div class="text-xs text-gray-600">
+          {api.description || 'No description available.'}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div class="h-full bg-gray-100 overflow-y-auto">
@@ -327,6 +334,16 @@ export function ApiCatalogDetailsPage() {
                               </span>
                             ))}
                           </div>
+                        </dd>
+                      </div>
+                    )}
+
+                    {/* Region */}
+                    {apiData.serviceName?.regionKey && (
+                      <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
+                        <dt class="text-sm font-medium text-gray-500">Region</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                          {apiData.serviceName.regionFlag} {apiData.serviceName.regionName}
                         </dd>
                       </div>
                     )}

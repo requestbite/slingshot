@@ -19,6 +19,10 @@ export default {
       description: 'Whether to show a red asterisk indicating a required field',
       defaultValue: false,
     },
+    description: {
+      control: 'text',
+      description: 'Optional description text displayed below the label',
+    },
     className: {
       control: 'text',
       description: 'Additional CSS classes to apply',
@@ -40,6 +44,25 @@ export const Mandatory = {
     children: 'Password',
     htmlFor: 'password',
     mandatory: true,
+  },
+};
+
+// Label with description
+export const WithDescription = {
+  args: {
+    children: 'API Key',
+    htmlFor: 'api-key',
+    description: 'Your API key can be found in your account settings',
+  },
+};
+
+// Mandatory label with description
+export const MandatoryWithDescription = {
+  args: {
+    children: 'Email Address',
+    htmlFor: 'email',
+    mandatory: true,
+    description: 'We will never share your email with anyone else',
   },
 };
 
@@ -73,7 +96,11 @@ export const FormExample = {
       </div>
 
       <div>
-        <Label htmlFor="email" mandatory={true}>
+        <Label
+          htmlFor="email"
+          mandatory={true}
+          description="We'll use this to send you important updates"
+        >
           Email Address
         </Label>
         <TextInput
@@ -84,7 +111,10 @@ export const FormExample = {
       </div>
 
       <div>
-        <Label htmlFor="phone">
+        <Label
+          htmlFor="phone"
+          description="Optional - for account recovery"
+        >
           Phone Number
         </Label>
         <TextInput
