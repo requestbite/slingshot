@@ -326,7 +326,7 @@ export function ApiCatalogEditPage() {
                       <div class="flex gap-2">
                         <TextInput
                           id="openapi-url"
-                          type="text"
+                          type="url"
                           value={openapiUrl}
                           onInput={handleUrlChange}
                           onKeyPress={handleKeyPress}

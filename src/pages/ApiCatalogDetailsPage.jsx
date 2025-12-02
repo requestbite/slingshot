@@ -348,6 +348,23 @@ export function ApiCatalogDetailsPage() {
                       </div>
                     )}
 
+                    {/* Documentation */}
+                    {apiData.externalDocsUrl && (
+                      <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
+                        <dt class="text-sm font-medium text-gray-500">Documentation</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                          <a
+                            href={apiData.externalDocsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="text-sky-500 hover:text-sky-700 hover:underline"
+                          >
+                            {apiData.externalDocsUrl}
+                          </a>
+                        </dd>
+                      </div>
+                    )}
+
                     {/* Added Date */}
                     {apiData.addedTs && (
                       <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
