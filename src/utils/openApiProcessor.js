@@ -169,6 +169,21 @@ function extractMetadata(spec, collectionName, serverSelection = null) {
     }
   }
 
+  // Handle trailing slash in baseUrl to prevent double slashes
+  // If baseUrl ends with "/" and any path starts with "/", trim the trailing "/"
+  if (baseUrl && baseUrl.endsWith('/')) {
+    const paths = spec.paths || {};
+    const pathKeys = Object.keys(paths);
+
+    // Check if any path starts with "/"
+    const hasLeadingSlashPath = pathKeys.some(path => path.startsWith('/'));
+
+    if (hasLeadingSlashPath) {
+      // Trim the trailing "/" to prevent URLs like http://example.com//path
+      baseUrl = baseUrl.slice(0, -1);
+    }
+  }
+
   return {
     name,
     description: info.description || '',
