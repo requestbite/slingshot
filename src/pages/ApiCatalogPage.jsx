@@ -23,7 +23,9 @@ export function ApiCatalogPage() {
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [regions, setRegions] = useState([]);
   const [loadingRegions, setLoadingRegions] = useState(true);
-  const [selectedRegion, setSelectedRegion] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState(() => {
+    return localStorage.getItem('api-katalog-region') || '';
+  });
 
   // Get current page from URL, default to 1
   const currentPage = params?.page ? parseInt(params.page, 10) : 1;
@@ -35,14 +37,6 @@ export function ApiCatalogPage() {
       setShowSuccessAlert(true);
       // Clean up URL by removing the parameter
       window.history.replaceState({}, '', '/catalog');
-    }
-  }, []);
-
-  // Initialize region from localStorage
-  useEffect(() => {
-    const savedRegion = localStorage.getItem('api-katalog-region');
-    if (savedRegion) {
-      setSelectedRegion(savedRegion);
     }
   }, []);
 
