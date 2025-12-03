@@ -6,6 +6,7 @@ import { ClickableCard } from '../components/common/ClickableCard';
 import { Button } from '../components/common/Button';
 import { BreadCrumbs } from '../components/common/BreadCrumbs';
 import { Alert } from '../components/common/Alert';
+import { Select } from '../components/common/Select';
 
 export function ApiCatalogPage() {
   usePageTitle('API Catalog');
@@ -20,6 +21,9 @@ export function ApiCatalogPage() {
   const [categoryInfo, setCategoryInfo] = useState(null);
   const searchInputRef = useRef(null);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [regions, setRegions] = useState([]);
+  const [loadingRegions, setLoadingRegions] = useState(true);
+  const [selectedRegion, setSelectedRegion] = useState('');
 
   // Get current page from URL, default to 1
   const currentPage = params?.page ? parseInt(params.page, 10) : 1;
@@ -31,6 +35,14 @@ export function ApiCatalogPage() {
       setShowSuccessAlert(true);
       // Clean up URL by removing the parameter
       window.history.replaceState({}, '', '/catalog');
+    }
+  }, []);
+
+  // Initialize region from localStorage
+  useEffect(() => {
+    const savedRegion = localStorage.getItem('api-katalog-region');
+    if (savedRegion) {
+      setSelectedRegion(savedRegion);
     }
   }, []);
 
@@ -46,8 +58,9 @@ export function ApiCatalogPage() {
     const loadCategories = async () => {
       try {
         setIsLoadingCategories(true);
+        const regionParam = selectedRegion ? `?region=${selectedRegion}` : '';
         const response = await fetch(
-          `${import.meta.env.VITE_CATALOG_API}/v1/categories`
+          `${import.meta.env.VITE_CATALOG_API}/v1/categories${regionParam}`
         );
 
         if (!response.ok) {
@@ -64,6 +77,29 @@ export function ApiCatalogPage() {
     };
 
     loadCategories();
+  }, [selectedRegion]);
+
+  // Load regions from the API
+  useEffect(() => {
+    const fetchRegions = async () => {
+      try {
+        setLoadingRegions(true);
+        const response = await fetch(
+          `${import.meta.env.VITE_CATALOG_API}/v1/regions`
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setRegions(data);
+        }
+      } catch (error) {
+        console.error('Error fetching regions:', error);
+      } finally {
+        setLoadingRegions(false);
+      }
+    };
+
+    fetchRegions();
   }, []);
 
   // Load APIs for a specific category
@@ -75,8 +111,9 @@ export function ApiCatalogPage() {
     const loadCategoryApis = async () => {
       try {
         setIsLoadingApis(true);
+        const regionParam = selectedRegion ? `&region=${selectedRegion}` : '';
         const response = await fetch(
-          `${import.meta.env.VITE_CATALOG_API}/v1/categories/key/${params.key}/apis?limit=20&page=${currentPage}`
+          `${import.meta.env.VITE_CATALOG_API}/v1/categories/key/${params.key}/apis?limit=20&page=${currentPage}${regionParam}`
         );
 
         if (!response.ok) {
@@ -98,10 +135,15 @@ export function ApiCatalogPage() {
     };
 
     loadCategoryApis();
-  }, [match, params?.key, currentPage]);
+  }, [match, params?.key, currentPage, selectedRegion]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+  };
+
+  const handleRegionChange = (value) => {
+    setSelectedRegion(value);
+    localStorage.setItem('api-katalog-region', value);
   };
 
   const handleApiSearch = async (query) => {
@@ -149,6 +191,15 @@ export function ApiCatalogPage() {
       </div>
     );
   };
+
+  // Prepare region options for the Select component
+  const regionOptions = [
+    { value: '', label: 'All regions' },
+    ...regions.map(region => ({
+      value: region.key,
+      label: region.flag ? `${region.name} ${region.flag}` : region.name
+    }))
+  ];
 
   // Helper component to render check/cross icon
   const SpecIcon = ({ available }) => (
@@ -297,6 +348,16 @@ export function ApiCatalogPage() {
                     {categoryInfo ? categoryInfo.description : `Browse APIs in the ${params.key} category.`}
                     {paginationDetails && ` This category contains a total of ${paginationDetails.entries} APIs.`}
                   </p>
+                  <div class="mt-6">
+                    <Select
+                      id="region-filter-category"
+                      value={selectedRegion}
+                      onChange={handleRegionChange}
+                      options={regionOptions}
+                      disabled={loadingRegions}
+                      placeholder="All regions"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -474,6 +535,16 @@ export function ApiCatalogPage() {
 
             {/* Content Section */}
             <div class="px-6 pb-6">
+                <div class="mb-6">
+                  <Select
+                    id="region-filter-main"
+                    value={selectedRegion}
+                    onChange={handleRegionChange}
+                    options={regionOptions}
+                    disabled={loadingRegions}
+                    placeholder="All regions"
+                  />
+                </div>
               {isLoadingCategories ? (
                 <div class="flex items-center justify-center py-8 text-gray-500">
                   <svg class="animate-spin w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24">
