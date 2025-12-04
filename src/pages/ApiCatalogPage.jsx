@@ -79,7 +79,7 @@ export function ApiCatalogPage() {
       try {
         setLoadingRegions(true);
         const response = await fetch(
-          `${import.meta.env.VITE_CATALOG_API}/v1/regions`
+          `${import.meta.env.VITE_CATALOG_API}/v1/regions?apiCount=true`
         );
 
         if (response.ok) {
@@ -189,10 +189,12 @@ export function ApiCatalogPage() {
   // Prepare region options for the Select component
   const regionOptions = [
     { value: '', label: 'All regions' },
-    ...regions.map(region => ({
-      value: region.key,
-      label: region.flag ? `${region.name} ${region.flag}` : region.name
-    }))
+    ...regions
+      .filter(region => region.apis > 0)
+      .map(region => ({
+        value: region.key,
+        label: region.flag ? `${region.name} ${region.flag}` : region.name
+      }))
   ];
 
   // Helper component to render check/cross icon
