@@ -24,8 +24,15 @@ export function ApiCatalogPage() {
   const [regions, setRegions] = useState([]);
   const [loadingRegions, setLoadingRegions] = useState(true);
   const [selectedRegion, setSelectedRegion] = useState(() => {
+    // Priority: URL query param > localStorage > empty string
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlRegion = urlParams.get('region');
+    if (urlRegion) {
+      return urlRegion;
+    }
     return localStorage.getItem('api-katalog-region') || '';
   });
+  const [regionError, setRegionError] = useState(null);
 
   // Get current page from URL, default to 1
   const currentPage = params?.page ? parseInt(params.page, 10) : 1;
@@ -96,6 +103,29 @@ export function ApiCatalogPage() {
     fetchRegions();
   }, []);
 
+  // Validate selected region once regions are loaded
+  useEffect(() => {
+    if (!loadingRegions && regions.length > 0 && selectedRegion) {
+      // Check if the selected region exists and has APIs
+      const regionExists = regions.some(
+        r => r.key === selectedRegion && r.apis > 0
+      );
+
+      if (!regionExists) {
+        setRegionError(`Region "${selectedRegion}" not found or has no APIs available.`);
+        // Reset to "All regions"
+        setSelectedRegion('');
+        localStorage.setItem('api-katalog-region', '');
+        // Update URL to remove invalid region parameter
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.delete('region');
+        window.history.replaceState({}, '', newUrl.pathname + newUrl.search);
+      } else {
+        setRegionError(null);
+      }
+    }
+  }, [loadingRegions, regions, selectedRegion]);
+
   // Load APIs for a specific category
   useEffect(() => {
     if (!match || !params?.key) {
@@ -138,6 +168,18 @@ export function ApiCatalogPage() {
   const handleRegionChange = (value) => {
     setSelectedRegion(value);
     localStorage.setItem('api-katalog-region', value);
+
+    // Update URL with region parameter
+    const newUrl = new URL(window.location);
+    if (value) {
+      newUrl.searchParams.set('region', value);
+    } else {
+      newUrl.searchParams.delete('region');
+    }
+    window.history.pushState({}, '', newUrl.pathname + newUrl.search);
+
+    // Clear any error
+    setRegionError(null);
   };
 
   const handleApiSearch = async (query) => {
@@ -354,6 +396,13 @@ export function ApiCatalogPage() {
                       placeholder="All regions"
                     />
                   </div>
+                  {regionError && (
+                    <div class="mt-3">
+                      <Alert type="warning">
+                        {regionError}
+                      </Alert>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -540,6 +589,13 @@ export function ApiCatalogPage() {
                     disabled={loadingRegions}
                     placeholder="All regions"
                   />
+                  {regionError && (
+                    <div class="mt-3">
+                      <Alert type="warning">
+                        {regionError}
+                      </Alert>
+                    </div>
+                  )}
                 </div>
               {isLoadingCategories ? (
                 <div class="flex items-center justify-center py-8 text-gray-500">
