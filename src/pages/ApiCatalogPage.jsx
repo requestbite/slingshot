@@ -137,7 +137,7 @@ export function ApiCatalogPage() {
         setIsLoadingApis(true);
         const regionParam = selectedRegion ? `&region=${selectedRegion}` : '';
         const response = await fetch(
-          `${import.meta.env.VITE_CATALOG_API}/v1/categories/key/${params.key}/apis?limit=20&page=${currentPage}${regionParam}`
+          `${import.meta.env.VITE_CATALOG_API}/v1/categories/key/${params.key}/apis?limit=20&page=${currentPage}${regionParam}&stripMarkdown=true`
         );
 
         if (!response.ok) {
@@ -185,7 +185,7 @@ export function ApiCatalogPage() {
   const handleApiSearch = async (query) => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_CATALOG_API}/v1/apis/search?q=${encodeURIComponent(query)}&resolveIds=true&fullDesc=false`
+        `${import.meta.env.VITE_CATALOG_API}/v1/apis/search?q=${encodeURIComponent(query)}&resolveIds=true&fullDesc=false&stripMarkdown=true`
       );
 
       if (!response.ok) {
@@ -393,7 +393,6 @@ export function ApiCatalogPage() {
                       onChange={handleRegionChange}
                       options={regionOptions}
                       disabled={loadingRegions}
-                      placeholder="All regions"
                     />
                   </div>
                   {regionError && (
@@ -587,7 +586,6 @@ export function ApiCatalogPage() {
                     onChange={handleRegionChange}
                     options={regionOptions}
                     disabled={loadingRegions}
-                    placeholder="All regions"
                   />
                   {regionError && (
                     <div class="mt-3">

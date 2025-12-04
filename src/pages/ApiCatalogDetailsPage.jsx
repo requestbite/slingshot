@@ -113,7 +113,7 @@ export function ApiCatalogDetailsPage() {
   const handleApiSearch = async (query) => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_CATALOG_API}/v1/apis/search?q=${encodeURIComponent(query)}&resolveIds=true&fullDesc=false`
+        `${import.meta.env.VITE_CATALOG_API}/v1/apis/search?q=${encodeURIComponent(query)}&resolveIds=true&fullDesc=false&stripMarkdown=true`
       );
 
       if (!response.ok) {
