@@ -20,8 +20,8 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const nameInputRef = useRef();
-  const [, setLocation] = useLocation();
-  const { addCollection, selectCollection } = useAppContext();
+    const [, setLocation] = useLocation();
+    const { addCollection, selectCollection } = useAppContext();
 
   // Toast state
   const [isToastVisible, showToast, hideToast] = useToast();
