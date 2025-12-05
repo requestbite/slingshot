@@ -49,9 +49,9 @@ export function SwaggerHostInputModal({ isOpen, basePath = '', onClose, onConfir
 
   const handleConfirm = () => {
     if (isValid) {
-      // Parse the URL one more time to get the origin
+      // Parse the URL one more time to get the swaggerHost (origin + pathname)
       const result = parseHostUrl(hostUrl.trim(), basePath);
-      onConfirm({ swaggerHost: result.origin });
+      onConfirm({ swaggerHost: result.swaggerHost });
     }
   };
 
@@ -79,10 +79,10 @@ export function SwaggerHostInputModal({ isOpen, basePath = '', onClose, onConfir
           <TextInput
             type="url"
             id="swagger-host-url"
-            placeholder="https://api.example.com"
+            placeholder="https://api.example.com/v2"
             value={hostUrl}
             onChange={handleHostChange}
-            description="Enter the base URL for the API server."
+            description="Enter the base URL for the API server. You can include a path if needed."
           />
         </div>
 
@@ -128,13 +128,13 @@ export function SwaggerHostInputModal({ isOpen, basePath = '', onClose, onConfir
 
 /**
  * Parses a host URL and combines it with basePath to create the resolved URL
- * @param {string} input - User's input URL
+ * @param {string} input - User's input URL (can include path)
  * @param {string} basePath - The basePath from the Swagger spec
- * @returns {Object} { origin: string, resolvedUrl: string, isValid: boolean }
+ * @returns {Object} { swaggerHost: string, resolvedUrl: string, isValid: boolean }
  */
 function parseHostUrl(input, basePath) {
   if (!input || !input.trim()) {
-    return { origin: '', resolvedUrl: '', isValid: false };
+    return { swaggerHost: '', resolvedUrl: '', isValid: false };
   }
 
   // Add https:// if no protocol specified
@@ -145,14 +145,26 @@ function parseHostUrl(input, basePath) {
 
   try {
     const url = new URL(urlString);
+
+    // Extract origin (protocol + host + port)
     const origin = url.origin; // e.g., "https://api.example.com:8080"
 
-    // Combine origin with basePath
-    const normalizedBasePath = basePath || '';
-    const resolvedUrl = origin + normalizedBasePath;
+    // Extract pathname (path from URL input)
+    const pathname = url.pathname; // e.g., "/v2" or "/" or ""
 
-    return { origin, resolvedUrl, isValid: true };
+    // Normalize pathname - remove trailing slash if present
+    const normalizedPathname = pathname === '/' ? '' : pathname.replace(/\/$/, '');
+
+    // Combine origin + pathname + basePath
+    // swaggerHost is what we pass to the processor (origin + pathname from user input)
+    const swaggerHost = origin + normalizedPathname;
+
+    // resolvedUrl is the full URL including basePath from spec
+    const normalizedBasePath = basePath || '';
+    const resolvedUrl = swaggerHost + normalizedBasePath;
+
+    return { swaggerHost, resolvedUrl, isValid: true };
   } catch (error) {
-    return { origin: '', resolvedUrl: '', isValid: false };
+    return { swaggerHost: '', resolvedUrl: '', isValid: false };
   }
 }
