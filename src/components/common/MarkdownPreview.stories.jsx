@@ -303,3 +303,45 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
 **The End**`,
   },
 };
+
+// Inline HTML and XSS Protection Test
+export const InlineHTML = {
+  args: {
+    content: `# HTML Support Test
+
+## Inline Formatting HTML
+Line break test: First line<br>Second line after break
+
+Text formatting:
+- <strong>Bold text with HTML tag</strong>
+- <em>Italic text with HTML tag</em>
+- <u>Underlined text</u>
+- <s>Strikethrough</s> or <del>deleted text</del>
+- <ins>Inserted text</ins>
+- Combined: <strong><em>Bold and italic together</em></strong>
+
+## Mixed Markdown and HTML
+Regular **markdown bold** and <strong>HTML bold</strong> work together.
+
+Regular *markdown italic* and <em>HTML italic</em> work together.
+
+## XSS Protection Tests
+The following should be sanitized (dangerous content removed):
+
+Script tag test: <script>alert('XSS')</script>
+
+Event handler test: <img src=x onerror="alert('XSS')">
+
+JavaScript URL test: <a href="javascript:alert('XSS')">Click me</a>
+
+Iframe test: <iframe src="https://evil.com"></iframe>
+
+Object/embed test: <object data="malicious.swf"></object>
+
+## Expected Results
+- Line breaks should work
+- Safe HTML formatting should render
+- Malicious content should be stripped (no alerts, no iframes)
+- Text content should be preserved even when tags are removed`,
+  },
+};
