@@ -10,6 +10,7 @@ import { TextInput } from '../common/TextInput';
 import { Button } from '../common/Button';
 import { Label } from '../common/Label';
 import { OpenAPIServerSelectModal } from '../modals/OpenAPIServerSelectModal';
+import { SwaggerHostInputModal } from '../modals/SwaggerHostInputModal';
 
 export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -32,6 +33,10 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
   const [parsedSpec, setParsedSpec] = useState(null);
   const [specFormat, setSpecFormat] = useState(null);
   const [specCollectionName, setSpecCollectionName] = useState('');
+
+  // Swagger host input state
+  const [showSwaggerHostModal, setShowSwaggerHostModal] = useState(false);
+  const [swaggerBasePath, setSwaggerBasePath] = useState('');
 
   // Initialize form data when modal opens and auto-focus name input
   useEffect(() => {
@@ -251,6 +256,17 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
             setIsLoading(false);
             return;
           }
+
+          // Check for Swagger 2.0 without host
+          if (spec && spec.swagger === '2.0' && !spec.host) {
+            setParsedSpec(spec);
+            setSpecFormat(format);
+            setSpecCollectionName(collectionName);
+            setSwaggerBasePath(spec.basePath || '');
+            setShowSwaggerHostModal(true);
+            setIsLoading(false);
+            return;
+          }
         } catch (_parseError) {
           // Parsing failed, continue with normal processing
         }
@@ -288,6 +304,31 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
     setParsedSpec(null);
     setSpecFormat(null);
     setSpecCollectionName('');
+    setIsLoading(false);
+  };
+
+  const handleSwaggerHostConfirm = async (hostSelection) => {
+    setShowSwaggerHostModal(false);
+    setIsLoading(true);
+
+    try {
+      // Convert spec back to string for processing
+      const content = JSON.stringify(parsedSpec);
+      await processImport(content, specFormat, specCollectionName, hostSelection);
+    } catch (error) {
+      console.error('URL import error:', error);
+      showErrorToast(error.message || 'Failed to import from URL. Please check the URL and try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSwaggerHostCancel = () => {
+    setShowSwaggerHostModal(false);
+    setParsedSpec(null);
+    setSpecFormat(null);
+    setSpecCollectionName('');
+    setSwaggerBasePath('');
     setIsLoading(false);
   };
 
@@ -385,6 +426,16 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
           servers={parsedSpec.servers || []}
           onClose={handleServerSelectionCancel}
           onConfirm={handleServerSelectionConfirm}
+        />
+      )}
+
+      {/* Swagger Host Input Modal */}
+      {parsedSpec && (
+        <SwaggerHostInputModal
+          isOpen={showSwaggerHostModal}
+          basePath={swaggerBasePath}
+          onClose={handleSwaggerHostCancel}
+          onConfirm={handleSwaggerHostConfirm}
         />
       )}
 

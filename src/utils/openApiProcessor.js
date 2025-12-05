@@ -161,10 +161,16 @@ function extractMetadata(spec, collectionName, serverSelection = null) {
     }
   } else if (spec.swagger) {
     // Swagger 2.0
-    const host = spec.host || '';
+    let host = spec.host || '';
     const basePath = spec.basePath || '';
-    const schemes = spec.schemes || ['https'];
-    if (host) {
+
+    // If host is missing but provided via serverSelection, use it
+    if (!host && serverSelection?.swaggerHost) {
+      // Use the full origin (includes protocol) from user input
+      baseUrl = serverSelection.swaggerHost + basePath;
+    } else if (host) {
+      // Use host from spec with scheme
+      const schemes = spec.schemes || ['https'];
       baseUrl = `${schemes[0]}://${host}${basePath}`;
     }
   }
