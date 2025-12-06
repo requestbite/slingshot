@@ -450,6 +450,8 @@ export function TopBar() {
         items={[
           {
             label: 'Documentation',
+            href: 'https://docs.requestbite.com',
+            target: '_blank',
             onClick: () => {
               window.open('https://docs.requestbite.com', '_blank');
             },
@@ -463,6 +465,7 @@ export function TopBar() {
           },
           {
             label: 'Screenshot Editor',
+            href: '/tools/screenshot-editor',
             onClick: () => {
               setLocation('/tools/screenshot-editor');
             },

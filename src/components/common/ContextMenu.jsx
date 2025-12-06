@@ -133,16 +133,47 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
       }}
     >
       {children || (
-        items.map((item, index) => (
-          item.divider ? (
-            <div key={index} class="border-t border-gray-200 my-1"></div>
-          ) : (
+        items.map((item, index) => {
+          if (item.divider) {
+            return <div key={index} class="border-t border-gray-200 my-1"></div>;
+          }
+
+          const commonClasses = `block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer no-underline ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''} ${item.destructive ? 'text-red-600 hover:text-red-700' : ''}`;
+
+          // If item has href, render as anchor tag
+          if (item.href) {
+            return (
+              <a
+                key={index}
+                href={item.href}
+                target={item.target}
+                onClick={(e) => {
+                  if (item.onClick) {
+                    if (!item.target || item.target === '_self') {
+                      e.preventDefault();
+                    }
+                    handleItemClick(item);
+                  }
+                }}
+                class={commonClasses}
+              >
+                {item.icon && (
+                  <span class="inline-block w-4 h-4 mr-2">
+                    {item.icon}
+                  </span>
+                )}
+                {item.label}
+              </a>
+            );
+          }
+
+          // Otherwise render as button
+          return (
             <button
               key={index}
               onClick={() => handleItemClick(item)}
               disabled={item.disabled}
-              class={`block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''
-                } ${item.destructive ? 'text-red-600 hover:text-red-700' : ''}`}
+              class={commonClasses}
             >
               {item.icon && (
                 <span class="inline-block w-4 h-4 mr-2">
@@ -151,8 +182,8 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
               )}
               {item.label}
             </button>
-          )
-        ))
+          );
+        })
       )}
     </div>
   );
