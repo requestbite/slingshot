@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'preact/hooks';
+import { useState, useRef, useEffect, useLayoutEffect } from 'preact/hooks';
 import { Button } from './Button';
 import { ContextMenu } from './ContextMenu';
 
@@ -45,6 +45,7 @@ export function ScreenshotEditor({
   const [canvasHeight, setCanvasHeight] = useState(0);
   const [showExportContextMenu, setShowExportContextMenu] = useState(false);
   const canvasRef = useRef(null);
+  const canvasContainerRef = useRef(null);
   const fileInputRef = useRef(null);
   const exportButtonRef = useRef(null);
 
@@ -72,7 +73,13 @@ export function ScreenshotEditor({
         setSelectedImage(img);
         setImageKey(prev => prev + 1);
       };
+      img.onerror = (err) => {
+        console.error('Image failed to load:', err);
+      };
       img.src = e.target.result;
+    };
+    reader.onerror = (err) => {
+      console.error('FileReader failed:', err);
     };
     reader.readAsDataURL(file);
   };
@@ -119,8 +126,10 @@ export function ScreenshotEditor({
   };
 
   // Render canvas when image or props change
-  useEffect(() => {
-    if (!selectedImage || !canvasRef.current) return;
+  useLayoutEffect(() => {
+    if (!selectedImage || !canvasContainerRef.current) {
+      return;
+    }
 
     // Ensure image is fully loaded before rendering
     if (!selectedImage.complete) {
@@ -130,7 +139,22 @@ export function ScreenshotEditor({
       return;
     }
 
-    const canvas = canvasRef.current;
+    // Create canvas element using plain JavaScript (workaround for Preact rendering issue)
+    let canvas = canvasRef.current;
+
+    // Always recreate canvas to ensure fresh start
+    canvas = document.createElement('canvas');
+    canvas.className = 'mx-auto block';
+
+    // Append canvas in next tick to ensure container is in DOM
+    setTimeout(() => {
+      if (canvasContainerRef.current) {
+        canvasContainerRef.current.innerHTML = ''; // Clear container
+        canvasContainerRef.current.appendChild(canvas);
+        canvasRef.current = canvas;
+      }
+    }, 0);
+
     const ctx = canvas.getContext('2d');
 
     // Calculate canvas dimensions
@@ -141,6 +165,14 @@ export function ScreenshotEditor({
     // Set canvas dimensions
     canvas.width = width;
     canvas.height = canvasHeight;
+
+    // Explicitly set CSS dimensions via DOM
+    canvas.style.width = '100%';
+    canvas.style.maxWidth = `${width}px`;
+    canvas.style.height = `${canvasHeight}px`;
+    canvas.style.maxHeight = '600px';
+
+    // Update state
     setCanvasHeight(canvasHeight);
 
     // Clear canvas
@@ -334,8 +366,8 @@ export function ScreenshotEditor({
           </div>
         </div>
       ) : (
-        <div class="space-y-4">
-          <div class="flex items-center justify-between">
+        <>
+          <div class="flex items-center justify-between mb-4">
             <div class="flex-1">
               <p class="text-sm font-medium text-gray-900">{fileName}</p>
               <p class="text-xs text-gray-500 mt-1">
@@ -374,14 +406,10 @@ export function ScreenshotEditor({
             </div>
           </div>
 
-          <div class="relative overflow-auto">
-            <canvas
-              ref={canvasRef}
-              class="max-w-full h-auto mx-auto block"
-              style={{ maxHeight: '600px' }}
-            />
+          <div ref={canvasContainerRef} class="relative overflow-auto">
+            {/* Canvas will be created via JavaScript */}
           </div>
-        </div>
+        </>
       )}
 
       {/* Export Context Menu */}
