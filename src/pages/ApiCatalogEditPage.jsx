@@ -178,10 +178,10 @@ export function ApiCatalogEditPage() {
       const apiVersion = spec.info?.version;
       const description = spec.info?.description || null;
       const externalDocsUrl = spec.externalDocs?.url || null;
-      const serverUrl = spec.servers?.[0]?.url;
+      const serverUrl = spec.servers?.[0]?.url || null;
 
       // Check for mandatory fields
-      if (!openapiVersion || !title || !apiVersion || !serverUrl) {
+      if (!openapiVersion || !title || !apiVersion) {
         setTestError('Mandatory details are missing to add the API (perhaps corrupt OpenAPI spec).');
         return;
       }

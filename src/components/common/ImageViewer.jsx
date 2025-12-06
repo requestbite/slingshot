@@ -49,8 +49,8 @@ export function ImageViewer({
     if (!file) return;
 
     // Validate file type
-    if (!file.type.match(/^image\/(png|jpeg|jpg|webp)$/)) {
-      alert('Please select a PNG, JPEG, or WebP image file.');
+    if (!file.type.match(/^image\/(png|jpeg|jpg|webp|svg\+xml)$/)) {
+      alert('Please select a PNG, JPEG, WebP, or SVG image file.');
       return;
     }
 
@@ -144,7 +144,7 @@ export function ImageViewer({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/png,image/jpeg,image/jpg,image/webp"
+          accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
           onChange={handleFileInputChange}
           class="hidden"
         />
@@ -171,18 +171,18 @@ export function ImageViewer({
                 Drop your image here, or click to select
               </p>
               <p class="mt-1 text-xs text-gray-500">
-                PNG, JPEG, or WebP files
+                PNG, JPEG, WebP, or SVG files
               </p>
             </div>
           </>
         ) : (
           <>
             {/* Image Preview */}
-            <div class="mx-auto w-32 h-32 bg-gray-300 p-2 rounded-lg overflow-hidden mb-3">
+            <div class="mx-auto w-32 h-32 bg-gray-300 p-2 rounded-lg overflow-hidden mb-3 flex items-center justify-center">
               <img
                 src={imagePreviewUrl}
                 alt={fileName}
-                class="w-full h-full object-cover"
+                class="max-w-full max-h-full object-contain"
               />
             </div>
 
