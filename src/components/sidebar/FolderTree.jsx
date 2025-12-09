@@ -240,6 +240,17 @@ export function FolderTree({ searchTerm = '' }) {
   return (
     <div class="mt-1">
       <ul class="space-y-1">
+        {/* Render root-level requests (not in any folder) */}
+        {filteredData.requests.map(request => (
+          <RequestItem
+            key={request.id}
+            request={request}
+            isSelected={request.id === selectedRequest?.id}
+            level={0}
+            onRequestUpdate={handleTreeUpdate}
+          />
+        ))}
+
         {/* Render root folders */}
         {filteredData.folders.map(folder => (
           <FolderItem
@@ -250,17 +261,6 @@ export function FolderTree({ searchTerm = '' }) {
             selectedRequestId={selectedRequest?.id}
             level={0}
             onFolderUpdate={handleTreeUpdate}
-          />
-        ))}
-
-        {/* Render root-level requests (not in any folder) */}
-        {filteredData.requests.map(request => (
-          <RequestItem
-            key={request.id}
-            request={request}
-            isSelected={request.id === selectedRequest?.id}
-            level={0}
-            onRequestUpdate={handleTreeUpdate}
           />
         ))}
       </ul>

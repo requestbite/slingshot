@@ -284,8 +284,10 @@ async function processPaths(spec, baseUrl) {
 
       // Determine folder name from tags
       const tags = operation.tags || [];
-      const folderName = tags.length > 0 ? tags[0] : 'Default';
-      folders.add(folderName);
+      const folderName = tags.length > 0 ? tags[0] : null;
+      if (folderName) {
+        folders.add(folderName);
+      }
 
       // Create request
       const request = await createRequestFromOperation({
