@@ -178,7 +178,8 @@ export function ApiCatalogEditPage() {
       const apiVersion = spec.info?.version;
       const description = spec.info?.description || null;
       const externalDocsUrl = spec.externalDocs?.url || null;
-      const serverUrl = spec.servers?.[0]?.url || null;
+      // Use server URL from spec if available, otherwise fall back to the URL where spec was fetched from
+      const serverUrl = spec.servers?.[0]?.url || normalizedUrl;
 
       // Check for mandatory fields
       if (!openapiVersion || !title || !apiVersion) {
