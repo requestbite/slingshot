@@ -13,10 +13,11 @@ import { TextInput } from '../common/TextInput';
  *
  * @param {boolean} isOpen - Whether the modal is open
  * @param {string} basePath - The basePath from the Swagger 2.0 spec (optional)
+ * @param {string} defaultHostUrl - Default URL to pre-populate (optional)
  * @param {Function} onClose - Callback when modal is closed/cancelled
  * @param {Function} onConfirm - Callback when user confirms (receives { swaggerHost: string })
  */
-export function SwaggerHostInputModal({ isOpen, basePath = '', onClose, onConfirm }) {
+export function SwaggerHostInputModal({ isOpen, basePath = '', defaultHostUrl = '', onClose, onConfirm }) {
   const [hostUrl, setHostUrl] = useState('');
   const [resolvedUrl, setResolvedUrl] = useState('');
   const [isValid, setIsValid] = useState(false);
@@ -24,11 +25,11 @@ export function SwaggerHostInputModal({ isOpen, basePath = '', onClose, onConfir
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
-      setHostUrl('');
+      setHostUrl(defaultHostUrl || '');
       setResolvedUrl('');
       setIsValid(false);
     }
-  }, [isOpen]);
+  }, [isOpen, defaultHostUrl]);
 
   // Update resolved URL and validation whenever hostUrl or basePath changes
   useEffect(() => {

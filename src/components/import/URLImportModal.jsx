@@ -37,6 +37,7 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
   // Swagger host input state
   const [showSwaggerHostModal, setShowSwaggerHostModal] = useState(false);
   const [swaggerBasePath, setSwaggerBasePath] = useState('');
+  const [swaggerSourceUrl, setSwaggerSourceUrl] = useState('');
 
   // Initialize form data when modal opens and auto-focus name input
   useEffect(() => {
@@ -73,6 +74,21 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
     setFormData({ ...formData, url: e.target.value });
     if (errors.url) {
       setErrors({ ...errors, url: '' });
+    }
+  };
+
+  /**
+   * Extracts the origin (protocol + hostname) from a URL
+   * Following Swagger 2.0 spec: if no host is provided, use the host serving the spec
+   * @param {string} url - The source URL
+   * @returns {string} The origin (e.g., "https://api.example.com")
+   */
+  const extractDefaultHost = (url) => {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.origin;
+    } catch (error) {
+      return '';
     }
   };
 
@@ -263,6 +279,7 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
             setSpecFormat(format);
             setSpecCollectionName(collectionName);
             setSwaggerBasePath(spec.basePath || '');
+            setSwaggerSourceUrl(formData.url.trim());
             setShowSwaggerHostModal(true);
             setIsLoading(false);
             return;
@@ -329,6 +346,7 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
     setSpecFormat(null);
     setSpecCollectionName('');
     setSwaggerBasePath('');
+    setSwaggerSourceUrl('');
     setIsLoading(false);
   };
 
@@ -434,6 +452,7 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
         <SwaggerHostInputModal
           isOpen={showSwaggerHostModal}
           basePath={swaggerBasePath}
+          defaultHostUrl={extractDefaultHost(swaggerSourceUrl)}
           onClose={handleSwaggerHostCancel}
           onConfirm={handleSwaggerHostConfirm}
         />
