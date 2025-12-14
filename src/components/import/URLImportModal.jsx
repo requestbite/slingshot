@@ -93,7 +93,7 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
   };
 
   // Helper function to process the import and create collection
-  const processImport = async (content, format, collectionName, serverSelection = null) => {
+  const processImport = async (content, format, collectionName, serverSelection = null, sourceUrl = null) => {
     let processedData;
 
     // Process based on detected format using dynamic imports
@@ -110,7 +110,8 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
       name: processedData.collectionName,
       description: processedData.description || '',
       variables: processedData.variables || [],
-      security_schemes: processedData.securitySchemes || null
+      security_schemes: processedData.securitySchemes || null,
+      source_openapi_url: sourceUrl || null
     });
 
     // Create individual variable records for collection management UI
@@ -290,7 +291,7 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
       }
 
       // Process without server selection
-      await processImport(content, format, collectionName, null);
+      await processImport(content, format, collectionName, null, formData.url.trim());
 
     } catch (error) {
       console.error('URL import error:', error);
@@ -307,7 +308,7 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
     try {
       // Convert spec back to string for processing
       const content = JSON.stringify(parsedSpec);
-      await processImport(content, specFormat, specCollectionName, serverSelection);
+      await processImport(content, specFormat, specCollectionName, serverSelection, formData.url.trim());
     } catch (error) {
       console.error('URL import error:', error);
       showErrorToast(error.message || 'Failed to import from URL. Please check the URL and try again.');
@@ -331,7 +332,7 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
     try {
       // Convert spec back to string for processing
       const content = JSON.stringify(parsedSpec);
-      await processImport(content, specFormat, specCollectionName, hostSelection);
+      await processImport(content, specFormat, specCollectionName, hostSelection, swaggerSourceUrl);
     } catch (error) {
       console.error('URL import error:', error);
       showErrorToast(error.message || 'Failed to import from URL. Please check the URL and try again.');

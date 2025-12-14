@@ -114,7 +114,8 @@ export class SlingshotApiClient {
       name: collectionData.name,
       description: collectionData.description || '',
       variables: collectionData.variables || [],
-      security_schemes: collectionData.security_schemes || null
+      security_schemes: collectionData.security_schemes || null,
+      source_openapi_url: collectionData.source_openapi_url || null
     };
 
     const id = await db.collections.add(collection);

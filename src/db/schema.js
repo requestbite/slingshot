@@ -59,6 +59,7 @@ db.collections.defineClass({
   timeout: Number,
   parse_ansi_colors: Boolean,
   security_schemes: Object, // OpenAPI security schemes from components.securitySchemes
+  source_openapi_url: String, // Optional URL of the imported OpenAPI spec or Postman collection
 });
 
 /**

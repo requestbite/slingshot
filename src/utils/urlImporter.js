@@ -36,11 +36,6 @@ export async function fetchFromURL(url) {
 
     const response = await requestSubmitter.submitRequest(proxyRequest);
 
-    // Debug logging - temporary
-    console.log('URLImporter: Raw response from proxy:', response);
-    console.log('URLImporter: response.responseData length:', response.responseData?.length);
-    console.log('URLImporter: response.responseData preview:', response.responseData?.substring(0, 100));
-
     // Handle proxy errors
     if (!response.success) {
       if (response.errorType === 'timeout') {
