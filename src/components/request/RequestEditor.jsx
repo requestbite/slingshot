@@ -1261,7 +1261,15 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
 
   // Handle clear response (clears only response data, preserves drafts and active tab)
   const handleClearResponse = async () => {
-    if (!request?.id) return;
+    // For non-collection requests (no request.id), just clear local state
+    if (!request?.id) {
+      setResponse(null);
+      setIsStreaming(false);
+      setStreamedContent('');
+      setStreamedChunks([]);
+      setStreamingMetadata(null);
+      return;
+    }
 
     try {
       // Use the new API method that only clears response fields

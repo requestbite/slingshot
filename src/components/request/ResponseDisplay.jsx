@@ -362,9 +362,9 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                     <Button
                       onClick={onClear}
                       variant="none"
-                      disabled={!(response.status || response.responseData || effectiveResponse.saved || streamedContent)}
+                      disabled={isStreaming || !(response.status || response.responseData || effectiveResponse.saved || streamedContent)}
                       className="inline-flex items-center text-sky-500 hover:text-sky-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                      title={(response.status || response.responseData || effectiveResponse.saved || streamedContent) ? "Clear cached response from IndexedDB" : "No response to clear"}
+                      title={isStreaming ? "Cannot clear while streaming is active" : (response.status || response.responseData || effectiveResponse.saved || streamedContent) ? "Clear cached response from IndexedDB" : "No response to clear"}
                     >
                       <span class="inline-block w-4 h-4 mr-1">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
