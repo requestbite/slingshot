@@ -9,6 +9,7 @@ const URLImportModal = lazy(() => import('../import/URLImportModal').then(m => (
 import { AddFolderModal } from '../modals/AddFolderModal';
 import { AddCollectionModal } from '../modals/AddCollectionModal';
 import { ExportPostmanModal } from '../modals/ExportPostmanModal';
+import { ReImportModal } from '../modals/ReImportModal';
 import { ContextMenu } from '../common/ContextMenu';
 import { FolderTree } from '../sidebar/FolderTree';
 import { TextInput } from '../common/TextInput';
@@ -24,11 +25,14 @@ export function SideBar({ onClose: _onClose }) {
   const [showAddFolderModal, setShowAddFolderModal] = useState(false);
   const [showAddCollectionModal, setShowAddCollectionModal] = useState(false);
   const [showExportPostmanModal, setShowExportPostmanModal] = useState(false);
+  const [showReImportModal, setShowReImportModal] = useState(false);
   const [showImportContextMenu, setShowImportContextMenu] = useState(false);
+  const [showCollectionContextMenu, setShowCollectionContextMenu] = useState(false);
   const importButtonRef = useRef();
+  const collectionMenuTriggerRef = useRef();
   const [searchTerm, setSearchTerm] = useState('');
   const [, setLocation] = useLocation();
-  const { collections, selectedCollection, selectCollection, selectRequest, isLoading, updateCollection, currentEnvironment, setCurrentEnvironment, hasManuallySelectedEnvironment, setHasManuallySelectedEnvironment } = useAppContext();
+  const { collections, selectedCollection, selectCollection, selectRequest, isLoading, updateCollection, addCollection, removeCollection, currentEnvironment, setCurrentEnvironment, hasManuallySelectedEnvironment, setHasManuallySelectedEnvironment } = useAppContext();
 
   // Environment state
   const [environments, setEnvironments] = useState([]);
@@ -39,6 +43,20 @@ export function SideBar({ onClose: _onClose }) {
   // Load environments when component mounts
   useEffect(() => {
     loadEnvironments();
+  }, []);
+
+  // Listen for global event to close collection context menu when other menus open
+  useEffect(() => {
+    const handleCloseAllContextMenus = (e) => {
+      if (e.detail.exceptId !== 'collection-menu') {
+        setShowCollectionContextMenu(false);
+      }
+    };
+
+    window.addEventListener('closeAllContextMenus', handleCloseAllContextMenus);
+    return () => {
+      window.removeEventListener('closeAllContextMenus', handleCloseAllContextMenus);
+    };
   }, []);
 
   // Update current environment when selectedCollection changes, but respect manual selection
@@ -127,6 +145,16 @@ export function SideBar({ onClose: _onClose }) {
     (currentEnvironment && selectedCollection.environment_id === currentEnvironment.id) ||
     (!currentEnvironment && !selectedCollection.environment_id)
   );
+
+  const handleCollectionContextMenuClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Close any other open context menus
+    window.dispatchEvent(new CustomEvent('closeAllContextMenus', { detail: { exceptId: 'collection-menu' } }));
+
+    setShowCollectionContextMenu(true);
+  };
 
   return (
     <>
@@ -412,19 +440,34 @@ export function SideBar({ onClose: _onClose }) {
               <div class="mt-4 overflow-y-auto overflow-x-visible relative">
                 {/* Collection link */}
                 {selectedCollection && (
-                  <a
-                    href={`/${selectedCollection.id}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      selectRequest(null);
-                      const url = `/${selectedCollection.id}`;
-                      setLastSlingshotUrl(url);
-                      setLocation(url);
-                    }}
-                    class="flex items-center py-1 rounded text-xs font-medium hover:bg-gray-100 cursor-pointer no-underline text-gray-600"
-                  >
-                    <span class="truncate font-medium">{selectedCollection.name}</span>
-                  </a>
+                  <div class="flex items-center group hover:bg-gray-100 rounded">
+                    <a
+                      href={`/${selectedCollection.id}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        selectRequest(null);
+                        const url = `/${selectedCollection.id}`;
+                        setLastSlingshotUrl(url);
+                        setLocation(url);
+                      }}
+                      class="flex-1 flex items-center py-1 text-xs font-medium cursor-pointer no-underline text-gray-600"
+                    >
+                      <span class="truncate font-medium">{selectedCollection.name}</span>
+                    </a>
+                    <button
+                      ref={collectionMenuTriggerRef}
+                      onClick={handleCollectionContextMenuClick}
+                      class="flex items-center px-2 text-sky-400 hover:text-sky-700 focus:outline-none cursor-pointer opacity-0 group-hover:opacity-100"
+                      title="More options"
+                    >
+                      <span class="sr-only">Open collection options</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="flex-shrink-0">
+                        <circle cx="5" cy="12" r="2" />
+                        <circle cx="12" cy="12" r="2" />
+                        <circle cx="19" cy="12" r="2" />
+                      </svg>
+                    </button>
+                  </div>
                 )}
                 <FolderTree searchTerm={searchTerm} />
               </div>
@@ -553,6 +596,44 @@ export function SideBar({ onClose: _onClose }) {
             )
           }
         ]}
+      />
+
+      {/* Collection Context Menu */}
+      <ContextMenu
+        isOpen={showCollectionContextMenu}
+        onClose={() => setShowCollectionContextMenu(false)}
+        trigger={collectionMenuTriggerRef.current}
+        width={200}
+        position="right"
+        items={[
+          {
+            label: 'Re-Import',
+            onClick: () => {
+              setShowCollectionContextMenu(false);
+              setShowReImportModal(true);
+            },
+            icon: (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5"/>
+                <path d="M11 19h8.203a1.83 1.83 0 0 0 1.556-.89 1.784 1.784 0 0 0 0-1.775l-1.226-2.12"/>
+                <path d="m14 16-3 3 3 3"/>
+                <path d="M8.293 13.596 7.196 9.5 3.1 10.598"/>
+                <path d="m9.344 5.811 1.093-1.892A1.83 1.83 0 0 1 11.985 3a1.784 1.784 0 0 1 1.546.888l3.943 6.843"/>
+                <path d="m13.378 9.633 4.096 1.098 1.097-4.096"/>
+              </svg>
+            )
+          }
+        ]}
+      />
+
+      {/* Re-Import Modal */}
+      <ReImportModal
+        isOpen={showReImportModal}
+        collection={selectedCollection}
+        onClose={() => setShowReImportModal(false)}
+        onSuccess={(collection) => {
+          console.log('Collection re-imported successfully:', collection);
+        }}
       />
     </>
   );
