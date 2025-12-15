@@ -440,7 +440,7 @@ export function SideBar({ onClose: _onClose }) {
               <div class="mt-4 overflow-y-auto overflow-x-visible relative">
                 {/* Collection link */}
                 {selectedCollection && (
-                  <div class="flex items-center group hover:bg-gray-100 rounded">
+                  <div class="flex items-center px-1 group hover:bg-gray-100 rounded">
                     <a
                       href={`/${selectedCollection.id}`}
                       onClick={(e) => {
@@ -457,7 +457,7 @@ export function SideBar({ onClose: _onClose }) {
                     <button
                       ref={collectionMenuTriggerRef}
                       onClick={handleCollectionContextMenuClick}
-                      class="flex items-center px-2 text-sky-400 hover:text-sky-700 focus:outline-none cursor-pointer opacity-0 group-hover:opacity-100"
+                      class="flex items-center text-sky-400 hover:text-sky-700 focus:outline-none cursor-pointer"
                       title="More options"
                     >
                       <span class="sr-only">Open collection options</span>
