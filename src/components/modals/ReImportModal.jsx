@@ -5,7 +5,6 @@ import { processImport } from '../../utils/importProcessor';
 import { apiClient } from '../../api';
 import { useAppContext } from '../../hooks/useAppContext';
 import { Toast, useToast } from '../common/Toast';
-import { Portal } from '../common/Portal';
 import { Modal } from '../common/Modal';
 import { TextInput } from '../common/TextInput';
 import { Button } from '../common/Button';
@@ -341,14 +340,12 @@ export function ReImportModal({ isOpen, collection, onClose, onSuccess }) {
       )}
 
       {/* Toast Notification */}
-      <Portal>
-        <Toast
-          message={toastMessage}
-          isVisible={isToastVisible}
-          onClose={hideToast}
-          type={toastType}
-        />
-      </Portal>
+      <Toast
+        message={toastMessage}
+        isVisible={isToastVisible}
+        onClose={hideToast}
+        type={toastType}
+      />
     </>
   );
 }

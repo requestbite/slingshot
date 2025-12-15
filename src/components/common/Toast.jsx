@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
+import { createPortal } from 'preact/compat';
 
 /**
  * Reusable toast notification component
@@ -76,11 +77,11 @@ export function Toast({
 
   const styles = getToastStyles();
 
-  return (
+  const toastContent = (
     <div
-      class={`fixed z-[9998] transition-all duration-300 ease-out ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-full'
+      class={`fixed z-[99999] transition-all duration-300 ease-out ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-full'
         } bottom-5 left-5 right-5 sm:left-auto sm:right-5 sm:w-auto w-auto`}
-      style={{ zIndex: 9998.5 }}
+      style={{ zIndex: 99999 }}
     >
       <div class="flex w-full flex-col items-center sm:items-end">
         <div class={`pointer-events-auto overflow-hidden rounded-lg ring-1 ring-black/5 ${styles.border} w-full sm:w-96`}>
@@ -110,6 +111,9 @@ export function Toast({
       </div>
     </div>
   );
+
+  // Render toast using createPortal directly to document.body with highest z-index
+  return createPortal(toastContent, document.body);
 }
 
 /**

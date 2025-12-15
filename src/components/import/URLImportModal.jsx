@@ -350,14 +350,12 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
       )}
 
       {/* Toast Notification */}
-      <Portal>
-        <Toast
-          message={toastMessage}
-          isVisible={isToastVisible}
-          onClose={hideToast}
-          type={toastType}
-        />
-      </Portal>
+      <Toast
+        message={toastMessage}
+        isVisible={isToastVisible}
+        onClose={hideToast}
+        type={toastType}
+      />
     </>
   );
 }
