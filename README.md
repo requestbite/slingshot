@@ -5,7 +5,8 @@
 Slingshot is a web-based HTTP request client that is highly performant, low on
 resources, privacy respecting, local-first, free and open-source. The
 source-code in this repository is what powers [RequestBite
-Slingshot](https://s.requestbite.com) at <https://s.requestbite.com>.
+Slingshot](https://s.requestbite.com) at
+[s.requestbite.com](https://s.requestbite.com).
 
 <p align="center">
   <img alt="RequestBite Slingshot" src="https://github.com/user-attachments/assets/95909a82-5832-42db-b2d2-86f2fe644128">
@@ -22,7 +23,8 @@ Slingshot](https://s.requestbite.com) at <https://s.requestbite.com>.
   need an account to fully use it.
 - **Privacy respecting**  
   All data can be stored locally and your requests don't need to pass through
-  our servers as this repo bundles the [Go Slingshot Proxy](/proxy/README.md)
+  our servers as this repo bundles the [Go Slingshot
+  Proxy](https://github.com/requestbite/slingshot-proxy)
   used by Slingshot so that you can run it locally (configurable in the app).
   This also allows you to call APIs local on your computer or behind a firewall or
   VPN (resources not publicly available on the Internet).
@@ -74,7 +76,7 @@ bug reports or feature suggestions.
 
 ## Related Projects
 
-- [Go Slingshot Proxy](/proxy/README.md).
+- [Go Slingshot Proxy](https://github.com/requestbite/slingshot-proxy).
 
 ## License
 
