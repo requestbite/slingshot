@@ -1,7 +1,29 @@
 import { useState } from 'preact/hooks';
 
-export function FileBrowser({ items = [], sort, onClick, onDoubleClick }) {
+export function FileBrowser({ items = [], sort, onClick, onDoubleClick, allowedExtensions = null, selectedItem = null }) {
   const [clickTimer, setClickTimer] = useState(null);
+
+  // Check if a file is allowed based on extensions
+  const isFileAllowed = (item) => {
+    // Directories and parent dir (..) are always allowed
+    if (item.type === 'directory' || item.name === '..') {
+      return true;
+    }
+
+    // If no allowedExtensions specified, all files are allowed
+    if (!allowedExtensions || allowedExtensions.length === 0) {
+      return true;
+    }
+
+    // Check if file has an allowed extension
+    const fileName = item.name.toLowerCase();
+    return allowedExtensions.some(ext => fileName.endsWith(ext.toLowerCase()));
+  };
+
+  // Check if an item is currently selected
+  const isSelected = (item) => {
+    return selectedItem && selectedItem.name === item.name && selectedItem.type === item.type;
+  };
 
   // Group and sort items
   const sortedItems = (() => {
@@ -82,25 +104,48 @@ export function FileBrowser({ items = [], sort, onClick, onDoubleClick }) {
   return (
     <div class="bg-white border border-gray-200 rounded-md shadow-sm">
       <div class="divide-y divide-gray-100">
-        {sortedItems.map((item, index) => (
-          <div
-            key={index}
-            onClick={(e) => handleClick(item, e)}
-            class="flex items-center px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer select-none"
-          >
-            <span class="flex items-center text-gray-500 mr-2">
-              {item.type === 'directory' ? <DirectoryIcon /> : <FileIcon />}
-            </span>
-            <span class="flex-1 truncate flex items-center">
-              {item.name}
-              {item.isSymlink && (
-                <span class="text-blue-500 opacity-60">
-                  <SymlinkIcon />
-                </span>
-              )}
-            </span>
-          </div>
-        ))}
+        {sortedItems.map((item, index) => {
+          const allowed = isFileAllowed(item);
+          const selected = isSelected(item);
+
+          // Build dynamic classes
+          const itemClasses = [
+            'flex items-center px-3 py-1 text-sm select-none',
+            selected ? 'bg-sky-500 text-white' : 'text-gray-700 hover:bg-gray-50',
+            allowed ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+          ].join(' ');
+
+          const iconClasses = selected ? 'text-white' : 'text-gray-500';
+
+          return (
+            <div
+              key={index}
+              onClick={(e) => {
+                if (allowed) {
+                  handleClick(item, e);
+                }
+              }}
+              class={itemClasses}
+            >
+              <span class={`flex items-center ${iconClasses} mr-2`}>
+                {item.type === 'directory' ? <DirectoryIcon /> : <FileIcon />}
+              </span>
+              <span class="flex-1 truncate flex items-center">
+                {item.name}
+                {item.sizeHuman && (
+                  <span class={`ml-2 text-xs ${selected ? 'text-sky-100' : 'text-gray-400'}`}>
+                    ({item.sizeHuman})
+                  </span>
+                )}
+                {item.isSymlink && (
+                  <span class={selected ? 'text-sky-100' : 'text-blue-500 opacity-60'}>
+                    <SymlinkIcon />
+                  </span>
+                )}
+              </span>
+            </div>
+          );
+        })}
         {sortedItems.length === 0 && (
           <div class="px-3 py-2 text-sm text-gray-400 text-center">
             No items

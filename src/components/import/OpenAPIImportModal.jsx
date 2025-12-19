@@ -34,7 +34,10 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
   const [isCheckingCapabilities, setIsCheckingCapabilities] = useState(true);
   const [directoryListing, setDirectoryListing] = useState([]);
   const [currentPath, setCurrentPath] = useState(null);
+  const [currentDir, setCurrentDir] = useState(null);
+  const [parentDir, setParentDir] = useState(null);
   const [isLoadingDirectory, setIsLoadingDirectory] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   // Initialize form data when modal opens and auto-focus name input
   useEffect(() => {
@@ -54,6 +57,7 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
   // Fetch directory listing from proxy
   const fetchDirectoryListing = async (path) => {
     setIsLoadingDirectory(true);
+    setSelectedItem(null); // Clear selection when navigating
     try {
       const proxyUrl = requestSubmitter.getCurrentProxyUrl();
       const dirUrl = `${proxyUrl.replace(/\/$/, '')}/dir`;
@@ -73,6 +77,8 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
 
       const data = await response.json();
       setCurrentPath(path);
+      setCurrentDir(data.currentDir);
+      setParentDir(data.parentDir);
 
       // Format directory listing for FileBrowser
       let items = [...(data.dir || [])];
@@ -93,6 +99,33 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
       });
     } finally {
       setIsLoadingDirectory(false);
+    }
+  };
+
+  // Fetch file contents from proxy
+  const fetchFileContents = async (filePath) => {
+    try {
+      const proxyUrl = requestSubmitter.getCurrentProxyUrl();
+      const fileUrl = `${proxyUrl.replace(/\/$/, '')}/file`;
+
+      const response = await fetch(fileUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/plain'
+        },
+        body: JSON.stringify({ path: filePath })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch file contents');
+      }
+
+      const content = await response.text();
+      return content;
+    } catch (error) {
+      console.error('Failed to fetch file contents:', error);
+      throw error;
     }
   };
 
@@ -132,6 +165,85 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
 
     checkProxyCapabilities();
   }, [isOpen]);
+
+  // Handle file/folder click (selection)
+  const handleFileBrowserClick = (item) => {
+    setSelectedItem(item);
+  };
+
+  // Handle file/folder double-click (navigation or import)
+  const handleFileBrowserDoubleClick = async (item) => {
+    if (item.type === 'directory') {
+      // Navigate into directory
+      let targetPath;
+      if (item.name === '..') {
+        // Navigate to parent directory
+        targetPath = parentDir;
+      } else {
+        // Navigate into subdirectory
+        targetPath = currentDir ? `${currentDir}/${item.name}` : item.name;
+      }
+      await fetchDirectoryListing(targetPath);
+    } else if (item.type === 'file') {
+      // Check if file has allowed extension
+      const allowedExtensions = ['.json', '.yml', '.yaml'];
+      const fileName = item.name.toLowerCase();
+      const isAllowed = allowedExtensions.some(ext => fileName.endsWith(ext));
+
+      if (!isAllowed) {
+        setErrors({
+          general: 'Please select a YAML or JSON file.'
+        });
+        return;
+      }
+
+      // Import file
+      setIsLoading(true);
+      setErrors({});
+
+      try {
+        const filePath = currentDir ? `${currentDir}/${item.name}` : item.name;
+        const content = await fetchFileContents(filePath);
+
+        // Parse to check for multiple servers
+        try {
+          let spec;
+
+          // Try parsing as JSON first
+          try {
+            spec = JSON.parse(content);
+          } catch (_jsonError) {
+            // If JSON fails, try YAML
+            const { load: loadYAML } = await import('js-yaml');
+            spec = loadYAML(content);
+          }
+
+          // If OpenAPI 3.x and has multiple servers, show server selection modal
+          if (spec && spec.openapi && spec.servers && spec.servers.length > 1) {
+            setParsedSpec(spec);
+            setFileContent(content);
+            setSpecCollectionName(formData.name);
+            setShowServerSelectModal(true);
+            setIsLoading(false);
+            return;
+          }
+        } catch (_parseError) {
+          // Parsing failed, continue with normal processing
+        }
+
+        // Process without server selection
+        await processImport(content, formData.name, null);
+
+      } catch (error) {
+        console.error('OpenAPI import error:', error);
+        setErrors({
+          general: error.message || 'Failed to import OpenAPI specification. Please check the file format and try again.'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
 
   const validateFile = (file) => {
     const errors = {};
@@ -343,6 +455,9 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
     setEnableLocalFiles(false);
     setDirectoryListing([]);
     setCurrentPath(null);
+    setCurrentDir(null);
+    setParentDir(null);
+    setSelectedItem(null);
     setIsCheckingCapabilities(true);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -389,19 +504,17 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
                 <FileBrowser
                   items={directoryListing}
                   sort="alphabetical"
-                  onClick={(item) => {
-                    console.log('Clicked:', item);
-                    // Future: Handle file selection
-                  }}
-                  onDoubleClick={(item) => {
-                    console.log('Double-clicked:', item);
-                    // Future: Navigate directories or select files
-                  }}
+                  onClick={handleFileBrowserClick}
+                  onDoubleClick={handleFileBrowserDoubleClick}
+                  allowedExtensions={['.json', '.yml', '.yaml']}
+                  selectedItem={selectedItem}
                 />
               )}
-              <p class="mt-2 text-sm text-gray-500">
-                Note: Directory navigation and file selection coming soon
-              </p>
+              {currentDir && (
+                <p class="mt-2 text-xs text-gray-500">
+                  Current directory: {currentDir}
+                </p>
+              )}
             </div>
           ) : (
             <>
@@ -434,9 +547,19 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
           <Button
             type="submit"
             variant="primary"
-            disabled={!formData.file || enableLocalFiles}
+            disabled={
+              enableLocalFiles
+                ? !selectedItem || selectedItem.type !== 'file' || !['.json', '.yml', '.yaml'].some(ext => selectedItem.name.toLowerCase().endsWith(ext))
+                : !formData.file
+            }
             loading={isLoading}
             className="w-full sm:ml-3 sm:w-auto"
+            onClick={enableLocalFiles ? (e) => {
+              e.preventDefault();
+              if (selectedItem && selectedItem.type === 'file') {
+                handleFileBrowserDoubleClick(selectedItem);
+              }
+            } : undefined}
           >
             {isLoading ? 'Importing...' : 'Import'}
           </Button>
