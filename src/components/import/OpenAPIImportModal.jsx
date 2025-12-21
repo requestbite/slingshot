@@ -29,6 +29,7 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
   const [parsedSpec, setParsedSpec] = useState(null);
   const [fileContent, setFileContent] = useState('');
   const [specCollectionName, setSpecCollectionName] = useState('');
+  const [sourceFilePath, setSourceFilePath] = useState(null);
 
   // Local file browser state
   const [enableLocalFiles, setEnableLocalFiles] = useState(false);
@@ -231,6 +232,7 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
             setParsedSpec(spec);
             setFileContent(content);
             setSpecCollectionName(formData.name);
+            setSourceFilePath(filePath);
             setShowServerSelectModal(true);
             setIsLoading(false);
             return;
@@ -240,7 +242,7 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
         }
 
         // Process without server selection
-        await processImport(content, formData.name, null);
+        await processImport(content, formData.name, null, filePath);
 
       } catch (error) {
         console.error('OpenAPI import error:', error);
@@ -323,7 +325,7 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
   };
 
   // Helper function to process the import and create collection
-  const processImport = async (content, collectionName, serverSelection = null) => {
+  const processImport = async (content, collectionName, serverSelection = null, sourceUrl = null) => {
     // Process OpenAPI spec with dynamic import
     const { processOpenAPISpec } = await import('../../utils/openApiProcessor');
     const processedData = await processOpenAPISpec(content, collectionName, serverSelection);
@@ -333,7 +335,8 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
       name: processedData.collectionName,
       description: processedData.description || '',
       variables: processedData.variables || [],
-      security_schemes: processedData.securitySchemes || null
+      security_schemes: processedData.securitySchemes || null,
+      source_openapi_url: sourceUrl || undefined
     });
 
     // Create individual variable records for collection management UI
@@ -457,7 +460,7 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
     setIsLoading(true);
 
     try {
-      await processImport(fileContent, specCollectionName, serverSelection);
+      await processImport(fileContent, specCollectionName, serverSelection, sourceFilePath);
     } catch (error) {
       console.error('OpenAPI import error:', error);
       setToastMessage(error.message || 'Failed to import OpenAPI specification. Please check the file format and try again.');
@@ -473,6 +476,7 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
     setParsedSpec(null);
     setFileContent('');
     setSpecCollectionName('');
+    setSourceFilePath(null);
     setIsLoading(false);
   };
 

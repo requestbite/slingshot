@@ -210,7 +210,7 @@ export function PostmanImportModal({ isOpen, onClose, onSuccess }) {
         const processedData = await processPostmanCollection(fileContent, formData.name);
 
         // Create collection and requests (same as handleSubmit)
-        await createCollectionFromProcessedData(processedData);
+        await createCollectionFromProcessedData(processedData, filePath);
 
       } catch (error) {
         console.error('Postman import error:', error);
@@ -240,12 +240,13 @@ export function PostmanImportModal({ isOpen, onClose, onSuccess }) {
   };
 
   // Helper function to create collection from processed data
-  const createCollectionFromProcessedData = async (processedData) => {
+  const createCollectionFromProcessedData = async (processedData, sourceUrl = null) => {
     // Create collection using our API client
     const collection = await apiClient.createCollection({
       name: processedData.collectionName,
       description: processedData.description || '',
-      variables: processedData.variables || []
+      variables: processedData.variables || [],
+      source_postman_url: sourceUrl || undefined
     });
 
     // Create individual variable records for collection management UI
