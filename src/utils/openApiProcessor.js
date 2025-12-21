@@ -145,7 +145,11 @@ function extractMetadata(spec, collectionName, serverSelection = null) {
 
   // Extract base URL
   let baseUrl = '';
-  if (spec.openapi) {
+
+  // If user provided a custom resolved URL, use that directly
+  if (serverSelection?.resolvedUrl) {
+    baseUrl = serverSelection.resolvedUrl;
+  } else if (spec.openapi) {
     // OpenAPI 3.x
     const servers = spec.servers || [];
     if (servers.length > 0) {
@@ -216,8 +220,8 @@ function extractVariables(spec, serverSelection = null) {
     });
   }
 
-  // Extract server variables from OpenAPI 3.x
-  if (spec.openapi && spec.servers) {
+  // Extract server variables from OpenAPI 3.x (only if not using custom resolvedUrl)
+  if (!serverSelection?.resolvedUrl && spec.openapi && spec.servers) {
     // Use selected server if provided, otherwise use first server
     const serverIndex = serverSelection?.serverIndex ?? 0;
     const server = spec.servers[serverIndex] || spec.servers[0];

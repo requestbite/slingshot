@@ -3,6 +3,7 @@ import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { Label } from '../common/Label';
 import { Select } from '../common/Select';
+import { TextInput } from '../common/TextInput';
 
 /**
  * OpenAPIServerSelectModal
@@ -19,6 +20,7 @@ export function OpenAPIServerSelectModal({ isOpen, servers = [], onClose, onConf
   const [selectedServerIndex, setSelectedServerIndex] = useState('');
   const [variableValues, setVariableValues] = useState({});
   const [resolvedUrl, setResolvedUrl] = useState('');
+  const [editableUrl, setEditableUrl] = useState('');
 
   // Reset state when modal opens
   useEffect(() => {
@@ -26,6 +28,7 @@ export function OpenAPIServerSelectModal({ isOpen, servers = [], onClose, onConf
       setSelectedServerIndex('');
       setVariableValues({});
       setResolvedUrl('');
+      setEditableUrl('');
     }
   }, [isOpen, servers]);
 
@@ -41,6 +44,11 @@ export function OpenAPIServerSelectModal({ isOpen, servers = [], onClose, onConf
       setResolvedUrl('');
     }
   }, [selectedServerIndex, variableValues, selectedServer]);
+
+  // Sync editable URL with resolved URL
+  useEffect(() => {
+    setEditableUrl(resolvedUrl);
+  }, [resolvedUrl]);
 
   // When server selection changes, reset variable values and initialize with defaults
   useEffect(() => {
@@ -75,7 +83,15 @@ export function OpenAPIServerSelectModal({ isOpen, servers = [], onClose, onConf
       }
     }
 
-    return true;
+    // Validate that editableUrl is a valid URL
+    if (!editableUrl) return false;
+
+    try {
+      new URL(editableUrl);
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   const handleServerChange = (value) => {
@@ -89,11 +105,16 @@ export function OpenAPIServerSelectModal({ isOpen, servers = [], onClose, onConf
     });
   };
 
+  const handleUrlChange = (e) => {
+    setEditableUrl(e.target.value);
+  };
+
   const handleConfirm = () => {
     if (isFormValid()) {
       onConfirm({
         serverIndex: parseInt(selectedServerIndex),
-        variableValues: variableValues
+        variableValues: variableValues,
+        resolvedUrl: editableUrl
       });
     }
   };
@@ -166,18 +187,20 @@ export function OpenAPIServerSelectModal({ isOpen, servers = [], onClose, onConf
           </div>
         )}
 
-        {/* Resolved URL Display */}
-        {resolvedUrl && (
+        {/* Resolved URL Input */}
+        {editableUrl && (
           <div class="pt-4 border-t border-gray-200">
-            <Label>
+            <Label htmlFor="resolved-url">
               Resolved URL
             </Label>
-            <div class="text-xs text-gray-500 mb-2">
-              This URL will used for the baseUrl collection variable.
-            </div>
-            <div class="text-sm font-mono bg-gray-50 p-3 rounded-md border border-gray-200 break-all">
-              {resolvedUrl}
-            </div>
+            <TextInput
+              id="resolved-url"
+              type="text"
+              value={editableUrl}
+              onChange={handleUrlChange}
+              placeholder="https://api.example.com"
+              description="This URL will be used for the baseUrl collection variable."
+            />
           </div>
         )}
 
