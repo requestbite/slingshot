@@ -3,12 +3,14 @@ import { useLocation } from 'wouter-preact';
 import { fetchFromURL, detectContentFormat } from '../../utils/urlImporter';
 import { processImport } from '../../utils/importProcessor';
 import { apiClient } from '../../api';
+import { requestSubmitter } from '../../utils/requestSubmitter';
 import { useAppContext } from '../../hooks/useAppContext';
 import { Toast, useToast } from '../common/Toast';
 import { Modal } from '../common/Modal';
 import { TextInput } from '../common/TextInput';
 import { Button } from '../common/Button';
 import { Label } from '../common/Label';
+import { FileBrowser } from '../common/FileBrowser';
 import { OpenAPIServerSelectModal } from './OpenAPIServerSelectModal';
 import { SwaggerHostInputModal } from './SwaggerHostInputModal';
 
@@ -37,6 +39,16 @@ export function ReImportModal({ isOpen, collection, onClose, onSuccess }) {
   // Swagger host input state (Swagger 2.0 without host)
   const [showSwaggerHostModal, setShowSwaggerHostModal] = useState(false);
   const [swaggerBasePath, setSwaggerBasePath] = useState('');
+
+  // Local file browser state
+  const [enableLocalFiles, setEnableLocalFiles] = useState(false);
+  const [isCheckingCapabilities, setIsCheckingCapabilities] = useState(true);
+  const [directoryListing, setDirectoryListing] = useState([]);
+  const [currentPath, setCurrentPath] = useState(null);
+  const [currentDir, setCurrentDir] = useState(null);
+  const [parentDir, setParentDir] = useState(null);
+  const [isLoadingDirectory, setIsLoadingDirectory] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   // Initialize form data when modal opens and auto-focus URL input
   useEffect(() => {
@@ -75,6 +87,271 @@ export function ReImportModal({ isOpen, collection, onClose, onSuccess }) {
     }
   };
 
+  // Fetch directory listing from proxy
+  const fetchDirectoryListing = async (path) => {
+    setIsLoadingDirectory(true);
+    setSelectedItem(null); // Clear selection when navigating
+    try {
+      const proxyUrl = requestSubmitter.getCurrentProxyUrl();
+      const dirUrl = `${proxyUrl.replace(/\/$/, '')}/dir`;
+
+      const response = await fetch(dirUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ path })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch directory listing');
+      }
+
+      const data = await response.json();
+      setCurrentPath(path);
+      setCurrentDir(data.currentDir);
+      setParentDir(data.parentDir);
+
+      // Format directory listing for FileBrowser
+      let items = [...(data.dir || [])];
+
+      // Add parent directory entry if not at root
+      if (data.parentDir !== null) {
+        items.unshift({
+          name: '..',
+          type: 'directory'
+        });
+      }
+
+      setDirectoryListing(items);
+    } catch (error) {
+      console.error('Failed to fetch directory listing:', error);
+      // Fall back to standard URL input on network/proxy error
+      setEnableLocalFiles(false);
+      setToastMessage('Failed to load directory listing. Using URL input only.');
+      setToastType('error');
+      showToast();
+    } finally {
+      setIsLoadingDirectory(false);
+    }
+  };
+
+  // Fetch file contents from proxy
+  const fetchFileContents = async (filePath) => {
+    try {
+      const proxyUrl = requestSubmitter.getCurrentProxyUrl();
+      const fileUrl = `${proxyUrl.replace(/\/$/, '')}/file`;
+
+      const response = await fetch(fileUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/plain'
+        },
+        body: JSON.stringify({ path: filePath })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch file contents');
+      }
+
+      const content = await response.text();
+      return content;
+    } catch (error) {
+      console.error('Failed to fetch file contents:', error);
+      throw error;
+    }
+  };
+
+  // Check proxy capabilities when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const checkProxyCapabilities = async () => {
+      setIsCheckingCapabilities(true);
+      try {
+        const proxyUrl = requestSubmitter.getCurrentProxyUrl();
+        const healthUrl = `${proxyUrl.replace(/\/$/, '')}/health`;
+
+        const response = await fetch(healthUrl, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const hasLocalFiles = data.enableLocalFiles === true;
+          setEnableLocalFiles(hasLocalFiles);
+
+          // If local files enabled, we'll fetch directory in separate effect
+        }
+      } catch (error) {
+        console.error('Failed to check proxy capabilities:', error);
+        // Fall back to standard URL input on error
+        setEnableLocalFiles(false);
+      } finally {
+        setIsCheckingCapabilities(false);
+      }
+    };
+
+    checkProxyCapabilities();
+  }, [isOpen]);
+
+  // Navigate to source file directory if local files enabled
+  useEffect(() => {
+    if (!isOpen || !enableLocalFiles || isCheckingCapabilities) return;
+
+    const navigateToSourceDirectory = async () => {
+      // Check if sourceUrl is a file path (not a URL)
+      const isUrl = sourceUrl.startsWith('http://') || sourceUrl.startsWith('https://');
+
+      if (!sourceUrl || isUrl) {
+        // No source URL or it's a URL - fetch default directory
+        await fetchDirectoryListing(null);
+        return;
+      }
+
+      // sourceUrl looks like a file path - extract directory
+      const lastSlashIndex = sourceUrl.lastIndexOf('/');
+      if (lastSlashIndex > 0) {
+        const directoryPath = sourceUrl.substring(0, lastSlashIndex);
+
+        try {
+          // Try to fetch the source file's directory
+          await fetchDirectoryListing(directoryPath);
+        } catch (error) {
+          // If that fails, fall back to default directory
+          console.error('Failed to navigate to source directory, using default:', error);
+          await fetchDirectoryListing(null);
+        }
+      } else {
+        // No directory separator - fetch default directory
+        await fetchDirectoryListing(null);
+      }
+    };
+
+    navigateToSourceDirectory();
+  }, [isOpen, enableLocalFiles, isCheckingCapabilities, sourceUrl]);
+
+  // Handle file/folder click (selection)
+  const handleFileBrowserClick = (item) => {
+    setSelectedItem(item);
+  };
+
+  // Handle file/folder double-click (navigation or re-import)
+  const handleFileBrowserDoubleClick = async (item) => {
+    if (item.type === 'directory') {
+      // Navigate into directory
+      let targetPath;
+      if (item.name === '..') {
+        // Navigate to parent directory
+        targetPath = parentDir;
+      } else {
+        // Navigate into subdirectory
+        targetPath = currentDir ? `${currentDir}/${item.name}` : item.name;
+      }
+      await fetchDirectoryListing(targetPath);
+    } else if (item.type === 'file') {
+      // Check if file has allowed extension
+      const allowedExtensions = ['.json', '.yml', '.yaml'];
+      const fileName = item.name.toLowerCase();
+      const isAllowed = allowedExtensions.some(ext => fileName.endsWith(ext));
+
+      if (!isAllowed) {
+        setToastMessage('Please select a JSON or YAML file.');
+        setToastType('error');
+        showToast();
+        return;
+      }
+
+      // Re-import from local file
+      setIsLoading(true);
+
+      try {
+        const filePath = currentDir ? `${currentDir}/${item.name}` : item.name;
+        const fileContent = await fetchFileContents(filePath);
+
+        // Detect content format
+        const format = detectContentFormat(fileContent);
+
+        if (format === 'unknown') {
+          setToastMessage('Unable to detect file format. Please ensure the file is a valid OpenAPI specification or Postman collection.');
+          setToastType('error');
+          showToast();
+          setIsLoading(false);
+          return;
+        }
+
+        // For OpenAPI, check if there are multiple servers or missing host
+        if (format === 'openapi') {
+          try {
+            let spec;
+
+            // Try parsing as JSON first
+            try {
+              spec = JSON.parse(fileContent);
+            } catch (_jsonError) {
+              // If JSON fails, try YAML
+              const { load: loadYAML } = await import('js-yaml');
+              spec = loadYAML(fileContent);
+            }
+
+            // If OpenAPI 3.x and has multiple servers, show server selection modal
+            if (spec && spec.openapi && spec.servers && spec.servers.length > 1) {
+              setParsedSpec(spec);
+              setSpecFormat(format);
+              setSpecContent(fileContent);
+              setShowServerSelectModal(true);
+              setIsLoading(false);
+              return;
+            }
+
+            // Check for Swagger 2.0 without host
+            if (spec && spec.swagger === '2.0' && !spec.host) {
+              setParsedSpec(spec);
+              setSpecFormat(format);
+              setSpecContent(fileContent);
+              setSwaggerBasePath(spec.basePath || '');
+              setShowSwaggerHostModal(true);
+              setIsLoading(false);
+              return;
+            }
+          } catch (_parseError) {
+            // Parsing failed, continue with normal processing
+          }
+        }
+
+        // Process without server selection
+        await executeReImport(fileContent, format, null);
+
+      } catch (error) {
+        console.error('Re-import from local file error:', error);
+
+        // Check if this is a network/fetch error vs a validation error
+        const isNetworkError = error.name === 'TypeError' ||
+                               error.message?.includes('fetch') ||
+                               error.message?.includes('network') ||
+                               error.message?.includes('Failed to fetch');
+
+        if (isNetworkError) {
+          // Network/proxy error - fall back to URL input only
+          setEnableLocalFiles(false);
+          setToastMessage('Failed to fetch file from proxy. Using URL input only.');
+          setToastType('error');
+          showToast();
+        } else {
+          // Validation error - keep file browser, just show error
+          setToastMessage(error.message || 'Failed to re-import from file. Please check the file format.');
+          setToastType('error');
+          showToast();
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
   /**
    * Main re-import handler
    * 1. Fetch spec from URL
@@ -97,8 +374,18 @@ export function ReImportModal({ isOpen, collection, onClose, onSuccess }) {
     setIsLoading(true);
 
     try {
-      // Fetch content from URL
-      const { content } = await fetchFromURL(sourceUrl.trim());
+      // Determine if sourceUrl is a file path or URL
+      const isUrl = sourceUrl.startsWith('http://') || sourceUrl.startsWith('https://');
+      let content;
+
+      if (isUrl) {
+        // Fetch content from URL
+        const result = await fetchFromURL(sourceUrl.trim());
+        content = result.content;
+      } else {
+        // Fetch content from local file via proxy
+        content = await fetchFileContents(sourceUrl.trim());
+      }
 
       // Detect content format
       const format = detectContentFormat(content);
@@ -249,6 +536,13 @@ export function ReImportModal({ isOpen, collection, onClose, onSuccess }) {
 
   const resetForm = () => {
     setSourceUrl('');
+    setEnableLocalFiles(false);
+    setDirectoryListing([]);
+    setCurrentPath(null);
+    setCurrentDir(null);
+    setParentDir(null);
+    setSelectedItem(null);
+    setIsCheckingCapabilities(true);
   };
 
   const handleClose = () => {
@@ -284,7 +578,6 @@ export function ReImportModal({ isOpen, collection, onClose, onSuccess }) {
               </Label>
               <TextInput
                 ref={urlInputRef}
-                type="url"
                 id="reimport-source-url"
                 placeholder="https://example.com/api-spec.yaml"
                 value={sourceUrl}
@@ -293,6 +586,39 @@ export function ReImportModal({ isOpen, collection, onClose, onSuccess }) {
                 description="URL to import OpenAPI specification or Postman collection from."
               />
             </div>
+
+            {/* Local File Browser */}
+            {isCheckingCapabilities ? (
+              <div>
+                <Label>Local file</Label>
+                <div class="mt-2 text-sm text-gray-500">
+                  Checking proxy capabilities...
+                </div>
+              </div>
+            ) : enableLocalFiles ? (
+              <div>
+                <Label>Local file</Label>
+                <div class="mt-2">
+                  {isLoadingDirectory ? (
+                    <div class="text-sm text-gray-500">Loading directory...</div>
+                  ) : (
+                    <FileBrowser
+                      items={directoryListing}
+                      sort="alphabetical"
+                      onClick={handleFileBrowserClick}
+                      onDoubleClick={handleFileBrowserDoubleClick}
+                      allowedExtensions={['.json', '.yml', '.yaml']}
+                      selectedItem={selectedItem}
+                    />
+                  )}
+                  {currentDir && (
+                    <p class="mt-2 text-xs text-gray-500">
+                      Current directory: {currentDir}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : null}
 
             <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
               <Button
