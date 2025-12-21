@@ -207,8 +207,10 @@ export function ReImportModal({ isOpen, collection, onClose, onSuccess }) {
       const isUrl = sourceUrl.startsWith('http://') || sourceUrl.startsWith('https://');
 
       if (!sourceUrl || isUrl) {
-        // No source URL or it's a URL - fetch default directory
-        await fetchDirectoryListing(null);
+        // No source URL or it's a URL - fetch default directory if we haven't loaded anything yet
+        if (currentDir === null) {
+          await fetchDirectoryListing(null);
+        }
         return;
       }
 
@@ -217,17 +219,22 @@ export function ReImportModal({ isOpen, collection, onClose, onSuccess }) {
       if (lastSlashIndex > 0) {
         const directoryPath = sourceUrl.substring(0, lastSlashIndex);
 
-        try {
-          // Try to fetch the source file's directory
-          await fetchDirectoryListing(directoryPath);
-        } catch (error) {
-          // If that fails, fall back to default directory
-          console.error('Failed to navigate to source directory, using default:', error);
-          await fetchDirectoryListing(null);
+        // Only fetch if we're not already in this directory
+        if (directoryPath !== currentDir) {
+          try {
+            // Try to fetch the source file's directory
+            await fetchDirectoryListing(directoryPath);
+          } catch (error) {
+            // If that fails, fall back to default directory
+            console.error('Failed to navigate to source directory, using default:', error);
+            await fetchDirectoryListing(null);
+          }
         }
       } else {
-        // No directory separator - fetch default directory
-        await fetchDirectoryListing(null);
+        // No directory separator - fetch default directory if we haven't loaded anything yet
+        if (currentDir === null) {
+          await fetchDirectoryListing(null);
+        }
       }
     };
 
@@ -237,6 +244,12 @@ export function ReImportModal({ isOpen, collection, onClose, onSuccess }) {
   // Handle file/folder click (selection)
   const handleFileBrowserClick = (item) => {
     setSelectedItem(item);
+
+    // If it's a file, update the source URL input field with the full path
+    if (item.type === 'file') {
+      const filePath = currentDir ? `${currentDir}/${item.name}` : item.name;
+      setSourceUrl(filePath);
+    }
   };
 
   // Handle file/folder double-click (navigation or re-import)
