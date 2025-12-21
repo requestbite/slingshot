@@ -94,8 +94,10 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
       setDirectoryListing(items);
     } catch (error) {
       console.error('Failed to fetch directory listing:', error);
+      // Fall back to standard file input on error
+      setEnableLocalFiles(false);
       setErrors({
-        general: 'Failed to load directory listing. Please try again or use file upload.'
+        general: 'Failed to load directory listing. Falling back to file upload.'
       });
     } finally {
       setIsLoadingDirectory(false);
@@ -236,8 +238,10 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
 
       } catch (error) {
         console.error('OpenAPI import error:', error);
+        // Fall back to standard file input on error
+        setEnableLocalFiles(false);
         setErrors({
-          general: error.message || 'Failed to import OpenAPI specification. Please check the file format and try again.'
+          general: error.message || 'Failed to import OpenAPI specification. Falling back to file upload.'
         });
       } finally {
         setIsLoading(false);

@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
 
-export function FileBrowser({ items = [], sort, onClick, onDoubleClick, allowedExtensions = null, selectedItem = null }) {
+export function FileBrowser({ items = [], sort, onClick, onDoubleClick, allowedExtensions = null, selectedItem = null, maxItems = 10 }) {
   const [clickTimer, setClickTimer] = useState(null);
 
   // Check if a file is allowed based on extensions
@@ -52,12 +52,14 @@ export function FileBrowser({ items = [], sort, onClick, onDoubleClick, allowedE
         onDoubleClick(item, event);
       }
     } else {
-      // This might be a single click, wait to see if another click follows
+      // Call onClick immediately for instant visual feedback
+      if (onClick) {
+        onClick(item, event);
+      }
+
+      // Set timer to detect if this becomes a double-click
       const timer = setTimeout(() => {
         setClickTimer(null);
-        if (onClick) {
-          onClick(item, event);
-        }
       }, 250);
       setClickTimer(timer);
     }
@@ -101,18 +103,28 @@ export function FileBrowser({ items = [], sort, onClick, onDoubleClick, allowedE
     </svg>
   );
 
+  // Calculate max height based on number of items (each item is ~2rem tall)
+  const maxHeight = `${maxItems * 2}rem`;
+
   return (
-    <div class="bg-white border border-gray-200 rounded-md shadow-sm">
+    <div
+      class="bg-white outline outline-1 -outline-offset-1 outline-gray-300 rounded-md overflow-y-auto scrollbar-hide"
+      style={{ maxHeight }}
+    >
       <div class="divide-y divide-gray-100">
         {sortedItems.map((item, index) => {
           const allowed = isFileAllowed(item);
           const selected = isSelected(item);
+          const isFirst = index === 0;
+          const isLast = index === sortedItems.length - 1;
 
-          // Build dynamic classes
+          // Build dynamic classes with rounded corners for first/last items
           const itemClasses = [
             'flex items-center px-3 py-1 text-sm select-none',
             selected ? 'bg-sky-500 text-white' : 'text-gray-700 hover:bg-gray-50',
-            allowed ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+            allowed ? 'cursor-pointer' : 'cursor-arrow opacity-50',
+            selected && isFirst ? 'rounded-t-md' : '',
+            selected && isLast ? 'rounded-b-md' : ''
           ].join(' ');
 
           const iconClasses = selected ? 'text-white' : 'text-gray-500';
