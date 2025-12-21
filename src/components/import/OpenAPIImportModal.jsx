@@ -9,6 +9,7 @@ import { TextInput } from '../common/TextInput';
 import { Button } from '../common/Button';
 import { Label } from '../common/Label';
 import { FileBrowser } from '../common/FileBrowser';
+import { Toast, useToast } from '../common/Toast';
 import { OpenAPIServerSelectModal } from '../modals/OpenAPIServerSelectModal';
 
 export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
@@ -38,6 +39,11 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
   const [parentDir, setParentDir] = useState(null);
   const [isLoadingDirectory, setIsLoadingDirectory] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+
+  // Toast notifications
+  const [isToastVisible, showToast, hideToast] = useToast();
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('error');
 
   // Initialize form data when modal opens and auto-focus name input
   useEffect(() => {
@@ -94,11 +100,11 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
       setDirectoryListing(items);
     } catch (error) {
       console.error('Failed to fetch directory listing:', error);
-      // Fall back to standard file input on error
+      // Fall back to standard file input on network/proxy error
       setEnableLocalFiles(false);
-      setErrors({
-        general: 'Failed to load directory listing. Falling back to file upload.'
-      });
+      setToastMessage('Failed to load directory listing. Falling back to file upload.');
+      setToastType('error');
+      showToast();
     } finally {
       setIsLoadingDirectory(false);
     }
@@ -193,9 +199,9 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
       const isAllowed = allowedExtensions.some(ext => fileName.endsWith(ext));
 
       if (!isAllowed) {
-        setErrors({
-          general: 'Please select a YAML or JSON file.'
-        });
+        setToastMessage('Please select a YAML or JSON file.');
+        setToastType('error');
+        showToast();
         return;
       }
 
@@ -238,11 +244,26 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
 
       } catch (error) {
         console.error('OpenAPI import error:', error);
-        // Fall back to standard file input on error
-        setEnableLocalFiles(false);
-        setErrors({
-          general: error.message || 'Failed to import OpenAPI specification. Falling back to file upload.'
-        });
+
+        // Check if this is a network/fetch error (should fall back to file input)
+        // vs a validation error (keep file browser)
+        const isNetworkError = error.name === 'TypeError' ||
+                               error.message?.includes('fetch') ||
+                               error.message?.includes('network') ||
+                               error.message?.includes('Failed to fetch');
+
+        if (isNetworkError) {
+          // Network/proxy error - fall back to file input
+          setEnableLocalFiles(false);
+          setToastMessage('Failed to fetch file from proxy. Falling back to file upload.');
+          setToastType('error');
+          showToast();
+        } else {
+          // Validation error - keep file browser, just show error
+          setToastMessage(error.message || 'Failed to import OpenAPI specification. Please check the file format.');
+          setToastType('error');
+          showToast();
+        }
       } finally {
         setIsLoading(false);
       }
@@ -279,16 +300,17 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
     const file = e.target.files[0];
     if (file) {
       const fileErrors = validateFile(file);
-      setErrors({ ...errors, file: fileErrors.file });
+      if (fileErrors.file) {
+        setToastMessage(fileErrors.file);
+        setToastType('error');
+        showToast();
+      }
       setFormData({ ...formData, file });
     }
   };
 
   const handleNameChange = (e) => {
     setFormData({ ...formData, name: e.target.value });
-    if (errors.name) {
-      setErrors({ ...errors, name: '' });
-    }
   };
 
   const readFileContent = (file) => {
@@ -379,12 +401,13 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
     // Validate form
     const fileErrors = validateFile(formData.file);
     if (Object.keys(fileErrors).length > 0) {
-      setErrors(fileErrors);
+      setToastMessage(fileErrors.file || 'Please check the file and try again.');
+      setToastType('error');
+      showToast();
       return;
     }
 
     setIsLoading(true);
-    setErrors({});
 
     try {
       // Read file content
@@ -421,9 +444,9 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
 
     } catch (error) {
       console.error('OpenAPI import error:', error);
-      setErrors({
-        general: error.message || 'Failed to import OpenAPI specification. Please check the file format and try again.'
-      });
+      setToastMessage(error.message || 'Failed to import OpenAPI specification. Please check the file format and try again.');
+      setToastType('error');
+      showToast();
     } finally {
       setIsLoading(false);
     }
@@ -437,9 +460,9 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
       await processImport(fileContent, specCollectionName, serverSelection);
     } catch (error) {
       console.error('OpenAPI import error:', error);
-      setErrors({
-        general: error.message || 'Failed to import OpenAPI specification. Please check the file format and try again.'
-      });
+      setToastMessage(error.message || 'Failed to import OpenAPI specification. Please check the file format and try again.');
+      setToastType('error');
+      showToast();
     } finally {
       setIsLoading(false);
     }
@@ -455,7 +478,6 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
 
   const resetForm = () => {
     setFormData({ name: '', file: null });
-    setErrors({});
     setEnableLocalFiles(false);
     setDirectoryListing([]);
     setCurrentPath(null);
@@ -532,20 +554,9 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
                 disabled={isLoading}
                 description="Maximum file size: 10 MB"
               />
-              {errors.file && (
-                <div class="mt-2 text-sm text-red-600 bg-red-100 p-2 rounded-md">
-                  {errors.file}
-                </div>
-              )}
             </>
           )}
         </div>
-
-        {errors.general && (
-          <div class="mt-2 text-sm text-red-600 bg-red-100 p-2 rounded-md">
-            {errors.general}
-          </div>
-        )}
 
         <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
           <Button
@@ -588,6 +599,14 @@ export function OpenAPIImportModal({ isOpen, onClose, onSuccess }) {
           onConfirm={handleServerSelectionConfirm}
         />
       )}
+
+      {/* Toast Notification */}
+      <Toast
+        message={toastMessage}
+        isVisible={isToastVisible}
+        onClose={hideToast}
+        type={toastType}
+      />
     </Modal>
   );
 }
