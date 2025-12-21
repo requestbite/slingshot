@@ -2,11 +2,14 @@ import { useState, useRef, useEffect } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 // processPostmanCollection will be dynamically imported when needed
 import { apiClient } from '../../api';
+import { requestSubmitter } from '../../utils/requestSubmitter';
 import { useAppContext } from '../../hooks/useAppContext';
 import { Modal } from '../common/Modal';
 import { TextInput } from '../common/TextInput';
 import { Button } from '../common/Button';
 import { Label } from '../common/Label';
+import { FileBrowser } from '../common/FileBrowser';
+import { Toast, useToast } from '../common/Toast';
 
 export function PostmanImportModal({ isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -19,6 +22,21 @@ export function PostmanImportModal({ isOpen, onClose, onSuccess }) {
   const nameInputRef = useRef();
   const [, setLocation] = useLocation();
   const { addCollection, selectCollection } = useAppContext();
+
+  // Local file browser state
+  const [enableLocalFiles, setEnableLocalFiles] = useState(false);
+  const [isCheckingCapabilities, setIsCheckingCapabilities] = useState(true);
+  const [directoryListing, setDirectoryListing] = useState([]);
+  const [currentPath, setCurrentPath] = useState(null);
+  const [currentDir, setCurrentDir] = useState(null);
+  const [parentDir, setParentDir] = useState(null);
+  const [isLoadingDirectory, setIsLoadingDirectory] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  // Toast notifications
+  const [isToastVisible, showToast, hideToast] = useToast();
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('error');
 
   // Initialize form data when modal opens and auto-focus name input
   useEffect(() => {
@@ -34,6 +52,265 @@ export function PostmanImportModal({ isOpen, onClose, onSuccess }) {
       }, 100);
     }
   }, [isOpen]);
+
+  // Fetch directory listing from proxy
+  const fetchDirectoryListing = async (path) => {
+    setIsLoadingDirectory(true);
+    setSelectedItem(null); // Clear selection when navigating
+    try {
+      const proxyUrl = requestSubmitter.getCurrentProxyUrl();
+      const dirUrl = `${proxyUrl.replace(/\/$/, '')}/dir`;
+
+      const response = await fetch(dirUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ path })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch directory listing');
+      }
+
+      const data = await response.json();
+      setCurrentPath(path);
+      setCurrentDir(data.currentDir);
+      setParentDir(data.parentDir);
+
+      // Format directory listing for FileBrowser
+      let items = [...(data.dir || [])];
+
+      // Add parent directory entry if not at root
+      if (data.parentDir !== null) {
+        items.unshift({
+          name: '..',
+          type: 'directory'
+        });
+      }
+
+      setDirectoryListing(items);
+    } catch (error) {
+      console.error('Failed to fetch directory listing:', error);
+      // Fall back to standard file input on network/proxy error
+      setEnableLocalFiles(false);
+      setToastMessage('Failed to load directory listing. Falling back to file upload.');
+      setToastType('error');
+      showToast();
+    } finally {
+      setIsLoadingDirectory(false);
+    }
+  };
+
+  // Fetch file contents from proxy
+  const fetchFileContents = async (filePath) => {
+    try {
+      const proxyUrl = requestSubmitter.getCurrentProxyUrl();
+      const fileUrl = `${proxyUrl.replace(/\/$/, '')}/file`;
+
+      const response = await fetch(fileUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/plain'
+        },
+        body: JSON.stringify({ path: filePath })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch file contents');
+      }
+
+      const content = await response.text();
+      return content;
+    } catch (error) {
+      console.error('Failed to fetch file contents:', error);
+      throw error;
+    }
+  };
+
+  // Check proxy capabilities when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const checkProxyCapabilities = async () => {
+      setIsCheckingCapabilities(true);
+      try {
+        const proxyUrl = requestSubmitter.getCurrentProxyUrl();
+        const healthUrl = `${proxyUrl.replace(/\/$/, '')}/health`;
+
+        const response = await fetch(healthUrl, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const hasLocalFiles = data.enableLocalFiles === true;
+          setEnableLocalFiles(hasLocalFiles);
+
+          // If local files enabled, fetch initial directory listing
+          if (hasLocalFiles) {
+            await fetchDirectoryListing(null);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check proxy capabilities:', error);
+        // Fall back to standard file input on error
+        setEnableLocalFiles(false);
+      } finally {
+        setIsCheckingCapabilities(false);
+      }
+    };
+
+    checkProxyCapabilities();
+  }, [isOpen]);
+
+  // Handle file/folder click (selection)
+  const handleFileBrowserClick = (item) => {
+    setSelectedItem(item);
+  };
+
+  // Handle file/folder double-click (navigation or import)
+  const handleFileBrowserDoubleClick = async (item) => {
+    if (item.type === 'directory') {
+      // Navigate into directory
+      let targetPath;
+      if (item.name === '..') {
+        // Navigate to parent directory
+        targetPath = parentDir;
+      } else {
+        // Navigate into subdirectory
+        targetPath = currentDir ? `${currentDir}/${item.name}` : item.name;
+      }
+      await fetchDirectoryListing(targetPath);
+    } else if (item.type === 'file') {
+      // Check if file has allowed extension
+      const allowedExtensions = ['.json'];
+      const fileName = item.name.toLowerCase();
+      const isAllowed = allowedExtensions.some(ext => fileName.endsWith(ext));
+
+      if (!isAllowed) {
+        setToastMessage('Please select a JSON file.');
+        setToastType('error');
+        showToast();
+        return;
+      }
+
+      // Import file
+      setIsLoading(true);
+
+      try {
+        const filePath = currentDir ? `${currentDir}/${item.name}` : item.name;
+        const fileContent = await fetchFileContents(filePath);
+
+        // Process Postman collection with dynamic import
+        const { processPostmanCollection } = await import('../../utils/postmanImporter');
+        const processedData = await processPostmanCollection(fileContent, formData.name);
+
+        // Create collection and requests (same as handleSubmit)
+        await createCollectionFromProcessedData(processedData);
+
+      } catch (error) {
+        console.error('Postman import error:', error);
+
+        // Check if this is a network/fetch error vs a validation error
+        const isNetworkError = error.name === 'TypeError' ||
+                               error.message?.includes('fetch') ||
+                               error.message?.includes('network') ||
+                               error.message?.includes('Failed to fetch');
+
+        if (isNetworkError) {
+          // Network/proxy error - fall back to file input
+          setEnableLocalFiles(false);
+          setToastMessage('Failed to fetch file from proxy. Falling back to file upload.');
+          setToastType('error');
+          showToast();
+        } else {
+          // Validation error - keep file browser, just show error
+          setToastMessage(error.message || 'Failed to import Postman collection. Please check the file format.');
+          setToastType('error');
+          showToast();
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  // Helper function to create collection from processed data
+  const createCollectionFromProcessedData = async (processedData) => {
+    // Create collection using our API client
+    const collection = await apiClient.createCollection({
+      name: processedData.collectionName,
+      description: processedData.description || '',
+      variables: processedData.variables || []
+    });
+
+    // Create individual variable records for collection management UI
+    for (const variable of processedData.variables || []) {
+      await apiClient.createSecret({
+        collection_id: collection.id,
+        key: variable.key,
+        value: variable.value,
+        description: variable.description || ''
+      });
+    }
+
+    // Create folders and requests
+    const folderMap = new Map(); // Maps temp UUID to database ID
+
+    // Create folders in hierarchical order (parents first)
+    const createFoldersRecursively = async (parentId = null) => {
+      const foldersAtLevel = processedData.folders.filter(f => f.parent_folder_id === parentId);
+
+      for (const folderData of foldersAtLevel) {
+        const folder = await apiClient.createFolder({
+          name: folderData.name,
+          collection_id: collection.id,
+          parent_folder_id: folderData.parent_folder_id ? folderMap.get(folderData.parent_folder_id) : null,
+          description: folderData.description || ''
+        });
+        folderMap.set(folderData.id, folder.id);
+
+        // Create child folders
+        await createFoldersRecursively(folderData.id);
+      }
+    };
+
+    await createFoldersRecursively();
+
+    // Create requests
+    for (const requestData of processedData.requests) {
+      const folderId = requestData.folderId ? folderMap.get(requestData.folderId) : null;
+
+      await apiClient.createRequest({
+        collection_id: collection.id,
+        folder_id: folderId,
+        name: requestData.name,
+        method: requestData.method,
+        url: requestData.url,
+        headers: requestData.headers || [],
+        params: requestData.params || [],
+        path_params: requestData.pathParams || [],
+        request_type: requestData.requestType || 'none',
+        content_type: requestData.contentType || 'json',
+        body: requestData.body || '',
+        form_data: requestData.formData || [],
+        url_encoded_data: requestData.urlEncodedData || []
+      });
+    }
+
+    // Success - add to context, navigate to collection, and notify parent
+    addCollection(collection);
+    selectCollection(collection);
+    setLocation(`/${collection.id}`);
+
+    if (onSuccess) onSuccess(collection);
+    onClose();
+    resetForm();
+  };
 
   const validateFile = (file) => {
     const errors = {};
@@ -65,16 +342,17 @@ export function PostmanImportModal({ isOpen, onClose, onSuccess }) {
     const file = e.target.files[0];
     if (file) {
       const fileErrors = validateFile(file);
-      setErrors({ ...errors, file: fileErrors.file });
+      if (fileErrors.file) {
+        setToastMessage(fileErrors.file);
+        setToastType('error');
+        showToast();
+      }
       setFormData({ ...formData, file });
     }
   };
 
   const handleNameChange = (e) => {
     setFormData({ ...formData, name: e.target.value });
-    if (errors.name) {
-      setErrors({ ...errors, name: '' });
-    }
   };
 
   const readFileContent = (file) => {
@@ -92,12 +370,13 @@ export function PostmanImportModal({ isOpen, onClose, onSuccess }) {
     // Validate form
     const fileErrors = validateFile(formData.file);
     if (Object.keys(fileErrors).length > 0) {
-      setErrors(fileErrors);
+      setToastMessage(fileErrors.file || 'Please check the file and try again.');
+      setToastType('error');
+      showToast();
       return;
     }
 
     setIsLoading(true);
-    setErrors({});
 
     try {
       // Read file content
@@ -107,81 +386,14 @@ export function PostmanImportModal({ isOpen, onClose, onSuccess }) {
       const { processPostmanCollection } = await import('../../utils/postmanImporter');
       const processedData = await processPostmanCollection(fileContent, formData.name);
 
-      // Create collection using our API client
-      const collection = await apiClient.createCollection({
-        name: processedData.collectionName,
-        description: processedData.description || '',
-        variables: processedData.variables || []
-      });
-
-      // Create individual variable records for collection management UI
-      for (const variable of processedData.variables || []) {
-        await apiClient.createSecret({
-          collection_id: collection.id,
-          key: variable.key,
-          value: variable.value,
-          description: variable.description || ''
-        });
-      }
-
-      // Create folders and requests
-      const folderMap = new Map(); // Maps temp UUID to database ID
-
-      // Create folders in hierarchical order (parents first)
-      const createFoldersRecursively = async (parentId = null) => {
-        const foldersAtLevel = processedData.folders.filter(f => f.parent_folder_id === parentId);
-
-        for (const folderData of foldersAtLevel) {
-          const folder = await apiClient.createFolder({
-            name: folderData.name,
-            collection_id: collection.id,
-            parent_folder_id: folderData.parent_folder_id ? folderMap.get(folderData.parent_folder_id) : null,
-            description: folderData.description || ''
-          });
-          folderMap.set(folderData.id, folder.id);
-
-          // Create child folders
-          await createFoldersRecursively(folderData.id);
-        }
-      };
-
-      await createFoldersRecursively();
-
-      // Create requests
-      for (const requestData of processedData.requests) {
-        const folderId = requestData.folderId ? folderMap.get(requestData.folderId) : null;
-
-        await apiClient.createRequest({
-          collection_id: collection.id,
-          folder_id: folderId,
-          name: requestData.name,
-          method: requestData.method,
-          url: requestData.url,
-          headers: requestData.headers || [],
-          params: requestData.params || [],
-          path_params: requestData.pathParams || [],
-          request_type: requestData.requestType || 'none',
-          content_type: requestData.contentType || 'json',
-          body: requestData.body || '',
-          form_data: requestData.formData || [],
-          url_encoded_data: requestData.urlEncodedData || []
-        });
-      }
-
-      // Success - add to context, navigate to collection, and notify parent
-      addCollection(collection);
-      selectCollection(collection);
-      setLocation(`/${collection.id}`);
-
-      if (onSuccess) onSuccess(collection);
-      onClose();
-      resetForm();
+      // Create collection and requests
+      await createCollectionFromProcessedData(processedData);
 
     } catch (error) {
       console.error('Postman import error:', error);
-      setErrors({
-        general: error.message || 'Failed to import Postman collection. Please check the file format and try again.'
-      });
+      setToastMessage(error.message || 'Failed to import Postman collection. Please check the file format and try again.');
+      setToastType('error');
+      showToast();
     } finally {
       setIsLoading(false);
     }
@@ -189,7 +401,13 @@ export function PostmanImportModal({ isOpen, onClose, onSuccess }) {
 
   const resetForm = () => {
     setFormData({ name: '', file: null });
-    setErrors({});
+    setEnableLocalFiles(false);
+    setDirectoryListing([]);
+    setCurrentPath(null);
+    setCurrentDir(null);
+    setParentDir(null);
+    setSelectedItem(null);
+    setIsCheckingCapabilities(true);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -219,37 +437,67 @@ export function PostmanImportModal({ isOpen, onClose, onSuccess }) {
             description="If left empty, the name will be taken from the Postman collection."
           />
 
-          <Label htmlFor="postman-file" className="mt-4">Postman Collection file (JSON)</Label>
-          <TextInput
-            ref={fileInputRef}
-            id="postman-file"
-            type="file"
-            accept=".json"
-            required
-            onChange={handleFileChange}
-            disabled={isLoading}
-            description="Maximum file size: 10 MB"
-          />
-          {errors.file && (
-            <div class="mt-2 text-sm text-red-600 bg-red-100 p-2 rounded-md">
-              {errors.file}
+          <Label htmlFor="postman-file" className="mt-4">
+            Postman Collection file (JSON)
+          </Label>
+
+          {isCheckingCapabilities ? (
+            <div class="mt-2 text-sm text-gray-500">
+              Checking proxy capabilities...
             </div>
+          ) : enableLocalFiles ? (
+            <div class="mt-2">
+              {isLoadingDirectory ? (
+                <div class="text-sm text-gray-500">Loading directory...</div>
+              ) : (
+                <FileBrowser
+                  items={directoryListing}
+                  sort="alphabetical"
+                  onClick={handleFileBrowserClick}
+                  onDoubleClick={handleFileBrowserDoubleClick}
+                  allowedExtensions={['.json']}
+                  selectedItem={selectedItem}
+                />
+              )}
+              {currentDir && (
+                <p class="mt-2 text-xs text-gray-500">
+                  Current directory: {currentDir}
+                </p>
+              )}
+            </div>
+          ) : (
+            <>
+              <TextInput
+                ref={fileInputRef}
+                id="postman-file"
+                type="file"
+                accept=".json"
+                required
+                onChange={handleFileChange}
+                disabled={isLoading}
+                description="Maximum file size: 10 MB"
+              />
+            </>
           )}
         </div>
-
-        {errors.general && (
-          <div class="mt-2 text-sm text-red-600 bg-red-100 p-2 rounded-md">
-            {errors.general}
-          </div>
-        )}
 
         <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
           <Button
             type="submit"
             variant="primary"
-            disabled={!formData.file}
+            disabled={
+              enableLocalFiles
+                ? !selectedItem || selectedItem.type !== 'file' || !['.json'].some(ext => selectedItem.name.toLowerCase().endsWith(ext))
+                : !formData.file
+            }
             loading={isLoading}
             className="w-full sm:ml-3 sm:w-auto"
+            onClick={enableLocalFiles ? (e) => {
+              e.preventDefault();
+              if (selectedItem && selectedItem.type === 'file') {
+                handleFileBrowserDoubleClick(selectedItem);
+              }
+            } : undefined}
           >
             {isLoading ? 'Importing...' : 'Import'}
           </Button>
@@ -264,6 +512,14 @@ export function PostmanImportModal({ isOpen, onClose, onSuccess }) {
           </Button>
         </div>
       </form>
+
+      {/* Toast Notification */}
+      <Toast
+        message={toastMessage}
+        isVisible={isToastVisible}
+        onClose={hideToast}
+        type={toastType}
+      />
     </Modal>
   );
 }
