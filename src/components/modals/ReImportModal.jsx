@@ -612,18 +612,14 @@ export function ReImportModal({ isOpen, collection, onClose, onSuccess }) {
               <div>
                 <Label>Local file</Label>
                 <div class="mt-2">
-                  {isLoadingDirectory ? (
-                    <div class="text-sm text-gray-500">Loading directory...</div>
-                  ) : (
-                    <FileBrowser
-                      items={directoryListing}
-                      sort="alphabetical"
-                      onClick={handleFileBrowserClick}
-                      onDoubleClick={handleFileBrowserDoubleClick}
-                      allowedExtensions={['.json', '.yml', '.yaml']}
-                      selectedItem={selectedItem}
-                    />
-                  )}
+                  <FileBrowser
+                    items={directoryListing}
+                    sort="alphabetical"
+                    onClick={handleFileBrowserClick}
+                    onDoubleClick={handleFileBrowserDoubleClick}
+                    allowedExtensions={['.json', '.yml', '.yaml']}
+                    selectedItem={selectedItem}
+                  />
                   {currentDir && (
                     <p class="mt-2 text-xs text-gray-500">
                       Current directory: {currentDir}
