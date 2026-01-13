@@ -23,11 +23,11 @@ Slingshot](https://s.requestbite.com) at
   need an account to fully use it.
 - **Privacy respecting**  
   All data can be stored locally and your requests don't need to pass through
-  our servers as this repo bundles the [Go Slingshot
-  Proxy](https://github.com/requestbite/slingshot-proxy)
-  used by Slingshot so that you can run it locally (configurable in the app).
-  This also allows you to call APIs local on your computer or behind a firewall or
-  VPN (resources not publicly available on the Internet).
+  our servers (unless you want to). Slingshot uses the [RequestBite
+  Proxy](https://github.com/requestbite/proxy) to make HTTP requests which you
+  can run locally (configurable in the app). This also allows you to call APIs
+  local on your computer or behind a firewall or VPN (resources not publicly
+  available on the Internet).
 - **Import / export**  
   Support for importing Swagger and OpenAPI specifications as well as Postman
 Collections. Also support exporting collections in Postman format.
@@ -76,7 +76,7 @@ bug reports or feature suggestions.
 
 ## Related Projects
 
-- [Go Slingshot Proxy](https://github.com/requestbite/slingshot-proxy).
+- [RequestBite Proxy](https://github.com/requestbite/proxy).
 
 ## License
 
