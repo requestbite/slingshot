@@ -93,7 +93,7 @@ export const TextInput = forwardRef(({
     rightPadding = 'pr-[40px]'; // Space for one icon
   }
 
-  const baseInputClasses = `block w-full rounded-md px-3 py-2 bg-white text-gray-900 outline focus:outline-2 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-sky-500 text-sm`;
+  const baseInputClasses = `block w-full rounded-md px-3 py-2 bg-white text-gray-900 outline outline-1 focus:outline-2 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-sky-500 text-sm`;
 
   return (
     <div class="w-full">
