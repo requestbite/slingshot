@@ -138,7 +138,30 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
             return <div key={index} class="border-t border-gray-200 my-1"></div>;
           }
 
+          if (item.sectionTitle) {
+            return <div key={index} class="text-xs px-4 mt-3 mb-1 text-left text-gray-500">{item.sectionTitle}</div>;
+          }
+
           const commonClasses = `block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer no-underline ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''} ${item.destructive ? 'text-red-600 hover:text-red-700' : ''}`;
+
+          const labelContent = (
+            <>
+              {item.icon && (
+                <span class="inline-block w-4 h-4 mr-2 align-middle">
+                  {item.icon}
+                </span>
+              )}
+              <span>
+                {item.label}
+                {item.subtext && (
+                  <>
+                    <br />
+                    <span class="text-xs text-gray-500">{item.subtext}</span>
+                  </>
+                )}
+              </span>
+            </>
+          );
 
           // If item has href, render as anchor tag
           if (item.href) {
@@ -157,12 +180,7 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
                 }}
                 class={commonClasses}
               >
-                {item.icon && (
-                  <span class="inline-block w-4 h-4 mr-2">
-                    {item.icon}
-                  </span>
-                )}
-                {item.label}
+                {labelContent}
               </a>
             );
           }
@@ -175,12 +193,7 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
               disabled={item.disabled}
               class={commonClasses}
             >
-              {item.icon && (
-                <span class="inline-block w-4 h-4 mr-2">
-                  {item.icon}
-                </span>
-              )}
-              {item.label}
+              {labelContent}
             </button>
           );
         })

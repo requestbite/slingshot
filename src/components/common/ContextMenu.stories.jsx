@@ -280,6 +280,98 @@ export const RequestContextMenu = {
   },
 };
 
+// With subtext
+export const WithSubtext = {
+  render: () => {
+    const Example = () => {
+      const [isOpen, setIsOpen] = useState(true);
+      const buttonRef = useRef();
+
+      const itemsWithSubtext = [
+        {
+          label: 'John Doe',
+          subtext: 'john@example.com',
+          onClick: fn(),
+        },
+        { divider: true },
+        { label: 'Switch accounts...', onClick: fn() },
+        { divider: true },
+        { label: 'Sign out', onClick: fn() },
+      ];
+
+      return (
+        <div class="p-8">
+          <button
+            ref={buttonRef}
+            onClick={() => setIsOpen(!isOpen)}
+            class="px-4 py-2 bg-sky-500 text-white rounded-md hover:bg-sky-400 cursor-pointer"
+          >
+            Menu with Subtext
+          </button>
+
+          <ContextMenu
+            isOpen={isOpen}
+            onClose={() => setIsOpen(false)}
+            trigger={buttonRef.current}
+            items={itemsWithSubtext}
+          />
+        </div>
+      );
+    };
+
+    return <Example />;
+  },
+};
+
+// With section titles
+export const WithSectionTitles = {
+  render: () => {
+    const Example = () => {
+      const [isOpen, setIsOpen] = useState(true);
+      const buttonRef = useRef();
+
+      const itemsWithSections = [
+        {
+          label: 'My Account',
+          subtext: 'user@example.com',
+          onClick: fn(),
+        },
+        { divider: true },
+        { sectionTitle: 'Inspector' },
+        { label: 'Views', onClick: fn() },
+        { divider: true },
+        { sectionTitle: 'Mock' },
+        { label: 'Mock APIs', onClick: fn() },
+        { label: 'Models', onClick: fn() },
+        { divider: true },
+        { label: 'Sign out', onClick: fn() },
+      ];
+
+      return (
+        <div class="p-8">
+          <button
+            ref={buttonRef}
+            onClick={() => setIsOpen(!isOpen)}
+            class="px-4 py-2 bg-sky-500 text-white rounded-md hover:bg-sky-400 cursor-pointer"
+          >
+            Menu with Section Titles
+          </button>
+
+          <ContextMenu
+            isOpen={isOpen}
+            onClose={() => setIsOpen(false)}
+            trigger={buttonRef.current}
+            items={itemsWithSections}
+            width={200}
+          />
+        </div>
+      );
+    };
+
+    return <Example />;
+  },
+};
+
 // Many items
 export const ManyItems = {
   render: () => {
