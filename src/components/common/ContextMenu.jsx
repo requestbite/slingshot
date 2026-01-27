@@ -34,19 +34,26 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
     // Calculate position
     let left, top;
 
-    if (position === "below") {
-      // Position below the trigger, aligned to bottom-left
-      left = triggerRect.left;
+    if (position === "below" || position === "below-right") {
+      // Position below the trigger
       top = triggerRect.bottom + 4;
-      
+
+      if (position === "below-right") {
+        // Align menu's right edge with trigger's right edge
+        left = triggerRect.right - menuWidth;
+      } else {
+        // Align menu's left edge with trigger's left edge
+        left = triggerRect.left;
+      }
+
       // Ensure menu doesn't go off-screen to the right
       if (left + menuWidth > viewport.width - 8) {
         left = viewport.width - menuWidth - 8;
       }
-      
+
       // Ensure menu doesn't go off-screen to the left
       if (left < 8) left = 8;
-      
+
       // If it would go below viewport, position above instead
       if (top + menuHeight > viewport.height - 8) {
         top = triggerRect.top - menuHeight - 4;
@@ -156,7 +163,12 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
                 {item.subtext && (
                   <>
                     <br />
-                    <span class="text-xs text-gray-500">{item.subtext}</span>
+                    <span
+                      class="text-xs text-gray-500 block overflow-hidden text-ellipsis whitespace-nowrap"
+                      style={{ maxWidth: '100%' }}
+                    >
+                      {item.subtext}
+                    </span>
                   </>
                 )}
               </span>
