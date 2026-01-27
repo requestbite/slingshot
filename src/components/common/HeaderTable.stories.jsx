@@ -8,6 +8,21 @@ export default {
       control: 'object',
       description: 'Array of header objects with name and value (each can be string or { text, url })',
     },
+    nameTitle: {
+      control: 'text',
+      description: 'Title for the name column',
+      defaultValue: 'Name',
+    },
+    valueTitle: {
+      control: 'text',
+      description: 'Title for the value column',
+      defaultValue: 'Value',
+    },
+    showTitles: {
+      control: 'boolean',
+      description: 'Whether to show the header row with titles',
+      defaultValue: true,
+    },
     className: {
       control: 'text',
       description: 'Additional CSS classes to apply to the container',
@@ -151,6 +166,45 @@ export const WithCustomClass = {
   },
 };
 
+// With custom column titles
+export const CustomTitles = {
+  args: {
+    headers: [
+      { name: 'API_KEY', value: 'sk-abc123...' },
+      { name: 'BASE_URL', value: 'https://api.example.com' },
+      { name: 'TIMEOUT', value: '30000' },
+    ],
+    nameTitle: 'Variable',
+    valueTitle: 'Content',
+  },
+};
+
+// Without titles (header row hidden)
+export const WithoutTitles = {
+  args: {
+    headers: [
+      { name: 'Content-Type', value: 'application/json' },
+      { name: 'Authorization', value: 'Bearer token...' },
+      { name: 'Accept', value: '*/*' },
+    ],
+    showTitles: false,
+  },
+};
+
+// Key-value pairs with custom titles
+export const KeyValuePairs = {
+  args: {
+    headers: [
+      { name: 'username', value: 'john_doe' },
+      { name: 'email', value: 'john@example.com' },
+      { name: 'role', value: 'admin' },
+      { name: 'status', value: 'active' },
+    ],
+    nameTitle: 'Key',
+    valueTitle: 'Value',
+  },
+};
+
 // Showcase of all variations
 export const Showcase = {
   render: () => (
@@ -199,6 +253,29 @@ export const Showcase = {
             },
             { name: 'X-Request-Id', value: 'req_123abc' },
           ]}
+        />
+      </div>
+
+      <div>
+        <h3 class="text-lg font-semibold mb-2">Custom Titles</h3>
+        <HeaderTable
+          headers={[
+            { name: 'API_KEY', value: 'sk-abc123...' },
+            { name: 'BASE_URL', value: 'https://api.example.com' },
+          ]}
+          nameTitle="Variable"
+          valueTitle="Content"
+        />
+      </div>
+
+      <div>
+        <h3 class="text-lg font-semibold mb-2">Without Titles</h3>
+        <HeaderTable
+          headers={[
+            { name: 'Content-Type', value: 'application/json' },
+            { name: 'Accept', value: '*/*' },
+          ]}
+          showTitles={false}
         />
       </div>
     </div>

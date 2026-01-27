@@ -5,9 +5,12 @@
  * @param {Array} props.headers - Array of header objects with name and value
  * @param {string|Object} props.headers[].name - Header name as string or { text, url } for links
  * @param {string|Object} props.headers[].value - Header value as string or { text, url } for links
+ * @param {string} [props.nameTitle='Name'] - Title for the name column (set to null to use default)
+ * @param {string} [props.valueTitle='Value'] - Title for the value column (set to null to use default)
+ * @param {boolean} [props.showTitles=true] - Whether to show the header row with titles
  * @param {string} [props.className] - Additional CSS classes for the container
  */
-export function HeaderTable({ headers = [], className = '' }) {
+export function HeaderTable({ headers = [], nameTitle = 'Name', valueTitle = 'Value', showTitles = true, className = '' }) {
   if (!headers || headers.length === 0) {
     return null;
   }
@@ -51,12 +54,14 @@ export function HeaderTable({ headers = [], className = '' }) {
   return (
     <div class={`max-w-full overflow-auto ${className}`}>
       <table class="border-collapse text-xs w-full table-fixed">
-        <thead>
-          <tr>
-            <th class="py-1 border-b border-slate-200 text-left font-mono font-bold">Name</th>
-            <th class="py-1 border-b border-slate-200 text-left font-mono font-bold">Value</th>
-          </tr>
-        </thead>
+        {showTitles && (
+          <thead>
+            <tr>
+              <th class="py-1 border-b border-slate-200 text-left font-mono font-bold">{nameTitle}</th>
+              <th class="py-1 border-b border-slate-200 text-left font-mono font-bold">{valueTitle}</th>
+            </tr>
+          </thead>
+        )}
         <tbody>
           {headers.map((header, index) => (
             <tr key={index}>
