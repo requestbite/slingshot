@@ -182,6 +182,7 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
                 key={index}
                 href={item.href}
                 target={item.target}
+                title={item.title}
                 onClick={(e) => {
                   if (item.onClick) {
                     if (!item.target || item.target === '_self') {
@@ -203,6 +204,7 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
               key={index}
               onClick={() => handleItemClick(item)}
               disabled={item.disabled}
+              title={item.title}
               class={commonClasses}
             >
               {labelContent}
