@@ -17,11 +17,21 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
     };
   }, [isOpen, trigger]);
 
+  // Recalculate position after menu is rendered with actual height
+  useEffect(() => {
+    if (isOpen && menuRef.current && menuPosition.top !== 0) {
+      // Use requestAnimationFrame to ensure the menu has been rendered
+      requestAnimationFrame(() => {
+        calculatePosition();
+      });
+    }
+  }, [isOpen, items, children]);
+
   const calculatePosition = () => {
     if (!trigger || !menuRef.current) return;
 
     const triggerRect = trigger.getBoundingClientRect();
-    const menuHeight = 120; // Approximate menu height
+    const menuHeight = menuRef.current.offsetHeight || 120; // Use actual height if available, otherwise approximate
     const menuWidth = width || 160; // Use provided width or default to 160px
     const viewport = {
       width: window.innerWidth,
@@ -93,9 +103,25 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
       }
     }
 
-    // Ensure menu doesn't go above viewport
+    // Final adjustment: ensure menu doesn't extend beyond viewport boundaries
+    // If menu would extend beyond bottom, move it up
+    if (top + menuHeight > viewport.height - 8) {
+      top = viewport.height - menuHeight - 8;
+    }
+
+    // Ensure menu doesn't go above viewport top
     if (top < 8) {
       top = 8;
+    }
+
+    // Ensure menu doesn't extend beyond right edge
+    if (left + menuWidth > viewport.width - 8) {
+      left = viewport.width - menuWidth - 8;
+    }
+
+    // Ensure menu doesn't go beyond left edge
+    if (left < 8) {
+      left = 8;
     }
 
     setMenuPosition({ top, left });
