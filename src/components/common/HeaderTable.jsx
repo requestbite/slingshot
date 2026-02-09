@@ -9,8 +9,10 @@
  * @param {string} [props.valueTitle='Value'] - Title for the value column (set to null to use default)
  * @param {boolean} [props.showTitles=true] - Whether to show the header row with titles
  * @param {string} [props.className] - Additional CSS classes for the container
+ * @param {string} [props.nameColumnWidth='50%'] - Width for the name column
+ * @param {string} [props.valueColumnWidth='50%'] - Width for the value column
  */
-export function HeaderTable({ headers = [], nameTitle = 'Name', valueTitle = 'Value', showTitles = true, className = '' }) {
+export function HeaderTable({ headers = [], nameTitle = 'Name', valueTitle = 'Value', showTitles = true, className = '', nameColumnWidth = '50%', valueColumnWidth = '50%' }) {
   if (!headers || headers.length === 0) {
     return null;
   }
@@ -57,18 +59,18 @@ export function HeaderTable({ headers = [], nameTitle = 'Name', valueTitle = 'Va
         {showTitles && (
           <thead>
             <tr>
-              <th class="py-1 border-b border-slate-200 text-left font-mono font-bold">{nameTitle}</th>
-              <th class="py-1 border-b border-slate-200 text-left font-mono font-bold">{valueTitle}</th>
+              <th class="py-1 border-b border-slate-200 text-left font-mono font-bold" style={{ width: nameColumnWidth }}>{nameTitle}</th>
+              <th class="py-1 border-b border-slate-200 text-left font-mono font-bold" style={{ width: valueColumnWidth }}>{valueTitle}</th>
             </tr>
           </thead>
         )}
         <tbody>
           {headers.map((header, index) => (
             <tr key={index}>
-              <td class="border-b border-slate-100 py-1 pr-3 font-mono whitespace-nowrap overflow-hidden text-ellipsis truncate">
+              <td class="border-b border-slate-100 py-1 pr-3 font-mono whitespace-nowrap overflow-hidden text-ellipsis truncate" style={{ width: nameColumnWidth }}>
                 {renderCell(header.name, false)}
               </td>
-              <td class="border-b border-slate-100 py-1 font-mono whitespace-nowrap overflow-hidden text-ellipsis truncate">
+              <td class="border-b border-slate-100 py-1 font-mono whitespace-nowrap overflow-hidden text-ellipsis truncate" style={{ width: valueColumnWidth }}>
                 {renderCell(header.value, true)}
               </td>
             </tr>
