@@ -63,7 +63,7 @@ lint-fix: $(NODE_MODULES)
 # Run Storybook development server
 storybook: $(NODE_MODULES)
 	@echo "$(COLOR_BOLD)$(COLOR_BLUE)Starting Storybook...$(COLOR_RESET)"
-	@yarn storybook dev -p 6006
+	@yarn storybook
 
 # Build Storybook for production
 build-storybook: $(NODE_MODULES)
