@@ -181,7 +181,7 @@ export function SchemaTree({
   return (
     <div class={`${className}`}>
       <div class="flex items-start">
-        <div class="flex-shrink-0" style={{ width: hasChildren ? 'auto' : '0' }}>
+        <div class="shrink-0" style={{ width: hasChildren ? 'auto' : '0' }}>
           {renderExpandButton()}
         </div>
         <div class="flex-1 min-w-0">
@@ -191,7 +191,7 @@ export function SchemaTree({
                 {name}
                 {isRequired && <span class="text-red-500 ml-1">*</span>}
               </span>
-              <span class={`px-1 py-0.5 text-[10px]/[12px] rounded ${getTypeBadgeColor(effectiveSchema.type)}`}>
+              <span class={`px-1 py-0.5 text-[10px]/[12px] rounded-sm ${getTypeBadgeColor(effectiveSchema.type)}`}>
                 {getTypeDisplay(effectiveSchema)}
               </span>
             </div>

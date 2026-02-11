@@ -145,7 +145,7 @@ export const CustomRendering = {
             />
           </div>
           {selected && (
-            <div class="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+            <div class="text-sm text-gray-600 bg-gray-50 p-3 rounded-sm">
               <div class="font-medium mb-1">Selected API:</div>
               <div><strong>Name:</strong> {selected.name}</div>
               <div><strong>Endpoint:</strong> {selected.endpoint}</div>
@@ -233,7 +233,7 @@ export const AsynchronousSearch = {
       const renderCountryItem = (country) => (
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span class="text-xs font-mono bg-gray-100 px-1.5 py-0.5 rounded">
+            <span class="text-xs font-mono bg-gray-100 px-1.5 py-0.5 rounded-sm">
               {country.code}
             </span>
             <span class="font-medium">{country.name}</span>
@@ -506,10 +506,10 @@ export const KeyboardNavigation = {
               Keyboard Navigation
             </label>
             <div class="text-xs text-gray-600 mb-3 space-y-1">
-              <div><kbd class="px-1 py-0.5 bg-gray-100 border border-gray-300 rounded text-xs">↑</kbd> / <kbd class="px-1 py-0.5 bg-gray-100 border border-gray-300 rounded text-xs">↓</kbd> Navigate items</div>
-              <div><kbd class="px-1 py-0.5 bg-gray-100 border border-gray-300 rounded text-xs">Enter</kbd> Select highlighted item</div>
-              <div><kbd class="px-1 py-0.5 bg-gray-100 border border-gray-300 rounded text-xs">Esc</kbd> Close dropdown</div>
-              <div><kbd class="px-1 py-0.5 bg-gray-100 border border-gray-300 rounded text-xs">Tab</kbd> Close and move to next field</div>
+              <div><kbd class="px-1 py-0.5 bg-gray-100 border border-gray-300 rounded-sm text-xs">↑</kbd> / <kbd class="px-1 py-0.5 bg-gray-100 border border-gray-300 rounded-sm text-xs">↓</kbd> Navigate items</div>
+              <div><kbd class="px-1 py-0.5 bg-gray-100 border border-gray-300 rounded-sm text-xs">Enter</kbd> Select highlighted item</div>
+              <div><kbd class="px-1 py-0.5 bg-gray-100 border border-gray-300 rounded-sm text-xs">Esc</kbd> Close dropdown</div>
+              <div><kbd class="px-1 py-0.5 bg-gray-100 border border-gray-300 rounded-sm text-xs">Tab</kbd> Close and move to next field</div>
             </div>
             <SearchAutocomplete
               value={query}

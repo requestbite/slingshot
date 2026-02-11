@@ -234,7 +234,7 @@ export const InteractiveTextarea = {
               rows={5}
               description="Type or edit the text to see the character count update"
             />
-            <p class="mt-2 text-xs text-gray-700 font-mono bg-gray-100 p-2 rounded">
+            <p class="mt-2 text-xs text-gray-700 font-mono bg-gray-100 p-2 rounded-sm">
               Character count: <code>{value.length}</code>
             </p>
           </div>
@@ -301,7 +301,7 @@ export const InteractiveFileInput = {
               description="Select a YAML or JSON file to upload"
             />
             {selectedFile && (
-              <div class="mt-2 text-xs text-gray-700 font-mono bg-gray-100 p-2 rounded">
+              <div class="mt-2 text-xs text-gray-700 font-mono bg-gray-100 p-2 rounded-sm">
                 <div><strong>File name:</strong> {selectedFile.name}</div>
                 <div><strong>File size:</strong> {(selectedFile.size / 1024).toFixed(2)} KB</div>
                 <div><strong>File type:</strong> {selectedFile.type || 'unknown'}</div>
@@ -340,7 +340,7 @@ export const InteractiveMultipleFiles = {
               description="Select one or more image files"
             />
             {selectedFiles.length > 0 && (
-              <div class="mt-2 text-xs text-gray-700 font-mono bg-gray-100 p-2 rounded">
+              <div class="mt-2 text-xs text-gray-700 font-mono bg-gray-100 p-2 rounded-sm">
                 <div class="mb-1"><strong>Selected files ({selectedFiles.length}):</strong></div>
                 <ul class="list-disc list-inside pl-2">
                   {selectedFiles.map((file, index) => (
@@ -427,7 +427,7 @@ export const InteractiveText = {
               clearable={true}
               description="Start typing to see the value update in real-time below"
             />
-            <p class="mt-2 text-xs text-gray-700 font-mono bg-gray-100 p-2 rounded">
+            <p class="mt-2 text-xs text-gray-700 font-mono bg-gray-100 p-2 rounded-sm">
               Current value: <code>{value || '(empty)'}</code>
             </p>
           </div>
@@ -457,7 +457,7 @@ export const InteractivePassword = {
               placeholder="Enter password..."
               description="Password must contain at least one uppercase letter, one number, and one special character"
             />
-            <p class="mt-2 text-xs text-gray-700 font-mono bg-gray-100 p-2 rounded">
+            <p class="mt-2 text-xs text-gray-700 font-mono bg-gray-100 p-2 rounded-sm">
               Password length: <code>{password.length} characters</code>
             </p>
           </div>
@@ -488,7 +488,7 @@ export const InteractivePasswordWithClear = {
               clearable={true}
               description="Both eye icon and clear button are visible. The clear button (X) is on the left and the eye icon is on the right."
             />
-            <p class="mt-2 text-xs text-gray-700 font-mono bg-gray-100 p-2 rounded">
+            <p class="mt-2 text-xs text-gray-700 font-mono bg-gray-100 p-2 rounded-sm">
               Password: <code>{password || '(empty)'}</code>
             </p>
           </div>
@@ -607,7 +607,7 @@ export const FormExample = {
           <div class="pt-2">
             <button
               type="submit"
-              class="w-full rounded-md bg-sky-500 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 cursor-pointer"
+              class="w-full rounded-md bg-sky-500 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-400 focus:outline-hidden focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 cursor-pointer"
             >
               Register
             </button>

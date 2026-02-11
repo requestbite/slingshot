@@ -108,7 +108,7 @@ export function FileBrowser({ items = [], sort, onClick, onDoubleClick, allowedE
 
   return (
     <div
-      class="bg-white outline outline-1 -outline-offset-1 outline-gray-300 rounded-md overflow-y-auto scrollbar-hide"
+      class="bg-white outline-solid outline-1 -outline-offset-1 outline-gray-300 rounded-md overflow-y-auto scrollbar-hide"
       style={{ maxHeight }}
     >
       <div class="divide-y divide-gray-100">

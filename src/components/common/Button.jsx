@@ -119,7 +119,7 @@ export function Button({
 
   // Base classes that apply to all buttons (font weight varies by size)
   const fontWeight = size === 'xs' ? 'font-normal' : 'font-semibold';
-  const baseClasses = `inline-flex items-center justify-center rounded-md ${fontWeight} focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 transition-colors cursor-pointer`;
+  const baseClasses = `inline-flex items-center justify-center rounded-md ${fontWeight} focus-visible:outline-solid focus-visible:outline-1 focus-visible:outline-offset-2 transition-colors cursor-pointer`;
 
   // Variant-specific classes
   const variantClasses = {

@@ -23,7 +23,7 @@ export default {
     },
     shadowBlur: {
       control: { type: 'number', min: 0, max: 100, step: 5 },
-      description: 'Shadow blur radius in pixels'
+      description: 'Shadow blur-sm radius in pixels'
     },
     shadowOffsetX: {
       control: { type: 'number', min: -50, max: 50, step: 1 },
@@ -302,7 +302,7 @@ export const Interactive = {
                     type="color"
                     value={gradientStartColor}
                     onInput={(e) => setGradientStartColor(e.target.value)}
-                    class="h-10 w-16 rounded cursor-pointer"
+                    class="h-10 w-16 rounded-sm cursor-pointer"
                   />
                   <TextInput
                     value={gradientStartColor}
@@ -321,7 +321,7 @@ export const Interactive = {
                     type="color"
                     value={gradientEndColor}
                     onInput={(e) => setGradientEndColor(e.target.value)}
-                    class="h-10 w-16 rounded cursor-pointer"
+                    class="h-10 w-16 rounded-sm cursor-pointer"
                   />
                   <TextInput
                     value={gradientEndColor}

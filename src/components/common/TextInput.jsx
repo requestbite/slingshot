@@ -93,7 +93,7 @@ export const TextInput = forwardRef(({
     rightPadding = 'pr-[40px]'; // Space for one icon
   }
 
-  const baseInputClasses = `block w-full rounded-md px-3 py-2 bg-white text-gray-900 outline outline-1 focus:outline-2 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-sky-500 text-sm`;
+  const baseInputClasses = `block w-full rounded-md px-3 py-2 bg-white text-gray-900 outline-solid outline-1 focus:outline-2 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-sky-500 text-sm`;
 
   return (
     <div class="w-full">
@@ -147,7 +147,7 @@ export const TextInput = forwardRef(({
               <button
                 type="button"
                 onClick={handleClear}
-                class="p-1 text-gray-400 hover:text-gray-600 rounded focus:outline-none cursor-pointer transition-colors"
+                class="p-1 text-gray-400 hover:text-gray-600 rounded-sm focus:outline-hidden cursor-pointer transition-colors"
                 aria-label="Clear input"
                 tabIndex={-1}
               >
@@ -172,7 +172,7 @@ export const TextInput = forwardRef(({
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
-                class="p-1 text-gray-400 hover:text-gray-600 rounded focus:outline-none cursor-pointer transition-colors"
+                class="p-1 text-gray-400 hover:text-gray-600 rounded-sm focus:outline-hidden cursor-pointer transition-colors"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                 tabIndex={-1}
               >

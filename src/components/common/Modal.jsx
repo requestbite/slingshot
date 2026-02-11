@@ -75,7 +75,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
 
   return (
     <Portal>
-      <div class="relative z-[60]" role="dialog" aria-modal="true" style={{
+      <div class="relative z-60" role="dialog" aria-modal="true" style={{
         position: 'fixed',
         top: 0,
         left: 0,
@@ -95,7 +95,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
           bottom: 0,
           zIndex: 58
         }}></div>
-        <div class="fixed inset-0 z-[60] w-screen overflow-y-auto" style={{
+        <div class="fixed inset-0 z-60 w-screen overflow-y-auto" style={{
           position: 'fixed',
           top: 0,
           left: 0,
@@ -115,7 +115,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
                     onClick={onClose}
                     type="button"
                     variant="none"
-                    className="cursor-pointer text-gray-400 hover:text-gray-600 p-1 transition-colors focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-gray-300 rounded"
+                    className="cursor-pointer text-gray-400 hover:text-gray-600 p-1 transition-colors focus-visible:outline-solid focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-gray-300 rounded-sm"
                   >
                     <span class="sr-only">Close</span>
                     <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">

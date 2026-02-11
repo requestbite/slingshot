@@ -334,7 +334,7 @@ export const Interactive = {
                   type="checkbox"
                   checked={disabled}
                   onChange={(e) => setDisabled(e.target.checked)}
-                  class="rounded"
+                  class="rounded-sm"
                 />
                 <span class="text-sm">Disabled</span>
               </label>
@@ -347,7 +347,7 @@ export const Interactive = {
                   type="number"
                   value={min}
                   onChange={(e) => setMin(Number(e.target.value))}
-                  class="rounded border-gray-300 text-sm w-20"
+                  class="rounded-sm border-gray-300 text-sm w-20"
                 />
               </div>
               <div class="flex items-center gap-2">
@@ -356,7 +356,7 @@ export const Interactive = {
                   type="number"
                   value={max}
                   onChange={(e) => setMax(Number(e.target.value))}
-                  class="rounded border-gray-300 text-sm w-20"
+                  class="rounded-sm border-gray-300 text-sm w-20"
                 />
               </div>
               <div class="flex items-center gap-2">
@@ -365,7 +365,7 @@ export const Interactive = {
                   type="number"
                   value={step}
                   onChange={(e) => setStep(Number(e.target.value))}
-                  class="rounded border-gray-300 text-sm w-20"
+                  class="rounded-sm border-gray-300 text-sm w-20"
                 />
               </div>
             </div>

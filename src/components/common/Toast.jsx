@@ -79,7 +79,7 @@ export function Toast({
 
   const toastContent = (
     <div
-      class={`fixed z-[99999] transition-all duration-300 ease-out ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-full'
+      class={`fixed z-99999 transition-all duration-300 ease-out ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-full'
         } bottom-5 left-5 right-5 sm:left-auto sm:right-5 sm:w-auto w-auto`}
       style={{ zIndex: 99999 }}
     >
@@ -96,7 +96,7 @@ export function Toast({
               <div class="ml-4 flex shrink-0">
                 <button
                   type="button"
-                  class="inline-flex rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-lime-600 focus:ring-offset-2 cursor-pointer"
+                  class="inline-flex rounded-md text-gray-400 hover:text-gray-500 focus:outline-hidden focus:ring-2 focus:ring-lime-600 focus:ring-offset-2 cursor-pointer"
                   onClick={handleClose}
                 >
                   <span class="sr-only">Close</span>

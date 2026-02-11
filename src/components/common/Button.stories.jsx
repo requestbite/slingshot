@@ -209,7 +209,7 @@ export const SuccessSmall = {
 export const None = {
   args: {
     variant: 'none',
-    className: 'px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600',
+    className: 'px-4 py-2 bg-purple-500 text-white rounded-sm hover:bg-purple-600',
     children: 'Custom Styled Button',
   },
 };
@@ -393,7 +393,7 @@ export const Interactive = {
                   type="checkbox"
                   checked={disabled}
                   onChange={(e) => setDisabled(e.target.checked)}
-                  class="rounded"
+                  class="rounded-sm"
                 />
                 <span class="text-sm">Disabled</span>
               </label>
@@ -402,7 +402,7 @@ export const Interactive = {
                 <select
                   value={variant}
                   onChange={(e) => setVariant(e.target.value)}
-                  class="rounded border-gray-300 text-sm"
+                  class="rounded-sm border-gray-300 text-sm"
                 >
                   <option value="primary">Primary</option>
                   <option value="secondary">Secondary</option>
@@ -573,7 +573,7 @@ export const AllVariants = {
       <div>
         <h3 class="text-sm font-semibold text-gray-900 mb-3">None (Custom Styling)</h3>
         <div class="flex flex-wrap gap-3">
-          <Button variant="none" className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 font-medium">Custom Purple</Button>
+          <Button variant="none" className="px-4 py-2 bg-purple-500 text-white rounded-sm hover:bg-purple-600 font-medium">Custom Purple</Button>
           <Button variant="none" className="text-blue-600 underline hover:text-blue-800">Link Style</Button>
           <Button variant="none" className="px-3 py-1 border-2 border-orange-500 text-orange-500 rounded-full hover:bg-orange-50 font-semibold">Custom Border</Button>
         </div>

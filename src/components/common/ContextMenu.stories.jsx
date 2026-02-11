@@ -251,7 +251,7 @@ export const RequestContextMenu = {
       return (
         <div class="p-8">
           <div class="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-md">
-            <span class="text-xs bg-green-600 text-white px-1 py-0.5 rounded">GET</span>
+            <span class="text-xs bg-green-600 text-white px-1 py-0.5 rounded-sm">GET</span>
             <span class="text-sm">Get Users</span>
             <button
               ref={buttonRef}

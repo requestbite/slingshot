@@ -162,7 +162,7 @@ export const WithCustomClass = {
       { name: 'Content-Type', value: 'application/json' },
       { name: 'Accept', value: '*/*' },
     ],
-    className: 'bg-gray-50 p-2 rounded',
+    className: 'bg-gray-50 p-2 rounded-sm',
   },
 };
 

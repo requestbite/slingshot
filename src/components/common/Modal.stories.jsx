@@ -121,7 +121,7 @@ export const WithForm = {
             </label>
             <input
               type="text"
-              class="block w-full rounded-md px-3 py-2 text-gray-900 outline focus:outline-2 -outline-offset-1 outline-gray-300 focus:-outline-offset-2 focus:outline-sky-500 text-sm"
+              class="block w-full rounded-md px-3 py-2 text-gray-900 outline-solid focus:outline-2 -outline-offset-1 outline-gray-300 focus:-outline-offset-2 focus:outline-sky-500 text-sm"
               placeholder="Enter name"
             />
           </div>
@@ -131,7 +131,7 @@ export const WithForm = {
             </label>
             <textarea
               rows="3"
-              class="block w-full rounded-md px-3 py-2 text-gray-900 outline focus:outline-2 -outline-offset-1 outline-gray-300 focus:-outline-offset-2 focus:outline-sky-500 text-sm"
+              class="block w-full rounded-md px-3 py-2 text-gray-900 outline-solid focus:outline-2 -outline-offset-1 outline-gray-300 focus:-outline-offset-2 focus:outline-sky-500 text-sm"
               placeholder="Enter description"
             />
           </div>
@@ -198,7 +198,7 @@ export const Interactive = {
                 This modal can be opened and closed interactively.
               </p>
               <p class="text-sm text-gray-600 mb-4">
-                Try pressing <kbd class="px-2 py-1 bg-gray-100 rounded text-xs">Escape</kbd> to close it,
+                Try pressing <kbd class="px-2 py-1 bg-gray-100 rounded-sm text-xs">Escape</kbd> to close it,
                 or click the X button.
               </p>
               <button
@@ -229,7 +229,7 @@ export const LongContent = {
           This modal demonstrates how scrolling works with long content.
         </p>
         {Array.from({ length: 20 }, (_, i) => (
-          <div key={i} class="mb-3 p-3 bg-gray-50 rounded">
+          <div key={i} class="mb-3 p-3 bg-gray-50 rounded-sm">
             <h4 class="font-semibold text-sm">Section {i + 1}</h4>
             <p class="text-xs text-gray-600">
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt.

@@ -109,7 +109,7 @@ export const InteractiveAutocomplete = {
             URL with Variable Autocomplete
           </label>
           <p class="text-xs text-gray-500 mb-3">
-            Type <kbd class="px-1 py-0.5 bg-gray-100 rounded text-xs">{'{{'}}</kbd> to trigger autocomplete.
+            Type <kbd class="px-1 py-0.5 bg-gray-100 rounded-sm text-xs">{'{{'}}</kbd> to trigger autocomplete.
             Available variables: baseUrl, apiKey, token, userId, version
           </p>
           <div class="mb-3">
@@ -319,11 +319,11 @@ export const RealWorldExample = {
           <div class="bg-gray-50 p-4 rounded-md mb-4">
             <p class="text-xs font-medium text-gray-700 mb-2">Available Variables:</p>
             <ul class="text-xs text-gray-600 space-y-1">
-              <li><code class="bg-white px-1 rounded">baseUrl</code>: api.example.com</li>
-              <li><code class="bg-white px-1 rounded">version</code>: v1</li>
-              <li><code class="bg-white px-1 rounded">apiKey</code>: test-api-key-123</li>
-              <li><code class="bg-white px-1 rounded">token</code>: bearer-token-456</li>
-              <li><code class="bg-white px-1 rounded">userId</code>: 123</li>
+              <li><code class="bg-white px-1 rounded-sm">baseUrl</code>: api.example.com</li>
+              <li><code class="bg-white px-1 rounded-sm">version</code>: v1</li>
+              <li><code class="bg-white px-1 rounded-sm">apiKey</code>: test-api-key-123</li>
+              <li><code class="bg-white px-1 rounded-sm">token</code>: bearer-token-456</li>
+              <li><code class="bg-white px-1 rounded-sm">userId</code>: 123</li>
             </ul>
           </div>
 
@@ -353,7 +353,7 @@ export const RealWorldExample = {
           <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
             <p class="text-xs font-medium text-blue-900">Tip:</p>
             <p class="text-xs text-blue-700 mt-1">
-              Type <code class="bg-white px-1 rounded">{'{{'}}</code> anywhere to open the variable picker
+              Type <code class="bg-white px-1 rounded-sm">{'{{'}}</code> anywhere to open the variable picker
             </p>
           </div>
         </div>

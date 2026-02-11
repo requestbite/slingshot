@@ -94,7 +94,7 @@ export const WithCode = {
     type: 'tip',
     children: (
       <div>
-        To use environment variables in your request, wrap them in double curly braces like <code class="bg-green-100 px-1.5 py-0.5 rounded text-sm font-mono">{'{{variable_name}}'}</code>.
+        To use environment variables in your request, wrap them in double curly braces like <code class="bg-green-100 px-1.5 py-0.5 rounded-sm text-sm font-mono">{'{{variable_name}}'}</code>.
       </div>
     ),
   },

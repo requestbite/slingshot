@@ -18,7 +18,7 @@ export function Select({
     ? "py-1 px-2 text-xs"
     : "py-2 px-3 text-sm";
 
-  const baseClasses = `w-full appearance-none rounded-md bg-white pr-8 text-gray-900 outline focus:outline-2 -outline-offset-1 outline-gray-300 focus:-outline-offset-2 focus:outline-sky-500 ${sizeClasses}`;
+  const baseClasses = `w-full appearance-none rounded-md bg-white pr-8 text-gray-900 outline-solid outline-1 focus:outline-2 -outline-offset-1 outline-gray-300 focus:-outline-offset-2 focus:outline-sky-500 ${sizeClasses}`;
 
   return (
     <div class="w-full">

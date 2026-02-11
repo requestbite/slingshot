@@ -39,7 +39,7 @@ export function ClickableCard({
     >
       <div class="flex items-start">
         {icon && (
-          <div class="flex-shrink-0 mr-3 text-gray-500">
+          <div class="shrink-0 mr-3 text-gray-500">
             {icon}
           </div>
         )}

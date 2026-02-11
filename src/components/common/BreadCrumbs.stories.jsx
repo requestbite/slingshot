@@ -162,7 +162,7 @@ export const AllVariants = {
     <div class="space-y-6 p-6 bg-gray-50">
       <div>
         <h3 class="text-sm font-semibold text-gray-900 mb-3">Simple (2 levels)</h3>
-        <div class="bg-white p-4 rounded border border-gray-200">
+        <div class="bg-white p-4 rounded-sm border border-gray-200">
           <BreadCrumbs
             items={[
               { name: 'Home', href: '/' },
@@ -174,7 +174,7 @@ export const AllVariants = {
 
       <div>
         <h3 class="text-sm font-semibold text-gray-900 mb-3">Medium (3 levels)</h3>
-        <div class="bg-white p-4 rounded border border-gray-200">
+        <div class="bg-white p-4 rounded-sm border border-gray-200">
           <BreadCrumbs
             items={[
               { name: 'Home', href: '/' },
@@ -187,7 +187,7 @@ export const AllVariants = {
 
       <div>
         <h3 class="text-sm font-semibold text-gray-900 mb-3">Deep (4 levels)</h3>
-        <div class="bg-white p-4 rounded border border-gray-200">
+        <div class="bg-white p-4 rounded-sm border border-gray-200">
           <BreadCrumbs
             items={[
               { name: 'Home', href: '/' },
@@ -201,7 +201,7 @@ export const AllVariants = {
 
       <div>
         <h3 class="text-sm font-semibold text-gray-900 mb-3">Very Deep (5 levels)</h3>
-        <div class="bg-white p-4 rounded border border-gray-200">
+        <div class="bg-white p-4 rounded-sm border border-gray-200">
           <BreadCrumbs
             items={[
               { name: 'Home', href: '/' },
@@ -216,7 +216,7 @@ export const AllVariants = {
 
       <div>
         <h3 class="text-sm font-semibold text-gray-900 mb-3">API Catalog Example</h3>
-        <div class="bg-white p-4 rounded border border-gray-200">
+        <div class="bg-white p-4 rounded-sm border border-gray-200">
           <BreadCrumbs
             items={[
               { name: 'Home', href: '/catalog' },
@@ -229,7 +229,7 @@ export const AllVariants = {
 
       <div>
         <h3 class="text-sm font-semibold text-gray-900 mb-3">Home Only</h3>
-        <div class="bg-white p-4 rounded border border-gray-200">
+        <div class="bg-white p-4 rounded-sm border border-gray-200">
           <BreadCrumbs
             items={[
               { name: 'Home', href: '/' }
