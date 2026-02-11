@@ -55,12 +55,12 @@ export function HeaderTable({ headers = [], nameTitle = 'Name', valueTitle = 'Va
 
   return (
     <div class={`max-w-full overflow-auto ${className}`}>
-      <table class="border-collapse text-xs w-full table-fixed">
+      <table class="border-collapse text-[11px] w-full table-fixed">
         {showTitles && (
           <thead>
             <tr>
-              <th class="py-1 border-b border-slate-200 text-left font-mono font-bold" style={{ width: nameColumnWidth }}>{nameTitle}</th>
-              <th class="py-1 border-b border-slate-200 text-left font-mono font-bold" style={{ width: valueColumnWidth }}>{valueTitle}</th>
+              <th class="py-1 text-xs border-b border-slate-200 text-left font-mono font-bold" style={{ width: nameColumnWidth }}>{nameTitle}</th>
+              <th class="py-1 text-xs border-b border-slate-200 text-left font-mono font-bold" style={{ width: valueColumnWidth }}>{valueTitle}</th>
             </tr>
           </thead>
         )}
