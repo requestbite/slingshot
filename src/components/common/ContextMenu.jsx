@@ -184,7 +184,7 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
                   {item.icon}
                 </span>
               )}
-              <span>
+              <span class={item.truncateLabel ? 'block overflow-hidden text-ellipsis whitespace-nowrap' : undefined}>
                 {item.label}
                 {item.subtext && (
                   <>
