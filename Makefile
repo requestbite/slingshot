@@ -8,8 +8,6 @@ NODE_MODULES := node_modules
 # Variables for versioned builds
 BUILD_DATE := $(shell date +%Y-%m-%d)
 GIT_HASH := $(shell git rev-parse --short HEAD)
-BUILD_SUBDIR := $(BUILD_DATE)-$(GIT_HASH)
-BUILD_PATH := $(BUILD_DIR)/$(BUILD_SUBDIR)
 VERSION := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "dev")
 
 # Version injection
@@ -39,37 +37,65 @@ install:
 dev: $(NODE_MODULES)
 ifeq ($(word 1,$(MAKECMDGOALS)),deploy)
 	@:
+else ifeq ($(word 1,$(MAKECMDGOALS)),build)
+	@:
 else
 	@echo "$(COLOR_BOLD)$(COLOR_BLUE)Starting development server...$(COLOR_RESET)"
 	@echo "$(COLOR_BOLD)$(COLOR_BLUE)Version: $(VERSION)$(COLOR_RESET)"
-	@VITE_VERSION=$(VERSION) yarn vite
+	@if [ ! -f .env.local ]; then \
+		echo "$(COLOR_BOLD)$(COLOR_RED)Error: .env.local not found$(COLOR_RESET)"; \
+		exit 1; \
+	fi; \
+	set -a; . ./.env.local; set +a; \
+	VITE_VERSION=$(VERSION) yarn vite
 endif
 
 # Build for production (with version injection)
+# Usage: make build dev/prod
 build: $(NODE_MODULES)
-	@echo "$(COLOR_BOLD)$(COLOR_BLUE)Building for production...$(COLOR_RESET)"
-	@echo "$(COLOR_BOLD)$(COLOR_BLUE)Version: $(VERSION)$(COLOR_RESET)"
-	@echo "$(COLOR_BOLD)$(COLOR_BLUE)Build directory: $(BUILD_SUBDIR)$(COLOR_RESET)"
-	@cp "$(TOPBAR_FILE)" "$(TOPBAR_FILE).backup"
-	@sed -i 's/$(VERSION_PLACEHOLDER)/v. $(VERSION)/g' "$(TOPBAR_FILE)"
-	@yarn vite build --outDir=$(BUILD_PATH) || (mv "$(TOPBAR_FILE).backup" "$(TOPBAR_FILE)" && exit 1)
-	@mv "$(TOPBAR_FILE).backup" "$(TOPBAR_FILE)"
-	@echo "$(COLOR_GREEN)✓ Build complete: $(BUILD_PATH)/$(COLOR_RESET)"
+	@ENV="$(word 2,$(MAKECMDGOALS))"; \
+	if [ -z "$$ENV" ]; then \
+		echo "$(COLOR_BOLD)$(COLOR_RED)Error: Please specify environment (dev or prod)$(COLOR_RESET)"; \
+		echo "Usage: make build dev/prod"; \
+		exit 1; \
+	fi; \
+	if [ "$$ENV" != "dev" ] && [ "$$ENV" != "prod" ]; then \
+		echo "$(COLOR_BOLD)$(COLOR_RED)Error: Environment must be 'dev' or 'prod'$(COLOR_RESET)"; \
+		echo "Usage: make build dev/prod"; \
+		exit 1; \
+	fi; \
+	ENV_FILE=".env.$$ENV"; \
+	if [ ! -f "$$ENV_FILE" ]; then \
+		echo "$(COLOR_BOLD)$(COLOR_RED)Error: $$ENV_FILE not found$(COLOR_RESET)"; \
+		exit 1; \
+	fi; \
+	BUILD_SUBDIR="$(BUILD_DATE)-$$ENV-$(GIT_HASH)"; \
+	BUILD_PATH="$(BUILD_DIR)/$$BUILD_SUBDIR"; \
+	echo "$(COLOR_BOLD)$(COLOR_BLUE)Building for production...$(COLOR_RESET)"; \
+	echo "$(COLOR_BOLD)$(COLOR_BLUE)Environment: $$ENV$(COLOR_RESET)"; \
+	echo "$(COLOR_BOLD)$(COLOR_BLUE)Version: $(VERSION)$(COLOR_RESET)"; \
+	echo "$(COLOR_BOLD)$(COLOR_BLUE)Build directory: $$BUILD_SUBDIR$(COLOR_RESET)"; \
+	cp "$(TOPBAR_FILE)" "$(TOPBAR_FILE).backup"; \
+	sed -i 's/$(VERSION_PLACEHOLDER)/v. $(VERSION)/g' "$(TOPBAR_FILE)"; \
+	set -a; . ./$$ENV_FILE; set +a; \
+	VITE_VERSION=$(VERSION) yarn vite build --outDir=$$BUILD_PATH || (mv "$(TOPBAR_FILE).backup" "$(TOPBAR_FILE)" && exit 1); \
+	mv "$(TOPBAR_FILE).backup" "$(TOPBAR_FILE)"; \
+	echo "$(COLOR_GREEN)✓ Build complete: $$BUILD_PATH/$(COLOR_RESET)"
 
 # Deploy to Bunny.net CDN
-# Usage: make deploy dev/prod dist/YYYY-MM-DD-hash
+# Usage: make deploy dev/prod dist/YYYY-MM-DD-env-hash
 deploy:
 	@ARGS="$$(echo '$(filter-out $@,$(MAKECMDGOALS))' | xargs)"; \
 	ENV="$$(echo $$ARGS | awk '{print $$1}')"; \
 	DEPLOY_DIR="$$(echo $$ARGS | awk '{print $$2}')"; \
 	if [ -z "$$ENV" ] || [ -z "$$DEPLOY_DIR" ]; then \
 		echo "$(COLOR_BOLD)$(COLOR_RED)Error: Please specify environment and build directory$(COLOR_RESET)"; \
-		echo "Usage: make deploy dev/prod dist/YYYY-MM-DD-hash"; \
+		echo "Usage: make deploy dev/prod dist/YYYY-MM-DD-env-hash"; \
 		exit 1; \
 	fi; \
 	if [ "$$ENV" != "dev" ] && [ "$$ENV" != "prod" ]; then \
 		echo "$(COLOR_BOLD)$(COLOR_RED)Error: Environment must be 'dev' or 'prod'$(COLOR_RESET)"; \
-		echo "Usage: make deploy dev/prod dist/YYYY-MM-DD-hash"; \
+		echo "Usage: make deploy dev/prod dist/YYYY-MM-DD-env-hash"; \
 		exit 1; \
 	fi; \
 	DEPLOY_DIR=$${DEPLOY_DIR%/}; \
@@ -77,22 +103,14 @@ deploy:
 		echo "$(COLOR_BOLD)$(COLOR_RED)Error: Directory not found: $$DEPLOY_DIR$(COLOR_RESET)"; \
 		exit 1; \
 	fi; \
-	if [ ! -f .env.production ]; then \
-		echo "$(COLOR_BOLD)$(COLOR_RED)Error: .env.production not found$(COLOR_RESET)"; \
+	ENV_FILE=".env.$$ENV"; \
+	if [ ! -f "$$ENV_FILE" ]; then \
+		echo "$(COLOR_BOLD)$(COLOR_RED)Error: $$ENV_FILE not found$(COLOR_RESET)"; \
 		exit 1; \
 	fi; \
-	set -a; . ./.env.production; set +a; \
-	if [ "$$ENV" = "dev" ]; then \
-		BUNNY_ZONE_NAME="$$DEV_BUNNY_ZONE_NAME"; \
-		BUNNY_ACCESS_KEY="$$DEV_BUNNY_ACCESS_KEY"; \
-		BUNNY_PULL_ID="$$DEV_BUNNY_PULL_ID"; \
-	else \
-		BUNNY_ZONE_NAME="$$PROD_BUNNY_ZONE_NAME"; \
-		BUNNY_ACCESS_KEY="$$PROD_BUNNY_ACCESS_KEY"; \
-		BUNNY_PULL_ID="$$PROD_BUNNY_PULL_ID"; \
-	fi; \
+	set -a; . ./$$ENV_FILE; set +a; \
 	if [ -z "$$BUNNY_ZONE_NAME" ] || [ -z "$$BUNNY_ACCESS_KEY" ]; then \
-		echo "$(COLOR_BOLD)$(COLOR_RED)Error: $${ENV^^}_BUNNY_ZONE_NAME and $${ENV^^}_BUNNY_ACCESS_KEY must be set in .env.production$(COLOR_RESET)"; \
+		echo "$(COLOR_BOLD)$(COLOR_RED)Error: BUNNY_ZONE_NAME and BUNNY_ACCESS_KEY must be set in $$ENV_FILE$(COLOR_RESET)"; \
 		exit 1; \
 	fi; \
 	echo "$(COLOR_BOLD)$(COLOR_BLUE)Deploying $$DEPLOY_DIR to Bunny.net CDN [$$ENV] ($$BUNNY_ZONE_NAME)...$(COLOR_RESET)"; \
@@ -145,6 +163,14 @@ ifneq ($(ARG3),)
 ifeq ($(filter $(ARG3),all dev build preview clean install lint lint-fix storybook build-storybook deploy help),)
 $(eval $(ARG3): ; @:)
 endif
+endif
+endif
+
+ifeq ($(word 1,$(MAKECMDGOALS)),build)
+ARG2 := $(word 2,$(MAKECMDGOALS))
+# Only create dummy targets if not already defined
+ifeq ($(filter $(ARG2),all dev build preview clean install lint lint-fix storybook build-storybook deploy help),)
+$(eval $(ARG2): ; @:)
 endif
 endif
 
@@ -212,7 +238,7 @@ help:
 	@echo "  lint-fix       - Run ESLint with auto-fix"
 	@echo ""
 	@echo "$(COLOR_BOLD)Build:$(COLOR_RESET)"
-	@echo "  build          - Build for production (injects version from git tag, creates versioned build dir)"
+	@echo "  build dev/prod - Build for production (injects version from git tag, creates versioned build dir)"
 	@echo "  build-storybook- Build Storybook for production"
 	@echo "  preview        - Preview production build locally"
 	@echo "  deploy         - Deploy built website to Bunny.net CDN (requires env and build directory)"
@@ -225,11 +251,12 @@ help:
 	@echo "  help           - Show this help message"
 	@echo ""
 	@echo "$(COLOR_BOLD)Examples:$(COLOR_RESET)"
-	@echo "  make dev                                      # Start dev server"
-	@echo "  make build                                    # Production build with version"
-	@echo "  make deploy dev dist/2026-02-25-a1b2c3d      # Deploy to dev CDN"
-	@echo "  make deploy prod dist/2026-02-25-a1b2c3d     # Deploy to prod CDN"
-	@echo "  make storybook                                # Start Storybook"
-	@echo "  make lint-fix                                 # Fix lint errors"
+	@echo "  make dev                                          # Start dev server"
+	@echo "  make build dev                                    # Development build"
+	@echo "  make build prod                                   # Production build"
+	@echo "  make deploy dev dist/2026-02-25-dev-a1b2c3d       # Deploy to dev CDN"
+	@echo "  make deploy prod dist/2026-02-25-prod-a1b2c3d     # Deploy to prod CDN"
+	@echo "  make storybook                                    # Start Storybook"
+	@echo "  make lint-fix                                     # Fix lint errors"
 	@echo ""
 	@echo "$(COLOR_BOLD)Current version:$(COLOR_RESET) $(VERSION)"
