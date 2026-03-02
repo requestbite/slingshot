@@ -1,5 +1,5 @@
 /**
- * HeaderTable - A generic table for displaying key-value pairs with optional links
+ * HeaderTable - A generic component for displaying key-value pairs with optional links
  *
  * @param {Object} props
  * @param {Array} props.headers - Array of header objects with name and value
@@ -9,13 +9,16 @@
  * @param {string} [props.valueTitle='Value'] - Title for the value column (set to null to use default)
  * @param {boolean} [props.showTitles=true] - Whether to show the header row with titles
  * @param {string} [props.className] - Additional CSS classes for the container
- * @param {string} [props.nameColumnWidth='50%'] - Width for the name column
- * @param {string} [props.valueColumnWidth='50%'] - Width for the value column
+ * @param {string} [props.nameColumnWidth='50%'] - Width for the name column (applies on sm+ screens)
+ * @param {string} [props.valueColumnWidth='50%'] - Width for the value column (applies on sm+ screens)
  */
 export function HeaderTable({ headers = [], nameTitle = 'Name', valueTitle = 'Value', showTitles = true, className = '', nameColumnWidth = '50%', valueColumnWidth = '50%' }) {
   if (!headers || headers.length === 0) {
     return null;
   }
+
+  // Stable scope class derived from column widths so responsive styles survive re-renders
+  const scopeClass = `ht-${nameColumnWidth.replace(/[^a-z0-9]/gi, '_')}-${valueColumnWidth.replace(/[^a-z0-9]/gi, '_')}`;
 
   const renderLink = (item) => (
     <a
@@ -48,35 +51,42 @@ export function HeaderTable({ headers = [], nameTitle = 'Name', valueTitle = 'Va
     if (typeof item === 'object' && item !== null && item.url) {
       return renderLink(item);
     }
-    // For values, just return the text; for names, return as-is
     const text = typeof item === 'object' && item !== null ? item.text : item;
     return isValue ? <span class="text-indigo-600">{text}</span> : text;
   };
 
   return (
-    <div class={`max-w-full overflow-auto ${className}`}>
-      <table class="border-collapse text-[11px] w-full table-fixed">
+    <>
+      <style>{`
+        @media (min-width: 640px) {
+          .${scopeClass} .ht-col-name {
+            width: ${nameColumnWidth};
+            flex-shrink: 0;
+          }
+          .${scopeClass} .ht-col-value {
+            width: ${valueColumnWidth};
+            flex-shrink: 0;
+          }
+        }
+      `}</style>
+      <div class={`${scopeClass} w-full text-[11px] font-mono ${className}`}>
         {showTitles && (
-          <thead>
-            <tr>
-              <th class="py-1 text-xs border-b border-slate-200 text-left font-mono font-bold" style={{ width: nameColumnWidth }}>{nameTitle}</th>
-              <th class="py-1 text-xs border-b border-slate-200 text-left font-mono font-bold" style={{ width: valueColumnWidth }}>{valueTitle}</th>
-            </tr>
-          </thead>
+          <div class="flex flex-row border-b border-slate-200 py-1">
+            <div class="ht-col-name text-xs font-bold truncate pr-3">{nameTitle}</div>
+            <div class="ht-col-value text-xs font-bold truncate hidden sm:block">{valueTitle}</div>
+          </div>
         )}
-        <tbody>
-          {headers.map((header, index) => (
-            <tr key={index}>
-              <td class="border-b border-slate-100 py-1 pr-3 font-mono whitespace-nowrap overflow-hidden text-ellipsis truncate" style={{ width: nameColumnWidth }}>
-                {renderCell(header.name, false)}
-              </td>
-              <td class="border-b border-slate-100 py-1 font-mono whitespace-nowrap overflow-hidden text-ellipsis truncate" style={{ width: valueColumnWidth }}>
-                {renderCell(header.value, true)}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+        {headers.map((header, index) => (
+          <div key={index} class="flex flex-col sm:flex-row border-b border-slate-100 py-1">
+            <div class="ht-col-name truncate pr-3">
+              {renderCell(header.name, false)}
+            </div>
+            <div class="ht-col-value truncate pl-4 sm:pl-0">
+              {renderCell(header.value, true)}
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
