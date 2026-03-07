@@ -15,9 +15,12 @@ import { useState, useRef, useEffect } from 'preact/hooks';
  */
 export function ImageViewer({
   value = null,
+  src = null,
   onChange,
+  variant = 'default',
   className = ''
 }) {
+  const readonly = variant === 'readonly';
   const [selectedImage, setSelectedImage] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState('');
@@ -127,6 +130,25 @@ export function ImageViewer({
       onChange(null);
     }
   };
+
+  if (readonly) {
+    const displayUrl = imagePreviewUrl || src;
+    return (
+      <div class={`w-full ${className}`}>
+        <div class="relative border-2 border-dashed rounded-lg p-8 text-center border-gray-300 bg-gray-50">
+          {displayUrl && (
+            <div class="mx-auto w-32 h-32 bg-gray-300 p-2 rounded-lg overflow-hidden flex items-center justify-center">
+              <img
+                src={displayUrl}
+                alt={fileName}
+                class="max-w-full max-h-full object-contain"
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div class={`w-full ${className}`}>

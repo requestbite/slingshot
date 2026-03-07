@@ -25,3 +25,9 @@ export const CustomClassName = {
     className: 'max-w-md',
   },
 };
+
+export const Readonly = {
+  args: {
+    variant: 'readonly',
+  },
+};
