@@ -555,17 +555,6 @@ export function ApiCatalogPage() {
                   Explore the vast number of REST APIs in the RequestBite API catalog.
                 </p>
               </div>
-              <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-                <Button
-                  onClick={() => setLocation('/catalog/edit')}
-                  type="button"
-                  variant="primary"
-                  size="md"
-                  className="block text-center"
-                >
-                  Add API
-                </Button>
-              </div>
             </div>
 
             {/* Success Alert */}
