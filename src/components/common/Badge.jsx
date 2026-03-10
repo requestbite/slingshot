@@ -23,15 +23,15 @@ export function Badge({
     );
   }
 
-  const baseClasses = 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold';
+  const baseClasses = 'inline-flex items-center rounded px-2.5 py-0.5 text-xs font-semibold border';
 
   const variantClasses = {
-    primary:   'bg-sky-500 text-white',
-    secondary: 'bg-white text-gray-900 ring-1 ring-inset ring-gray-300',
-    ghost:     'text-sky-600 bg-sky-50 ring-1 ring-inset ring-sky-200',
-    danger:    'bg-red-100 text-red-700',
-    utility:   'bg-gray-100 text-gray-700 ring-1 ring-inset ring-gray-300',
-    success:   'bg-green-100 text-green-700',
+    primary: 'bg-sky-500 text-white border-white',
+    secondary: 'bg-white text-gray-900 border-gray-500',
+    ghost: 'text-sky-600 bg-sky-50 border-sky-300',
+    danger: 'bg-red-100 text-red-700 border-red-300',
+    utility: 'bg-gray-100 text-gray-700 border-gray-300',
+    success: 'bg-green-100 text-green-700 border-green-300',
   };
 
   const badgeClasses = `${baseClasses} ${variantClasses[variant] ?? variantClasses.primary} ${className}`;
