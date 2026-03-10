@@ -25,7 +25,13 @@ export function ImageViewer({
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState('');
   const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
+  const [srcDismissed, setSrcDismissed] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Reset dismissed state when src prop changes
+  useEffect(() => {
+    setSrcDismissed(false);
+  }, [src]);
 
   // Sync internal state with value prop
   useEffect(() => {
@@ -121,6 +127,7 @@ export function ImageViewer({
     setSelectedImage(null);
     setFileName('');
     setImagePreviewUrl(null);
+    setSrcDismissed(true);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -171,61 +178,70 @@ export function ImageViewer({
           class="hidden"
         />
 
-        {!selectedImage ? (
-          <>
-            <svg
-              class="mx-auto h-12 w-12 text-gray-400"
-              stroke="currentColor"
-              fill="none"
-              viewBox="0 0 48 48"
-              aria-hidden="true"
-            >
-              <path
-                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-
-            <div class="mt-4">
-              <p class="text-sm font-semibold text-gray-900">
-                Drop your image here, or click to select
-              </p>
-              <p class="mt-1 text-xs text-gray-500">
-                PNG, JPEG, WebP, or SVG files
-              </p>
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Image Preview */}
-            <div class="mx-auto w-32 h-32 bg-gray-300 p-2 rounded-lg overflow-hidden mb-3 flex items-center justify-center">
-              <img
-                src={imagePreviewUrl}
-                alt={fileName}
-                class="max-w-full max-h-full object-contain"
-              />
-            </div>
-
-            <div class="mt-4">
-              <p class="text-sm font-semibold text-gray-900">
-                Drop new image here or click to replace.{' '}
-                <a
-                  href="#"
-                  onClick={handleRemove}
-                  class="text-sky-600 hover:text-sky-700 underline"
+        {(() => {
+          const hasImage = selectedImage || (src && !srcDismissed);
+          const displayUrl = imagePreviewUrl || (!srcDismissed ? src : null);
+          if (!hasImage) {
+            return (
+              <>
+                <svg
+                  class="mx-auto h-12 w-12 text-gray-400"
+                  stroke="currentColor"
+                  fill="none"
+                  viewBox="0 0 48 48"
+                  aria-hidden="true"
                 >
-                  Remove
-                </a>
-                .
-              </p>
-              <p class="mt-1 text-xs text-gray-500">
-                {fileName}
-              </p>
-            </div>
-          </>
-        )}
+                  <path
+                    d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+
+                <div class="mt-4">
+                  <p class="text-sm font-semibold text-gray-900">
+                    Drop your image here, or click to select
+                  </p>
+                  <p class="mt-1 text-xs text-gray-500">
+                    PNG, JPEG, WebP, or SVG files
+                  </p>
+                </div>
+              </>
+            );
+          }
+          return (
+            <>
+              {/* Image Preview */}
+              <div class="mx-auto w-32 h-32 bg-gray-300 p-2 rounded-lg overflow-hidden mb-3 flex items-center justify-center">
+                <img
+                  src={displayUrl}
+                  alt={fileName || 'Current logo'}
+                  class="max-w-full max-h-full object-contain"
+                />
+              </div>
+
+              <div class="mt-4">
+                <p class="text-sm font-semibold text-gray-900">
+                  Drop new image here or click to replace.{' '}
+                  <a
+                    href="#"
+                    onClick={handleRemove}
+                    class="text-sky-600 hover:text-sky-700 underline"
+                  >
+                    Remove
+                  </a>
+                  .
+                </p>
+                {fileName && (
+                  <p class="mt-1 text-xs text-gray-500">
+                    {fileName}
+                  </p>
+                )}
+              </div>
+            </>
+          );
+        })()}
       </div>
     </div>
   );
