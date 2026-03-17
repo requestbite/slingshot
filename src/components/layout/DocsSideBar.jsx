@@ -1249,7 +1249,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                 </div>
 
                 {/* Collection Documentation */}
-                <div class="flex-1 min-h-0">
+                <div>
                   {selectedCollection.description && selectedCollection.description.trim() ? (
                     <div class="text-left pb-4 border-b border-gray-200">
                       <MarkdownPreview markdown={selectedCollection.description} />
