@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { Suspense, lazy } from 'preact/compat';
 import { useLocation } from 'wouter-preact';
+import { Settings, FolderPlus, Download, RefreshCw } from 'lucide-preact';
 
 // Dynamic imports for import modals - only loaded when needed
 const OpenAPIImportModal = lazy(() => import('../import/OpenAPIImportModal').then(m => ({ default: m.OpenAPIImportModal })));
@@ -607,21 +608,38 @@ export function SideBar({ onClose: _onClose }) {
         position="right"
         items={[
           {
-            label: 'Re-Import',
+            label: 'Settings',
+            onClick: () => {
+              setShowCollectionContextMenu(false);
+              setLocation(`/collections/${selectedCollection.id}`);
+            },
+            icon: <Settings size={16} />
+          },
+          { divider: true },
+          {
+            label: 'Add folder...',
+            onClick: () => {
+              setShowCollectionContextMenu(false);
+              setShowAddFolderModal(true);
+            },
+            icon: <FolderPlus size={16} />
+          },
+          { divider: true },
+          {
+            label: 'Re-Import...',
             onClick: () => {
               setShowCollectionContextMenu(false);
               setShowReImportModal(true);
             },
-            icon: (
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5"/>
-                <path d="M11 19h8.203a1.83 1.83 0 0 0 1.556-.89 1.784 1.784 0 0 0 0-1.775l-1.226-2.12"/>
-                <path d="m14 16-3 3 3 3"/>
-                <path d="M8.293 13.596 7.196 9.5 3.1 10.598"/>
-                <path d="m9.344 5.811 1.093-1.892A1.83 1.83 0 0 1 11.985 3a1.784 1.784 0 0 1 1.546.888l3.943 6.843"/>
-                <path d="m13.378 9.633 4.096 1.098 1.097-4.096"/>
-              </svg>
-            )
+            icon: <RefreshCw size={16} />
+          },
+          {
+            label: 'Export...',
+            onClick: () => {
+              setShowCollectionContextMenu(false);
+              setShowExportPostmanModal(true);
+            },
+            icon: <Download size={16} />
           }
         ]}
       />
