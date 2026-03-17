@@ -629,7 +629,7 @@ export function DocsSideBar({ onClose: _onClose }) {
     <>
       {/* Documentation Sidebar */}
       <aside class="bg-white rounded-lg md:border border-gray-300 h-full flex flex-col">
-        <div class="flex flex-1 flex-col gap-y-5 overflow-y-auto p-4">
+        <div class="flex flex-1 flex-col gap-y-5 overflow-y-auto scrollbar-hide p-4">
           <nav class="flex flex-1 flex-col space-y-4">
             {selectedRequest ? (
               <>

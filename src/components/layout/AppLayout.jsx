@@ -81,7 +81,7 @@ export function AppLayout({ children, showDocsSidebar = false }) {
           )}
 
           {/* Main content area - fills available space */}
-          <div class={`mt-[2px] rounded-lg bg-white border border-gray-300 w-full flex flex-col overflow-x-auto md:overflow-y-auto`}>
+          <div class={`mt-[2px] rounded-lg bg-white border border-gray-300 w-full flex flex-col overflow-x-auto md:overflow-y-auto scrollbar-hide`}>
             {children}
           </div>
 

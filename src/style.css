@@ -74,6 +74,16 @@ body {
   animation: fade-in 0.3s ease-out;
 }
 
+/* Hide scrollbars while keeping scroll functionality */
+.scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
 /* Custom Slider Component Styles - Firefox-like appearance for all browsers */
 .slider {
   -webkit-appearance: none;
