@@ -68,6 +68,7 @@ export function DocsSideBar({ onClose: _onClose }) {
   const [selectedRequestExampleContentType, setSelectedRequestExampleContentType] = useState('');
   const [selectedRequestExample, setSelectedRequestExample] = useState('');
   const [selectedTocSection, setSelectedTocSection] = useState('show-all');
+  const [selectedCollectionTocSection, setSelectedCollectionTocSection] = useState('show-all');
   const [selectedAuthScheme, setSelectedAuthScheme] = useState('');
   const menuTriggerRef = useRef();
   const paramsMenuTriggerRef = useRef();
@@ -256,6 +257,11 @@ export function DocsSideBar({ onClose: _onClose }) {
     setSelectedTocSection('show-all');
     setShowContextMenu(false);
   }, [selectedRequest?.id]);
+
+  // Reset collection TOC when collection changes
+  useEffect(() => {
+    setSelectedCollectionTocSection('show-all');
+  }, [selectedCollection?.id]);
 
   // Handle auth scheme selection when collection changes
   useEffect(() => {
@@ -625,6 +631,20 @@ export function DocsSideBar({ onClose: _onClose }) {
     return selectedTocSection === 'show-all' || selectedTocSection === sectionId;
   };
 
+  // Build table of contents sections for collection view
+  const collectionTocSections = [];
+  if (selectedCollection?.description && selectedCollection.description.trim()) {
+    collectionTocSections.push({ id: 'col-description', label: 'Description' });
+  }
+  if (selectedCollection?.security_schemes && Object.keys(selectedCollection.security_schemes).length > 0) {
+    collectionTocSections.push({ id: 'col-authorization', label: 'Authorization' });
+  }
+  collectionTocSections.push({ id: 'slingshot-docs', label: 'Slingshot Docs' });
+
+  const shouldShowCollectionSection = (sectionId) => {
+    return selectedCollectionTocSection === 'show-all' || selectedCollectionTocSection === sectionId;
+  };
+
   return (
     <>
       {/* Documentation Sidebar */}
@@ -662,7 +682,7 @@ export function DocsSideBar({ onClose: _onClose }) {
 
                 {/* Table of Contents */}
                 {tocSections.length > 0 && (
-                  <div class={`pb-4 border-b border-gray-200 ${selectedRequest.summary && selectedRequest.summary.trim() ? 'pt-3 border-t' : ''}`}>
+                  <div class={`${selectedRequest.summary && selectedRequest.summary.trim() ? 'pt-3 border-t border-gray-200' : ''}`}>
                     <h3 class="text-xs font-medium text-gray-600 mb-2">Table of Contents</h3>
                     <div class="space-y-1">
                       {/* Show All option */}
@@ -698,22 +718,22 @@ export function DocsSideBar({ onClose: _onClose }) {
 
                 {/* Request Description */}
                 {selectedRequest.description && selectedRequest.description.trim() && shouldShowSection('description') && (
-                  <div>
-                    <div class="text-left pb-4 border-b border-gray-200">
+                  <div class="border-t border-gray-200 pt-6">
+                    <div class="text-left">
                       <MarkdownPreview markdown={selectedRequest.description} />
                     </div>
                   </div>
                 )}
 
                 {/* Request Documentation */}
-                <div class="flex-1 min-h-0 space-y-4">
+                <div class="flex-1 min-h-0 space-y-8">
                   {/* Parameters Schema - filtered by TOC selection */}
                   {parametersSchema && (
                     (parametersSchema.path && Object.keys(parametersSchema.path).length > 0) ||
                     (parametersSchema.query && Object.keys(parametersSchema.query).length > 0) ||
                     (parametersSchema.headers && Object.keys(parametersSchema.headers).length > 0)
                   ) && shouldShowSection('parameters-schema') && (
-                      <div id="parameters-schema">
+                      <div id="parameters-schema" class="border-t border-gray-200 pt-6">
                         <div class="flex items-center justify-between mb-2">
                           <label class="block text-xs font-medium text-gray-600">Parameters Schema</label>
                           <button
@@ -748,7 +768,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                     const selectedSchema = getRequestBodySchemaForContentType(requestBodySchema, selectedRequestBodyContentType);
 
                     return (
-                      <div id="request-body-schema" class="space-y-2">
+                      <div id="request-body-schema" class="space-y-2 border-t border-gray-200 pt-4">
                         <div class="flex items-center justify-between">
                           <label class="block text-xs font-medium text-gray-600">Request Body Schema</label>
                           <button
@@ -808,7 +828,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                     const selectedExample = examples.find(ex => ex.name === selectedRequestExample);
 
                     return (
-                      <div id="request-examples" class="space-y-2">
+                      <div id="request-examples" class="space-y-2 border-t border-gray-200 pt-4">
                         <div class="flex items-center justify-between">
                           <label class="block text-xs font-medium text-gray-600">Request Examples</label>
                           <button
@@ -886,7 +906,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                       : [];
 
                     return (
-                      <div id="response-schema" class="space-y-2">
+                      <div id="response-schema" class="space-y-2 border-t border-gray-200 pt-6">
                         <div class="flex items-center justify-between">
                           <label class="block text-xs font-medium text-gray-600">Response Schema</label>
                           <button
@@ -972,7 +992,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                     const selectedExample = examples.find(ex => ex.name === selectedResponseExample);
 
                     return (
-                      <div id="response-examples" class="space-y-2">
+                      <div id="response-examples" class="space-y-2 border-t border-gray-200 pt-6">
                         <div class="flex items-center justify-between">
                           <label class="block text-xs font-medium text-gray-600">Response Examples</label>
                           <button
@@ -1073,7 +1093,7 @@ export function DocsSideBar({ onClose: _onClose }) {
 
                   {/* Slingshot Docs */}
                   {shouldShowSection('slingshot-docs') && (
-                    <div id="slingshot-docs" class="space-y-2">
+                    <div id="slingshot-docs" class="space-y-2 border-t border-gray-200 pt-6">
                       <label class="block text-xs font-medium text-gray-600 mb-2">Slingshot Docs</label>
                       <ul class="space-y-1.5 text-xs text-gray-700">
                         <li class="flex items-start">
@@ -1241,17 +1261,52 @@ export function DocsSideBar({ onClose: _onClose }) {
                   </button>
                 </div>
 
-                {/* Collection Documentation */}
-                <div>
-                  {selectedCollection.description && selectedCollection.description.trim() ? (
-                    <div class="text-left pb-4 border-b border-gray-200">
-                      <MarkdownPreview markdown={selectedCollection.description} />
+                {/* Table of Contents */}
+                {collectionTocSections.length > 0 && (
+                  <div class="pb-4">
+                    <h3 class="text-xs font-medium text-gray-600 mb-2">Table of Contents</h3>
+                    <div class="space-y-1">
+                      <label class="flex items-center text-xs text-gray-700 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="col-toc-section"
+                          value="show-all"
+                          checked={selectedCollectionTocSection === 'show-all'}
+                          onChange={(e) => setSelectedCollectionTocSection(e.target.value)}
+                          class="mr-2 text-sky-600 focus:ring-sky-500"
+                        />
+                        Show all
+                      </label>
+                      {collectionTocSections.map((section) => (
+                        <label key={section.id} class="flex items-center text-xs text-gray-700 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="col-toc-section"
+                            value={section.id}
+                            checked={selectedCollectionTocSection === section.id}
+                            onChange={(e) => setSelectedCollectionTocSection(e.target.value)}
+                            class="mr-2 text-sky-600 focus:ring-sky-500"
+                          />
+                          <span class="hover:text-sky-600">{section.label}</span>
+                        </label>
+                      ))}
                     </div>
-                  ) : ''}
-                </div>
+                  </div>
+                )}
+
+                {/* Collection Documentation */}
+                {shouldShowCollectionSection('col-description') && (
+                  <div>
+                    {selectedCollection.description && selectedCollection.description.trim() ? (
+                      <div class="text-left border-t border-gray-200 pt-4">
+                        <MarkdownPreview markdown={selectedCollection.description} />
+                      </div>
+                    ) : ''}
+                  </div>
+                )}
 
                 {/* Authorization Section */}
-                {selectedCollection.security_schemes && Object.keys(selectedCollection.security_schemes).length > 0 && (() => {
+                {shouldShowCollectionSection('col-authorization') && selectedCollection.security_schemes && Object.keys(selectedCollection.security_schemes).length > 0 && (() => {
                   const schemeNames = Object.keys(selectedCollection.security_schemes);
                   const selectedScheme = selectedCollection.security_schemes[selectedAuthScheme];
 
@@ -1409,7 +1464,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                   };
 
                   return (
-                    <div class="space-y-3">
+                    <div class="space-y-3 border-t border-gray-200 pt-4">
                       <div class="flex items-center justify-between">
                         <label class="block text-xs font-medium text-gray-600">Authorization</label>
                         <button
@@ -1457,143 +1512,145 @@ export function DocsSideBar({ onClose: _onClose }) {
                 })()}
 
                 {/* Slingshot Docs */}
-                <div class="space-y-2">
-                  <label class="block text-xs font-medium text-gray-600 mb-2">Slingshot Docs</label>
-                  <ul class="space-y-1.5 text-xs text-gray-700">
-                    <li class="flex items-start">
-                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
-                      <a
-                        href="https://docs.requestbite.com/slingshot/slingshot/#making-a-request"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="hover:text-sky-600 hover:underline"
-                      >
-                        Making a request
-                      </a>
-                    </li>
-                    <li class="flex items-start">
-                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
-                      <a
-                        href="https://docs.requestbite.com/slingshot/slingshot/#what-are-collections"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="hover:text-sky-600 hover:underline"
-                      >
-                        What are collections?
-                      </a>
-                    </li>
-                    <li class="flex items-start">
-                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
-                      <a
-                        href="https://docs.requestbite.com/slingshot/slingshot/#what-are-environments"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="hover:text-sky-600 hover:underline"
-                      >
-                        What are environments?
-                      </a>
-                    </li>
-                    <li class="flex items-start">
-                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
-                      <a
-                        href="https://docs.requestbite.com/slingshot/slingshot/#drafts-vs-saved-requests"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="hover:text-sky-600 hover:underline"
-                      >
-                        Drafts vs saved requests
-                      </a>
-                    </li>
-                    <li class="flex items-start">
-                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
-                      <a
-                        href="https://docs.requestbite.com/slingshot/slingshot/#import-openapi-or-postman-collection"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="hover:text-sky-600 hover:underline"
-                      >
-                        Import OpenAPI or Postman collection
-                      </a>
-                    </li>
-                    <li class="flex items-start">
-                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
-                      <a
-                        href="https://docs.requestbite.com/slingshot/slingshot/#import-curl-command"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="hover:text-sky-600 hover:underline"
-                      >
-                        Import cURL command
-                      </a>
-                    </li>
-                    <li class="flex items-start">
-                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
-                      <a
-                        href="https://docs.requestbite.com/slingshot/slingshot/#export-request-as-curl-command"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="hover:text-sky-600 hover:underline"
-                      >
-                        Export request as cURL command
-                      </a>
-                    </li>
-                    <li class="flex items-start">
-                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
-                      <a
-                        href="https://docs.requestbite.com/slingshot/slingshot/#copy-request"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="hover:text-sky-600 hover:underline"
-                      >
-                        Copy request
-                      </a>
-                    </li>
-                    <li class="flex items-start">
-                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
-                      <a
-                        href="https://docs.requestbite.com/slingshot/slingshot/#copy-response-from-request"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="hover:text-sky-600 hover:underline"
-                      >
-                        Copy response from request
-                      </a>
-                    </li>
-                    <li class="flex items-start">
-                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
-                      <a
-                        href="https://docs.requestbite.com/slingshot/slingshot/#presentation-of-response-data"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="hover:text-sky-600 hover:underline"
-                      >
-                        Presentation of response data
-                      </a>
-                    </li>
-                    <li class="flex items-start">
-                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
-                      <a
-                        href="https://docs.requestbite.com/slingshot/slingshot/#precedence-of-variables-and-secrets"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="hover:text-sky-600 hover:underline"
-                      >
-                        Precedence of variables and secrets
-                      </a>
-                    </li>
-                    <li class="flex items-start">
-                      <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
-                      <a
-                        href="https://docs.requestbite.com/slingshot/slingshot/#how-requests-are-sent"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="hover:text-sky-600 hover:underline"
-                      >
-                        How requests are sent
-                      </a>
-                    </li>
-                  </ul>
-                </div>
+                {shouldShowCollectionSection('slingshot-docs') && (
+                  <div class="space-y-2 border-t border-gray-200 pt-4">
+                    <label class="block text-xs font-medium text-gray-600 mb-2">Slingshot Docs</label>
+                    <ul class="space-y-1.5 text-xs text-gray-700">
+                      <li class="flex items-start">
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <a
+                          href="https://docs.requestbite.com/slingshot/slingshot/#making-a-request"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="hover:text-sky-600 hover:underline"
+                        >
+                          Making a request
+                        </a>
+                      </li>
+                      <li class="flex items-start">
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <a
+                          href="https://docs.requestbite.com/slingshot/slingshot/#what-are-collections"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="hover:text-sky-600 hover:underline"
+                        >
+                          What are collections?
+                        </a>
+                      </li>
+                      <li class="flex items-start">
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <a
+                          href="https://docs.requestbite.com/slingshot/slingshot/#what-are-environments"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="hover:text-sky-600 hover:underline"
+                        >
+                          What are environments?
+                        </a>
+                      </li>
+                      <li class="flex items-start">
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <a
+                          href="https://docs.requestbite.com/slingshot/slingshot/#drafts-vs-saved-requests"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="hover:text-sky-600 hover:underline"
+                        >
+                          Drafts vs saved requests
+                        </a>
+                      </li>
+                      <li class="flex items-start">
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <a
+                          href="https://docs.requestbite.com/slingshot/slingshot/#import-openapi-or-postman-collection"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="hover:text-sky-600 hover:underline"
+                        >
+                          Import OpenAPI or Postman collection
+                        </a>
+                      </li>
+                      <li class="flex items-start">
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <a
+                          href="https://docs.requestbite.com/slingshot/slingshot/#import-curl-command"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="hover:text-sky-600 hover:underline"
+                        >
+                          Import cURL command
+                        </a>
+                      </li>
+                      <li class="flex items-start">
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <a
+                          href="https://docs.requestbite.com/slingshot/slingshot/#export-request-as-curl-command"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="hover:text-sky-600 hover:underline"
+                        >
+                          Export request as cURL command
+                        </a>
+                      </li>
+                      <li class="flex items-start">
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <a
+                          href="https://docs.requestbite.com/slingshot/slingshot/#copy-request"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="hover:text-sky-600 hover:underline"
+                        >
+                          Copy request
+                        </a>
+                      </li>
+                      <li class="flex items-start">
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <a
+                          href="https://docs.requestbite.com/slingshot/slingshot/#copy-response-from-request"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="hover:text-sky-600 hover:underline"
+                        >
+                          Copy response from request
+                        </a>
+                      </li>
+                      <li class="flex items-start">
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <a
+                          href="https://docs.requestbite.com/slingshot/slingshot/#presentation-of-response-data"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="hover:text-sky-600 hover:underline"
+                        >
+                          Presentation of response data
+                        </a>
+                      </li>
+                      <li class="flex items-start">
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <a
+                          href="https://docs.requestbite.com/slingshot/slingshot/#precedence-of-variables-and-secrets"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="hover:text-sky-600 hover:underline"
+                        >
+                          Precedence of variables and secrets
+                        </a>
+                      </li>
+                      <li class="flex items-start">
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <a
+                          href="https://docs.requestbite.com/slingshot/slingshot/#how-requests-are-sent"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="hover:text-sky-600 hover:underline"
+                        >
+                          How requests are sent
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                )}
               </>
             ) : (
               <>
