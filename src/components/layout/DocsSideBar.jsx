@@ -660,13 +660,6 @@ export function DocsSideBar({ onClose: _onClose }) {
                   </button>
                 </div>
 
-                {/* Request Summary */}
-                {selectedRequest.summary && selectedRequest.summary.trim() && (
-                  <div class="text-sm text-gray-700">
-                    {selectedRequest.summary}
-                  </div>
-                )}
-
                 {/* Table of Contents */}
                 {tocSections.length > 0 && (
                   <div class={`pb-4 border-b border-gray-200 ${selectedRequest.summary && selectedRequest.summary.trim() ? 'pt-3 border-t' : ''}`}>
