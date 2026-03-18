@@ -1263,7 +1263,7 @@ export function DocsSideBar({ onClose: _onClose }) {
 
                 {/* Table of Contents */}
                 {collectionTocSections.length > 0 && (
-                  <div class="pb-4">
+                  <div class="border-t border-gray-200 pt-3">
                     <h3 class="text-xs font-medium text-gray-600 mb-2">Table of Contents</h3>
                     <div class="space-y-1">
                       <label class="flex items-center text-xs text-gray-700 cursor-pointer">
