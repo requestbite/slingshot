@@ -2,11 +2,79 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { generateFormattedCurlCommand } from '../../utils/curlGenerator';
 import { resolveRequestVariables } from '../../utils/variableResolver';
 import { useAppContext } from '../../hooks/useAppContext';
+import { decryptSecret } from '../../utils/encryption';
 import { Modal } from '../common/Modal';
 import { Toast, useToast } from '../common/Toast';
 
+const decryptAuthResponse = async (encryptedResponse) => {
+  if (!encryptedResponse || !encryptedResponse.encrypted_value) return encryptedResponse;
+  try {
+    const decryptedString = await decryptSecret(encryptedResponse.encrypted_value, encryptedResponse.iv);
+    return JSON.parse(decryptedString);
+  } catch {
+    return null;
+  }
+};
+
+const decryptAuthConfig = async (encryptedConfig) => {
+  if (!encryptedConfig || !encryptedConfig.encrypted_value) return encryptedConfig;
+  try {
+    const decryptedString = await decryptSecret(encryptedConfig.encrypted_value, encryptedConfig.iv);
+    return JSON.parse(decryptedString);
+  } catch {
+    return null;
+  }
+};
+
+const injectAuthHeaders = async (resolvedData, environment) => {
+  if (!environment?.auth || environment.auth === 'none') return resolvedData;
+
+  let headers = [...(resolvedData.headers || [])];
+
+  const hasAuthHeader = (key) => headers.some(h => h.enabled && h.key.toLowerCase() === key.toLowerCase());
+
+  try {
+    if ((environment.auth === 'oidc_pkce' || environment.auth === 'oauth2_pkce' || environment.auth === 'oauth2_code') && environment.authResponse) {
+      const authResp = await decryptAuthResponse(environment.authResponse);
+      if (authResp?.access_token && !hasAuthHeader('authorization')) {
+        headers.push({ key: 'Authorization', value: `Bearer ${authResp.access_token}`, enabled: true });
+      }
+    } else if (environment.auth === 'bearer_token' && environment.authConfig) {
+      const authCfg = await decryptAuthConfig(environment.authConfig);
+      if (authCfg?.token && !hasAuthHeader('authorization')) {
+        headers.push({ key: 'Authorization', value: `Bearer ${authCfg.token}`, enabled: true });
+      }
+    } else if (environment.auth === 'basic_auth' && environment.authConfig) {
+      const authCfg = await decryptAuthConfig(environment.authConfig);
+      if ((authCfg?.username || authCfg?.password) && !hasAuthHeader('authorization')) {
+        const credentials = btoa(`${authCfg.username || ''}:${authCfg.password || ''}`);
+        headers.push({ key: 'Authorization', value: `Basic ${credentials}`, enabled: true });
+      }
+    } else if (environment.auth === 'api_key' && environment.authConfig) {
+      const authCfg = await decryptAuthConfig(environment.authConfig);
+      if (authCfg?.key && authCfg?.value) {
+        const addTo = authCfg.addTo || 'header';
+        if (addTo === 'header' && !hasAuthHeader(authCfg.key)) {
+          headers.push({ key: authCfg.key, value: authCfg.value, enabled: true });
+        } else if (addTo === 'query') {
+          const queryParams = [...(resolvedData.queryParams || [])];
+          const hasParam = queryParams.some(p => p.enabled && p.key.toLowerCase() === authCfg.key.toLowerCase());
+          if (!hasParam) {
+            queryParams.push({ key: authCfg.key, value: authCfg.value, enabled: true });
+            return { ...resolvedData, headers, queryParams };
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Failed to inject auth headers for cURL export:', error);
+  }
+
+  return { ...resolvedData, headers };
+};
+
 export function CurlExportModal({ isOpen, onClose, requestData }) {
-  const { selectedCollection } = useAppContext();
+  const { selectedCollection, currentEnvironment } = useAppContext();
   const [curlCommand, setCurlCommand] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const preRef = useRef();
@@ -17,6 +85,7 @@ export function CurlExportModal({ isOpen, onClose, requestData }) {
     if (isOpen && requestData) {
       setIsLoading(true);
       resolveRequestVariables(requestData, selectedCollection)
+        .then(resolvedData => injectAuthHeaders(resolvedData, currentEnvironment))
         .then(resolvedData => {
           const command = generateFormattedCurlCommand(resolvedData);
           setCurlCommand(command);
@@ -30,7 +99,7 @@ export function CurlExportModal({ isOpen, onClose, requestData }) {
           setIsLoading(false);
         });
     }
-  }, [isOpen, requestData, selectedCollection]);
+  }, [isOpen, requestData, selectedCollection, currentEnvironment]);
 
   // Auto-select content when modal opens
   useEffect(() => {
