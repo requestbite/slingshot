@@ -43,7 +43,9 @@ export async function resolveRequestVariables(requestData, collection, environme
 
   const { vars: variables, secretKeys } = await loadVariables(collection, environment);
   let hasResolvedSecrets = false;
-  const resolveText = (text) => {
+
+  // Resolves variables and tracks when a secret key is substituted
+  const resolveTracked = (text) => {
     if (!text || typeof text !== 'string') return text;
     return text.replace(/\{\{([^}]*)\}\}/g, (match, variableName) => {
       if (variables.has(variableName)) {
@@ -54,62 +56,65 @@ export async function resolveRequestVariables(requestData, collection, environme
     });
   };
 
+  // Resolves variables without affecting the secret warning (used for disabled fields)
+  const resolveUntracked = (text) => {
+    if (!text || typeof text !== 'string') return text;
+    return text.replace(/\{\{([^}]*)\}\}/g, (match, variableName) => {
+      return variables.has(variableName) ? variables.get(variableName) : match;
+    });
+  };
+
   // Create a deep copy to avoid mutating original
   const resolved = JSON.parse(JSON.stringify(requestData));
 
-  // Resolve URL
+  // Resolve URL (always included in export)
   if (resolved.url) {
-    resolved.url = resolveText(resolved.url);
+    resolved.url = resolveTracked(resolved.url);
   }
 
-  // Resolve headers
+  // Resolve headers — only track secrets for enabled headers
   if (resolved.headers && Array.isArray(resolved.headers)) {
-    resolved.headers = resolved.headers.map(header => ({
-      ...header,
-      key: resolveText(header.key),
-      value: resolveText(header.value)
-    }));
+    resolved.headers = resolved.headers.map(header => {
+      const resolve = header.enabled ? resolveTracked : resolveUntracked;
+      return { ...header, key: resolve(header.key), value: resolve(header.value) };
+    });
   }
 
-  // Resolve query parameters
+  // Resolve query parameters — only track secrets for enabled params
   if (resolved.queryParams && Array.isArray(resolved.queryParams)) {
-    resolved.queryParams = resolved.queryParams.map(param => ({
-      ...param,
-      key: resolveText(param.key),
-      value: resolveText(param.value)
-    }));
+    resolved.queryParams = resolved.queryParams.map(param => {
+      const resolve = param.enabled ? resolveTracked : resolveUntracked;
+      return { ...param, key: resolve(param.key), value: resolve(param.value) };
+    });
   }
 
-  // Resolve path parameters
+  // Resolve path parameters — only track secrets for enabled params
   if (resolved.pathParams && Array.isArray(resolved.pathParams)) {
-    resolved.pathParams = resolved.pathParams.map(param => ({
-      ...param,
-      key: resolveText(param.key),
-      value: resolveText(param.value)
-    }));
+    resolved.pathParams = resolved.pathParams.map(param => {
+      const resolve = param.enabled ? resolveTracked : resolveUntracked;
+      return { ...param, key: resolve(param.key), value: resolve(param.value) };
+    });
   }
 
-  // Resolve body content
+  // Resolve body content (always included in export when bodyType is set)
   if (resolved.bodyContent) {
-    resolved.bodyContent = resolveText(resolved.bodyContent);
+    resolved.bodyContent = resolveTracked(resolved.bodyContent);
   }
 
-  // Resolve form data
+  // Resolve form data — only track secrets for enabled fields
   if (resolved.formData && Array.isArray(resolved.formData)) {
-    resolved.formData = resolved.formData.map(field => ({
-      ...field,
-      key: resolveText(field.key),
-      value: field.type === 'text' ? resolveText(field.value) : field.value
-    }));
+    resolved.formData = resolved.formData.map(field => {
+      const resolve = field.enabled ? resolveTracked : resolveUntracked;
+      return { ...field, key: resolve(field.key), value: field.type === 'text' ? resolve(field.value) : field.value };
+    });
   }
 
-  // Resolve URL encoded data
+  // Resolve URL encoded data — only track secrets for enabled fields
   if (resolved.urlEncodedData && Array.isArray(resolved.urlEncodedData)) {
-    resolved.urlEncodedData = resolved.urlEncodedData.map(field => ({
-      ...field,
-      key: resolveText(field.key),
-      value: resolveText(field.value)
-    }));
+    resolved.urlEncodedData = resolved.urlEncodedData.map(field => {
+      const resolve = field.enabled ? resolveTracked : resolveUntracked;
+      return { ...field, key: resolve(field.key), value: resolve(field.value) };
+    });
   }
 
   return { data: resolved, hasResolvedSecrets };

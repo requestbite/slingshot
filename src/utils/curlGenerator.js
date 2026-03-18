@@ -239,7 +239,7 @@ export function generateFormattedCurlCommand(requestData) {
   // If there are only 2 parts (curl + url), format on single line
   // Otherwise use multi-line format with backslashes
   if (parts.length === 2) {
-    return parts.join('');
+    return parts[0] + ' ' + parts[1].trim();
   }
 
   return parts.join(' \\\n');
