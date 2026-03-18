@@ -131,13 +131,10 @@ async function loadVariables(collection, environment) {
       collection.variables.forEach(v => vars.set(v.key, v.value));
     }
 
-    // Database collection variables - treated as secrets
+    // Database collection variables - not treated as secrets for warning purposes
     if (collection?.id) {
       const collectionVars = await apiClient.getSecretsByCollection(collection.id);
-      collectionVars.forEach(v => {
-        vars.set(v.key, v.value);
-        secretKeys.add(v.key);
-      });
+      collectionVars.forEach(v => vars.set(v.key, v.value));
     }
 
     // Environment variables - prefer explicit environment over collection's default
