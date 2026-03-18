@@ -28,14 +28,16 @@ export function generateCurlCommand(requestData) {
     });
   }
 
-  // Add query parameters
+  // Add query parameters - strip any existing query string from the URL first
+  // to avoid duplicating params that were already parsed into queryParams
+  url = url.split('?')[0];
   if (requestData.queryParams && requestData.queryParams.length > 0) {
     const enabledParams = requestData.queryParams.filter(param => param.enabled && param.key);
     if (enabledParams.length > 0) {
       const queryString = enabledParams
         .map(param => `${encodeURIComponent(param.key)}=${encodeURIComponent(param.value || '')}`)
         .join('&');
-      url = url + (url.includes('?') ? '&' : '?') + queryString;
+      url = url + '?' + queryString;
     }
   }
 
@@ -156,14 +158,16 @@ export function generateFormattedCurlCommand(requestData) {
     });
   }
 
-  // Add query parameters
+  // Add query parameters - strip any existing query string from the URL first
+  // to avoid duplicating params that were already parsed into queryParams
+  url = url.split('?')[0];
   if (requestData.queryParams && requestData.queryParams.length > 0) {
     const enabledParams = requestData.queryParams.filter(param => param.enabled && param.key);
     if (enabledParams.length > 0) {
       const queryString = enabledParams
         .map(param => `${encodeURIComponent(param.key)}=${encodeURIComponent(param.value || '')}`)
         .join('&');
-      url = url + (url.includes('?') ? '&' : '?') + queryString;
+      url = url + '?' + queryString;
     }
   }
 

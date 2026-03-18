@@ -5,6 +5,7 @@ import { useAppContext } from '../../hooks/useAppContext';
 import { decryptSecret } from '../../utils/encryption';
 import { Modal } from '../common/Modal';
 import { Toast, useToast } from '../common/Toast';
+import { Alert } from '../common/Alert';
 
 const decryptAuthResponse = async (encryptedResponse) => {
   if (!encryptedResponse || !encryptedResponse.encrypted_value) return encryptedResponse;
@@ -27,9 +28,10 @@ const decryptAuthConfig = async (encryptedConfig) => {
 };
 
 const injectAuthHeaders = async (resolvedData, environment) => {
-  if (!environment?.auth || environment.auth === 'none') return resolvedData;
+  if (!environment?.auth || environment.auth === 'none') return { data: resolvedData, hasAuth: false };
 
   let headers = [...(resolvedData.headers || [])];
+  let hasAuth = false;
 
   const hasAuthHeader = (key) => headers.some(h => h.enabled && h.key.toLowerCase() === key.toLowerCase());
 
@@ -38,17 +40,20 @@ const injectAuthHeaders = async (resolvedData, environment) => {
       const authResp = await decryptAuthResponse(environment.authResponse);
       if (authResp?.access_token && !hasAuthHeader('authorization')) {
         headers.push({ key: 'Authorization', value: `Bearer ${authResp.access_token}`, enabled: true });
+        hasAuth = true;
       }
     } else if (environment.auth === 'bearer_token' && environment.authConfig) {
       const authCfg = await decryptAuthConfig(environment.authConfig);
       if (authCfg?.token && !hasAuthHeader('authorization')) {
         headers.push({ key: 'Authorization', value: `Bearer ${authCfg.token}`, enabled: true });
+        hasAuth = true;
       }
     } else if (environment.auth === 'basic_auth' && environment.authConfig) {
       const authCfg = await decryptAuthConfig(environment.authConfig);
       if ((authCfg?.username || authCfg?.password) && !hasAuthHeader('authorization')) {
         const credentials = btoa(`${authCfg.username || ''}:${authCfg.password || ''}`);
         headers.push({ key: 'Authorization', value: `Basic ${credentials}`, enabled: true });
+        hasAuth = true;
       }
     } else if (environment.auth === 'api_key' && environment.authConfig) {
       const authCfg = await decryptAuthConfig(environment.authConfig);
@@ -56,12 +61,13 @@ const injectAuthHeaders = async (resolvedData, environment) => {
         const addTo = authCfg.addTo || 'header';
         if (addTo === 'header' && !hasAuthHeader(authCfg.key)) {
           headers.push({ key: authCfg.key, value: authCfg.value, enabled: true });
+          hasAuth = true;
         } else if (addTo === 'query') {
           const queryParams = [...(resolvedData.queryParams || [])];
           const hasParam = queryParams.some(p => p.enabled && p.key.toLowerCase() === authCfg.key.toLowerCase());
           if (!hasParam) {
             queryParams.push({ key: authCfg.key, value: authCfg.value, enabled: true });
-            return { ...resolvedData, headers, queryParams };
+            return { data: { ...resolvedData, headers, queryParams }, hasAuth: true };
           }
         }
       }
@@ -70,12 +76,13 @@ const injectAuthHeaders = async (resolvedData, environment) => {
     console.error('Failed to inject auth headers for cURL export:', error);
   }
 
-  return { ...resolvedData, headers };
+  return { data: { ...resolvedData, headers }, hasAuth };
 };
 
 export function CurlExportModal({ isOpen, onClose, requestData }) {
   const { selectedCollection, currentEnvironment } = useAppContext();
   const [curlCommand, setCurlCommand] = useState('');
+  const [hasAuthData, setHasAuthData] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const preRef = useRef();
   const [isToastVisible, showToast, hideToast] = useToast();
@@ -84,11 +91,15 @@ export function CurlExportModal({ isOpen, onClose, requestData }) {
   useEffect(() => {
     if (isOpen && requestData) {
       setIsLoading(true);
-      resolveRequestVariables(requestData, selectedCollection)
-        .then(resolvedData => injectAuthHeaders(resolvedData, currentEnvironment))
-        .then(resolvedData => {
-          const command = generateFormattedCurlCommand(resolvedData);
+      resolveRequestVariables(requestData, selectedCollection, currentEnvironment)
+        .then(({ data: resolvedData, hasResolvedSecrets }) =>
+          injectAuthHeaders(resolvedData, currentEnvironment)
+            .then(({ data, hasAuth }) => ({ data, hasAuth: hasAuth || hasResolvedSecrets }))
+        )
+        .then(({ data, hasAuth }) => {
+          const command = generateFormattedCurlCommand(data);
           setCurlCommand(command);
+          setHasAuthData(hasAuth);
         })
         .catch(error => {
           console.error('Failed to resolve variables:', error);
@@ -150,6 +161,12 @@ export function CurlExportModal({ isOpen, onClose, requestData }) {
             {isLoading ? 'Resolving variables...' : curlCommand}
           </pre>
         </div>
+
+        {hasAuthData && (
+          <Alert type="warning" className="mt-3">
+            Caution! Export contains secret/auth data.
+          </Alert>
+        )}
 
         <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
           <button

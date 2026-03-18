@@ -33,18 +33,24 @@ export async function resolveVariables(text, collection) {
  * Resolves variables in an entire request data object
  * @param {Object} requestData - Request data object
  * @param {Object} collection - Collection object
- * @returns {Promise<Object>} - Request data with variables resolved
+ * @param {Object} [environment] - Currently active environment (overrides collection.environment_id)
+ * @returns {Promise<{data: Object, hasResolvedSecrets: boolean}>} - Resolved request data and secret flag
  */
-export async function resolveRequestVariables(requestData, collection) {
+export async function resolveRequestVariables(requestData, collection, environment) {
   if (!requestData) {
-    return requestData;
+    return { data: requestData, hasResolvedSecrets: false };
   }
 
-  const variables = await loadVariables(collection);
+  const { vars: variables, secretKeys } = await loadVariables(collection, environment);
+  let hasResolvedSecrets = false;
   const resolveText = (text) => {
     if (!text || typeof text !== 'string') return text;
     return text.replace(/\{\{([^}]*)\}\}/g, (match, variableName) => {
-      return variables.has(variableName) ? variables.get(variableName) : match;
+      if (variables.has(variableName)) {
+        if (secretKeys.has(variableName)) hasResolvedSecrets = true;
+        return variables.get(variableName);
+      }
+      return match;
     });
   };
 
@@ -106,37 +112,46 @@ export async function resolveRequestVariables(requestData, collection) {
     }));
   }
 
-  return resolved;
+  return { data: resolved, hasResolvedSecrets };
 }
 
 /**
  * Loads all variables from collection, environment, and database
  * @param {Object} collection - Collection object
- * @returns {Promise<Map>} - Map of variable key -> value
+ * @param {Object} [environment] - Currently active environment (overrides collection.environment_id)
+ * @returns {Promise<{vars: Map, secretKeys: Set}>} - Variable map and set of secret key names
  */
-async function loadVariables(collection) {
+async function loadVariables(collection, environment) {
   const vars = new Map();
-  
+  const secretKeys = new Set();
+
   try {
-    // Collection variables (inline)
+    // Collection variables (inline) - not treated as secrets
     if (collection?.variables) {
       collection.variables.forEach(v => vars.set(v.key, v.value));
     }
-    
-    // Database collection variables
+
+    // Database collection variables - treated as secrets
     if (collection?.id) {
       const collectionVars = await apiClient.getSecretsByCollection(collection.id);
-      collectionVars.forEach(v => vars.set(v.key, v.value));
+      collectionVars.forEach(v => {
+        vars.set(v.key, v.value);
+        secretKeys.add(v.key);
+      });
     }
-    
-    // Environment variables (if collection has environment)
-    if (collection?.environment_id) {
-      const envVars = await apiClient.getDecryptedEnvironmentSecrets(collection.environment_id);
-      envVars.forEach(v => vars.set(v.key, v.value));
+
+    // Environment variables - prefer explicit environment over collection's default
+    const environmentId = environment?.id || collection?.environment_id;
+    if (environmentId) {
+      const envVars = await apiClient.getDecryptedEnvironmentSecrets(environmentId);
+      envVars.forEach(v => {
+        vars.set(v.key, v.value);
+        secretKeys.add(v.key);
+      });
     }
   } catch (error) {
     console.error('Failed to load variables:', error);
   }
-  
-  return vars;
+
+  return { vars, secretKeys };
 }
