@@ -1377,19 +1377,6 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
             >
               {isSubmitting ? 'Sending...' : 'Send'}
             </Button>
-            <Button
-              onClick={() => setShowCurlModal(true)}
-              disabled={isSubmitting}
-              type="button"
-              variant="utility"
-              size="md"
-              className="ml-2"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-code-icon lucide-code">
-                <path d="m16 18 6-6-6-6" />
-                <path d="m8 6-6 6 6 6" />
-              </svg>
-            </Button>
           </div>
         </div>
       </div>
@@ -1457,7 +1444,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
                 onClick={() => setShowCurlModal(true)}
                 variant="ghost"
                 size="xs"
-                className="sm:hidden px-4 py-2 rounded-t-md"
+                className="px-4 py-2 rounded-t-md"
               >
                 Export cURL
               </Button>
