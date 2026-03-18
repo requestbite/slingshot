@@ -445,6 +445,9 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   const updateRequestData = (updates) => {
     setRequestData(prev => {
       const newData = { ...prev, ...updates };
+      // Keep ref in sync immediately so handleSendRequest always reads latest data,
+      // even if called before React has re-rendered with the new state.
+      currentRequestDataRef.current = newData;
       return newData;
     });
   };
@@ -767,7 +770,12 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   const handleSendRequest = async () => {
     if (isSubmitting) return;
 
-    const effectiveUrl = getEffectiveUrl();
+    // Use the ref to get the most current data, bypassing any stale React closure.
+    // This matters when the user edits a field and immediately hits Enter before
+    // React has re-rendered with the updated requestData.
+    const currentData = currentRequestDataRef.current;
+
+    const effectiveUrl = currentData.url.trim() || placeholderUrl;
     if (!effectiveUrl) return;
 
     setIsSubmitting(true);
@@ -787,13 +795,13 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
     // Use collection settings if available, otherwise use local settings
     const effectiveFollowRedirects = selectedCollection?.follow_redirects !== undefined
       ? selectedCollection.follow_redirects
-      : requestData.followRedirects;
+      : currentData.followRedirects;
     const effectiveTimeout = selectedCollection?.timeout !== undefined
       ? selectedCollection.timeout
-      : requestData.timeout;
+      : currentData.timeout;
 
     // Process headers with variable replacement
-    let processedHeaders = requestData.headers.map(h => ({
+    let processedHeaders = currentData.headers.map(h => ({
       ...h,
       key: replaceVariables(h.key, variables),
       value: replaceVariables(h.value, variables)
@@ -917,8 +925,30 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       }
     }
 
+    // Parse query params fresh from the URL string to bypass the 500ms debounce.
+    // Query params are always URL-derived (read-only in the UI), so re-parsing here
+    // ensures we capture any params the user just typed before hitting Enter.
+    let baseQueryParams = currentData.queryParams;
+    try {
+      const tempUrl = new URL(effectiveUrl.startsWith('http') ? effectiveUrl : `http://${effectiveUrl}`);
+      const urlDerivedParams = [];
+      tempUrl.searchParams.forEach((value, key) => {
+        const existing = currentData.queryParams.find(p => p.key === key);
+        urlDerivedParams.push({
+          id: existing?.id || generateUUID(),
+          key,
+          value,
+          enabled: existing?.enabled !== undefined ? existing.enabled : true
+        });
+      });
+      // Only use freshly-parsed params if we got any (or the URL has no query string)
+      baseQueryParams = urlDerivedParams;
+    } catch (e) {
+      // URL parsing failed, fall back to current state
+    }
+
     // Process query parameters (including API key if needed)
-    let processedQueryParams = requestData.queryParams.map(p => ({
+    let processedQueryParams = baseQueryParams.map(p => ({
       ...p,
       key: replaceVariables(p.key, variables),
       value: replaceVariables(p.value, variables)
@@ -973,24 +1003,24 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
 
     // Replace variables in all request fields
     const processedRequestData = {
-      ...requestData,
+      ...currentData,
       followRedirects: effectiveFollowRedirects,
       timeout: effectiveTimeout,
       url: processedUrl,
       headers: processedHeaders,
       queryParams: processedQueryParams,
-      pathParams: requestData.pathParams.map(p => ({
+      pathParams: currentData.pathParams.map(p => ({
         ...p,
         key: replaceVariables(p.key, variables),
         value: replaceVariables(p.value, variables)
       })),
-      bodyContent: replaceVariables(requestData.bodyContent, variables),
-      formData: requestData.formData?.map(f => ({
+      bodyContent: replaceVariables(currentData.bodyContent, variables),
+      formData: currentData.formData?.map(f => ({
         ...f,
         key: replaceVariables(f.key, variables),
         value: f.type === 'text' ? replaceVariables(f.value, variables) : f.value // Don't replace file values
       })),
-      urlEncodedData: requestData.urlEncodedData?.map(u => ({
+      urlEncodedData: currentData.urlEncodedData?.map(u => ({
         ...u,
         key: replaceVariables(u.key, variables),
         value: replaceVariables(u.value, variables)
