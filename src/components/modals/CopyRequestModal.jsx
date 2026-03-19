@@ -1,35 +1,127 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
+import { Alert } from '../common/Alert';
+import { resolveRequestVariables } from '../../utils/variableResolver';
+import { useAppContext } from '../../hooks/useAppContext';
+import { decryptSecret } from '../../utils/encryption';
 
-export function CopyRequestModal({ isOpen, onClose, requestData, getAvailableVariables, replaceVariables, onCopySuccess }) {
+const decryptAuthResponse = async (encryptedResponse) => {
+  if (!encryptedResponse || !encryptedResponse.encrypted_value) return encryptedResponse;
+  try {
+    const decryptedString = await decryptSecret(encryptedResponse.encrypted_value, encryptedResponse.iv);
+    return JSON.parse(decryptedString);
+  } catch {
+    return null;
+  }
+};
+
+const decryptAuthConfig = async (encryptedConfig) => {
+  if (!encryptedConfig || !encryptedConfig.encrypted_value) return encryptedConfig;
+  try {
+    const decryptedString = await decryptSecret(encryptedConfig.encrypted_value, encryptedConfig.iv);
+    return JSON.parse(decryptedString);
+  } catch {
+    return null;
+  }
+};
+
+const injectAuthHeaders = async (resolvedData, environment) => {
+  if (!environment?.auth || environment.auth === 'none') return { data: resolvedData, hasAuth: false };
+
+  let headers = [...(resolvedData.headers || [])];
+  let hasAuth = false;
+
+  const hasAuthHeader = (key) => headers.some(h => h.enabled && h.key.toLowerCase() === key.toLowerCase());
+
+  try {
+    if ((environment.auth === 'oidc_pkce' || environment.auth === 'oauth2_pkce' || environment.auth === 'oauth2_code') && environment.authResponse) {
+      const authResp = await decryptAuthResponse(environment.authResponse);
+      if (authResp?.access_token && !hasAuthHeader('authorization')) {
+        headers.push({ key: 'Authorization', value: `Bearer ${authResp.access_token}`, enabled: true });
+        hasAuth = true;
+      }
+    } else if (environment.auth === 'bearer_token' && environment.authConfig) {
+      const authCfg = await decryptAuthConfig(environment.authConfig);
+      if (authCfg?.token && !hasAuthHeader('authorization')) {
+        headers.push({ key: 'Authorization', value: `Bearer ${authCfg.token}`, enabled: true });
+        hasAuth = true;
+      }
+    } else if (environment.auth === 'basic_auth' && environment.authConfig) {
+      const authCfg = await decryptAuthConfig(environment.authConfig);
+      if ((authCfg?.username || authCfg?.password) && !hasAuthHeader('authorization')) {
+        const credentials = btoa(`${authCfg.username || ''}:${authCfg.password || ''}`);
+        headers.push({ key: 'Authorization', value: `Basic ${credentials}`, enabled: true });
+        hasAuth = true;
+      }
+    } else if (environment.auth === 'api_key' && environment.authConfig) {
+      const authCfg = await decryptAuthConfig(environment.authConfig);
+      if (authCfg?.key && authCfg?.value) {
+        const addTo = authCfg.addTo || 'header';
+        if (addTo === 'header' && !hasAuthHeader(authCfg.key)) {
+          headers.push({ key: authCfg.key, value: authCfg.value, enabled: true });
+          hasAuth = true;
+        } else if (addTo === 'query') {
+          const queryParams = [...(resolvedData.queryParams || [])];
+          const hasParam = queryParams.some(p => p.enabled && p.key.toLowerCase() === authCfg.key.toLowerCase());
+          if (!hasParam) {
+            queryParams.push({ key: authCfg.key, value: authCfg.value, enabled: true });
+            return { data: { ...resolvedData, headers, queryParams }, hasAuth: true };
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Failed to inject auth headers for shareable URL:', error);
+  }
+
+  return { data: { ...resolvedData, headers }, hasAuth };
+};
+
+export function CopyRequestModal({ isOpen, onClose, requestData, onCopySuccess }) {
+  const { selectedCollection, currentEnvironment } = useAppContext();
   const [isLoading, setIsLoading] = useState(false);
+  const [hasAuthData, setHasAuthData] = useState(false);
+
+  // Check for secrets/auth when modal opens
+  useEffect(() => {
+    if (!isOpen || !requestData) {
+      setHasAuthData(false);
+      return;
+    }
+    resolveRequestVariables(requestData, selectedCollection, currentEnvironment)
+      .then(({ data: resolvedData, hasResolvedSecrets }) =>
+        injectAuthHeaders(resolvedData, currentEnvironment)
+          .then(({ hasAuth }) => setHasAuthData(hasAuth || hasResolvedSecrets))
+      )
+      .catch(() => {});
+  }, [isOpen, requestData, selectedCollection, currentEnvironment]);
 
   const generateShareableUrl = async () => {
     setIsLoading(true);
-    
-    try {
-      // Get all available variables for replacement
-      const variables = await getAvailableVariables();
 
-      // Process request data and resolve variables
+    try {
+      const { data: resolvedData } = await resolveRequestVariables(requestData, selectedCollection, currentEnvironment);
+      const { data } = await injectAuthHeaders(resolvedData, currentEnvironment);
+
+      // Process resolved data into the shareable URL format
       const processedData = {
-        method: requestData.method || 'GET',
-        url: replaceVariables(requestData.url || '', variables),
-        headers: requestData.headers?.filter(h => h.enabled && h.key.trim()).reduce((acc, h) => {
-          acc[replaceVariables(h.key, variables)] = replaceVariables(h.value, variables);
+        method: data.method || 'GET',
+        url: data.url || '',
+        headers: data.headers?.filter(h => h.enabled && h.key.trim()).reduce((acc, h) => {
+          acc[h.key] = h.value;
           return acc;
         }, {}) || {},
-        params: requestData.queryParams?.filter(p => p.enabled && p.key.trim()).reduce((acc, p) => {
-          acc[replaceVariables(p.key, variables)] = replaceVariables(p.value, variables);
+        params: data.queryParams?.filter(p => p.enabled && p.key.trim()).reduce((acc, p) => {
+          acc[p.key] = p.value;
           return acc;
         }, {}) || {},
-        requestType: requestData.bodyType || 'none',
-        contentType: requestData.contentType || '',
-        body: replaceVariables(requestData.bodyContent || '', variables),
-        formData: requestData.formData?.filter(f => f.enabled && f.key.trim()).map(f => ({
-          key: replaceVariables(f.key, variables),
-          value: f.type === 'text' ? replaceVariables(f.value, variables) : f.value,
+        requestType: data.bodyType || 'none',
+        contentType: data.contentType || '',
+        body: data.bodyContent || '',
+        formData: data.formData?.filter(f => f.enabled && f.key.trim()).map(f => ({
+          key: f.key,
+          value: f.value,
           type: f.type
         })) || []
       };
@@ -53,16 +145,14 @@ export function CopyRequestModal({ isOpen, onClose, requestData, getAvailableVar
 
       // Copy to clipboard
       await navigator.clipboard.writeText(shareableUrl);
-      
+
       onClose();
-      
-      // Notify parent component of successful copy
+
       if (onCopySuccess) {
         onCopySuccess();
       }
     } catch (error) {
       console.error('Failed to generate shareable URL:', error);
-      // Could add error state here if needed
     } finally {
       setIsLoading(false);
     }
@@ -77,8 +167,14 @@ export function CopyRequestModal({ isOpen, onClose, requestData, getAvailableVar
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Copy Request URL" size="md">
       <div class="text-sm text-gray-500">
-        Do you want to copy the current request as a shareable URL? Any used variables or secrets will be included in plain-text.
+        Do you want to create a copy of the current request as a shareable URL which opens Slingshot with the copied data?
       </div>
+
+      {hasAuthData && (
+        <Alert type="warning" className="mt-3">
+          Caution! Export contains secret/auth data.
+        </Alert>
+      )}
 
       <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
         <Button

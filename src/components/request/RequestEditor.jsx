@@ -1649,8 +1649,6 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         isOpen={showCopyRequestModal}
         onClose={() => setShowCopyRequestModal(false)}
         requestData={requestData}
-        getAvailableVariables={getAvailableVariables}
-        replaceVariables={replaceVariables}
         onCopySuccess={handleCopyRequestSuccess}
       />
 
