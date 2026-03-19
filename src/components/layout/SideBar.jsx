@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { Suspense, lazy } from 'preact/compat';
 import { useLocation } from 'wouter-preact';
-import { Settings, FolderPlus, Download, RefreshCw } from 'lucide-preact';
+import { Settings, FolderPlus, Download, RefreshCw, Undo2 } from 'lucide-preact';
 
 // Dynamic imports for import modals - only loaded when needed
 const OpenAPIImportModal = lazy(() => import('../import/OpenAPIImportModal').then(m => ({ default: m.OpenAPIImportModal })));
@@ -31,6 +31,7 @@ export function SideBar({ onClose: _onClose }) {
   const [showCollectionContextMenu, setShowCollectionContextMenu] = useState(false);
   const importButtonRef = useRef();
   const collectionMenuTriggerRef = useRef();
+  const lastInitCollectionRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [, setLocation] = useLocation();
   const { collections, selectedCollection, selectCollection, selectRequest, isLoading, updateCollection, addCollection, removeCollection, currentEnvironment, setCurrentEnvironment, hasManuallySelectedEnvironment, setHasManuallySelectedEnvironment } = useAppContext();
@@ -62,21 +63,54 @@ export function SideBar({ onClose: _onClose }) {
 
   // Update current environment when selectedCollection changes, but respect manual selection
   useEffect(() => {
-    if (selectedCollection) {
-      // Only auto-set environment if user hasn't manually selected one
-      if (!hasManuallySelectedEnvironment && selectedCollection.environment_id && environments.length > 0) {
-        const environment = environments.find(env => env.id === selectedCollection.environment_id);
-        setCurrentEnvironment(environment || null);
-      } else if (!hasManuallySelectedEnvironment) {
-        // No environment set or environment doesn't exist anymore
-        setCurrentEnvironment(null);
+    if (!selectedCollection) {
+      lastInitCollectionRef.current = null;
+      setCurrentEnvironment(null);
+      setHasManuallySelectedEnvironment(false);
+      return;
+    }
+
+    const collectionChanged = lastInitCollectionRef.current !== selectedCollection.id;
+
+    // Skip if same collection and user already manually picked an environment
+    if (!collectionChanged && hasManuallySelectedEnvironment) return;
+
+    lastInitCollectionRef.current = selectedCollection.id;
+
+    // Check localStorage for a previously selected environment for this collection
+    try {
+      const stored = localStorage.getItem('slingshot_draft_env');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.col === selectedCollection.id) {
+          if (parsed.env === 'none') {
+            setCurrentEnvironment(null);
+            setHasManuallySelectedEnvironment(true);
+            return;
+          }
+          if (environments.length > 0) {
+            const storedEnv = environments.find(env => env.id === parsed.env);
+            if (storedEnv) {
+              setCurrentEnvironment(storedEnv);
+              setHasManuallySelectedEnvironment(true);
+              return;
+            }
+          }
+        }
       }
-      // If user has manually selected an environment, don't override it
+    } catch (e) {
+      // ignore malformed localStorage value
+    }
+
+    // Fall back to collection default environment
+    if (selectedCollection.environment_id && environments.length > 0) {
+      const environment = environments.find(env => env.id === selectedCollection.environment_id);
+      setCurrentEnvironment(environment || null);
     } else {
       setCurrentEnvironment(null);
-      setHasManuallySelectedEnvironment(false); // Reset when no collection
     }
-  }, [selectedCollection, environments, setCurrentEnvironment, hasManuallySelectedEnvironment, setHasManuallySelectedEnvironment]);
+    setHasManuallySelectedEnvironment(false);
+  }, [selectedCollection, environments, hasManuallySelectedEnvironment, setCurrentEnvironment, setHasManuallySelectedEnvironment]);
 
   const loadEnvironments = async () => {
     // Only load environments if encryption key is available
@@ -106,6 +140,10 @@ export function SideBar({ onClose: _onClose }) {
     } else {
       const environment = environments.find(env => env.id === environmentId);
       setCurrentEnvironment(environment || null);
+    }
+    // Persist selection so it survives full-page reloads
+    if (selectedCollection) {
+      localStorage.setItem('slingshot_draft_env', JSON.stringify({ env: environmentId, col: selectedCollection.id }));
     }
   };
 
@@ -146,6 +184,15 @@ export function SideBar({ onClose: _onClose }) {
     (currentEnvironment && selectedCollection.environment_id === currentEnvironment.id) ||
     (!currentEnvironment && !selectedCollection.environment_id)
   );
+
+  // True when the user has a draft env override that differs from the collection's saved default
+  const hasDraftEnvOverride = selectedCollection && hasManuallySelectedEnvironment && !isDefaultEnvironment;
+
+  const handleResetDraftEnv = () => {
+    localStorage.removeItem('slingshot_draft_env');
+    setHasManuallySelectedEnvironment(false);
+    // The useEffect will re-run and restore the collection default
+  };
 
   const handleCollectionContextMenuClick = (e) => {
     e.preventDefault();
@@ -280,6 +327,15 @@ export function SideBar({ onClose: _onClose }) {
               <div>
                 <div class="flex items-center justify-between mb-2">
                   <label for="environment-select" class="block text-xs font-medium text-gray-600">Environment</label>
+                  {hasDraftEnvOverride && (
+                    <button
+                      onClick={handleResetDraftEnv}
+                      class="text-xs text-sky-600 hover:text-sky-800 focus:outline-none cursor-pointer flex items-center"
+                      title="Reset draft env. to collection setting."
+                    >
+                      <Undo2 size={12} />
+                    </button>
+                  )}
                 </div>
                 <div class="relative">
                   <select
