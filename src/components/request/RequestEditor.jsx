@@ -1416,7 +1416,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         {/* Tabs */}
         <div class={`px-4 overflow-x-auto scrollbar-hide ${activeTab !== 'overview' ? 'border-b border-gray-200' : ''}`}>
           <div class="flex justify-between items-start flex-nowrap min-w-max">
-            <div class="flex space-x-2 flex-nowrap">
+            <div class="flex space-x-1 flex-nowrap">
               {/* Overview Tab with Eye-Closed Icon */}
               <button type="button" data-tab="overview"
                 onClick={() => setActiveTab('overview')}
@@ -1466,7 +1466,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
                 onClick={() => setShowCurlImportModal(true)}
                 variant="ghost"
                 size="xs"
-                className="px-4 py-2 rounded-t-md"
+                className="py-2 rounded-t-md"
               >
                 <div class="flex items-center space-x-1">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1482,7 +1482,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
                 onClick={() => setShowCurlModal(true)}
                 variant="ghost"
                 size="xs"
-                className="px-4 py-2 rounded-t-md"
+                className="py-2 rounded-t-md"
               >
                 <div class="flex items-center space-x-1">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1497,7 +1497,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
                 onClick={() => setShowCopyRequestModal(true)}
                 variant="ghost"
                 size="xs"
-                className="px-4 py-2 rounded-t-md"
+                className="py-2 rounded-t-md"
               >
                 <div class="flex items-center space-x-1">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1532,7 +1532,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
                   onClick={() => setIsDocsSidebarVisible(!isDocsSidebarVisible)}
                   variant="ghost"
                   size="xs"
-                  className="pl-4 py-2 rounded-t-md"
+                  className="py-2 rounded-t-md"
                   title={isDocsSidebarVisible ? "Hide docs panel" : "Show docs panel"}
                 >
                   <div class="flex items-center space-x-1">
