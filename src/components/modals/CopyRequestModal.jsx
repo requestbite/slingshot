@@ -104,10 +104,19 @@ export function CopyRequestModal({ isOpen, onClose, requestData, onCopySuccess }
       const { data: resolvedData } = await resolveRequestVariables(requestData, selectedCollection, currentEnvironment);
       const { data } = await injectAuthHeaders(resolvedData, currentEnvironment);
 
+      // Substitute resolved path parameters into the URL
+      let resolvedUrl = data.url || '';
+      data.pathParams?.forEach(param => {
+        if (param.enabled && param.value) {
+          const pattern = new RegExp(`:${param.key}\\b`, 'g');
+          resolvedUrl = resolvedUrl.replace(pattern, param.value);
+        }
+      });
+
       // Process resolved data into the shareable URL format
       const processedData = {
         method: data.method || 'GET',
-        url: data.url || '',
+        url: resolvedUrl,
         headers: data.headers?.filter(h => h.enabled && h.key.trim()).reduce((acc, h) => {
           acc[h.key] = h.value;
           return acc;
