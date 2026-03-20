@@ -264,7 +264,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
         <div id="response-details-wrapper" class="flex flex-col h-full">
 
           {/* Response Metadata */}
-          <div class="mb-4 overflow-x-auto scrollbar-hide" style="-ms-overflow-style: none; scrollbar-width: none;">
+          <div class="mb-2 overflow-x-auto scrollbar-hide" style="-ms-overflow-style: none; scrollbar-width: none;">
             <style>
               {`::-webkit-scrollbar { display: none; }`}
             </style>
@@ -343,47 +343,12 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                 </div>
               </div>
 
-              {/* Copy Response Button and Clear Button */}
-              {(response.responseData || streamedContent || response.finalStreamedContent) && (
-                <div class="flex items-center space-x-3">
-                  <Button
-                    onClick={() => copyToClipboard(isStreaming ? streamedContent : processResponseContent(response, selectedCollection))}
-                    variant="none"
-                    className="inline-flex items-center text-sky-500 hover:text-sky-700 cursor-pointer"
-                  >
-                    <span class="inline-block w-4 h-4 mr-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-full h-full">
-                        <path d="M20 2H10c-1.103 0-2 .897-2 2v4H4c-1.103 0-2 .897-2 2v10c0 1.103.897 2 2 2h10c1.103 0 2-.897 2-2v-4h4c1.103 0 2-.897 2-2V4c0-1.103-.897-2-2-2zM4 20V10h10l.002 10H4zm16-6h-4v-4c0-1.103-.897-2-2-2h-4V4h10v10z"></path>
-                      </svg>
-                    </span>
-                    Copy
-                  </Button>
-                  {onClear && (
-                    <Button
-                      onClick={onClear}
-                      variant="none"
-                      disabled={isStreaming || !(response.status || response.responseData || effectiveResponse.saved || streamedContent)}
-                      className="inline-flex items-center text-sky-500 hover:text-sky-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                      title={isStreaming ? "Cannot clear while streaming is active" : (response.status || response.responseData || effectiveResponse.saved || streamedContent) ? "Clear cached response from IndexedDB" : "No response to clear"}
-                    >
-                      <span class="inline-block w-4 h-4 mr-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
-                          <path d="m3 6 18 0"></path>
-                          <path d="m19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                          <path d="m8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                        </svg>
-                      </span>
-                      Clear
-                    </Button>
-                  )}
-                </div>
-              )}
             </div>
           </div>
 
           {/* Response Headers Collapsible Section */}
           {processedHeaders && processedHeaders.length > 0 && (
-            <div id="response-headers-section" class="mb-4">
+            <div id="response-headers-section" class="mb-2">
               <div class="max-w-full overflow-auto" style={{ display: showHeaders ? 'block' : 'none' }}>
                 <table class="border-collapse text-xs w-full table-fixed">
                   <thead>
@@ -450,6 +415,42 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                     </span>
                     Download {getDownloadFilename(response)}
                   </Button>
+                </div>
+              )}
+
+              {/* Copy Response Button and Clear Button */}
+              {(response.responseData || streamedContent || response.finalStreamedContent) && (
+                <div class="flex items-center justify-end space-x-3 mb-2">
+                  <Button
+                    onClick={() => copyToClipboard(isStreaming ? streamedContent : processResponseContent(response, selectedCollection))}
+                    variant="none"
+                    className="inline-flex items-center text-xs text-sky-500 hover:text-sky-700 cursor-pointer"
+                  >
+                    <span class="inline-block w-3 h-3 mr-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-full h-full">
+                        <path d="M20 2H10c-1.103 0-2 .897-2 2v4H4c-1.103 0-2 .897-2 2v10c0 1.103.897 2 2 2h10c1.103 0 2-.897 2-2v-4h4c1.103 0 2-.897 2-2V4c0-1.103-.897-2-2-2zM4 20V10h10l.002 10H4zm16-6h-4v-4c0-1.103-.897-2-2-2h-4V4h10v10z"></path>
+                      </svg>
+                    </span>
+                    Copy
+                  </Button>
+                  {onClear && (
+                    <Button
+                      onClick={onClear}
+                      variant="none"
+                      disabled={isStreaming || !(response.status || response.responseData || effectiveResponse.saved || streamedContent)}
+                      className="inline-flex items-center text-xs text-sky-500 hover:text-sky-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      title={isStreaming ? "Cannot clear while streaming is active" : (response.status || response.responseData || effectiveResponse.saved || streamedContent) ? "Clear cached response from IndexedDB" : "No response to clear"}
+                    >
+                      <span class="inline-block w-3 h-3 mr-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                          <path d="m3 6 18 0"></path>
+                          <path d="m19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                          <path d="m8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                        </svg>
+                      </span>
+                      Clear
+                    </Button>
+                  )}
                 </div>
               )}
 
