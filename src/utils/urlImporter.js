@@ -57,9 +57,15 @@ export async function fetchFromURL(url) {
     const content = response.responseData || '';
     const contentType = response.rawHeaders?.['content-type'] || '';
 
-    // Check content type to detect binary files
-    if (contentType.includes('application/octet-stream') || 
-        contentType.includes('application/pdf') ||
+    // Check file size (10MB limit) before further processing
+    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    if (content.length > maxSize) {
+      throw new Error('File size must be less than 10MB');
+    }
+
+    // Reject clearly binary content types (but allow octet-stream since servers
+    // sometimes serve YAML/JSON files with that content type)
+    if (contentType.includes('application/pdf') ||
         contentType.includes('image/') ||
         contentType.includes('video/') ||
         contentType.includes('audio/')) {
@@ -69,12 +75,6 @@ export async function fetchFromURL(url) {
     // Check if content is empty
     if (!content.trim()) {
       throw new Error('The file appears to be empty');
-    }
-
-    // Check file size (10MB limit)
-    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
-    if (content.length > maxSize) {
-      throw new Error('File size must be less than 10MB');
     }
 
     return {
