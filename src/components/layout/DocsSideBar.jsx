@@ -648,9 +648,9 @@ export function DocsSideBar({ onClose: _onClose }) {
   return (
     <>
       {/* Documentation Sidebar */}
-      <aside class="bg-white rounded-lg md:border border-gray-300 h-full flex flex-col">
-        <div class="flex flex-1 flex-col gap-y-5 overflow-y-auto scrollbar-hide p-4">
-          <nav class="flex flex-1 flex-col space-y-4">
+      <aside class="bg-white rounded-lg md:border border-gray-300 h-full flex flex-col overflow-hidden">
+        <div class="flex flex-1 flex-col gap-y-5 overflow-y-auto scrollbar-hide p-4 min-h-0">
+          <nav class="flex flex-col space-y-4">
             {selectedRequest ? (
               <>
                 {/* Request Header */}
@@ -726,7 +726,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                 )}
 
                 {/* Request Documentation */}
-                <div class="flex-1 min-h-0 space-y-8">
+                <div class="space-y-8">
                   {/* Parameters Schema - filtered by TOC selection */}
                   {parametersSchema && (
                     (parametersSchema.path && Object.keys(parametersSchema.path).length > 0) ||

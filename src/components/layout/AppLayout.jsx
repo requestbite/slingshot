@@ -87,7 +87,7 @@ export function AppLayout({ children, showDocsSidebar = false }) {
 
           {/* Docs Sidebar - right column */}
           {shouldShowDocsSidebar && (
-            <div class={`mt-[2px] w-[300px] flex-shrink-0 ml-4 docs-sidebar-responsive md:overflow-hidden ${!isDocsSidebarVisible ? 'docs-sidebar-hidden' : ''}`}>
+            <div class={`mt-[2px] h-full w-[300px] flex-shrink-0 ml-4 docs-sidebar-responsive overflow-hidden ${!isDocsSidebarVisible ? 'docs-sidebar-hidden' : ''}`}>
               <DocsSideBar />
             </div>
           )}
