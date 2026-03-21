@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { Suspense, lazy } from 'preact/compat';
 import { useLocation } from 'wouter-preact';
-import { Settings, FolderPlus, Download, RefreshCw, Undo2 } from 'lucide-preact';
+import { Settings, FolderPlus, Download, RefreshCw, Undo2, ChevronsUpDown, ChevronsDownUp } from 'lucide-preact';
 
 // Dynamic imports for import modals - only loaded when needed
 const OpenAPIImportModal = lazy(() => import('../import/OpenAPIImportModal').then(m => ({ default: m.OpenAPIImportModal })));
@@ -453,19 +453,35 @@ export function SideBar({ onClose: _onClose }) {
               <div class="flex justify-between items-center mb-2">
                 <label class="block text-xs font-medium text-gray-600">Requests</label>
                 {selectedCollection && (
-                  <a
-                    href={selectedCollection ? `/${selectedCollection.id}` : '#'}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      selectRequest(null); // Clear request editor fields
-                      const url = `/${selectedCollection.id}`;
-                      setLastSlingshotUrl(url);
-                      setLocation(url);
-                    }}
-                    class="text-xs text-sky-600 hover:text-sky-800 focus:outline-none cursor-pointer"
-                  >
-                    Add
-                  </a>
+                  <div class="flex items-center gap-1">
+                    <button
+                      onClick={() => window.dispatchEvent(new CustomEvent('expandAllFolders'))}
+                      class="text-xs text-sky-600 hover:text-sky-800 focus:outline-none cursor-pointer"
+                      title="Expand all folders"
+                    >
+                      <ChevronsUpDown size={14} />
+                    </button>
+                    <button
+                      onClick={() => window.dispatchEvent(new CustomEvent('collapseAllFolders'))}
+                      class="text-xs text-sky-600 hover:text-sky-800 focus:outline-none cursor-pointer"
+                      title="Collapse all folders"
+                    >
+                      <ChevronsDownUp size={14} />
+                    </button>
+                    <a
+                      href={selectedCollection ? `/${selectedCollection.id}` : '#'}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        selectRequest(null); // Clear request editor fields
+                        const url = `/${selectedCollection.id}`;
+                        setLastSlingshotUrl(url);
+                        setLocation(url);
+                      }}
+                      class="text-xs text-sky-600 hover:text-sky-800 focus:outline-none cursor-pointer"
+                    >
+                      Add
+                    </a>
+                  </div>
                 )}
               </div>
 

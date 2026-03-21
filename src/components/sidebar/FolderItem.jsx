@@ -22,9 +22,16 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
       }
     };
 
+    const handleExpandAll = () => setIsExpanded(true);
+    const handleCollapseAll = () => setIsExpanded(false);
+
     window.addEventListener('closeAllContextMenus', handleCloseAllContextMenus);
+    window.addEventListener('expandAllFolders', handleExpandAll);
+    window.addEventListener('collapseAllFolders', handleCollapseAll);
     return () => {
       window.removeEventListener('closeAllContextMenus', handleCloseAllContextMenus);
+      window.removeEventListener('expandAllFolders', handleExpandAll);
+      window.removeEventListener('collapseAllFolders', handleCollapseAll);
     };
   }, [folder.id]);
 
