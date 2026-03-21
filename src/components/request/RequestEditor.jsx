@@ -22,6 +22,7 @@ import { useAppContext } from '../../hooks/useAppContext';
 import { decryptSecret } from '../../utils/encryption';
 import { Button } from '../common/Button';
 import { parseRequestBodySchema, getRequestBodySchemaForContentType } from '../../utils/schemaParser';
+import { trackRecentRequest } from '../../utils/recentRequests.js';
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 
@@ -777,6 +778,8 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
 
     const effectiveUrl = currentData.url.trim() || placeholderUrl;
     if (!effectiveUrl) return;
+
+    trackRecentRequest(request?.id);
 
     setIsSubmitting(true);
     setResponse(null);
