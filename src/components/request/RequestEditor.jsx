@@ -6,6 +6,7 @@ import { HeadersTab } from './tabs/HeadersTab';
 import { BodyTab } from './tabs/BodyTab';
 import { SettingsTab } from './tabs/SettingsTab';
 import { ResponseDisplay } from './ResponseDisplay';
+import { ContextMenu } from '../common/ContextMenu';
 import { CurlExportModal } from '../modals/CurlExportModal';
 import { CurlImportModal } from '../modals/CurlImportModal';
 import { SaveAsModal } from '../modals/SaveAsModal';
@@ -23,6 +24,7 @@ import { decryptSecret } from '../../utils/encryption';
 import { Button } from '../common/Button';
 import { parseRequestBodySchema, getRequestBodySchemaForContentType } from '../../utils/schemaParser';
 import { trackRecentRequest } from '../../utils/recentRequests.js';
+import { getMethodColor as getMethodBgColor } from '../../utils/httpMethods';
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 
@@ -155,6 +157,11 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   const currentRequestDataRef = useRef(requestData);
   const isInitialLoadRef = useRef(false);
   const previousRequestIdRef = useRef(null);
+
+  // Recent requests menu state
+  const [showRecentMenu, setShowRecentMenu] = useState(false);
+  const [recentRequests, setRecentRequests] = useState([]);
+  const recentMenuButtonRef = useRef(null);
 
   // Modal state
   const [showCurlModal, setShowCurlModal] = useState(false);
@@ -1292,6 +1299,23 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
     }
   };
 
+  // Load recent requests from localStorage + IndexedDB and show menu
+  const loadAndShowRecentMenu = async () => {
+    try {
+      const raw = localStorage.getItem('slingshot_recent_req');
+      const ids = raw ? JSON.parse(raw) : [];
+
+      const resolved = await Promise.all(
+        ids.map(id => apiClient.getRequest(id).catch(() => null))
+      );
+
+      setRecentRequests(resolved.filter(Boolean));
+    } catch (error) {
+      setRecentRequests([]);
+    }
+    setShowRecentMenu(true);
+  };
+
   // Handle clear response (clears only response data, preserves drafts and active tab)
   const handleClearResponse = async () => {
     // For non-collection requests (no request.id), just clear local state
@@ -1328,8 +1352,22 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       <div class="p-4">
         <div class="mb-2 overflow-x-auto scrollbar-hide">
           <div class="flex items-center justify-between flex-nowrap min-w-max">
-            <div class="text-sm font-medium text-gray-700 whitespace-nowrap mr-2">
-              ⚡️ <span>{request?.name || 'Untitled request'}</span>
+            <div class="flex items-center space-x-2 text-sm font-medium text-gray-700 whitespace-nowrap mr-2">
+              <span ref={recentMenuButtonRef} class="inline-flex">
+                <Button
+                  onClick={loadAndShowRecentMenu}
+                  variant="icon"
+                  size="xs"
+                  className="rounded-full p-1"
+                  title="Recently sent requests"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 14 4 9l5-5" />
+                    <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" />
+                  </svg>
+                </Button>
+              </span>
+              <span>⚡️ {request?.name || 'Untitled request'}</span>
             </div>
             <div class="flex items-center space-x-2 whitespace-nowrap">
               {hasUnsavedChanges && (
@@ -1621,6 +1659,42 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
           />
         </div>
       </div>
+
+      {/* Recent Requests Menu */}
+      <ContextMenu
+        isOpen={showRecentMenu}
+        onClose={() => setShowRecentMenu(false)}
+        trigger={recentMenuButtonRef.current}
+        width={260}
+        position="below"
+      >
+        {recentRequests.length === 0 ? (
+          <div class="px-4 py-2 text-sm text-gray-400">No recent requests...</div>
+        ) : (
+          recentRequests.map(req => (
+            <a
+              key={req.id}
+              href={`/${req.collection_id}/${req.id}`}
+              onClick={(e) => {
+                e.preventDefault();
+                setShowRecentMenu(false);
+                setLocation(`/${req.collection_id}/${req.id}`);
+              }}
+              class="flex flex-col px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer no-underline"
+            >
+              <span class="truncate">{req.name || 'Untitled request'}</span>
+              <span class="flex items-center gap-1.5 mt-0.5 overflow-hidden">
+                <span class={`text-[10px] text-white font-semibold py-0.5 px-1 rounded flex-shrink-0 ${getMethodBgColor(req.method)}`}>
+                  {req.method?.toUpperCase()}
+                </span>
+                {req.url && (
+                  <span class="text-xs text-gray-400 truncate">{req.url.replace(/^\{\{[^}]+\}\}/, '')}</span>
+                )}
+              </span>
+            </a>
+          ))
+        )}
+      </ContextMenu>
 
       {/* Curl Export Modal */}
       <CurlExportModal
