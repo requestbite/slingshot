@@ -59,7 +59,7 @@ export function Donut({
     if (clamped <= 0) continue;
 
     const sweepAngle = (clamped / max) * fullCircle;
-    const endAngle = startAngle + sweepAngle;
+    const endAngle = Math.min(startAngle + sweepAngle, fullCircle - 0.0001);
 
     paths.push({ d: arcPath(cx, cy, outerR, innerR, startAngle, endAngle), color: slice.color });
 
