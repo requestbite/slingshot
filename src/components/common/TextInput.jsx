@@ -1,4 +1,6 @@
 import { useState, forwardRef } from 'preact/compat';
+import { Copy } from 'lucide-preact';
+import { Toast, useToast } from './Toast';
 
 /**
  * TextInput Component
@@ -22,6 +24,7 @@ export const TextInput = forwardRef(({
   placeholder = '',
   disabled = false,
   clearable = false,
+  showCopyButton = false,
   description = '',
   className = '',
   id,
@@ -33,6 +36,7 @@ export const TextInput = forwardRef(({
 }, ref) => {
   const [showPassword, setShowPassword] = useState(false);
   const [inputType, setInputType] = useState(type);
+  const [toastVisible, showToast, hideToast] = useToast();
   const isTextarea = type === 'textarea';
   const isFile = type === 'file';
 
@@ -79,18 +83,37 @@ export const TextInput = forwardRef(({
     setInputType(showPassword ? 'password' : 'text');
   };
 
+  const handleCopy = async (e) => {
+    e.stopPropagation();
+    if (!value) return;
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(value);
+    } else {
+      const el = document.createElement('textarea');
+      el.value = value;
+      el.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+    }
+    showToast();
+  };
+
   const isPassword = type === 'password';
   const hasValue = value && value.length > 0;
   const showClearButton = clearable && hasValue && !disabled && !isTextarea && !isFile;
   const showEyeIcon = isPassword && !disabled;
-  const hasRightIcons = showClearButton || showEyeIcon;
+  const showCopyIcon = showCopyButton && !isTextarea && !isFile;
+  const hasRightIcons = showClearButton || showEyeIcon || showCopyIcon;
 
   // Calculate padding based on which icons are shown
+  const iconCount = [showClearButton, showEyeIcon, showCopyIcon].filter(Boolean).length;
   let rightPadding = 'pr-7';
-  if (showClearButton && showEyeIcon) {
-    rightPadding = 'pr-[72px]'; // Space for both icons
-  } else if (showClearButton || showEyeIcon) {
-    rightPadding = 'pr-[40px]'; // Space for one icon
+  if (iconCount >= 2) {
+    rightPadding = 'pr-[72px]';
+  } else if (iconCount === 1) {
+    rightPadding = 'pr-[40px]';
   }
 
   const baseInputClasses = `block w-full rounded-md px-3 py-2 ${disabled ? 'bg-gray-50' : 'bg-white'} text-gray-900 outline-solid outline-1 focus:outline-2 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-sky-500 text-sm`;
@@ -168,6 +191,18 @@ export const TextInput = forwardRef(({
               </button>
             )}
 
+            {showCopyIcon && (
+              <button
+                type="button"
+                onClick={handleCopy}
+                class="p-1 text-gray-400 hover:text-gray-600 rounded-sm focus:outline-hidden cursor-pointer transition-colors"
+                aria-label="Copy to clipboard"
+                tabIndex={-1}
+              >
+                <Copy class="h-4 w-4" />
+              </button>
+            )}
+
             {showEyeIcon && (
               <button
                 type="button"
@@ -225,6 +260,13 @@ export const TextInput = forwardRef(({
           {description}
         </p>
       )}
+
+      <Toast
+        message="Copied to clipboard."
+        isVisible={toastVisible}
+        onClose={hideToast}
+        type="success"
+      />
     </div>
   );
 });
