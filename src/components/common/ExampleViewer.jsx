@@ -40,7 +40,8 @@ export function ExampleViewer({
           minHeight: "120px !important"
         },
         ".cm-scroller": {
-          overflow: "auto"
+          overflow: "auto",
+          fontFamily: '"JetBrains Mono", ui-monospace, monospace',
         }
       }),
       EditorView.editable.of(false)
@@ -116,7 +117,7 @@ export function ExampleViewer({
           border: '2px solid #282a36',
           borderRadius: '0.375rem',
           fontSize: '11px',
-          fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
+          fontFamily: '"JetBrains Mono", ui-monospace, monospace',
         }}
       />
     </div>
