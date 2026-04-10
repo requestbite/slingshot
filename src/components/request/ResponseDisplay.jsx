@@ -473,18 +473,20 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                       {isJsonataMode ? 'Close JSONata' : 'JSONata'}
                     </Button>
                   )}
-                  <Button
-                    onClick={() => copyToClipboard(isStreaming ? streamedContent : processResponseContent(response, selectedCollection))}
-                    variant="none"
-                    className="inline-flex items-center text-xs text-sky-500 hover:text-sky-700 cursor-pointer"
-                  >
-                    <span class="inline-block w-3 h-3 mr-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-full h-full">
-                        <path d="M20 2H10c-1.103 0-2 .897-2 2v4H4c-1.103 0-2 .897-2 2v10c0 1.103.897 2 2 2h10c1.103 0 2-.897 2-2v-4h4c1.103 0 2-.897 2-2V4c0-1.103-.897-2-2-2zM4 20V10h10l.002 10H4zm16-6h-4v-4c0-1.103-.897-2-2-2h-4V4h10v10z"></path>
-                      </svg>
-                    </span>
-                    Copy
-                  </Button>
+                  {!isJsonataMode && (
+                    <Button
+                      onClick={() => copyToClipboard(isStreaming ? streamedContent : processResponseContent(response, selectedCollection))}
+                      variant="none"
+                      className="inline-flex items-center text-xs text-sky-500 hover:text-sky-700 cursor-pointer"
+                    >
+                      <span class="inline-block w-3 h-3 mr-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-full h-full">
+                          <path d="M20 2H10c-1.103 0-2 .897-2 2v4H4c-1.103 0-2 .897-2 2v10c0 1.103.897 2 2 2h10c1.103 0 2-.897 2-2v-4h4c1.103 0 2-.897 2-2V4c0-1.103-.897-2-2-2zM4 20V10h10l.002 10H4zm16-6h-4v-4c0-1.103-.897-2-2-2h-4V4h10v10z"></path>
+                        </svg>
+                      </span>
+                      Copy
+                    </Button>
+                  )}
                   {onClear && (
                     <Button
                       onClick={onClear}
@@ -668,6 +670,39 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                               fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
                             }}
                           />
+                        )}
+                        {isJsonataMode && (
+                          <div class="flex gap-2 mb-1">
+                            <div class="w-1/2 flex justify-end">
+                              <Button
+                                onClick={() => copyToClipboard(processResponseContent(response, selectedCollection))}
+                                variant="none"
+                                className="inline-flex items-center text-xs text-sky-500 hover:text-sky-700 cursor-pointer"
+                              >
+                                <span class="inline-block w-3 h-3 mr-1">
+                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-full h-full">
+                                    <path d="M20 2H10c-1.103 0-2 .897-2 2v4H4c-1.103 0-2 .897-2 2v10c0 1.103.897 2 2 2h10c1.103 0 2-.897 2-2v-4h4c1.103 0 2-.897 2-2V4c0-1.103-.897-2-2-2zM4 20V10h10l.002 10H4zm16-6h-4v-4c0-1.103-.897-2-2-2h-4V4h10v10z"></path>
+                                  </svg>
+                                </span>
+                                Copy
+                              </Button>
+                            </div>
+                            <div class="w-1/2 flex justify-end">
+                              <Button
+                                onClick={() => copyToClipboard(jsonataError || jsonataResult)}
+                                variant="none"
+                                disabled={!jsonataResult && !jsonataError}
+                                className="inline-flex items-center text-xs text-sky-500 hover:text-sky-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <span class="inline-block w-3 h-3 mr-1">
+                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-full h-full">
+                                    <path d="M20 2H10c-1.103 0-2 .897-2 2v4H4c-1.103 0-2 .897-2 2v10c0 1.103.897 2 2 2h10c1.103 0 2-.897 2-2v-4h4c1.103 0 2-.897 2-2V4c0-1.103-.897-2-2-2zM4 20V10h10l.002 10H4zm16-6h-4v-4c0-1.103-.897-2-2-2h-4V4h10v10z"></path>
+                                  </svg>
+                                </span>
+                                Copy
+                              </Button>
+                            </div>
+                          </div>
                         )}
                         <div class={`flex flex-grow gap-2`}>
                           <div class={isJsonataMode ? 'w-1/2' : 'w-full'}>
