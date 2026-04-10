@@ -18,6 +18,9 @@ export default defineConfig({
 			}
 		}
 	],
+	optimizeDeps: {
+		include: ['jsonata']
+	},
 	worker: {
 		format: 'es'
 	},

@@ -23,6 +23,7 @@
     "dexie-react-hooks": "^1.1.7",
     "dompurify": "^3.3.0",
     "js-yaml": "^4.1.0",
+    "jsonata": "^2.1.0",
     "lucide-preact": "^0.577.0",
     "micromark": "^4.0.2",
     "oidc-client-ts": "^3.3.0",

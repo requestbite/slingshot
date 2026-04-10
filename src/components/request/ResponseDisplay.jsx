@@ -27,6 +27,7 @@ import {
   getStatusColor
 } from './ResponseDisplayUtils';
 import { Button } from '../common/Button';
+import { Music } from 'lucide-preact';
 
 export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStreaming, streamedContent, streamedChunks, streamingMetadata, selectedCollection }) {
   // Initialize headers visibility from localStorage, defaulting to false (closed)
@@ -44,6 +45,14 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
   const editorRef = useRef(null);
   const [activeHtmlTab, setActiveHtmlTab] = useState('preview');
   const [isToastVisible, showToast, hideToast] = useToast();
+
+  // JSONata state
+  const jsonataLib = useRef(null);
+  const jsonataDebounce = useRef(null);
+  const [isJsonataMode, setIsJsonataMode] = useState(false);
+  const [jsonataExpr, setJsonataExpr] = useState('');
+  const [jsonataResult, setJsonataResult] = useState('');
+  const [jsonataError, setJsonataError] = useState('');
 
   // Save headers visibility preference to localStorage whenever it changes
   useEffect(() => {
@@ -68,6 +77,38 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
       }
     }
   }, [isStreaming, streamedContent]);
+
+  // Debounced JSONata evaluation
+  useEffect(() => {
+    clearTimeout(jsonataDebounce.current);
+    if (!isJsonataMode || !jsonataLib.current) return;
+
+    jsonataDebounce.current = setTimeout(async () => {
+      if (!jsonataExpr.trim()) {
+        setJsonataResult('');
+        setJsonataError('');
+        return;
+      }
+      try {
+        const parsed = JSON.parse(response?.responseData || '{}');
+        const expr = jsonataLib.current(jsonataExpr);
+        const result = await expr.evaluate(parsed);
+        setJsonataResult(result === undefined ? '// No match' : JSON.stringify(result, null, 2));
+        setJsonataError('');
+      } catch (e) {
+        setJsonataError(`// Error: ${e.message}`);
+        setJsonataResult('');
+      }
+    }, 350);
+  }, [jsonataExpr, isJsonataMode]);
+
+  const handleJsonataToggle = async () => {
+    if (!jsonataLib.current) {
+      const mod = await import('jsonata');
+      jsonataLib.current = mod.default ?? mod;
+    }
+    setIsJsonataMode(prev => !prev);
+  };
 
   if (isLoading) {
     return (
@@ -421,6 +462,17 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
               {/* Copy Response Button and Clear Button */}
               {(response.responseData || streamedContent || response.finalStreamedContent) && (
                 <div class="flex items-center justify-end space-x-3 mb-2">
+                  {!isStreaming && response.responseData && isJsonContent(response.responseData) && (
+                    <Button
+                      onClick={handleJsonataToggle}
+                      variant="none"
+                      className={`inline-flex items-center text-xs cursor-pointer ${isJsonataMode ? 'text-indigo-500 hover:text-indigo-700' : 'text-sky-500 hover:text-sky-700'}`}
+                      title="Query with JSONata"
+                    >
+                      <Music size={12} class="mr-1" />
+                      JSONata
+                    </Button>
+                  )}
                   <Button
                     onClick={() => copyToClipboard(isStreaming ? streamedContent : processResponseContent(response, selectedCollection))}
                     variant="none"
@@ -581,34 +633,77 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                       </div>
                     );
                   } else {
-                    // Show text content with CodeMirror (existing behavior)
+                    // Show text content with CodeMirror, optionally with JSONata panel
+                    const codeMirrorStyle = {
+                      border: '2px solid #282a36',
+                      borderRadius: '0.375rem',
+                      fontSize: '12px',
+                      fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
+                    };
+                    const codeMirrorSetup = {
+                      lineNumbers: true,
+                      foldGutter: true,
+                      dropCursor: false,
+                      allowMultipleSelections: false,
+                      indentOnInput: false,
+                      bracketMatching: true,
+                      closeBrackets: false,
+                      autocompletion: false,
+                      rectangularSelection: false,
+                      searchKeymap: false,
+                      highlightSelectionMatches: false
+                    };
                     return (
-                      <CodeMirror
-                        ref={editorRef}
-                        value={isStreaming ? (streamedContent || '') : processResponseContent(response, selectedCollection)}
-                        extensions={getResponseCodeMirrorExtensions(response)}
-                        theme={dracula}
-                        editable={false}
-                        basicSetup={{
-                          lineNumbers: true,
-                          foldGutter: true,
-                          dropCursor: false,
-                          allowMultipleSelections: false,
-                          indentOnInput: false,
-                          bracketMatching: true,
-                          closeBrackets: false,
-                          autocompletion: false,
-                          rectangularSelection: false,
-                          searchKeymap: false,
-                          highlightSelectionMatches: false
-                        }}
-                        style={{
-                          border: '2px solid #282a36',
-                          borderRadius: '0.375rem',
-                          fontSize: '12px',
-                          fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
-                        }}
-                      />
+                      <div class="flex flex-col flex-grow">
+                        {isJsonataMode && (
+                          <input
+                            type="text"
+                            value={jsonataExpr}
+                            onInput={e => setJsonataExpr(e.target.value)}
+                            placeholder="JSONata expression…"
+                            class="w-full mb-2 px-3 py-2 rounded-md text-xs font-mono text-gray-100 outline-none focus:ring-1 focus:ring-sky-500"
+                            style={{
+                              backgroundColor: '#282a36',
+                              border: '2px solid #44475a',
+                              fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
+                            }}
+                          />
+                        )}
+                        <div class={`flex flex-grow gap-2`}>
+                          <div class={isJsonataMode ? 'w-1/2' : 'w-full'}>
+                            <CodeMirror
+                              ref={editorRef}
+                              value={isStreaming ? (streamedContent || '') : processResponseContent(response, selectedCollection)}
+                              extensions={getResponseCodeMirrorExtensions(response)}
+                              theme={dracula}
+                              editable={false}
+                              basicSetup={codeMirrorSetup}
+                              style={codeMirrorStyle}
+                            />
+                          </div>
+                          {isJsonataMode && (
+                            <div class="w-1/2">
+                              <CodeMirror
+                                value={jsonataError || jsonataResult}
+                                extensions={[
+                                  bracketMatching(),
+                                  EditorView.theme({
+                                    "&": { minHeight: "200px" },
+                                    ".cm-content, .cm-gutter": { minHeight: "200px !important" },
+                                    ".cm-scroller": { overflow: "auto" }
+                                  }),
+                                  EditorView.editable.of(false),
+                                  json()
+                                ]}
+                                theme={dracula}
+                                editable={false}
+                                basicSetup={codeMirrorSetup}
+                                style={codeMirrorStyle}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     );
                   }
                 }
