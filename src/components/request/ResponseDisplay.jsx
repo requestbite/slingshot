@@ -50,6 +50,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
   // JSONata state
   const jsonataLib = useRef(null);
   const jsonataDebounce = useRef(null);
+  const jsonataInputRef = useRef(null);
   const [isJsonataMode, setIsJsonataMode] = useState(false);
   const [jsonataExpr, setJsonataExpr] = useState('');
   const [jsonataResult, setJsonataResult] = useState('');
@@ -108,7 +109,12 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
       const mod = await import('jsonata');
       jsonataLib.current = mod.default ?? mod;
     }
-    setIsJsonataMode(prev => !prev);
+    setIsJsonataMode(prev => {
+      if (!prev) {
+        setTimeout(() => jsonataInputRef.current?.focus(), 0);
+      }
+      return !prev;
+    });
   };
 
   if (isLoading) {
@@ -675,6 +681,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                       <div class="flex flex-col flex-grow">
                         {isJsonataMode && (
                           <input
+                            ref={jsonataInputRef}
                             type="text"
                             value={jsonataExpr}
                             onInput={e => setJsonataExpr(e.target.value)}
