@@ -6,8 +6,9 @@ import { requestSubmitter } from '../../utils/requestSubmitter';
 import { json } from '@codemirror/lang-json';
 import { xml } from '@codemirror/lang-xml';
 import { dracula } from '@uiw/codemirror-theme-dracula';
-import { EditorView } from '@codemirror/view';
+import { EditorView, keymap } from '@codemirror/view';
 import { bracketMatching } from '@codemirror/language';
+import { search, searchKeymap, openSearchPanel } from '@codemirror/search';
 import { ansiColors } from '../codemirror/ansiExtension.js';
 import { HtmlTabs } from './HtmlTabs';
 import { HtmlPreview } from './HtmlPreview';
@@ -263,6 +264,20 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
   const getResponseCodeMirrorExtensions = (response) => {
     const baseExtensions = [
       bracketMatching(),
+      search({ top: true }),
+      keymap.of(searchKeymap),
+      // Ensure the editor is keyboard-focusable in read-only mode
+      EditorView.contentAttributes.of({ tabIndex: '0' }),
+      // Intercept Ctrl+F directly so it opens CM search instead of browser search
+      EditorView.domEventHandlers({
+        keydown(event, view) {
+          if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
+            event.preventDefault();
+            openSearchPanel(view);
+            return true;
+          }
+        }
+      }),
       // Auto-expanding height based on content
       EditorView.theme({
         "&": {
@@ -653,8 +668,8 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                       closeBrackets: false,
                       autocompletion: false,
                       rectangularSelection: false,
-                      searchKeymap: false,
-                      highlightSelectionMatches: false
+                      searchKeymap: true,
+                      highlightSelectionMatches: true
                     };
                     return (
                       <div class="flex flex-col flex-grow">
