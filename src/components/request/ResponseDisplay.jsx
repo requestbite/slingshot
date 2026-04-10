@@ -721,7 +721,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                           </div>
                         )}
                         <div class={`flex flex-grow gap-2`}>
-                          <div class={isJsonataMode ? 'w-1/2' : 'w-full'}>
+                          <div class={isJsonataMode ? 'w-1/2' : 'w-full'} style={{ display: 'flex', flexDirection: 'column' }}>
                             <CodeMirror
                               ref={editorRef}
                               value={isStreaming ? (streamedContent || '') : processResponseContent(response, selectedCollection)}
@@ -729,7 +729,8 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                               theme={dracula}
                               editable={false}
                               basicSetup={codeMirrorSetup}
-                              style={codeMirrorStyle}
+                              style={{ ...codeMirrorStyle, flex: 1 }}
+                              height="100%"
                             />
                           </div>
                           {isJsonataMode && (
