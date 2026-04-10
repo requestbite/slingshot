@@ -682,9 +682,10 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                             />
                           </div>
                           {isJsonataMode && (
-                            <div class="w-1/2">
+                            <div class="w-1/2" style={{ display: 'flex', flexDirection: 'column' }}>
                               <CodeMirror
                                 value={jsonataError || jsonataResult}
+                                height="100%"
                                 extensions={[
                                   bracketMatching(),
                                   EditorView.theme({
@@ -698,7 +699,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                                 theme={dracula}
                                 editable={false}
                                 basicSetup={codeMirrorSetup}
-                                style={codeMirrorStyle}
+                                style={{ ...codeMirrorStyle, flex: 1 }}
                               />
                             </div>
                           )}
