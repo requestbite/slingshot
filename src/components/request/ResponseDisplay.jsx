@@ -272,7 +272,8 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
           minHeight: "200px !important"
         },
         ".cm-scroller": {
-          overflow: "auto"
+          overflow: "auto",
+          fontFamily: '"JetBrains Mono", ui-monospace, monospace',
         }
       }),
       // Make editor read-only
@@ -628,7 +629,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                               border: '2px solid #282a36',
                               borderRadius: '0.375rem',
                               fontSize: '12px',
-                              fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
+                              fontFamily: '"JetBrains Mono", ui-monospace, monospace',
                             }}
                           />
                         )}
@@ -640,7 +641,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                       border: '2px solid #282a36',
                       borderRadius: '0.375rem',
                       fontSize: '12px',
-                      fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
+                      fontFamily: '"JetBrains Mono", ui-monospace, monospace',
                     };
                     const codeMirrorSetup = {
                       lineNumbers: true,
@@ -667,7 +668,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                             style={{
                               backgroundColor: '#282a36',
                               border: '2px solid #44475a',
-                              fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
+                              fontFamily: '"JetBrains Mono", ui-monospace, monospace',
                             }}
                           />
                         )}
@@ -726,7 +727,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                                   EditorView.theme({
                                     "&": { minHeight: "200px" },
                                     ".cm-content, .cm-gutter": { minHeight: "200px !important" },
-                                    ".cm-scroller": { overflow: "auto" }
+                                    ".cm-scroller": { overflow: "auto", fontFamily: '"JetBrains Mono", ui-monospace, monospace' }
                                   }),
                                   EditorView.editable.of(false),
                                   json()
