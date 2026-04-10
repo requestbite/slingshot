@@ -466,11 +466,11 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                     <Button
                       onClick={handleJsonataToggle}
                       variant="none"
-                      className={`inline-flex items-center text-xs cursor-pointer ${isJsonataMode ? 'text-indigo-500 hover:text-indigo-700' : 'text-sky-500 hover:text-sky-700'}`}
+                      className="inline-flex items-center text-xs cursor-pointer text-sky-500 hover:text-sky-700"
                       title="Query with JSONata"
                     >
                       <Music size={12} class="mr-1" />
-                      JSONata
+                      {isJsonataMode ? 'Close JSONata' : 'JSONata'}
                     </Button>
                   )}
                   <Button
