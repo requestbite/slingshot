@@ -28,8 +28,8 @@ export function ExampleViewer({
 
   const selectedExample = examples[selectedIndex] || examples[0];
 
-  // Get CodeMirror extensions based on content type
-  const getExtensions = () => {
+  // Get CodeMirror extensions based on content type and content shape
+  const getExtensions = (formattedContent) => {
     const baseExtensions = [
       bracketMatching(),
       EditorView.theme({
@@ -47,12 +47,12 @@ export function ExampleViewer({
       EditorView.editable.of(false)
     ];
 
-    if (contentType.includes('application/json')) {
-      return [...baseExtensions, json()];
-    } else if (contentType.includes('application/xml') || contentType.includes('text/xml')) {
-      return [...baseExtensions, xml()];
-    }
+    const isXml = contentType.includes('application/xml') || contentType.includes('text/xml');
+    const isJson = contentType.includes('json') ||
+      (!isXml && /^\s*[{\[]/.test(formattedContent));
 
+    if (isJson) return [...baseExtensions, json()];
+    if (isXml) return [...baseExtensions, xml()];
     return baseExtensions;
   };
 
@@ -79,11 +79,16 @@ export function ExampleViewer({
     label: example.name || example.summary || `Example ${index + 1}`
   }));
 
+  const formattedContent = formatContent(selectedExample.value !== undefined ? selectedExample.value : selectedExample);
+  const displayTitle = title || (examples.length === 1 ? (selectedExample.name || selectedExample.summary || '') : '');
+
   return (
     <div class={`space-y-2 ${className}`}>
-      <div class="flex items-center justify-between">
-        <label class="block text-xs font-medium text-gray-600">{title}</label>
-      </div>
+      {displayTitle && (
+        <div class="flex items-center justify-between">
+          <label class="block text-xs font-medium text-gray-400">{displayTitle}</label>
+        </div>
+      )}
 
       {examples.length > 1 && (
         <Select
@@ -96,8 +101,8 @@ export function ExampleViewer({
       )}
 
       <CodeMirror
-        value={formatContent(selectedExample.value || selectedExample)}
-        extensions={getExtensions()}
+        value={formattedContent}
+        extensions={getExtensions(formattedContent)}
         theme={dracula}
         editable={false}
         basicSetup={{

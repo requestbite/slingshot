@@ -188,6 +188,74 @@ export function getOperationsByTag(spec) {
 }
 
 // ---------------------------------------------------------------------------
+// Example generation from schema
+// ---------------------------------------------------------------------------
+
+function generateExampleFromSchema(schema, depth = 0) {
+  if (!schema || typeof schema !== 'object' || depth > 8) return null;
+
+  if (schema.example !== undefined) return schema.example;
+
+  if (schema.allOf) {
+    const merged = {};
+    for (const s of schema.allOf) {
+      const sub = generateExampleFromSchema(s, depth);
+      if (sub && typeof sub === 'object' && !Array.isArray(sub)) {
+        Object.assign(merged, sub);
+      }
+    }
+    return Object.keys(merged).length > 0 ? merged : null;
+  }
+  if (schema.oneOf?.length > 0) return generateExampleFromSchema(schema.oneOf[0], depth);
+  if (schema.anyOf?.length > 0) return generateExampleFromSchema(schema.anyOf[0], depth);
+
+  const type = Array.isArray(schema.type) ? schema.type[0] : schema.type;
+
+  if (type === 'object' || (!type && schema.properties)) {
+    const obj = {};
+    for (const [key, propSchema] of Object.entries(schema.properties || {})) {
+      const val = generateExampleFromSchema(propSchema, depth + 1);
+      obj[key] = val !== null ? val : 'string';
+    }
+    if (schema.additionalProperties && typeof schema.additionalProperties === 'object' && Object.keys(obj).length === 0) {
+      obj['key'] = generateExampleFromSchema(schema.additionalProperties, depth + 1) ?? 'string';
+    }
+    return obj;
+  }
+
+  if (type === 'array') {
+    if (schema.items) {
+      const item = generateExampleFromSchema(schema.items, depth + 1);
+      return [item !== null ? item : 'string'];
+    }
+    return [];
+  }
+
+  if (type === 'string') {
+    if (schema.enum?.length > 0) return schema.enum[0];
+    const fmt = schema.format;
+    if (fmt === 'date') return '2024-01-01';
+    if (fmt === 'date-time') return '2024-01-01T00:00:00Z';
+    if (fmt === 'time') return '00:00:00';
+    if (fmt === 'email') return 'user@example.com';
+    if (fmt === 'uuid') return '00000000-0000-0000-0000-000000000000';
+    if (fmt === 'uri' || fmt === 'url') return 'https://example.com';
+    if (fmt === 'hostname') return 'example.com';
+    if (fmt === 'ipv4') return '0.0.0.0';
+    if (fmt === 'ipv6') return '::';
+    if (fmt === 'byte') return '';
+    return 'string';
+  }
+
+  if (type === 'integer') return 0;
+  if (type === 'number') return 0.0;
+  if (type === 'boolean') return true;
+  if (type === 'null') return null;
+
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Status code styling
 // ---------------------------------------------------------------------------
 
@@ -305,12 +373,19 @@ function EndpointSection({ method, path, operation, parameters, spec }) {
   const reqSchema = requestBodyInfo?.content[effectiveReqCT]?.schema || null;
   const reqExamples = useMemo(() => {
     const raw = requestBodyInfo?.content[effectiveReqCT]?.examples || {};
-    return Object.entries(raw).map(([name, ex]) => ({
+    const entries = Object.entries(raw).map(([name, ex]) => ({
       name: ex.summary || name,
       value: ex.value,
       summary: ex.summary || ''
     }));
-  }, [requestBodyInfo, effectiveReqCT]);
+    if (entries.length === 0 && reqSchema) {
+      const generated = generateExampleFromSchema(reqSchema);
+      if (generated !== null) {
+        entries.push({ name: 'Generated Request Example', value: generated, summary: '' });
+      }
+    }
+    return entries;
+  }, [requestBodyInfo, effectiveReqCT, reqSchema]);
 
   // Response schema state
   const [respSchemaCode, setRespSchemaCode] = useState('');
@@ -333,11 +408,21 @@ function EndpointSection({ method, path, operation, parameters, spec }) {
   const effectiveRespExCT = respExCT || respExContentTypes[0] || '';
   const respExamples = useMemo(() => {
     const raw = responseSchemas[effectiveRespExCode]?.content?.[effectiveRespExCT]?.examples || {};
-    return Object.entries(raw).map(([name, ex]) => ({
+    const entries = Object.entries(raw).map(([name, ex]) => ({
       name: ex.summary || name,
       value: ex.value,
       summary: ex.summary || ''
     }));
+    if (entries.length === 0) {
+      const schema = responseSchemas[effectiveRespExCode]?.content?.[effectiveRespExCT]?.schema;
+      if (schema) {
+        const generated = generateExampleFromSchema(schema);
+        if (generated !== null) {
+          entries.push({ name: 'Generated Response Example', value: generated, summary: '' });
+        }
+      }
+    }
+    return entries;
   }, [responseSchemas, effectiveRespExCode, effectiveRespExCT]);
 
   const hasRightContent = reqExamples.length > 0 || respExamples.length > 0;
