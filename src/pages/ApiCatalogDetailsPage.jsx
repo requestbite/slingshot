@@ -507,7 +507,7 @@ export function ApiCatalogDetailsPage() {
               </div>
 
               {/* Right viewer */}
-              <div class="flex-1 min-w-0 bg-white rounded-lg border border-gray-300 overflow-hidden">
+              <div class="flex-1 min-w-0 bg-white rounded-lg border border-gray-300">
                 <OpenAPIViewer
                   spec={parsedSpec}
                   overrideTitle={apiData.name}

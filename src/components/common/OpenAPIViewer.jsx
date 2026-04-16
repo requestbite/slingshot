@@ -430,11 +430,11 @@ function EndpointSection({ method, path, operation, parameters, spec }) {
   const hasLeftContent = !!operation.description || hasParams || !!reqSchema || responseCodes.length > 0;
 
   return (
-    <div id={getEndpointId(method, path)} class="border-b border-gray-200 last:border-b-0 scroll-mt-[73px]">
+    <div id={getEndpointId(method, path)} class="scroll-mt-[73px]">
       {/* Endpoint header – always visible */}
       <button
         onClick={() => setIsExpanded(v => !v)}
-        class="w-full flex items-center gap-3 px-6 py-4 hover:bg-gray-50 text-left group transition-colors"
+        class="w-full flex items-center gap-3 px-6 py-3 bg-white hover:bg-gray-50 text-left group transition-colors sticky top-[109px] z-10 cursor-pointer border-b border-t border-gray-200"
       >
         <span class={`text-[10px] font-bold text-white py-0.5 px-1.5 rounded flex-shrink-0 uppercase tracking-wide ${getMethodColor(method)}`}>
           {method}
@@ -460,7 +460,7 @@ function EndpointSection({ method, path, operation, parameters, spec }) {
       {isExpanded && (hasLeftContent || hasRightContent) && (
         <div class="grid grid-cols-1 lg:grid-cols-2 min-h-0">
           {/* ---- LEFT PANEL ---- */}
-          <div class="px-6 py-5 space-y-5 border-t border-gray-100 lg:border-r lg:border-gray-200 min-w-0">
+          <div class="px-6 py-5 space-y-5 min-w-0">
 
             {/* Operation-level description */}
             {operation.description && (
@@ -661,7 +661,7 @@ function TagSection({ tag, spec }) {
       {/* Tag header */}
       <button
         onClick={() => setIsCollapsed(v => !v)}
-        class="w-full flex items-center gap-2 px-6 py-3 bg-gray-50 hover:bg-gray-100 border-b border-gray-200 text-left transition-colors"
+        class="w-full flex items-center gap-2 px-6 py-3 bg-gray-50 hover:bg-gray-100 text-left transition-colors sticky top-[65px] z-20 cursor-pointer"
       >
         <svg
           class={`h-4 w-4 text-gray-400 flex-shrink-0 transition-transform ${isCollapsed ? '-rotate-90' : ''}`}
@@ -709,7 +709,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
   const hasRightContent = (servers?.length > 0) || !!(info?.contact || info?.license || info?.termsOfService);
 
   return (
-    <header class="border-b border-gray-200 bg-white">
+    <header class="border-b border-gray-200 bg-white rounded-t-lg">
       {/* Top section: breadcrumbs + actions + title */}
       <div class="px-6 pt-6 pb-5">
         {(breadcrumbs || externalDocsUrl || onImportClick) && (
