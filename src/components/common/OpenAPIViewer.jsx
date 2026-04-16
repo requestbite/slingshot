@@ -706,46 +706,48 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
   const title = overrideTitle || info?.title || 'API Documentation';
   const description = overrideDescription !== undefined ? overrideDescription : info?.description;
 
-  return (
-    <header class="px-6 py-6 border-b border-gray-200 bg-white">
-      {/* Breadcrumbs + Actions row */}
-      {(breadcrumbs || externalDocsUrl || onImportClick) && (
-        <div class="flex items-start justify-between">
-          <div>{breadcrumbs}</div>
-          <div class="flex items-center gap-2">
-            {externalDocsUrl && (
-              <a
-                href={externalDocsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center"
-              >
-                <BookMarked size={16} class="mr-2" />
-                Docs
-              </a>
-            )}
-            {onImportClick && (
-              <button
-                onClick={(e) => onImportClick(e.currentTarget)}
-                class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
-                  <path d="M12 15V3" />
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <path d="m7 10 5 5 5-5" />
-                </svg>
-                Import
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-            )}
-          </div>
-        </div>
-      )}
+  const hasRightContent = (servers?.length > 0) || !!(info?.contact || info?.license || info?.termsOfService);
 
-      <div class="max-w-3xl">
-        <div class="flex items-center gap-3 mb-2">
+  return (
+    <header class="border-b border-gray-200 bg-white">
+      {/* Top section: breadcrumbs + actions + title */}
+      <div class="px-6 pt-6 pb-5">
+        {(breadcrumbs || externalDocsUrl || onImportClick) && (
+          <div class="flex items-start justify-between mb-4">
+            <div>{breadcrumbs}</div>
+            <div class="flex items-center gap-2">
+              {externalDocsUrl && (
+                <a
+                  href={externalDocsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center"
+                >
+                  <BookMarked size={16} class="mr-2" />
+                  Docs
+                </a>
+              )}
+              {onImportClick && (
+                <button
+                  onClick={(e) => onImportClick(e.currentTarget)}
+                  class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                    <path d="M12 15V3" />
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <path d="m7 10 5 5 5-5" />
+                  </svg>
+                  Open in Slingshot
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div class="flex items-center gap-3">
           <h1 class="text-2xl font-bold text-gray-900">{title}</h1>
           {info?.version && (
             <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
@@ -753,56 +755,75 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
             </span>
           )}
         </div>
-
-        {description && (
-          <div class="text-sm text-gray-600 mt-3 [&_.prose]:text-sm [&_.prose_p]:text-gray-600">
-            <MarkdownPreview markdown={description} />
-          </div>
-        )}
-
-        {servers?.length > 0 && (
-          <div class="mt-4 flex flex-wrap gap-2">
-            {servers.map((server, i) => (
-              <div key={i} class="flex items-center gap-1.5 text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1">
-                <span class="text-gray-400 font-medium">Base URL</span>
-                <code class="font-mono text-gray-700">{server.url}</code>
-                {server.description && (
-                  <span class="text-gray-400">— {server.description}</span>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Contact / license / terms */}
-        {(info?.contact || info?.license || info?.termsOfService) && (
-          <div class="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
-            {info.contact?.url && (
-              <a href={info.contact.url} target="_blank" rel="noopener noreferrer" class="hover:text-sky-600 underline">
-                {info.contact.name || 'Contact'}
-              </a>
-            )}
-            {info.contact?.email && (
-              <a href={`mailto:${info.contact.email}`} class="hover:text-sky-600 underline">
-                {info.contact.email}
-              </a>
-            )}
-            {info.license && (
-              <span>
-                {info.license.url
-                  ? <a href={info.license.url} target="_blank" rel="noopener noreferrer" class="hover:text-sky-600 underline">{info.license.name}</a>
-                  : info.license.name
-                }
-              </span>
-            )}
-            {info.termsOfService && (
-              <a href={info.termsOfService} target="_blank" rel="noopener noreferrer" class="hover:text-sky-600 underline">
-                Terms of Service
-              </a>
-            )}
-          </div>
-        )}
       </div>
+
+      {/* Two-column body: description left, servers + links right */}
+      {(description || hasRightContent) && (
+        <div class="grid grid-cols-1 lg:grid-cols-2 border-t border-gray-100 min-h-0">
+          {/* Left: description */}
+          <div class="px-6 py-5 border-b lg:border-b-0 lg:border-r border-gray-200 min-w-0">
+            {description ? (
+              <div class="text-sm [&_.prose]:text-sm [&_.prose_p]:text-gray-600">
+                <MarkdownPreview markdown={description} />
+              </div>
+            ) : (
+              <p class="text-xs text-gray-400 italic">No description.</p>
+            )}
+          </div>
+
+          {/* Right: servers + links (dark panel) */}
+          <div class="bg-[#282a36] px-6 py-5 space-y-4 min-w-0">
+            {servers?.length > 0 && (
+              <div>
+                <span class="block text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-2">
+                  Base URL{servers.length > 1 ? 's' : ''}
+                </span>
+                <div class="flex flex-col gap-2">
+                  {servers.map((server, i) => (
+                    <div key={i} class="flex flex-wrap items-center gap-1.5 text-xs bg-[#1e2029] border border-[#3d3f4e] rounded px-2 py-1.5">
+                      <code class="font-mono text-gray-200 break-all">{server.url}</code>
+                      {server.description && (
+                        <span class="text-gray-500">— {server.description}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {(info?.contact || info?.license || info?.termsOfService) && (
+              <div>
+                <span class="block text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-2">Links</span>
+                <div class="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-gray-400">
+                  {info.contact?.url && (
+                    <a href={info.contact.url} target="_blank" rel="noopener noreferrer" class="hover:text-sky-400 underline">
+                      {info.contact.name || 'Contact'}
+                    </a>
+                  )}
+                  {info.contact?.email && (
+                    <a href={`mailto:${info.contact.email}`} class="hover:text-sky-400 underline">
+                      {info.contact.email}
+                    </a>
+                  )}
+                  {info.license && (
+                    <span>
+                      {info.license.url
+                        ? <a href={info.license.url} target="_blank" rel="noopener noreferrer" class="hover:text-sky-400 underline">{info.license.name}</a>
+                        : <span>{info.license.name}</span>
+                      }
+                    </span>
+                  )}
+                  {info.termsOfService && (
+                    <a href={info.termsOfService} target="_blank" rel="noopener noreferrer" class="hover:text-sky-400 underline">
+                      Terms of Service
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }
