@@ -6,6 +6,9 @@ import { ContextMenu } from '../components/common/ContextMenu';
 import { BreadCrumbs } from '../components/common/BreadCrumbs';
 import { SearchAutocomplete } from '../components/common/SearchAutocomplete';
 import { MarkdownPreview } from '../components/common/MarkdownPreview';
+import { OpenAPIViewer, getEndpointId } from '../components/common/OpenAPIViewer';
+import { OpenAPINavPanel } from '../components/common/OpenAPINavPanel';
+import { fetchFromURL } from '../utils/urlImporter';
 
 // Dynamic import for URL import modal
 const URLImportModal = lazy(() => import('../components/import/URLImportModal').then(m => ({ default: m.URLImportModal })));
@@ -20,8 +23,13 @@ export function ApiCatalogDetailsPage() {
   const [showURLImportModal, setShowURLImportModal] = useState(false);
   const [importUrl, setImportUrl] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [parsedSpec, setParsedSpec] = useState(null);
+  const [isLoadingSpec, setIsLoadingSpec] = useState(false);
+  const [specError, setSpecError] = useState(null);
+  const [activeEndpointId, setActiveEndpointId] = useState(null);
   const importButtonRef = useRef();
   const searchInputRef = useRef();
+  const viewerScrollRef = useRef();
 
   usePageTitle(apiData?.name || 'Untitled API');
 
@@ -37,6 +45,53 @@ export function ApiCatalogDetailsPage() {
       }
     }
   }, [params?.param1, params?.param2, params?.param3]);
+
+  // Fetch and parse the OpenAPI spec once apiData is available
+  useEffect(() => {
+    if (!apiData) return;
+
+    // Prefer JSON spec, fall back to YAML
+    const specUrl = apiData.openApiJsonUrl || apiData.openApiYamlUrl;
+    if (!specUrl) return;
+
+    let cancelled = false;
+
+    const load = async () => {
+      setIsLoadingSpec(true);
+      setSpecError(null);
+      setParsedSpec(null);
+
+      try {
+        const { content } = await fetchFromURL(specUrl);
+
+        if (cancelled) return;
+
+        let parsed;
+        try {
+          parsed = JSON.parse(content);
+        } catch {
+          const { load: loadYAML } = await import('js-yaml');
+          parsed = loadYAML(content);
+        }
+
+        if (!cancelled) {
+          setParsedSpec(parsed);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setSpecError(err.message || 'Failed to load spec');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingSpec(false);
+        }
+      }
+    };
+
+    load();
+
+    return () => { cancelled = true; };
+  }, [apiData?.openApiJsonUrl, apiData?.openApiYamlUrl]);
 
   const loadApiDetailsByUuid = async (uuid) => {
     try {
@@ -415,6 +470,48 @@ export function ApiCatalogDetailsPage() {
             )}
           </div>
         </div>
+
+        {/* OpenAPI Spec Viewer — full-width with sticky nav */}
+        {!isLoading && !error && apiData && (apiData.openApiJsonUrl || apiData.openApiYamlUrl) && (
+          <div class="px-4 mt-6">
+            {isLoadingSpec ? (
+              <div class="bg-white rounded-lg border border-gray-300 flex items-center gap-3 px-6 py-8 text-gray-500">
+                <svg class="animate-spin w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span class="text-sm">Loading API spec...</span>
+              </div>
+            ) : specError ? (
+              <div class="bg-white rounded-lg border border-gray-300 px-6 py-8 text-sm text-red-600">
+                Failed to load spec: {specError}
+              </div>
+            ) : parsedSpec ? (
+              <div class="flex items-start gap-4">
+                {/* Left nav — sticky, clears the fixed 65px topbar */}
+                <div class="hidden lg:flex flex-col w-64 flex-shrink-0 bg-white rounded-lg border border-gray-300 overflow-hidden sticky top-[73px] max-h-[calc(100vh-81px)]">
+                  <div class="px-3 pt-3 pb-2 border-b border-gray-200 flex-shrink-0">
+                    <span class="text-xs font-medium text-gray-600">Endpoints</span>
+                  </div>
+                  <OpenAPINavPanel
+                    spec={parsedSpec}
+                    activeId={activeEndpointId}
+                    onSelect={(method, path) => setActiveEndpointId(getEndpointId(method, path))}
+                    scrollContainerRef={viewerScrollRef}
+                  />
+                </div>
+
+                {/* Right viewer */}
+                <div
+                  ref={viewerScrollRef}
+                  class="flex-1 min-w-0 bg-white rounded-lg border border-gray-300 overflow-hidden"
+                >
+                  <OpenAPIViewer spec={parsedSpec} />
+                </div>
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
 
       {/* Import Context Menu */}
