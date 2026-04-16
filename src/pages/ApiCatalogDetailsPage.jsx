@@ -56,12 +56,18 @@ export function ApiCatalogDetailsPage() {
     let cancelled = false;
 
     const load = async () => {
+      const startTime = Date.now();
       setIsLoadingSpec(true);
       setSpecError(null);
       setParsedSpec(null);
 
       try {
-        const { content } = await fetchFromURL(specUrl);
+        const { content } = await Promise.race([
+          fetchFromURL(specUrl),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('OpenAPI spec download timed out')), 5000)
+          )
+        ]);
 
         if (cancelled) return;
 
@@ -82,7 +88,14 @@ export function ApiCatalogDetailsPage() {
         }
       } finally {
         if (!cancelled) {
-          setIsLoadingSpec(false);
+          const elapsed = Date.now() - startTime;
+          const remaining = 2000 - elapsed;
+          if (remaining > 0) {
+            await new Promise(resolve => setTimeout(resolve, remaining));
+          }
+          if (!cancelled) {
+            setIsLoadingSpec(false);
+          }
         }
       }
     };
@@ -254,8 +267,8 @@ export function ApiCatalogDetailsPage() {
           </div>
         </div>
 
-        {/* Main Container */}
-        <div class="max-w-4xl mx-auto px-4">
+        {/* Main Container — hidden once OpenAPI spec is successfully loaded */}
+        {!parsedSpec && <div class="max-w-4xl mx-auto px-4">
           <div class="bg-white rounded-lg border border-gray-300">
             {/* Header Section */}
             <div class="p-6">
@@ -341,9 +354,20 @@ export function ApiCatalogDetailsPage() {
                     </div>
                   )}
                   <div class="flex-1">
-                    <h1 class="text-base/7 font-semibold text-gray-900 pt-4 sm:pt-0">
-                      {apiData.name || 'Untitled API'}
-                    </h1>
+                    <div class="flex items-center flex-wrap gap-x-3 gap-y-1">
+                      <h1 class="text-base/7 font-semibold text-gray-900 pt-4 sm:pt-0">
+                        {apiData.name || 'Untitled API'}
+                      </h1>
+                      {isLoadingSpec && (
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2.5 py-1 text-xs font-medium text-red-700 mt-4 sm:mt-0 flex-shrink-0">
+                          Fetching OpenAPI spec
+                          <svg class="animate-spin w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                        </span>
+                      )}
+                    </div>
                     <div class="mt-1 text-sm/6 text-gray-600">
                       <MarkdownPreview markdown={apiData.description || 'No description available.'} />
                     </div>
@@ -467,61 +491,47 @@ export function ApiCatalogDetailsPage() {
               </div>
             )}
           </div>
-        </div>
+        </div>}
 
-        {/* OpenAPI Spec Viewer — full-width with sticky nav */}
-        {!isLoading && !error && apiData && (apiData.openApiJsonUrl || apiData.openApiYamlUrl) && (
-          <div class="px-4 mt-6">
-            {isLoadingSpec ? (
-              <div class="bg-white rounded-lg border border-gray-300 flex items-center gap-3 px-6 py-8 text-gray-500">
-                <svg class="animate-spin w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                <span class="text-sm">Loading API spec...</span>
-              </div>
-            ) : specError ? (
-              <div class="bg-white rounded-lg border border-gray-300 px-6 py-8 text-sm text-red-600">
-                Failed to load spec: {specError}
-              </div>
-            ) : parsedSpec ? (
-              <div class="flex items-start gap-4">
-                {/* Left nav — sticky, clears the fixed 65px topbar */}
-                <div class="hidden lg:flex flex-col w-64 flex-shrink-0 bg-white rounded-lg border border-gray-300 overflow-hidden sticky top-[73px] max-h-[calc(100vh-81px)]">
-                  <div class="px-3 pt-3 pb-2 border-b border-gray-200 flex-shrink-0">
-                    <span class="text-xs font-medium text-gray-600">Endpoints</span>
-                  </div>
-                  <OpenAPINavPanel
-                    spec={parsedSpec}
-                    activeId={activeEndpointId}
-                    onSelect={(method, path) => setActiveEndpointId(getEndpointId(method, path))}
-                  />
+        {/* OpenAPI Spec Viewer — replaces the main card once the spec is ready */}
+        {!isLoading && !error && apiData && parsedSpec && (
+          <div class="px-4">
+            <div class="flex items-start gap-4">
+              {/* Left nav — sticky, clears the fixed 65px topbar */}
+              <div class="hidden lg:flex flex-col w-64 flex-shrink-0 bg-white rounded-lg border border-gray-300 overflow-hidden sticky top-[73px] max-h-[calc(100vh-81px)]">
+                <div class="px-3 pt-3 pb-2 border-b border-gray-200 flex-shrink-0">
+                  <span class="text-xs font-medium text-gray-600">Endpoints</span>
                 </div>
+                <OpenAPINavPanel
+                  spec={parsedSpec}
+                  activeId={activeEndpointId}
+                  onSelect={(method, path) => setActiveEndpointId(getEndpointId(method, path))}
+                />
+              </div>
 
-                {/* Right viewer */}
-                <div class="flex-1 min-w-0 bg-white rounded-lg border border-gray-300 overflow-hidden">
-                  <OpenAPIViewer
-                    spec={parsedSpec}
-                    overrideTitle={apiData.name}
-                    overrideDescription={apiData.description}
-                    breadcrumbs={
-                      <BreadCrumbs
-                        items={[
-                          { name: 'Home', href: '/catalog' },
-                          ...(apiData.categories?.length > 0 ? [{
-                            name: apiData.categories[0].name,
-                            href: `/catalog/category/${apiData.categories[0].key}`
-                          }] : []),
-                          { name: apiData.name || 'Untitled API' }
-                        ]}
-                      />
-                    }
-                    externalDocsUrl={apiData.externalDocsUrl}
-                    onImportClick={(el) => { setImportAnchorEl(el); setShowImportContextMenu(true); }}
-                  />
-                </div>
+              {/* Right viewer */}
+              <div class="flex-1 min-w-0 bg-white rounded-lg border border-gray-300 overflow-hidden">
+                <OpenAPIViewer
+                  spec={parsedSpec}
+                  overrideTitle={apiData.name}
+                  overrideDescription={apiData.description}
+                  breadcrumbs={
+                    <BreadCrumbs
+                      items={[
+                        { name: 'Home', href: '/catalog' },
+                        ...(apiData.categories?.length > 0 ? [{
+                          name: apiData.categories[0].name,
+                          href: `/catalog/category/${apiData.categories[0].key}`
+                        }] : []),
+                        { name: apiData.name || 'Untitled API' }
+                      ]}
+                    />
+                  }
+                  externalDocsUrl={apiData.externalDocsUrl}
+                  onImportClick={(el) => { setImportAnchorEl(el); setShowImportContextMenu(true); }}
+                />
               </div>
-            ) : null}
+            </div>
           </div>
         )}
       </div>
