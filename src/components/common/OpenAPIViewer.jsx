@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'preact/hooks';
+import { BookMarked } from 'lucide-preact';
 import { MarkdownPreview } from './MarkdownPreview';
 import { ExampleViewer } from './ExampleViewer';
 import { SchemaTreeRoot } from './SchemaTree';
@@ -701,24 +702,61 @@ function TagSection({ tag, spec }) {
 // ApiInfoHeader
 // ---------------------------------------------------------------------------
 
-function ApiInfoHeader({ info, servers }) {
-  if (!info) return null;
+function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, breadcrumbs, onImportClick, externalDocsUrl }) {
+  const title = overrideTitle || info?.title || 'API Documentation';
+  const description = overrideDescription !== undefined ? overrideDescription : info?.description;
 
   return (
-    <header class="px-6 py-8 border-b border-gray-200 bg-white">
+    <header class="px-6 py-6 border-b border-gray-200 bg-white">
+      {/* Breadcrumbs + Actions row */}
+      {(breadcrumbs || externalDocsUrl || onImportClick) && (
+        <div class="flex items-start justify-between">
+          <div>{breadcrumbs}</div>
+          <div class="flex items-center gap-2">
+            {externalDocsUrl && (
+              <a
+                href={externalDocsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center"
+              >
+                <BookMarked size={16} class="mr-2" />
+                Docs
+              </a>
+            )}
+            {onImportClick && (
+              <button
+                onClick={(e) => onImportClick(e.currentTarget)}
+                class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                  <path d="M12 15V3" />
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <path d="m7 10 5 5 5-5" />
+                </svg>
+                Import
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       <div class="max-w-3xl">
         <div class="flex items-center gap-3 mb-2">
-          <h1 class="text-2xl font-bold text-gray-900">{info.title || 'API Documentation'}</h1>
-          {info.version && (
+          <h1 class="text-2xl font-bold text-gray-900">{title}</h1>
+          {info?.version && (
             <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
               v{info.version}
             </span>
           )}
         </div>
 
-        {info.description && (
+        {description && (
           <div class="text-sm text-gray-600 mt-3 [&_.prose]:text-sm [&_.prose_p]:text-gray-600">
-            <MarkdownPreview markdown={info.description} />
+            <MarkdownPreview markdown={description} />
           </div>
         )}
 
@@ -737,7 +775,7 @@ function ApiInfoHeader({ info, servers }) {
         )}
 
         {/* Contact / license / terms */}
-        {(info.contact || info.license || info.termsOfService) && (
+        {(info?.contact || info?.license || info?.termsOfService) && (
           <div class="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
             {info.contact?.url && (
               <a href={info.contact.url} target="_blank" rel="noopener noreferrer" class="hover:text-sky-600 underline">
@@ -773,7 +811,7 @@ function ApiInfoHeader({ info, servers }) {
 // Main OpenAPIViewer
 // ---------------------------------------------------------------------------
 
-export function OpenAPIViewer({ spec, className = '' }) {
+export function OpenAPIViewer({ spec, className = '', overrideTitle, overrideDescription, breadcrumbs, onImportClick, externalDocsUrl }) {
   const tagGroups = useMemo(() => {
     if (!spec || !spec.paths) return [];
     return getOperationsByTag(spec);
@@ -797,7 +835,15 @@ export function OpenAPIViewer({ spec, className = '' }) {
 
   return (
     <div class={`bg-gray-50 min-h-full ${className}`}>
-      <ApiInfoHeader info={spec.info} servers={spec.servers} />
+      <ApiInfoHeader
+        info={spec.info}
+        servers={spec.servers}
+        overrideTitle={overrideTitle}
+        overrideDescription={overrideDescription}
+        breadcrumbs={breadcrumbs}
+        onImportClick={onImportClick}
+        externalDocsUrl={externalDocsUrl}
+      />
 
       <div class="divide-y divide-gray-200">
         {tagGroups.map(tag => (

@@ -27,7 +27,7 @@ export function ApiCatalogDetailsPage() {
   const [isLoadingSpec, setIsLoadingSpec] = useState(false);
   const [specError, setSpecError] = useState(null);
   const [activeEndpointId, setActiveEndpointId] = useState(null);
-  const importButtonRef = useRef();
+  const [importAnchorEl, setImportAnchorEl] = useState(null);
   const searchInputRef = useRef();
 
   usePageTitle(apiData?.name || 'Untitled API');
@@ -291,8 +291,7 @@ export function ApiCatalogDetailsPage() {
                 </div>
                 <div class="sm:ml-4">
                   <button
-                    ref={importButtonRef}
-                    onClick={() => setShowImportContextMenu(true)}
+                    onClick={(e) => { setImportAnchorEl(e.currentTarget); setShowImportContextMenu(true); }}
                     disabled={isLoading || error}
                     class="rounded-md bg-sky-100 hover:bg-sky-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer"
                   >
@@ -501,7 +500,25 @@ export function ApiCatalogDetailsPage() {
 
                 {/* Right viewer */}
                 <div class="flex-1 min-w-0 bg-white rounded-lg border border-gray-300 overflow-hidden">
-                  <OpenAPIViewer spec={parsedSpec} />
+                  <OpenAPIViewer
+                    spec={parsedSpec}
+                    overrideTitle={apiData.name}
+                    overrideDescription={apiData.description}
+                    breadcrumbs={
+                      <BreadCrumbs
+                        items={[
+                          { name: 'Home', href: '/catalog' },
+                          ...(apiData.categories?.length > 0 ? [{
+                            name: apiData.categories[0].name,
+                            href: `/catalog/category/${apiData.categories[0].key}`
+                          }] : []),
+                          { name: apiData.name || 'Untitled API' }
+                        ]}
+                      />
+                    }
+                    externalDocsUrl={apiData.externalDocsUrl}
+                    onImportClick={(el) => { setImportAnchorEl(el); setShowImportContextMenu(true); }}
+                  />
                 </div>
               </div>
             ) : null}
@@ -513,7 +530,7 @@ export function ApiCatalogDetailsPage() {
       <ContextMenu
         isOpen={showImportContextMenu}
         onClose={() => setShowImportContextMenu(false)}
-        trigger={importButtonRef.current}
+        trigger={importAnchorEl}
         width={200}
         position="below"
         items={[
