@@ -342,8 +342,8 @@ function InlineParametersSchema({ parametersSchema }) {
 // EndpointSection
 // ---------------------------------------------------------------------------
 
-function EndpointSection({ method, path, operation, parameters, spec }) {
-  const [isExpanded, setIsExpanded] = useState(true);
+function EndpointSection({ method, path, operation, parameters, spec, defaultExpanded = false }) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   // Parsed data
   const parametersSchema = useMemo(
@@ -653,7 +653,7 @@ function EndpointSection({ method, path, operation, parameters, spec }) {
 // TagSection
 // ---------------------------------------------------------------------------
 
-function TagSection({ tag, spec }) {
+function TagSection({ tag, spec, startIndex }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
@@ -681,7 +681,7 @@ function TagSection({ tag, spec }) {
             </div>
           )}
           <div class="bg-white">
-            {tag.operations.map(({ method, path, operation, parameters }) => (
+            {tag.operations.map(({ method, path, operation, parameters }, i) => (
               <EndpointSection
                 key={`${method}-${path}`}
                 method={method}
@@ -689,6 +689,7 @@ function TagSection({ tag, spec }) {
                 operation={operation}
                 parameters={parameters}
                 spec={spec}
+                defaultExpanded={startIndex + i < 50}
               />
             ))}
           </div>
@@ -867,9 +868,13 @@ export function OpenAPIViewer({ spec, className = '', overrideTitle, overrideDes
       />
 
       <div class="divide-y divide-gray-200">
-        {tagGroups.map(tag => (
-          <TagSection key={tag.name} tag={tag} spec={spec} />
-        ))}
+        {tagGroups.reduce((acc, tag) => {
+          acc.elements.push(
+            <TagSection key={tag.name} tag={tag} spec={spec} startIndex={acc.count} />
+          );
+          acc.count += tag.operations.length;
+          return acc;
+        }, { elements: [], count: 0 }).elements}
       </div>
     </div>
   );
