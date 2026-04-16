@@ -498,10 +498,7 @@ export function ApiCatalogDetailsPage() {
           <div class="px-4">
             <div class="flex items-start gap-4">
               {/* Left nav — sticky, clears the fixed 65px topbar */}
-              <div class="hidden lg:flex flex-col w-64 flex-shrink-0 bg-white rounded-lg border border-gray-300 overflow-hidden sticky top-[73px] max-h-[calc(100vh-81px)]">
-                <div class="px-3 pt-3 pb-2 border-b border-gray-200 flex-shrink-0">
-                  <span class="text-xs font-medium text-gray-600">Endpoints</span>
-                </div>
+              <div class="hidden lg:flex flex-col w-64 flex-shrink-0 bg-white rounded-lg border border-gray-300 overflow-hidden">
                 <OpenAPINavPanel
                   spec={parsedSpec}
                   activeId={activeEndpointId}
