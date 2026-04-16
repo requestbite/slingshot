@@ -107,7 +107,7 @@ function TagFolder({ tag, searchTerm, activeId, onSelect, level = 0 }) {
 // OpenAPINavPanel
 // ---------------------------------------------------------------------------
 
-export function OpenAPINavPanel({ spec, activeId, onSelect, scrollContainerRef }) {
+export function OpenAPINavPanel({ spec, activeId, onSelect }) {
   const [searchTerm, setSearchTerm] = useState('');
 
   const tagGroups = useMemo(() => {
@@ -133,15 +133,7 @@ export function OpenAPINavPanel({ spec, activeId, onSelect, scrollContainerRef }
     const id = getEndpointId(method, path);
     const el = document.getElementById(id);
     if (el) {
-      // Scroll within the provided container or fall back to el.scrollIntoView
-      if (scrollContainerRef?.current) {
-        const containerTop = scrollContainerRef.current.getBoundingClientRect().top;
-        const elTop = el.getBoundingClientRect().top;
-        const offset = elTop - containerTop + scrollContainerRef.current.scrollTop - 8;
-        scrollContainerRef.current.scrollTo({ top: offset, behavior: 'smooth' });
-      } else {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 

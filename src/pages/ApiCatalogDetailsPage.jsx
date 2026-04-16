@@ -29,7 +29,6 @@ export function ApiCatalogDetailsPage() {
   const [activeEndpointId, setActiveEndpointId] = useState(null);
   const importButtonRef = useRef();
   const searchInputRef = useRef();
-  const viewerScrollRef = useRef();
 
   usePageTitle(apiData?.name || 'Untitled API');
 
@@ -497,15 +496,11 @@ export function ApiCatalogDetailsPage() {
                     spec={parsedSpec}
                     activeId={activeEndpointId}
                     onSelect={(method, path) => setActiveEndpointId(getEndpointId(method, path))}
-                    scrollContainerRef={viewerScrollRef}
                   />
                 </div>
 
                 {/* Right viewer */}
-                <div
-                  ref={viewerScrollRef}
-                  class="flex-1 min-w-0 bg-white rounded-lg border border-gray-300 overflow-hidden"
-                >
+                <div class="flex-1 min-w-0 bg-white rounded-lg border border-gray-300 overflow-hidden">
                   <OpenAPIViewer spec={parsedSpec} />
                 </div>
               </div>

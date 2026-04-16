@@ -344,7 +344,7 @@ function EndpointSection({ method, path, operation, parameters, spec }) {
   const hasLeftContent = !!operation.description || hasParams || !!reqSchema || responseCodes.length > 0;
 
   return (
-    <div id={getEndpointId(method, path)} class="border-b border-gray-200 last:border-b-0 scroll-mt-4">
+    <div id={getEndpointId(method, path)} class="border-b border-gray-200 last:border-b-0 scroll-mt-[73px]">
       {/* Endpoint header – always visible */}
       <button
         onClick={() => setIsExpanded(v => !v)}
