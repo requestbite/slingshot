@@ -428,7 +428,7 @@ function EndpointSection({ method, path, operation, parameters, spec, defaultExp
     return entries;
   }, [responseSchemas, effectiveRespExCode, effectiveRespExCT]);
 
-  const hasRightContent = reqExamples.length > 0 || respExamples.length > 0;
+  const hasRightContent = reqExamples.length > 0 || responseCodes.length > 0;
   const hasLeftContent = !!operation.description || hasParams || !!reqSchema || responseCodes.length > 0;
 
   return (
@@ -590,7 +590,7 @@ function EndpointSection({ method, path, operation, parameters, spec, defaultExp
             )}
 
             {/* Response examples */}
-            {respExamples.length > 0 && (
+            {responseCodes.length > 0 && (
               <div>
                 {reqExamples.length > 0 && <div class="border-t border-gray-700 my-4" />}
                 <div class="flex items-center justify-between mb-2">
@@ -632,11 +632,15 @@ function EndpointSection({ method, path, operation, parameters, spec, defaultExp
                   </div>
                 )}
 
-                <ExampleViewer
-                  examples={respExamples}
-                  title=""
-                  contentType={effectiveRespExCT || 'application/json'}
-                />
+                {respExamples.length > 0 ? (
+                  <ExampleViewer
+                    examples={respExamples}
+                    title=""
+                    contentType={effectiveRespExCT || 'application/json'}
+                  />
+                ) : (
+                  <p class="text-xs text-gray-500 italic">No example for this status code.</p>
+                )}
               </div>
             )}
 
