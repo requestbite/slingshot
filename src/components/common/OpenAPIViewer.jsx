@@ -1,10 +1,12 @@
-import { useState, useMemo } from 'preact/hooks';
+import { useState, useMemo, useRef, useEffect } from 'preact/hooks';
 import { BookMarked } from 'lucide-preact';
 import { MarkdownPreview } from './MarkdownPreview';
 import { ExampleViewer } from './ExampleViewer';
 import { SchemaTreeRoot } from './SchemaTree';
 import { Select } from './Select';
 import { getMethodColor } from '../../utils/httpMethods';
+import { Badge } from './Badge';
+import { ContextMenu } from './ContextMenu';
 import { flattenAllOf } from '../../utils/schemaParser';
 
 // ---------------------------------------------------------------------------
@@ -703,46 +705,122 @@ function TagSection({ tag, spec, startIndex }) {
 // ApiInfoHeader
 // ---------------------------------------------------------------------------
 
-function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, breadcrumbs, onImportClick, externalDocsUrl }) {
+function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, breadcrumbs, onImportClick, onImportYamlClick, onImportJsonClick, externalDocsUrl }) {
   const title = overrideTitle || info?.title || 'API Documentation';
   const description = overrideDescription !== undefined ? overrideDescription : info?.description;
 
   const hasRightContent = (servers?.length > 0) || !!(info?.contact || info?.license || info?.termsOfService);
 
+  const containerRef = useRef(null);
+  const hamburgerRef = useRef(null);
+  const [isNarrow, setIsNarrow] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver(([entry]) => {
+      setIsNarrow(entry.contentRect.width <= 730);
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const fileIcon = (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14,2 14,8 20,8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+      <polyline points="10,9 9,9 8,9" />
+    </svg>
+  );
+
+  const menuItems = [
+    {
+      label: 'Documentation',
+      href: externalDocsUrl || undefined,
+      target: '_blank',
+      disabled: !externalDocsUrl,
+      icon: <BookMarked size={16} />,
+      onClick: externalDocsUrl ? () => window.open(externalDocsUrl, '_blank') : undefined,
+    },
+    { divider: true },
+    {
+      label: 'Import YAML spec',
+      disabled: !onImportYamlClick,
+      icon: fileIcon,
+      onClick: onImportYamlClick,
+    },
+    {
+      label: 'Import JSON spec',
+      disabled: !onImportJsonClick,
+      icon: fileIcon,
+      onClick: onImportJsonClick,
+    },
+  ];
+
   return (
-    <header class="border-b border-gray-200 rounded-t-lg overflow-hidden">
+    <header ref={containerRef} class="border-b border-gray-200 rounded-t-lg overflow-hidden">
       {/* Top section: breadcrumbs + actions + title */}
       <div class="px-6 pt-6 pb-5">
         {(breadcrumbs || externalDocsUrl || onImportClick) && (
           <div class="flex items-start justify-between mb-4">
             <div>{breadcrumbs}</div>
             <div class="flex items-center gap-2">
-              {externalDocsUrl && (
-                <a
-                  href={externalDocsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center"
-                >
-                  <BookMarked size={16} class="mr-2" />
-                  Docs
-                </a>
-              )}
-              {onImportClick && (
-                <button
-                  onClick={(e) => onImportClick(e.currentTarget)}
-                  class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
-                    <path d="M12 15V3" />
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <path d="m7 10 5 5 5-5" />
-                  </svg>
-                  Open in Slingshot
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
-                    <path d="m6 9 6 6 6-6" />
-                  </svg>
-                </button>
+              {isNarrow ? (
+                <>
+                  <button
+                    ref={hamburgerRef}
+                    onClick={() => setShowMenu(v => !v)}
+                    class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="currentColor" class="w-4 h-4">
+                      <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
+                        <path d="M7.94971 11.9497H39.9497" />
+                        <path d="M7.94971 23.9497H39.9497" />
+                        <path d="M7.94971 35.9497H39.9497" />
+                      </g>
+                    </svg>
+                  </button>
+                  <ContextMenu
+                    isOpen={showMenu}
+                    onClose={() => setShowMenu(false)}
+                    trigger={hamburgerRef.current}
+                    width={200}
+                    position="below-right"
+                    items={menuItems}
+                  />
+                </>
+              ) : (
+                <>
+                  {externalDocsUrl && (
+                    <a
+                      href={externalDocsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center"
+                    >
+                      <BookMarked size={16} class="mr-2" />
+                      Docs
+                    </a>
+                  )}
+                  {onImportClick && (
+                    <button
+                      onClick={(e) => onImportClick(e.currentTarget)}
+                      class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                        <path d="M12 15V3" />
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <path d="m7 10 5 5 5-5" />
+                      </svg>
+                      Open in Slingshot
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
+                        <path d="m6 9 6 6 6-6" />
+                      </svg>
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -751,10 +829,9 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
         <div class="flex items-center gap-3">
           <h1 class="text-2xl font-bold text-gray-900">{title}</h1>
           {info?.version && (
-            <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-              v{info.version}
-            </span>
+            <Badge variant="utility">v{info.version}</Badge>
           )}
+          <Badge variant="ghost">API viewer in beta</Badge>
         </div>
       </div>
 
@@ -833,7 +910,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
 // Main OpenAPIViewer
 // ---------------------------------------------------------------------------
 
-export function OpenAPIViewer({ spec, className = '', overrideTitle, overrideDescription, breadcrumbs, onImportClick, externalDocsUrl }) {
+export function OpenAPIViewer({ spec, className = '', overrideTitle, overrideDescription, breadcrumbs, onImportClick, onImportYamlClick, onImportJsonClick, externalDocsUrl }) {
   const tagGroups = useMemo(() => {
     if (!spec || !spec.paths) return [];
     return getOperationsByTag(spec);
@@ -864,6 +941,8 @@ export function OpenAPIViewer({ spec, className = '', overrideTitle, overrideDes
         overrideDescription={overrideDescription}
         breadcrumbs={breadcrumbs}
         onImportClick={onImportClick}
+        onImportYamlClick={onImportYamlClick}
+        onImportJsonClick={onImportJsonClick}
         externalDocsUrl={externalDocsUrl}
       />
 

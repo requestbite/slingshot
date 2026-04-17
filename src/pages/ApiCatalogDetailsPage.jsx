@@ -526,6 +526,8 @@ export function ApiCatalogDetailsPage() {
                   }
                   externalDocsUrl={apiData.externalDocsUrl}
                   onImportClick={(el) => { setImportAnchorEl(el); setShowImportContextMenu(true); }}
+                  onImportYamlClick={apiData.openApiYamlUrl ? handleImportYaml : undefined}
+                  onImportJsonClick={apiData.openApiJsonUrl ? handleImportJson : undefined}
                 />
               </div>
             </div>
