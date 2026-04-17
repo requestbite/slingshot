@@ -657,11 +657,11 @@ function TagSection({ tag, spec, startIndex }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <section class="mb-2">
+    <section>
       {/* Tag header */}
       <button
         onClick={() => setIsCollapsed(v => !v)}
-        class="w-full flex items-center gap-2 px-6 py-3 bg-gray-50 hover:bg-gray-100 text-left transition-colors sticky top-[65px] z-20 cursor-pointer"
+        class="w-full flex items-center gap-2 px-6 py-3 bg-gray-50 hover:bg-gray-100 text-left transition-colors sticky top-[65px] z-20 cursor-pointer border-b border-gray-200"
       >
         <svg
           class={`h-4 w-4 text-gray-400 flex-shrink-0 transition-transform ${isCollapsed ? '-rotate-90' : ''}`}
@@ -680,7 +680,7 @@ function TagSection({ tag, spec, startIndex }) {
               <MarkdownPreview markdown={tag.description} />
             </div>
           )}
-          <div class="bg-white border-t border-gray-200">
+          <div class="bg-white">
             {tag.operations.map(({ method, path, operation, parameters }, i) => (
               <EndpointSection
                 key={`${method}-${path}`}
@@ -867,7 +867,7 @@ export function OpenAPIViewer({ spec, className = '', overrideTitle, overrideDes
         externalDocsUrl={externalDocsUrl}
       />
 
-      <div class="divide-y divide-gray-200">
+      <div>
         {tagGroups.reduce((acc, tag) => {
           acc.elements.push(
             <TagSection key={tag.name} tag={tag} spec={spec} startIndex={acc.count} />
