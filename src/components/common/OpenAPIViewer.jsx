@@ -710,7 +710,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
   const hasRightContent = (servers?.length > 0) || !!(info?.contact || info?.license || info?.termsOfService);
 
   return (
-    <header class="border-b border-gray-200 bg-white rounded-t-lg">
+    <header class="border-b border-gray-200 rounded-t-lg overflow-hidden">
       {/* Top section: breadcrumbs + actions + title */}
       <div class="px-6 pt-6 pb-5">
         {(breadcrumbs || externalDocsUrl || onImportClick) && (
@@ -856,7 +856,7 @@ export function OpenAPIViewer({ spec, className = '', overrideTitle, overrideDes
   }
 
   return (
-    <div class={`bg-gray-50 min-h-full ${className}`}>
+    <div class={`min-h-full ${className}`}>
       <ApiInfoHeader
         info={spec.info}
         servers={spec.servers}
