@@ -434,7 +434,7 @@ function EndpointSection({ method, path, operation, parameters, spec, defaultExp
       {/* Endpoint header – always visible */}
       <button
         onClick={() => setIsExpanded(v => !v)}
-        class="w-full flex items-center gap-3 px-6 py-3 bg-white hover:bg-gray-50 text-left group transition-colors sticky top-[109px] z-10 cursor-pointer border-b border-t border-gray-200"
+        class="w-full flex items-center gap-3 px-6 py-3 bg-white hover:bg-gray-50 text-left group transition-colors sticky top-[109px] z-10 cursor-pointer border-b border-gray-200"
       >
         <span class={`text-[10px] font-bold text-white py-0.5 px-1.5 rounded flex-shrink-0 uppercase tracking-wide ${getMethodColor(method)}`}>
           {method}
@@ -680,7 +680,7 @@ function TagSection({ tag, spec, startIndex }) {
               <MarkdownPreview markdown={tag.description} />
             </div>
           )}
-          <div class="bg-white">
+          <div class="bg-white border-t border-gray-200">
             {tag.operations.map(({ method, path, operation, parameters }, i) => (
               <EndpointSection
                 key={`${method}-${path}`}

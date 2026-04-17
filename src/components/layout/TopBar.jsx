@@ -128,7 +128,7 @@ export function TopBar() {
   const banner = useMemo(() => getProxyBanner(), [proxyConfig]);
 
   return (
-    <header class="h-[65px] bg-white/75 backdrop-blur-lg border-b border-gray-300 fixed top-0 left-0 w-full z-20 text-sm">
+    <header class="h-[65px] bg-white/75 backdrop-blur-lg border-b border-gray-300 fixed top-0 left-0 w-full z-30 text-sm">
       <div class="flex items-center justify-between h-full px-4">
         {/* Logo */}
         <a
