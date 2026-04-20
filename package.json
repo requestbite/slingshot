@@ -27,6 +27,7 @@
     "jsonata": "^2.1.0",
     "lucide-preact": "^0.577.0",
     "micromark": "^4.0.2",
+    "micromark-extension-gfm": "^3.0.0",
     "oidc-client-ts": "^3.3.0",
     "preact": "^10.25.3",
     "wouter-preact": "^3.7.1"

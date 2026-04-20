@@ -1,4 +1,5 @@
 import { micromark } from 'micromark';
+import { gfm, gfmHtml } from 'micromark-extension-gfm';
 import DOMPurify from 'dompurify';
 import { useMemo } from 'preact/hooks';
 
@@ -28,7 +29,9 @@ export function MarkdownPreview({ markdown = '' }) {
   const cleanHtml = useMemo(() => {
     // Step 1: Convert markdown to HTML with HTML support enabled
     let htmlContent = micromark(markdown, {
-      allowDangerousHtml: true  // Enable HTML rendering
+      allowDangerousHtml: true,
+      extensions: [gfm()],
+      htmlExtensions: [gfmHtml()]
     });
 
     // Step 2: Add target="_blank" and rel="noopener noreferrer" to all links
