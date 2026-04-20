@@ -35,37 +35,78 @@ Collections. Also support exporting collections in Postman format.
   Support for (most) ANSI color escape sequences do enjoy terminal based HTTP
   services such as [wttr.in](https://wttr.in/).
 
-## Run app
+## Hosted version
 
-### Run locally
+Run the hosted version:
+
+- <https://s.requestbite.com>
+
+Documentation:
+
+- <https://docs.requestbite.com/slingshot/>
+
+## Run and manage app locally
 
 To run the app locally, you must first rename the file `.env.example` to
-`.env.development` and update any variables in it accordingly (see instructions
-in the file).
+`.env.local` and update any variables in it accordingly (see instructions in the
+file itself). You can then run and manage the locally running app running `make`
+using the provided `Makefile`.
 
 Install dependencies:
 
 ```bash
-yarn install
+make install
 ```
 
 Run development server:
 
 ```bash
-yarn dev
+make dev
 ```
 
-### Build for production
+Run Storybook development server to explore UI components in project:
 
-To make a production build of Slingshot, you must first copy `.env.example` (or
-`.env.development`) to `.env.production` and make sure the environment variables
-are updated correctly.
+```bash
+make storybook
+```
+
+### Build for dev or prod
+
+To make a development or production build of Slingshot, you must first copy
+`.env.example` (or `.env.local`) to `.env.dev` for development builds and
+`.env.prod` for production builds. The separation allows you to deploy these
+builds to e.g. different BunnyCDN targets for testing and for production use.
 
 Make production build:
 
 ```bash
-yarn build
+make build prod
 ```
+
+Make development build:
+
+```bash
+make build dev
+```
+
+### Deploy to dev or prod
+
+If you have configured the BunnyCDN section of your `.env.dev` or `.env.prod`
+file, you can deploy to your configured target like below.
+
+Deploy to production:
+
+```bash
+make deploy prod dist/{folder}
+```
+
+Deploy to dev:
+
+```bash
+make deploy dev dist/{folder}
+```
+
+Replace `{folder}` with the folder name from when you ran `make build {env}`.
 
 ## Contributing
 
