@@ -16,15 +16,15 @@ export function BreadCrumbs({ items, className = '' }) {
   }
 
   return (
-    <nav class={`flex items-center space-x-2 text-xs ${className}`} aria-label="Breadcrumb">
-      <ol class="flex items-center space-x-2">
+    <nav class={`flex items-center text-xs overflow-hidden ${className}`} aria-label="Breadcrumb">
+      <ol class="flex items-center space-x-2 min-w-0 overflow-hidden">
         {items.map((item, index) => {
           const isFirst = index === 0;
           const isLast = index === items.length - 1;
           const isClickable = item.href && !isLast;
 
           return (
-            <li key={index} class="flex items-center space-x-2">
+            <li key={index} class={`flex items-center space-x-2 flex-shrink-0${isLast ? ' min-w-0 truncate' : ''}`}>
               {index > 0 && (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -94,7 +94,7 @@ export function BreadCrumbs({ items, className = '' }) {
                     {item.name}
                   </Link>
                 ) : (
-                  <span class={isLast ? 'text-gray-900 font-medium' : 'text-gray-500'}>
+                  <span class={isLast ? 'text-gray-900 font-medium truncate' : 'text-gray-500 whitespace-nowrap'}>
                     {item.name}
                   </span>
                 )

@@ -769,7 +769,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
       <div class="px-6 pt-6 pb-5">
         {(breadcrumbs || externalDocsUrl || onImportClick) && (
           <div class="flex items-start justify-between mb-4">
-            <div>{breadcrumbs}</div>
+            <div class="min-w-0 overflow-hidden">{breadcrumbs}</div>
             <div class="flex items-center gap-2">
               {isNarrow ? (
                 <>
@@ -830,8 +830,8 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
           </div>
         )}
 
-        <div class="flex items-center gap-3">
-          <h1 class="text-2xl font-bold text-gray-900">{title}</h1>
+        <div class="flex flex-wrap items-center gap-3">
+          <h1 class="text-2xl font-bold text-gray-900 whitespace-nowrap">{title}</h1>
           {info?.version && (
             <Badge variant="utility">v{info.version}</Badge>
           )}
