@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'preact/hooks';
-import { BookMarked } from 'lucide-preact';
+import { BookMarked, ArrowUpToLine } from 'lucide-preact';
 import { MarkdownPreview } from './MarkdownPreview';
 import { ExampleViewer } from './ExampleViewer';
 import { SchemaTreeRoot } from './SchemaTree';
@@ -717,8 +717,13 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
 
   const containerRef = useRef(null);
   const hamburgerRef = useRef(null);
+  const fixedHamburgerRef = useRef(null);
+  const buttonsRef = useRef(null);
   const [isNarrow, setIsNarrow] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showFixedMenu, setShowFixedMenu] = useState(false);
+  const [isButtonsVisible, setIsButtonsVisible] = useState(true);
+  const [fixedRight, setFixedRight] = useState(24);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -727,6 +732,38 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
     });
     observer.observe(containerRef.current);
     return () => observer.disconnect();
+  }, []);
+
+  const scrollToTop = () => {
+    let node = containerRef.current?.parentElement;
+    while (node && node !== document.body) {
+      const { overflowY } = window.getComputedStyle(node);
+      if (overflowY === 'auto' || overflowY === 'scroll') {
+        node.scrollTo(0, 0);
+        return;
+      }
+      node = node.parentElement;
+    }
+    window.scrollTo(0, 0);
+  };
+
+  useEffect(() => {
+    if (!buttonsRef.current) return;
+    const updateRight = () => {
+      const rect = buttonsRef.current?.getBoundingClientRect();
+      if (rect) setFixedRight(window.innerWidth - rect.right);
+    };
+    updateRight();
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsButtonsVisible(entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(buttonsRef.current);
+    window.addEventListener('resize', updateRight, { passive: true });
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateRight);
+    };
   }, []);
 
   const fileIcon = (
@@ -770,7 +807,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
         {(breadcrumbs || externalDocsUrl || onImportClick) && (
           <div class="flex items-start justify-between mb-4">
             <div class="min-w-0 overflow-hidden">{breadcrumbs}</div>
-            <div class="flex items-center gap-2">
+            <div ref={buttonsRef} class="flex items-center gap-2">
               {isNarrow ? (
                 <>
                   <button
@@ -904,6 +941,75 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
               </div>
             )}
           </div>
+        </div>
+      )}
+      {/* Fixed-at-bottom copy of actions, visible once the original scrolls out of view */}
+      {!isButtonsVisible && (
+        <div
+          class="fixed z-50 flex items-stretch gap-2"
+          style={{ bottom: '20px', right: `${fixedRight}px` }}
+        >
+          {isNarrow ? (
+            <>
+              <button
+                ref={fixedHamburgerRef}
+                onClick={() => setShowFixedMenu(v => !v)}
+                class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer shadow-lg"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="currentColor" class="w-4 h-4">
+                  <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
+                    <path d="M7.94971 11.9497H39.9497" />
+                    <path d="M7.94971 23.9497H39.9497" />
+                    <path d="M7.94971 35.9497H39.9497" />
+                  </g>
+                </svg>
+              </button>
+              <ContextMenu
+                isOpen={showFixedMenu}
+                onClose={() => setShowFixedMenu(false)}
+                trigger={fixedHamburgerRef.current}
+                width={200}
+                position="below-right"
+                items={menuItems}
+              />
+            </>
+          ) : (
+            <>
+              {externalDocsUrl && (
+                <a
+                  href={externalDocsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center shadow-lg"
+                >
+                  <BookMarked size={16} class="mr-2" />
+                  Docs
+                </a>
+              )}
+              {onImportClick && (
+                <button
+                  onClick={(e) => onImportClick(e.currentTarget)}
+                  class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer shadow-lg"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                    <path d="M12 15V3" />
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <path d="m7 10 5 5 5-5" />
+                  </svg>
+                  Open in Slingshot
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </button>
+              )}
+            </>
+          )}
+          <button
+            onClick={scrollToTop}
+            class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer shadow-lg"
+          >
+            <ArrowUpToLine size={16} />
+          </button>
         </div>
       )}
     </header>
