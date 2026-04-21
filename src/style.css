@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+@theme {
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
 body {
   font-family: 'Twemoji Country Flags', 'Inter', system-ui, sans-serif;
 }

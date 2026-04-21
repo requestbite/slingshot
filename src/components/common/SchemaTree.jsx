@@ -187,11 +187,11 @@ export function SchemaTree({
         <div class="flex-1 min-w-0">
           {name && (
             <div class="flex items-center gap-2">
-              <span class="text-xs font-medium text-gray-900">
+              <span class="text-xs font-medium font-mono text-blue-900">
                 {name}
                 {isRequired && <span class="text-red-500 ml-1">*</span>}
               </span>
-              <span class={`px-1 py-0.5 text-[10px]/[12px] rounded-sm ${getTypeBadgeColor(effectiveSchema.type)}`}>
+              <span class={`px-1 py-0.5 text-[10px]/[12px] font-mono rounded-sm ${getTypeBadgeColor(effectiveSchema.type)}`}>
                 {getTypeDisplay(effectiveSchema)}
               </span>
             </div>
