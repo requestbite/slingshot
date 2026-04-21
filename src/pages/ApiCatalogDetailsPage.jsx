@@ -353,7 +353,7 @@ export function ApiCatalogDetailsPage() {
                       />
                     </div>
                   )}
-                  <div class="flex-1">
+                  <div class="flex-1 min-w-0">
                     <div class="flex items-center flex-wrap gap-x-3 gap-y-1">
                       <h1 class="text-base/7 font-semibold text-gray-900 pt-4 sm:pt-0">
                         {apiData.name || 'Untitled API'}
