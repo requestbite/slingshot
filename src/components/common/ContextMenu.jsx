@@ -175,29 +175,36 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
             return <div key={index} class="text-xs px-4 mt-3 mb-1 text-left text-gray-500">{item.sectionTitle}</div>;
           }
 
-          const commonClasses = `block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer no-underline ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''} ${item.destructive ? 'text-red-600 hover:text-red-700' : ''}`;
+          const commonClasses = `flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer no-underline ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''} ${item.destructive ? 'text-red-600 hover:text-red-700' : ''}`;
 
           const labelContent = (
             <>
-              {item.icon && (
-                <span class="inline-block w-4 h-4 mr-2 align-middle">
-                  {item.icon}
+              <span class="flex items-center min-w-0 flex-1">
+                {item.icon && (
+                  <span class="inline-block w-4 h-4 mr-2 shrink-0 align-middle">
+                    {item.icon}
+                  </span>
+                )}
+                <span class={item.truncateLabel ? 'block overflow-hidden text-ellipsis whitespace-nowrap min-w-0' : undefined}>
+                  {item.label}
+                  {item.subtext && (
+                    <>
+                      <br />
+                      <span
+                        class="text-xs text-gray-500 block overflow-hidden text-ellipsis whitespace-nowrap"
+                        style={{ maxWidth: '100%' }}
+                      >
+                        {item.subtext}
+                      </span>
+                    </>
+                  )}
+                </span>
+              </span>
+              {item.trailing && (
+                <span class="ml-2 shrink-0">
+                  {item.trailing}
                 </span>
               )}
-              <span class={item.truncateLabel ? 'block overflow-hidden text-ellipsis whitespace-nowrap' : undefined}>
-                {item.label}
-                {item.subtext && (
-                  <>
-                    <br />
-                    <span
-                      class="text-xs text-gray-500 block overflow-hidden text-ellipsis whitespace-nowrap"
-                      style={{ maxWidth: '100%' }}
-                    >
-                      {item.subtext}
-                    </span>
-                  </>
-                )}
-              </span>
             </>
           );
 
