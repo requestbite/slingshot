@@ -274,52 +274,36 @@ export function ApiCatalogDetailsPage() {
             {/* Header Section */}
             <div class="p-6">
               {/* Breadcrumbs and Import Button Row */}
-              <div class="flex flex-col-reverse sm:flex-row sm:items-start sm:justify-between gap-3">
-                <div class="flex-1">
-                  {isLoading ? (
-                    <BreadCrumbs
-                      items={[
-                        { name: 'Home', href: '/catalog' },
-                        { name: '...' }
-                      ]}
-                    />
-                  ) : error ? (
-                    <BreadCrumbs
-                      items={[
-                        { name: 'Home', href: '/catalog' },
-                        { name: 'Error' }
-                      ]}
-                    />
-                  ) : apiData ? (
-                    <BreadCrumbs
-                      items={[
-                        { name: 'Home', href: '/catalog' },
-                        ...(apiData.categories && apiData.categories.length > 0 ? [{
-                          name: apiData.categories[0].name,
-                          href: `/catalog/category/${apiData.categories[0].key}`
-                        }] : []),
-                        { name: apiData.name || 'Untitled API' }
-                      ]}
-                    />
-                  ) : null}
-                </div>
-                <div class="sm:ml-4">
-                  <button
-                    onClick={(e) => { setImportAnchorEl(e.currentTarget); setShowImportContextMenu(true); }}
-                    disabled={isLoading || error}
-                    class="rounded-md bg-sky-100 hover:bg-sky-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
-                      <path d="M12 15V3" />
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                      <path d="m7 10 5 5 5-5" />
-                    </svg>
-                    Import
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
-                      <path d="m6 9 6 6 6-6" />
-                    </svg>
-                  </button>
-                </div>
+              <div>
+                {isLoading ? (
+                  <BreadCrumbs
+                    items={[
+                      { name: 'Home', href: '/catalog' },
+                      { name: '...' }
+                    ]}
+                    className="mb-3"
+                  />
+                ) : error ? (
+                  <BreadCrumbs
+                    items={[
+                      { name: 'Home', href: '/catalog' },
+                      { name: 'Error' }
+                    ]}
+                    className="mb-3"
+                  />
+                ) : apiData ? (
+                  <BreadCrumbs
+                    items={[
+                      { name: 'Home', href: '/catalog' },
+                      ...(apiData.categories && apiData.categories.length > 0 ? [{
+                        name: apiData.categories[0].name,
+                        href: `/catalog/category/${apiData.categories[0].key}`
+                      }] : []),
+                      { name: apiData.name || 'Untitled API' }
+                    ]}
+                    className="mb-3"
+                  />
+                ) : null}
               </div>
 
               {/* API Title and Description - Full Width */}
@@ -341,26 +325,14 @@ export function ApiCatalogDetailsPage() {
                   </p>
                 </div>
               ) : apiData ? (
-                <div class={`flex ${apiData.logoUrl ? 'flex-col sm:flex-row gap-8' : ''}`}>
-                  {apiData.logoUrl && (
-                    <div class="flex-shrink-0">
-                      <img
-                        src={apiData.logoUrl}
-                        alt={`${apiData.name || 'Untitled API'} logo`}
-                        class="w-36 h-auto sm:w-20 mt-3"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  )}
+                <div class="flex">
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center flex-wrap gap-x-3 gap-y-1">
-                      <h1 class="text-base/7 font-semibold text-gray-900 pt-4 sm:pt-0">
+                      <h1 class="text-base/7 font-semibold text-gray-900 pt-2">
                         {apiData.name || 'Untitled API'}
                       </h1>
                       {isLoadingSpec && (
-                        <span class="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2.5 py-1 text-xs font-medium text-red-700 mt-4 sm:mt-0 flex-shrink-0">
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2.5 py-1 text-xs font-medium text-red-700 flex-shrink-0 mt-1">
                           Fetching OpenAPI spec
                           <svg class="animate-spin w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
