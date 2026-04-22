@@ -28,6 +28,7 @@ export function ApiCatalogDetailsPage() {
   const [specError, setSpecError] = useState(null);
   const [activeEndpointId, setActiveEndpointId] = useState(null);
   const [importAnchorEl, setImportAnchorEl] = useState(null);
+  const [isNavOpen, setIsNavOpen] = useState(false);
   const searchInputRef = useRef();
 
   usePageTitle(apiData?.name || 'Untitled API');
@@ -496,6 +497,37 @@ export function ApiCatalogDetailsPage() {
         {/* OpenAPI Spec Viewer — replaces the main card once the spec is ready */}
         {!isLoading && !error && apiData && parsedSpec && (
           <div class="px-4">
+            {/* Mobile nav panel toggle — only on small screens */}
+            <button
+              onClick={() => setIsNavOpen(true)}
+              class={`fixed top-1/2 -left-1 transform -translate-y-1/2 z-[50] bg-sky-100 hover:bg-sky-200 text-sky-700 p-2 rounded-r-lg shadow-lg cursor-pointer transition-all duration-200 hover:translate-x-1 ${isNavOpen ? 'hidden' : 'block lg:hidden'}`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 17 5-5-5-5" />
+                <path d="m13 17 5-5-5-5" />
+              </svg>
+            </button>
+
+            {/* Mobile nav panel overlay + slide-in */}
+            {isNavOpen && (
+              <>
+                <div
+                  class="fixed inset-0 bg-gray-500/75 z-[60] lg:hidden animate-fade-in"
+                  onClick={() => setIsNavOpen(false)}
+                />
+                <div class="fixed left-0 top-0 bottom-0 right-[75px] bg-white z-[70] lg:hidden overflow-y-auto animate-slide-in-left">
+                  <OpenAPINavPanel
+                    spec={parsedSpec}
+                    activeId={activeEndpointId}
+                    onSelect={(method, path) => {
+                      setActiveEndpointId(getEndpointId(method, path));
+                      setIsNavOpen(false);
+                    }}
+                  />
+                </div>
+              </>
+            )}
+
             <div class="flex items-start gap-4">
               {/* Left nav — sticky, clears the fixed 65px topbar */}
               <div class="hidden lg:flex flex-col w-64 flex-shrink-0 bg-white rounded-lg border border-gray-300 overflow-hidden">
