@@ -61,7 +61,7 @@ export function Checkbox({
         <label
           for={checkboxId}
           class={`
-            ml-2 text-sm text-gray-900
+            ml-2 text-sm text-gray-600
             ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
           `}
         >
