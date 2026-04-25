@@ -146,7 +146,7 @@ export function TopBar() {
 
         {/* Desktop Navigation */}
         <nav class="hidden sm:flex items-center space-x-1">
-          <a href="https://requestbite.com" class="hidden lg:flex text-gray-600 dark:text-neutral-dark-600 hover:text-gray-900 dark:hover:text-neutral-dark-900 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-dark-200 transition-colors flex items-center">
+          <a href="https://requestbite.com" class="hidden lg:flex text-gray-600 dark:text-neutral-dark-900 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-dark-200 transition-colors flex items-center">
             RequestBite
           </a>
           <a
@@ -157,7 +157,7 @@ export function TopBar() {
             }}
             class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isSlingshotActive()
               ? 'text-sky-700 bg-sky-100 hover:bg-sky-200 dark:text-primary-dark-400 dark:bg-primary-dark-200 dark:hover:bg-primary-dark-300'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-600 dark:hover:text-neutral-dark-900 dark:hover:bg-neutral-dark-200'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-900 dark:hover:text-white dark:hover:bg-neutral-dark-200'
               }`}
           >
             Slingshot
@@ -170,7 +170,7 @@ export function TopBar() {
             }}
             class={`hidden md:flex px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/catalog')
               ? 'text-sky-700 bg-sky-100 hover:bg-sky-200 dark:text-primary-dark-400 dark:bg-primary-dark-200 dark:hover:bg-primary-dark-300'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-600 dark:hover:text-neutral-dark-900 dark:hover:bg-neutral-dark-200'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-900 dark:hover:text-white dark:hover:bg-neutral-dark-200'
               }`}
           >
             Catalog
@@ -183,7 +183,7 @@ export function TopBar() {
             }}
             class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/environments')
               ? 'text-sky-700 bg-sky-100 hover:bg-sky-200 dark:text-primary-dark-400 dark:bg-primary-dark-200 dark:hover:bg-primary-dark-300'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-600 dark:hover:text-neutral-dark-900 dark:hover:bg-neutral-dark-200'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-900 dark:hover:text-white dark:hover:bg-neutral-dark-200'
               }`}
           >
             Environments
@@ -196,7 +196,7 @@ export function TopBar() {
             }}
             class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/collections')
               ? 'text-sky-700 bg-sky-100 hover:bg-sky-200 dark:text-primary-dark-400 dark:bg-primary-dark-200 dark:hover:bg-primary-dark-300'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-600 dark:hover:text-neutral-dark-900 dark:hover:bg-neutral-dark-200'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-900 dark:hover:text-white dark:hover:bg-neutral-dark-200'
               }`}
           >
             Collections
@@ -209,7 +209,7 @@ export function TopBar() {
             }}
             class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/settings')
               ? 'text-sky-700 bg-sky-100 hover:bg-sky-200 dark:text-primary-dark-400 dark:bg-primary-dark-200 dark:hover:bg-primary-dark-300'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-600 dark:hover:text-neutral-dark-900 dark:hover:bg-neutral-dark-200'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-900 dark:hover:text-white dark:hover:bg-neutral-dark-200'
               }`}
           >
             Settings
@@ -217,7 +217,7 @@ export function TopBar() {
           <button
             ref={toolsButtonRef}
             onClick={() => setShowToolsMenu(true)}
-            class="hidden lg:flex text-gray-600 dark:text-neutral-dark-600 hover:text-gray-900 dark:hover:text-neutral-dark-900 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-dark-200 transition-colors items-center cursor-pointer"
+            class="hidden lg:flex text-gray-600 dark:text-neutral-dark-900 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-dark-200 transition-colors items-center cursor-pointer"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -243,7 +243,7 @@ export function TopBar() {
           <button
             ref={themeButtonRef}
             onClick={() => setShowThemeMenu(true)}
-            class="hidden lg:flex items-center justify-center w-9 h-9 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-400 dark:hover:text-neutral-dark-900 dark:hover:bg-neutral-dark-200 transition-colors cursor-pointer"
+            class="hidden lg:flex items-center justify-center w-9 h-9 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-900 dark:hover:text-white dark:hover:bg-neutral-dark-200 transition-colors cursor-pointer"
             title="Theme"
             aria-label="Change theme"
           >
@@ -251,7 +251,7 @@ export function TopBar() {
           </button>
 
           {/* Desktop Version Link */}
-          <a href="https://docs.requestbite.com/changelog/" target="_blank" class="hidden lg:flex text-gray-600 dark:text-neutral-dark-600 hover:text-gray-400 dark:hover:text-neutral-dark-400 flex items-center">
+          <a href="https://docs.requestbite.com/changelog/" target="_blank" class="hidden lg:flex text-gray-600 dark:text-neutral-dark-900 hover:text-gray-400 dark:hover:text-neutral-dark-700 flex items-center">
             v. 9.9.9
           </a>
 
@@ -266,7 +266,7 @@ export function TopBar() {
           </button>
 
           {/* Mobile Version Link */}
-          <a href="https://docs.requestbite.com/changelog/" target="_blank" class="lg:hidden text-gray-600 dark:text-neutral-dark-600 hover:text-gray-400 dark:hover:text-neutral-dark-400 flex items-center">
+          <a href="https://docs.requestbite.com/changelog/" target="_blank" class="lg:hidden text-gray-600 dark:text-neutral-dark-900 hover:text-gray-400 dark:hover:text-neutral-dark-700 flex items-center">
             v. 9.9.9
           </a>
 
@@ -275,7 +275,7 @@ export function TopBar() {
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               type="button"
-              class="cursor-pointer text-gray-600 dark:text-neutral-dark-600 hover:text-gray-900 dark:hover:text-neutral-dark-900"
+              class="cursor-pointer text-gray-600 dark:text-neutral-dark-900 hover:text-gray-900 dark:hover:text-white"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="currentColor" class="w-6 h-6">
                 <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">

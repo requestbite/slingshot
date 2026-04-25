@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+@config "../tailwind.config.js";
 
 @variant dark (&:where(.dark, .dark *));
 
@@ -9,6 +10,10 @@
 
 body {
   font-family: 'Twemoji Country Flags', 'Inter', system-ui, sans-serif;
+}
+
+.dark body {
+  color: #f8f8f2; /* Dracula foreground - base text color for dark mode */
 }
 
 /* Custom class for docs sidebar visibility at exact 1450px breakpoint */
