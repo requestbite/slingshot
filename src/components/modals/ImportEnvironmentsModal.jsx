@@ -250,7 +250,7 @@ export function ImportEnvironmentsModal({ isOpen, onClose, onSuccess }) {
     <Modal isOpen={isOpen} onClose={handleClose} title="Import environments" size="md">
       <form onSubmit={handleSubmit}>
         <div>
-          <div class="text-sm text-gray-500">
+          <div class="text-sm text-gray-500 dark:text-neutral-dark-500">
             Import a previously exported environment JSON file. Any existing environment with the same ID as in the imported file will be overwritten. Any other environments will be added.
           </div>
 
@@ -266,7 +266,7 @@ export function ImportEnvironmentsModal({ isOpen, onClose, onSuccess }) {
               onChange={handleFileChange}
               disabled={isLoading}
             />
-            <div class="text-xs text-gray-500 mt-1">Maximum file size: 10 MB</div>
+            <div class="text-xs text-gray-500 dark:text-neutral-dark-500 mt-1">Maximum file size: 10 MB</div>
             {errors.file && (
               <div class="mt-2 text-sm text-red-600 bg-red-100 p-2 rounded-md">
                 {errors.file}

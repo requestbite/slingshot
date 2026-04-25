@@ -1,46 +1,10 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useTheme } from '../../hooks/useTheme';
 
-/**
- * ThemeSwitch Component
- *
- * A toggle button that switches between light and dark themes.
- * Shows a sun icon in light mode and a moon icon in dark mode.
- * Persists theme preference to localStorage and applies the 'dark' class to document.documentElement.
- *
- * @param {Object} props
- * @param {string} [props.className] - Additional CSS classes
- */
 export function ThemeSwitch({ className = '' }) {
-  // Initialize theme from localStorage or system preference
-  const [isDark, setIsDark] = useState(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      return savedTheme === 'dark';
-    }
-    // Fall back to system preference if no saved theme
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
-
-  // Apply theme on mount and when isDark changes
-  useEffect(() => {
-    const theme = isDark ? 'dark' : 'light';
-
-    // Update document class
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-
-    // Save to localStorage
-    localStorage.setItem('theme', theme);
-
-    // Dispatch custom event for other components to react to theme changes
-    window.dispatchEvent(new CustomEvent('themechange', { detail: { theme } }));
-  }, [isDark]);
+  const { isDark, setTheme } = useTheme();
 
   const handleToggle = () => {
-    setIsDark(!isDark);
+    setTheme(isDark ? 'light' : 'dark');
   };
 
   return (

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'preact/hooks';
 import { Suspense, lazy } from 'preact/compat';
 import { Router, Route, Switch, useLocation } from 'wouter-preact';
 import { AppProvider } from './context/AppContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { AppLayout } from './components/layout/AppLayout';
 import { FullPageLayout } from './components/layout/FullPageLayout';
 import { TopBar } from './components/layout/TopBar';
@@ -271,7 +272,7 @@ export function App() {
   // Don't render the main app until we've checked for environments and handled encryption
   if (!isAppReady) {
     return (
-      <div class="h-screen bg-gray-100 flex items-center justify-center">
+      <div class="h-screen bg-gray-100 dark:bg-[#282a36] flex items-center justify-center">
         {/* Only show loading spinner if we haven't determined what to show yet */}
         {!encryptionKeyModal.isOpen && !clearEnvironmentsModal && (
           <div class="text-center">
@@ -281,7 +282,7 @@ export function App() {
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
             </div>
-            <p class="text-gray-600">Loading Slingshot...</p>
+            <p class="text-gray-600 dark:text-neutral-dark-600">Loading Slingshot...</p>
           </div>
         )}
 
@@ -316,8 +317,8 @@ export function App() {
       (location.match(/^\/[^/]+\/[^/]+$/) && !location.startsWith('/collections/') && !location.startsWith('/catalog/') && !location.startsWith('/environments/') && !location.startsWith('/tools/'));
 
     const containerClass = isAppLayoutRoute ?
-      "min-h-screen flex flex-col bg-gray-50" :
-      "h-screen flex flex-col bg-gray-50";
+      "min-h-screen flex flex-col bg-gray-50 dark:bg-[#282a36]" :
+      "h-screen flex flex-col bg-gray-50 dark:bg-[#282a36]";
 
     return (
       <div class={containerClass}>
@@ -422,10 +423,12 @@ export function App() {
   }
 
   return (
-    <AppProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </AppProvider>
+    <ThemeProvider>
+      <AppProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </AppProvider>
+    </ThemeProvider>
   );
 }

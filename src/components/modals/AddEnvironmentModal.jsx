@@ -132,7 +132,7 @@ export function AddEnvironmentModal({ isOpen, onClose, onSuccess }) {
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Add Environment" size="md">
-      <div class="text-sm text-gray-500">Create a new environment for your encrypted secrets.</div>
+      <div class="text-sm text-gray-500 dark:text-neutral-dark-500">Create a new environment for your encrypted secrets.</div>
 
       <form onSubmit={handleSubmit}>
         <div class="mt-6">
@@ -149,7 +149,7 @@ export function AddEnvironmentModal({ isOpen, onClose, onSuccess }) {
           <textarea
             placeholder="Description (optional)"
             rows="3"
-            class="block w-full rounded-md px-3 py-1.5 text-gray-900 outline focus:outline-2 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-sky-500 text-sm/6"
+            class="block w-full rounded-md px-3 py-1.5 text-gray-900 dark:text-neutral-dark-900 bg-white dark:bg-[#313340] outline focus:outline-2 -outline-offset-1 outline-gray-300 dark:outline-neutral-dark-50 placeholder:text-gray-400 dark:placeholder:text-neutral-dark-400 focus:-outline-offset-2 focus:outline-sky-500 text-sm/6"
             value={formData.description}
             onChange={(e) => handleInputChange('description', e.target.value)}
             disabled={isSubmitting}

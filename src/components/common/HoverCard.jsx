@@ -154,7 +154,7 @@ export function HoverCardContent({ children, side = 'bottom', align = 'center', 
     <Portal>
       <div
         ref={contentRef}
-        class={`fixed z-50 w-64 rounded-md border border-gray-200 bg-white p-4 text-gray-900 shadow-md transition-[opacity,transform] duration-150 origin-top ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${className}`}
+        class={`fixed z-50 w-64 rounded-md border border-gray-200 dark:border-neutral-dark-300 bg-white dark:bg-surface-dark-elevated p-4 text-gray-900 dark:text-neutral-dark-900 shadow-md transition-[opacity,transform] duration-150 origin-top ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${className}`}
         style={{ top: `${position.top}px`, left: `${position.left}px`, visibility: visible ? 'visible' : 'hidden' }}
         onMouseEnter={cancelClose}
         onMouseLeave={closeCard}

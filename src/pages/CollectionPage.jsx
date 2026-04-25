@@ -13,7 +13,7 @@ export function CollectionPage() {
 
   return (
     <div class="h-full">
-      <Suspense fallback={<div class="flex items-center justify-center h-full"><div class="text-gray-500">Loading...</div></div>}>
+      <Suspense fallback={<div class="flex items-center justify-center h-full"><div class="text-gray-500 dark:text-neutral-dark-500">Loading...</div></div>}>
         <RequestEditor />
       </Suspense>
     </div>

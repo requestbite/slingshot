@@ -77,7 +77,7 @@ export function CurlImportModal({ isOpen, onClose, onImport }) {
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Import cURL Command" size="md">
-      <p class="text-sm text-gray-500 mb-2">Paste your cURL command below to import it into the app.</p>
+      <p class="text-sm text-gray-500 dark:text-neutral-dark-500 mb-2">Paste your cURL command below to import it into the app.</p>
       <div class="mb-2 text-right">
         <Button
           onClick={handlePasteExample}

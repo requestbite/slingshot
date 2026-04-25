@@ -86,9 +86,9 @@ export function AuthCallback() {
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
         </div>
-        <h2 class="text-lg font-medium text-gray-900 mb-2">Processing Authentication</h2>
-        <p class="text-gray-600">Please wait while we complete the authentication process...</p>
-        <p class="text-sm text-gray-500 mt-4">This window will close automatically.</p>
+        <h2 class="text-lg font-medium text-gray-900 dark:text-neutral-dark-900 mb-2">Processing Authentication</h2>
+        <p class="text-gray-600 dark:text-neutral-dark-600">Please wait while we complete the authentication process...</p>
+        <p class="text-sm text-gray-500 dark:text-neutral-dark-500 mt-4">This window will close automatically.</p>
       </div>
     </div>
   );

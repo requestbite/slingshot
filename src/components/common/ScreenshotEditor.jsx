@@ -325,7 +325,7 @@ export function ScreenshotEditor({
         <div
           class={`relative border-2 border-dashed rounded-lg p-12 text-center transition-colors cursor-pointer ${isDragging
               ? 'border-sky-500 bg-sky-50'
-              : 'border-gray-300 bg-gray-50 hover:border-gray-400'
+              : 'border-gray-300 dark:border-neutral-dark-50 bg-gray-50 dark:bg-neutral-dark-200 hover:border-gray-400 dark:hover:border-neutral-dark-400'
             }`}
           onDragEnter={handleDragEnter}
           onDragOver={handleDragOver}
@@ -342,7 +342,7 @@ export function ScreenshotEditor({
           />
 
           <svg
-            class="mx-auto h-12 w-12 text-gray-400"
+            class="mx-auto h-12 w-12 text-gray-400 dark:text-neutral-dark-400"
             stroke="currentColor"
             fill="none"
             viewBox="0 0 48 48"
@@ -357,10 +357,10 @@ export function ScreenshotEditor({
           </svg>
 
           <div class="mt-4">
-            <p class="text-sm font-semibold text-gray-900">
+            <p class="text-sm font-semibold text-gray-900 dark:text-neutral-dark-900">
               Drop your image here, or click to select
             </p>
-            <p class="mt-1 text-xs text-gray-500">
+            <p class="mt-1 text-xs text-gray-500 dark:text-neutral-dark-500">
               PNG, JPEG, or WebP files
             </p>
           </div>
@@ -369,8 +369,8 @@ export function ScreenshotEditor({
         <>
           <div class="flex items-center justify-between mb-4">
             <div class="flex-1">
-              <p class="text-sm font-medium text-gray-900">{fileName}</p>
-              <p class="text-xs text-gray-500 mt-1">
+              <p class="text-sm font-medium text-gray-900 dark:text-neutral-dark-900">{fileName}</p>
+              <p class="text-xs text-gray-500 dark:text-neutral-dark-500 mt-1">
                 Canvas: {width}px × {canvasHeight}px
               </p>
             </div>

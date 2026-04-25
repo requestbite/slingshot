@@ -1317,7 +1317,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
               ]}
               className="mt-1"
             />
-            <p class="mt-1 text-xs text-gray-500">
+            <p class="mt-1 text-xs text-gray-500 dark:text-neutral-dark-500">
               Where to add the API key in the request
             </p>
           </div>
@@ -1533,7 +1533,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
               ]}
               className="mt-1"
             />
-            <p class="mt-1 text-xs text-gray-500">
+            <p class="mt-1 text-xs text-gray-500 dark:text-neutral-dark-500">
               The method used to generate the code challenge for PKCE
             </p>
           </div>
@@ -1552,9 +1552,9 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
           </div>
 
           {/* Token Request Headers */}
-          <div class="border-b border-gray-200 pb-2 mb-6">
-            <h3 class="text-sm font-medium text-gray-700 mb-1">Token Request</h3>
-            <p class="text-sm text-gray-600 mb-4">Custom headers to include when making token requests.</p>
+          <div class="border-b border-gray-200 dark:border-neutral-dark-300 pb-2 mb-6">
+            <h3 class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700 mb-1">Token Request</h3>
+            <p class="text-sm text-gray-600 dark:text-neutral-dark-600 mb-4">Custom headers to include when making token requests.</p>
 
             {/* Add new token header form */}
             <form onSubmit={handleAddTokenHeader} class="mb-4">
@@ -1603,26 +1603,26 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
 
             {/* Token Headers Table */}
             {authConfig.tokenHeaders && authConfig.tokenHeaders.length > 0 && (
-              <div class="overflow-hidden border border-gray-300 rounded-lg mb-4">
+              <div class="overflow-hidden border border-gray-300 dark:border-neutral-dark-50 rounded-lg mb-4">
                 <table class="min-w-full divide-y divide-gray-300">
-                  <thead class="bg-gray-50">
+                  <thead class="bg-gray-50 dark:bg-neutral-dark-200">
                     <tr>
-                      <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Key</th>
-                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Value</th>
-                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Send in</th>
+                      <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900 sm:pl-6">Key</th>
+                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900">Value</th>
+                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900">Send in</th>
                       <th class="relative py-3.5 pl-3 pr-4 sm:pr-6 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-gray-200 bg-white">
+                  <tbody class="divide-y divide-gray-200 dark:divide-neutral-dark-300 bg-white dark:bg-surface-dark-elevated">
                     {authConfig.tokenHeaders.map((header) => (
                       <tr key={header._tempId || header.key}>
-                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-neutral-dark-900 sm:pl-6">
                           {header.key}
                         </td>
-                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900 dark:text-neutral-dark-900">
                           {header.value}
                         </td>
-                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900 dark:text-neutral-dark-900">
                           {header.sendIn === 'header' ? 'Header' : 'Query Param'}
                         </td>
                         <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-2">
@@ -1797,9 +1797,9 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
           </div>
 
           {/* Token Request Headers */}
-          <div class="border-b border-gray-200 pb-2 mb-6">
-            <h3 class="text-sm font-medium text-gray-700 mb-1">Token Request</h3>
-            <p class="text-sm text-gray-600 mb-4">Custom headers to include when making token requests.</p>
+          <div class="border-b border-gray-200 dark:border-neutral-dark-300 pb-2 mb-6">
+            <h3 class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700 mb-1">Token Request</h3>
+            <p class="text-sm text-gray-600 dark:text-neutral-dark-600 mb-4">Custom headers to include when making token requests.</p>
 
             {/* Add new token header form */}
             <form onSubmit={handleAddTokenHeader} class="mb-4">
@@ -1848,26 +1848,26 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
 
             {/* Token Headers Table */}
             {authConfig.tokenHeaders && authConfig.tokenHeaders.length > 0 && (
-              <div class="overflow-hidden border border-gray-300 rounded-lg mb-4">
+              <div class="overflow-hidden border border-gray-300 dark:border-neutral-dark-50 rounded-lg mb-4">
                 <table class="min-w-full divide-y divide-gray-300">
-                  <thead class="bg-gray-50">
+                  <thead class="bg-gray-50 dark:bg-neutral-dark-200">
                     <tr>
-                      <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Key</th>
-                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Value</th>
-                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Send in</th>
+                      <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900 sm:pl-6">Key</th>
+                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900">Value</th>
+                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900">Send in</th>
                       <th class="relative py-3.5 pl-3 pr-4 sm:pr-6 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-gray-200 bg-white">
+                  <tbody class="divide-y divide-gray-200 dark:divide-neutral-dark-300 bg-white dark:bg-surface-dark-elevated">
                     {authConfig.tokenHeaders.map((header) => (
                       <tr key={header._tempId || header.key}>
-                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-neutral-dark-900 sm:pl-6">
                           {header.key}
                         </td>
-                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900 dark:text-neutral-dark-900">
                           {header.value}
                         </td>
-                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900 dark:text-neutral-dark-900">
                           {header.sendIn === 'header' ? 'Header' : 'Query Param'}
                         </td>
                         <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-2">

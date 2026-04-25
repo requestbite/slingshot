@@ -64,7 +64,7 @@ export function DocsEditIntroModal({ isOpen, onClose, request, onSave }) {
     <Modal isOpen={isOpen && !!request} onClose={handleClose} title="Edit intro" size="xl">
       <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
         <div class="mt-2">
-          <p class="text-sm text-gray-500 mb-4 text-center sm:text-left">
+          <p class="text-sm text-gray-500 dark:text-neutral-dark-500 mb-4 text-center sm:text-left">
             Edit the introductory details for this request.
           </p>
 
@@ -110,7 +110,7 @@ export function DocsEditIntroModal({ isOpen, onClose, request, onSave }) {
                 />
               </div>
               {/* Preview */}
-              <div class="h-48 overflow-y-auto rounded-md border border-gray-300 px-3 py-2 bg-gray-50">
+              <div class="h-48 overflow-y-auto rounded-md border border-gray-300 dark:border-neutral-dark-50 px-3 py-2 bg-gray-50">
                 <MarkdownPreview markdown={description} />
               </div>
             </div>

@@ -377,7 +377,7 @@ export function VariableInput({
       {showAutocomplete && filteredVariables.length > 0 && (
         <div
           ref={autocompleteRef}
-          class="absolute z-50 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto"
+          class="absolute z-50 bg-white dark:bg-surface-dark-elevated border border-gray-300 dark:border-neutral-dark-50 rounded-md shadow-lg max-h-48 overflow-y-auto"
           style={{
             top: '100%',
             left: '0',
@@ -390,7 +390,7 @@ export function VariableInput({
               key={variableName}
               class={`px-3 py-2 cursor-pointer text-sm ${index === selectedIndex
                 ? 'bg-sky-100 text-sky-900'
-                : 'text-gray-700 hover:bg-gray-100'
+                : 'text-gray-700 dark:text-neutral-dark-700 hover:bg-gray-100 dark:hover:bg-neutral-dark-200'
                 }`}
               onClick={() => insertVariable(variableName)}
             >
@@ -398,7 +398,7 @@ export function VariableInput({
                 <span class="font-medium">{variableName}</span>
               </div>
               {variables.has(variableName) && (
-                <div class="text-xs text-gray-500 truncate mt-1">
+                <div class="text-xs text-gray-500 dark:text-neutral-dark-500 truncate mt-1">
                   {String(variables.get(variableName)).slice(0, 50)}
                   {String(variables.get(variableName)).length > 50 ? '...' : ''}
                 </div>
@@ -415,7 +415,7 @@ export function VariableInput({
         const shouldShow = showResolved && (hasVariables || hasPathParams || hasQueryParams) && (fullyResolvedUrl || value);
 
         return shouldShow && (
-          <p class="mt-1 text-xs text-gray-500 truncate">
+          <p class="mt-1 text-xs text-gray-500 dark:text-neutral-dark-500 truncate">
             {fullyResolvedUrl || resolveVariables(value)}
           </p>
         );

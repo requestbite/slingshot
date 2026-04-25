@@ -34,21 +34,21 @@ export function ClickableCard({
     <Link
       href={href}
       onClick={handleClick}
-      class={`block bg-white rounded-lg border border-gray-300 p-4 transition-colors hover:bg-gray-50 cursor-pointer ${className}`}
+      class={`block bg-white dark:bg-surface-dark-elevated rounded-lg border border-gray-300 dark:border-neutral-dark-50 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-neutral-dark-200 cursor-pointer ${className}`}
       {...rest}
     >
       <div class="flex items-start">
         {icon && (
-          <div class="shrink-0 mr-3 text-gray-500">
+          <div class="shrink-0 mr-3 text-gray-500 dark:text-neutral-dark-500">
             {icon}
           </div>
         )}
         <div class="flex-1 min-w-0">
-          <h3 class="text-sm font-semibold text-gray-900 truncate">
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-neutral-dark-900 truncate">
             {title}
           </h3>
           {description && (
-            <div class="mt-1 text-xs text-gray-600 line-clamp-2">
+            <div class="mt-1 text-xs text-gray-600 dark:text-neutral-dark-600 line-clamp-2">
               {description}
             </div>
           )}

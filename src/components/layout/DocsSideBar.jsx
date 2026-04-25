@@ -648,7 +648,7 @@ export function DocsSideBar({ onClose: _onClose }) {
   return (
     <>
       {/* Documentation Sidebar */}
-      <aside class="bg-white rounded-lg md:border border-gray-300 h-full flex flex-col overflow-hidden">
+      <aside class="bg-white dark:bg-[#313340] rounded-lg md:border border-gray-300 dark:border-neutral-dark-50 h-full flex flex-col overflow-hidden">
         <div class="flex flex-1 flex-col gap-y-5 overflow-y-auto scrollbar-hide p-4 min-h-0">
           <nav class="flex flex-col space-y-4">
             {selectedRequest ? (
@@ -659,7 +659,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                     <span class={`text-[10px]/[12px] text-white py-0.5 px-1 rounded flex-shrink-0 ${getMethodColor(selectedRequest.method)}`}>
                       {selectedRequest.method}
                     </span>
-                    <h2 class="text-sm font-medium text-gray-900 truncate" title={selectedRequest.name || selectedRequest.url || 'Untitled Request'}>
+                    <h2 class="text-sm font-medium text-gray-900 dark:text-neutral-dark-900 truncate" title={selectedRequest.name || selectedRequest.url || 'Untitled Request'}>
                       {selectedRequest.name || selectedRequest.url || 'Untitled Request'}
                     </h2>
                   </div>
@@ -683,10 +683,10 @@ export function DocsSideBar({ onClose: _onClose }) {
                 {/* Table of Contents */}
                 {tocSections.length > 0 && (
                   <div class={`${selectedRequest.summary && selectedRequest.summary.trim() ? 'pt-3 border-t border-gray-200' : ''}`}>
-                    <h3 class="text-xs font-medium text-gray-600 mb-2">Table of Contents</h3>
+                    <h3 class="text-xs font-medium text-gray-600 dark:text-neutral-dark-600 mb-2">Table of Contents</h3>
                     <div class="space-y-1">
                       {/* Show All option */}
-                      <label class="flex items-center text-xs text-gray-700 cursor-pointer">
+                      <label class="flex items-center text-xs text-gray-700 dark:text-neutral-dark-700 cursor-pointer">
                         <input
                           type="radio"
                           name="toc-section"
@@ -700,7 +700,7 @@ export function DocsSideBar({ onClose: _onClose }) {
 
                       {/* Individual sections */}
                       {tocSections.map((section) => (
-                        <label key={section.id} class="flex items-center text-xs text-gray-700 cursor-pointer">
+                        <label key={section.id} class="flex items-center text-xs text-gray-700 dark:text-neutral-dark-700 cursor-pointer">
                           <input
                             type="radio"
                             name="toc-section"
@@ -718,7 +718,7 @@ export function DocsSideBar({ onClose: _onClose }) {
 
                 {/* Request Description */}
                 {selectedRequest.description && selectedRequest.description.trim() && shouldShowSection('description') && (
-                  <div class="border-t border-gray-200 pt-6">
+                  <div class="border-t border-gray-200 dark:border-neutral-dark-300 pt-6">
                     <div class="text-left">
                       <MarkdownPreview markdown={selectedRequest.description} />
                     </div>
@@ -733,9 +733,9 @@ export function DocsSideBar({ onClose: _onClose }) {
                     (parametersSchema.query && Object.keys(parametersSchema.query).length > 0) ||
                     (parametersSchema.headers && Object.keys(parametersSchema.headers).length > 0)
                   ) && shouldShowSection('parameters-schema') && (
-                      <div id="parameters-schema" class="border-t border-gray-200 pt-6">
+                      <div id="parameters-schema" class="border-t border-gray-200 dark:border-neutral-dark-300 pt-6">
                         <div class="flex items-center justify-between mb-2">
-                          <label class="block text-xs font-medium text-gray-600">Parameters Schema</label>
+                          <label class="block text-xs font-medium text-gray-600 dark:text-neutral-dark-600">Parameters Schema</label>
                           <button
                             ref={paramsMenuTriggerRef}
                             onClick={(e) => {
@@ -768,9 +768,9 @@ export function DocsSideBar({ onClose: _onClose }) {
                     const selectedSchema = getRequestBodySchemaForContentType(requestBodySchema, selectedRequestBodyContentType);
 
                     return (
-                      <div id="request-body-schema" class="space-y-2 border-t border-gray-200 pt-4">
+                      <div id="request-body-schema" class="space-y-2 border-t border-gray-200 dark:border-neutral-dark-300 pt-4">
                         <div class="flex items-center justify-between">
-                          <label class="block text-xs font-medium text-gray-600">Request Body Schema</label>
+                          <label class="block text-xs font-medium text-gray-600 dark:text-neutral-dark-600">Request Body Schema</label>
                           <button
                             ref={requestBodyMenuTriggerRef}
                             onClick={(e) => {
@@ -793,7 +793,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         {/* Content Type Selector */}
                         {requestBodyContentTypes.length > 0 && (
                           <div class="space-y-1">
-                            <label class="block text-[10px] font-medium text-gray-500">Content Type</label>
+                            <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Content Type</label>
                             <Select
                               value={selectedRequestBodyContentType}
                               onChange={setSelectedRequestBodyContentType}
@@ -828,9 +828,9 @@ export function DocsSideBar({ onClose: _onClose }) {
                     const selectedExample = examples.find(ex => ex.name === selectedRequestExample);
 
                     return (
-                      <div id="request-examples" class="space-y-2 border-t border-gray-200 pt-4">
+                      <div id="request-examples" class="space-y-2 border-t border-gray-200 dark:border-neutral-dark-300 pt-4">
                         <div class="flex items-center justify-between">
-                          <label class="block text-xs font-medium text-gray-600">Request Examples</label>
+                          <label class="block text-xs font-medium text-gray-600 dark:text-neutral-dark-600">Request Examples</label>
                           <button
                             ref={requestExamplesMenuTriggerRef}
                             onClick={(e) => {
@@ -853,7 +853,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         {/* Content Type Selector */}
                         {contentTypes.length > 0 && (
                           <div class="space-y-1">
-                            <label class="block text-[10px] font-medium text-gray-500">Content Type</label>
+                            <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Content Type</label>
                             <Select
                               value={selectedRequestExampleContentType}
                               onChange={setSelectedRequestExampleContentType}
@@ -871,7 +871,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         {/* Example Selector */}
                         {examples.length > 0 && (
                           <div class="space-y-1">
-                            <label class="block text-[10px] font-medium text-gray-500">Example</label>
+                            <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Example</label>
                             <Select
                               value={selectedRequestExample}
                               onChange={setSelectedRequestExample}
@@ -906,9 +906,9 @@ export function DocsSideBar({ onClose: _onClose }) {
                       : [];
 
                     return (
-                      <div id="response-schema" class="space-y-2 border-t border-gray-200 pt-6">
+                      <div id="response-schema" class="space-y-2 border-t border-gray-200 dark:border-neutral-dark-300 pt-6">
                         <div class="flex items-center justify-between">
-                          <label class="block text-xs font-medium text-gray-600">Response Schema</label>
+                          <label class="block text-xs font-medium text-gray-600 dark:text-neutral-dark-600">Response Schema</label>
                           <button
                             ref={responseMenuTriggerRef}
                             onClick={(e) => {
@@ -931,7 +931,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         {/* Status Code Selector */}
                         {schemaStatusCodes.length > 0 && (
                           <div class="space-y-1">
-                            <label class="block text-[10px] font-medium text-gray-500">Status Code</label>
+                            <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Status Code</label>
                             <Select
                               value={selectedSchemaStatus}
                               onChange={setSelectedSchemaStatus}
@@ -949,7 +949,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         {/* Content Type Selector */}
                         {schemaContentTypes.length > 0 && (
                           <div class="space-y-1">
-                            <label class="block text-[10px] font-medium text-gray-500">Content Type</label>
+                            <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Content Type</label>
                             <Select
                               value={selectedSchemaContentType}
                               onChange={setSelectedSchemaContentType}
@@ -992,9 +992,9 @@ export function DocsSideBar({ onClose: _onClose }) {
                     const selectedExample = examples.find(ex => ex.name === selectedResponseExample);
 
                     return (
-                      <div id="response-examples" class="space-y-2 border-t border-gray-200 pt-6">
+                      <div id="response-examples" class="space-y-2 border-t border-gray-200 dark:border-neutral-dark-300 pt-6">
                         <div class="flex items-center justify-between">
-                          <label class="block text-xs font-medium text-gray-600">Response Examples</label>
+                          <label class="block text-xs font-medium text-gray-600 dark:text-neutral-dark-600">Response Examples</label>
                           <button
                             ref={responseExamplesMenuTriggerRef}
                             onClick={(e) => {
@@ -1017,7 +1017,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         {/* Status Code Selector */}
                         {responseStatusCodes.length > 0 && (
                           <div class="space-y-1">
-                            <label class="block text-[10px] font-medium text-gray-500">Status Code</label>
+                            <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Status Code</label>
                             <Select
                               value={selectedResponseStatus}
                               onChange={setSelectedResponseStatus}
@@ -1035,7 +1035,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         {/* Content Type Selector */}
                         {contentTypes.length > 0 && (
                           <div class="space-y-1">
-                            <label class="block text-[10px] font-medium text-gray-500">Content Type</label>
+                            <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Content Type</label>
                             <Select
                               value={selectedResponseContentType}
                               onChange={setSelectedResponseContentType}
@@ -1053,7 +1053,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         {/* Example Name Selector */}
                         {examples.length > 0 && (
                           <div class="space-y-1">
-                            <label class="block text-[10px] font-medium text-gray-500">Example</label>
+                            <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Example</label>
                             <Select
                               value={selectedResponseExample}
                               onChange={setSelectedResponseExample}
@@ -1086,18 +1086,18 @@ export function DocsSideBar({ onClose: _onClose }) {
                     !parametersSchema &&
                     !requestBodySchema &&
                     Object.keys(responseSchemas).length === 0 && (
-                      <div class="text-left text-gray-500 italic text-sm">
+                      <div class="text-left text-gray-500 dark:text-neutral-dark-500 italic text-sm">
                         No examples or schemas available for this request.
                       </div>
                     )}
 
                   {/* Slingshot Docs */}
                   {shouldShowSection('slingshot-docs') && (
-                    <div id="slingshot-docs" class="space-y-2 border-t border-gray-200 pt-6">
+                    <div id="slingshot-docs" class="space-y-2 border-t border-gray-200 dark:border-neutral-dark-300 pt-6">
                       <label class="block text-xs font-medium text-gray-600 mb-2">Slingshot Docs</label>
-                      <ul class="space-y-1.5 text-xs text-gray-700">
+                      <ul class="space-y-1.5 text-xs text-gray-700 dark:text-neutral-dark-700">
                         <li class="flex items-start">
-                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                           <a
                             href="https://docs.requestbite.com/slingshot/slingshot/#making-a-request"
                             target="_blank"
@@ -1108,7 +1108,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                           </a>
                         </li>
                         <li class="flex items-start">
-                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                           <a
                             href="https://docs.requestbite.com/slingshot/slingshot/#what-are-collections"
                             target="_blank"
@@ -1119,7 +1119,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                           </a>
                         </li>
                         <li class="flex items-start">
-                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                           <a
                             href="https://docs.requestbite.com/slingshot/slingshot/#what-are-environments"
                             target="_blank"
@@ -1130,7 +1130,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                           </a>
                         </li>
                         <li class="flex items-start">
-                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                           <a
                             href="https://docs.requestbite.com/slingshot/slingshot/#drafts-vs-saved-requests"
                             target="_blank"
@@ -1141,7 +1141,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                           </a>
                         </li>
                         <li class="flex items-start">
-                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                           <a
                             href="https://docs.requestbite.com/slingshot/slingshot/#import-openapi-or-postman-collection"
                             target="_blank"
@@ -1152,7 +1152,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                           </a>
                         </li>
                         <li class="flex items-start">
-                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                           <a
                             href="https://docs.requestbite.com/slingshot/slingshot/#import-curl-command"
                             target="_blank"
@@ -1163,7 +1163,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                           </a>
                         </li>
                         <li class="flex items-start">
-                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                           <a
                             href="https://docs.requestbite.com/slingshot/slingshot/#export-request-as-curl-command"
                             target="_blank"
@@ -1174,7 +1174,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                           </a>
                         </li>
                         <li class="flex items-start">
-                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                           <a
                             href="https://docs.requestbite.com/slingshot/slingshot/#copy-request"
                             target="_blank"
@@ -1185,7 +1185,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                           </a>
                         </li>
                         <li class="flex items-start">
-                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                           <a
                             href="https://docs.requestbite.com/slingshot/slingshot/#copy-response-from-request"
                             target="_blank"
@@ -1196,7 +1196,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                           </a>
                         </li>
                         <li class="flex items-start">
-                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                           <a
                             href="https://docs.requestbite.com/slingshot/slingshot/#presentation-of-response-data"
                             target="_blank"
@@ -1207,7 +1207,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                           </a>
                         </li>
                         <li class="flex items-start">
-                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                           <a
                             href="https://docs.requestbite.com/slingshot/slingshot/#precedence-of-variables-and-secrets"
                             target="_blank"
@@ -1218,7 +1218,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                           </a>
                         </li>
                         <li class="flex items-start">
-                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                           <a
                             href="https://docs.requestbite.com/slingshot/slingshot/#how-requests-are-sent"
                             target="_blank"
@@ -1237,7 +1237,7 @@ export function DocsSideBar({ onClose: _onClose }) {
               <>
                 {/* Collection Header */}
                 <div class="flex items-center gap-2 justify-between">
-                  <h2 class="text-sm font-medium text-gray-900 truncate flex-grow overflow-hidden" title={selectedCollection.name}>
+                  <h2 class="text-sm font-medium text-gray-900 dark:text-neutral-dark-900 truncate flex-grow overflow-hidden" title={selectedCollection.name}>
                     {selectedCollection.name}
                   </h2>
 
@@ -1263,10 +1263,10 @@ export function DocsSideBar({ onClose: _onClose }) {
 
                 {/* Table of Contents */}
                 {collectionTocSections.length > 0 && (
-                  <div class="border-t border-gray-200 pt-3">
-                    <h3 class="text-xs font-medium text-gray-600 mb-2">Table of Contents</h3>
+                  <div class="border-t border-gray-200 dark:border-neutral-dark-300 pt-3">
+                    <h3 class="text-xs font-medium text-gray-600 dark:text-neutral-dark-600 mb-2">Table of Contents</h3>
                     <div class="space-y-1">
-                      <label class="flex items-center text-xs text-gray-700 cursor-pointer">
+                      <label class="flex items-center text-xs text-gray-700 dark:text-neutral-dark-700 cursor-pointer">
                         <input
                           type="radio"
                           name="col-toc-section"
@@ -1278,7 +1278,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         Show all
                       </label>
                       {collectionTocSections.map((section) => (
-                        <label key={section.id} class="flex items-center text-xs text-gray-700 cursor-pointer">
+                        <label key={section.id} class="flex items-center text-xs text-gray-700 dark:text-neutral-dark-700 cursor-pointer">
                           <input
                             type="radio"
                             name="col-toc-section"
@@ -1319,20 +1319,20 @@ export function DocsSideBar({ onClose: _onClose }) {
                     if (scheme.type === 'apiKey') {
                       details.push(
                         <div key="type" class="space-y-1">
-                          <label class="block text-[10px] font-medium text-gray-500">Type</label>
-                          <div class="text-xs text-gray-700">API Key</div>
+                          <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Type</label>
+                          <div class="text-xs text-gray-700 dark:text-neutral-dark-700">API Key</div>
                         </div>
                       );
                       details.push(
                         <div key="in" class="space-y-1">
-                          <label class="block text-[10px] font-medium text-gray-500">Location</label>
-                          <div class="text-xs text-gray-700">{scheme.in}</div>
+                          <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Location</label>
+                          <div class="text-xs text-gray-700 dark:text-neutral-dark-700">{scheme.in}</div>
                         </div>
                       );
                       details.push(
                         <div key="name" class="space-y-1">
-                          <label class="block text-[10px] font-medium text-gray-500">Parameter Name</label>
-                          <div class="text-xs text-gray-700">{scheme.name}</div>
+                          <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Parameter Name</label>
+                          <div class="text-xs text-gray-700 dark:text-neutral-dark-700">{scheme.name}</div>
                         </div>
                       );
                     }
@@ -1341,21 +1341,21 @@ export function DocsSideBar({ onClose: _onClose }) {
                     else if (scheme.type === 'http') {
                       details.push(
                         <div key="type" class="space-y-1">
-                          <label class="block text-[10px] font-medium text-gray-500">Type</label>
-                          <div class="text-xs text-gray-700">HTTP</div>
+                          <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Type</label>
+                          <div class="text-xs text-gray-700 dark:text-neutral-dark-700">HTTP</div>
                         </div>
                       );
                       details.push(
                         <div key="scheme" class="space-y-1">
-                          <label class="block text-[10px] font-medium text-gray-500">Scheme</label>
-                          <div class="text-xs text-gray-700">{scheme.scheme}</div>
+                          <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Scheme</label>
+                          <div class="text-xs text-gray-700 dark:text-neutral-dark-700">{scheme.scheme}</div>
                         </div>
                       );
                       if (scheme.bearerFormat) {
                         details.push(
                           <div key="bearerFormat" class="space-y-1">
-                            <label class="block text-[10px] font-medium text-gray-500">Bearer Format</label>
-                            <div class="text-xs text-gray-700">{scheme.bearerFormat}</div>
+                            <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Bearer Format</label>
+                            <div class="text-xs text-gray-700 dark:text-neutral-dark-700">{scheme.bearerFormat}</div>
                           </div>
                         );
                       }
@@ -1365,8 +1365,8 @@ export function DocsSideBar({ onClose: _onClose }) {
                     else if (scheme.type === 'oauth2' && scheme.flows) {
                       details.push(
                         <div key="type" class="space-y-1">
-                          <label class="block text-[10px] font-medium text-gray-500">Type</label>
-                          <div class="text-xs text-gray-700">OAuth 2.0</div>
+                          <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Type</label>
+                          <div class="text-xs text-gray-700 dark:text-neutral-dark-700">OAuth 2.0</div>
                         </div>
                       );
 
@@ -1374,15 +1374,15 @@ export function DocsSideBar({ onClose: _onClose }) {
                       Object.entries(scheme.flows).forEach(([flowType, flowData]) => {
                         details.push(
                           <div key={`flow-${flowType}`} class="space-y-1">
-                            <label class="block text-[10px] font-medium text-gray-500">Flow Type</label>
-                            <div class="text-xs text-gray-700">{flowType}</div>
+                            <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Flow Type</label>
+                            <div class="text-xs text-gray-700 dark:text-neutral-dark-700">{flowType}</div>
                           </div>
                         );
 
                         if (flowData.authorizationUrl) {
                           details.push(
                             <div key={`auth-url-${flowType}`} class="space-y-1">
-                              <label class="block text-[10px] font-medium text-gray-500">Authorization URL</label>
+                              <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Authorization URL</label>
                               <div class="text-xs text-gray-700 break-all">{flowData.authorizationUrl}</div>
                             </div>
                           );
@@ -1391,7 +1391,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         if (flowData.tokenUrl) {
                           details.push(
                             <div key={`token-url-${flowType}`} class="space-y-1">
-                              <label class="block text-[10px] font-medium text-gray-500">Token URL</label>
+                              <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Token URL</label>
                               <div class="text-xs text-gray-700 break-all">{flowData.tokenUrl}</div>
                             </div>
                           );
@@ -1400,7 +1400,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         if (flowData.refreshUrl) {
                           details.push(
                             <div key={`refresh-url-${flowType}`} class="space-y-1">
-                              <label class="block text-[10px] font-medium text-gray-500">Refresh URL</label>
+                              <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Refresh URL</label>
                               <div class="text-xs text-gray-700 break-all">{flowData.refreshUrl}</div>
                             </div>
                           );
@@ -1409,8 +1409,8 @@ export function DocsSideBar({ onClose: _onClose }) {
                         if (flowData.scopes && Object.keys(flowData.scopes).length > 0) {
                           details.push(
                             <div key={`scopes-${flowType}`} class="space-y-1">
-                              <label class="block text-[10px] font-medium text-gray-500">Scopes</label>
-                              <div class="text-xs text-gray-700">
+                              <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Scopes</label>
+                              <div class="text-xs text-gray-700 dark:text-neutral-dark-700">
                                 {Object.entries(flowData.scopes).map(([scope, description]) => (
                                   <div key={scope} class="ml-2 mb-2">
                                     <span class="font-medium">{scope}</span>
@@ -1428,13 +1428,13 @@ export function DocsSideBar({ onClose: _onClose }) {
                     else if (scheme.type === 'openIdConnect') {
                       details.push(
                         <div key="type" class="space-y-1">
-                          <label class="block text-[10px] font-medium text-gray-500">Type</label>
-                          <div class="text-xs text-gray-700">OpenID Connect</div>
+                          <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Type</label>
+                          <div class="text-xs text-gray-700 dark:text-neutral-dark-700">OpenID Connect</div>
                         </div>
                       );
                       details.push(
                         <div key="url" class="space-y-1">
-                          <label class="block text-[10px] font-medium text-gray-500">OpenID Connect URL</label>
+                          <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">OpenID Connect URL</label>
                           <div class="text-xs text-gray-700 break-all">{scheme.openIdConnectUrl}</div>
                         </div>
                       );
@@ -1444,8 +1444,8 @@ export function DocsSideBar({ onClose: _onClose }) {
                     else if (scheme.type === 'mutualTLS') {
                       details.push(
                         <div key="type" class="space-y-1">
-                          <label class="block text-[10px] font-medium text-gray-500">Type</label>
-                          <div class="text-xs text-gray-700">Mutual TLS</div>
+                          <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Type</label>
+                          <div class="text-xs text-gray-700 dark:text-neutral-dark-700">Mutual TLS</div>
                         </div>
                       );
                     }
@@ -1454,8 +1454,8 @@ export function DocsSideBar({ onClose: _onClose }) {
                     if (scheme.description) {
                       details.push(
                         <div key="description" class="space-y-1">
-                          <label class="block text-[10px] font-medium text-gray-500">Description</label>
-                          <div class="text-xs text-gray-700">{scheme.description}</div>
+                          <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Description</label>
+                          <div class="text-xs text-gray-700 dark:text-neutral-dark-700">{scheme.description}</div>
                         </div>
                       );
                     }
@@ -1464,9 +1464,9 @@ export function DocsSideBar({ onClose: _onClose }) {
                   };
 
                   return (
-                    <div class="space-y-3 border-t border-gray-200 pt-4">
+                    <div class="space-y-3 border-t border-gray-200 dark:border-neutral-dark-300 pt-4">
                       <div class="flex items-center justify-between">
-                        <label class="block text-xs font-medium text-gray-600">Authorization</label>
+                        <label class="block text-xs font-medium text-gray-600 dark:text-neutral-dark-600">Authorization</label>
                         <button
                           ref={authMenuTriggerRef}
                           onClick={(e) => {
@@ -1489,7 +1489,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                       {/* Auth Scheme Selector */}
                       {schemeNames.length > 1 && (
                         <div class="space-y-1">
-                          <label class="block text-[10px] font-medium text-gray-500">Auth Mechanism</label>
+                          <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Auth Mechanism</label>
                           <Select
                             value={selectedAuthScheme}
                             onChange={setSelectedAuthScheme}
@@ -1513,11 +1513,11 @@ export function DocsSideBar({ onClose: _onClose }) {
 
                 {/* Slingshot Docs */}
                 {shouldShowCollectionSection('slingshot-docs') && (
-                  <div class="space-y-2 border-t border-gray-200 pt-4">
+                  <div class="space-y-2 border-t border-gray-200 dark:border-neutral-dark-300 pt-4">
                     <label class="block text-xs font-medium text-gray-600 mb-2">Slingshot Docs</label>
-                    <ul class="space-y-1.5 text-xs text-gray-700">
+                    <ul class="space-y-1.5 text-xs text-gray-700 dark:text-neutral-dark-700">
                       <li class="flex items-start">
-                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                         <a
                           href="https://docs.requestbite.com/slingshot/slingshot/#making-a-request"
                           target="_blank"
@@ -1528,7 +1528,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         </a>
                       </li>
                       <li class="flex items-start">
-                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                         <a
                           href="https://docs.requestbite.com/slingshot/slingshot/#what-are-collections"
                           target="_blank"
@@ -1539,7 +1539,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         </a>
                       </li>
                       <li class="flex items-start">
-                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                         <a
                           href="https://docs.requestbite.com/slingshot/slingshot/#what-are-environments"
                           target="_blank"
@@ -1550,7 +1550,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         </a>
                       </li>
                       <li class="flex items-start">
-                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                         <a
                           href="https://docs.requestbite.com/slingshot/slingshot/#drafts-vs-saved-requests"
                           target="_blank"
@@ -1561,7 +1561,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         </a>
                       </li>
                       <li class="flex items-start">
-                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                         <a
                           href="https://docs.requestbite.com/slingshot/slingshot/#import-openapi-or-postman-collection"
                           target="_blank"
@@ -1572,7 +1572,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         </a>
                       </li>
                       <li class="flex items-start">
-                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                         <a
                           href="https://docs.requestbite.com/slingshot/slingshot/#import-curl-command"
                           target="_blank"
@@ -1583,7 +1583,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         </a>
                       </li>
                       <li class="flex items-start">
-                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                         <a
                           href="https://docs.requestbite.com/slingshot/slingshot/#export-request-as-curl-command"
                           target="_blank"
@@ -1594,7 +1594,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         </a>
                       </li>
                       <li class="flex items-start">
-                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                         <a
                           href="https://docs.requestbite.com/slingshot/slingshot/#copy-request"
                           target="_blank"
@@ -1605,7 +1605,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         </a>
                       </li>
                       <li class="flex items-start">
-                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                         <a
                           href="https://docs.requestbite.com/slingshot/slingshot/#copy-response-from-request"
                           target="_blank"
@@ -1616,7 +1616,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         </a>
                       </li>
                       <li class="flex items-start">
-                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                         <a
                           href="https://docs.requestbite.com/slingshot/slingshot/#presentation-of-response-data"
                           target="_blank"
@@ -1627,7 +1627,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         </a>
                       </li>
                       <li class="flex items-start">
-                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                         <a
                           href="https://docs.requestbite.com/slingshot/slingshot/#precedence-of-variables-and-secrets"
                           target="_blank"
@@ -1638,7 +1638,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                         </a>
                       </li>
                       <li class="flex items-start">
-                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
                         <a
                           href="https://docs.requestbite.com/slingshot/slingshot/#how-requests-are-sent"
                           target="_blank"
@@ -1656,23 +1656,23 @@ export function DocsSideBar({ onClose: _onClose }) {
               <>
                 {/* Default Header */}
                 <div class="flex items-center justify-between">
-                  <h2 class="text-sm font-medium text-gray-900">Documentation</h2>
+                  <h2 class="text-sm font-medium text-gray-900 dark:text-neutral-dark-900">Documentation</h2>
                 </div>
 
                 {/* Placeholder content */}
                 <div class="space-y-4">
-                  <div class="text-sm text-gray-600">
+                  <div class="text-sm text-gray-600 dark:text-neutral-dark-600">
                     <p class="mb-3">Collection documentation will appear here when you select a collection.</p>
 
                     <div class="space-y-2">
-                      <div class="p-3 bg-gray-50 rounded-md">
-                        <h3 class="text-xs font-medium text-gray-700 mb-1">Collection Info</h3>
-                        <p class="text-xs text-gray-500">Collection description and documentation will be displayed here.</p>
+                      <div class="p-3 bg-gray-50 dark:bg-neutral-dark-200 rounded-md">
+                        <h3 class="text-xs font-medium text-gray-700 dark:text-neutral-dark-700 mb-1">Collection Info</h3>
+                        <p class="text-xs text-gray-500 dark:text-neutral-dark-500">Collection description and documentation will be displayed here.</p>
                       </div>
 
-                      <div class="p-3 bg-gray-50 rounded-md">
-                        <h3 class="text-xs font-medium text-gray-700 mb-1">API Documentation</h3>
-                        <p class="text-xs text-gray-500">Markdown-formatted documentation for your API collection.</p>
+                      <div class="p-3 bg-gray-50 dark:bg-neutral-dark-200 rounded-md">
+                        <h3 class="text-xs font-medium text-gray-700 dark:text-neutral-dark-700 mb-1">API Documentation</h3>
+                        <p class="text-xs text-gray-500 dark:text-neutral-dark-500">Markdown-formatted documentation for your API collection.</p>
                       </div>
                     </div>
                   </div>

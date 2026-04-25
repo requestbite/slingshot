@@ -52,7 +52,7 @@ export function ExportPostmanModal({ isOpen, onClose, collection }) {
     <Modal isOpen={isOpen} onClose={handleClose} title="Export collection" size="md">
       <form onSubmit={(e) => { e.preventDefault(); handleExport(); }}>
         <div>
-          <p class="text-sm text-gray-500">
+          <p class="text-sm text-gray-500 dark:text-neutral-dark-500">
             Download the current collection in Postman Collection v2.1 format that can be used by supported API clients.
           </p>
           {error && (

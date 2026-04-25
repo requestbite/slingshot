@@ -18,7 +18,7 @@ export function Select({
     ? "py-1 px-2 text-xs"
     : "py-2 px-3 text-sm";
 
-  const baseClasses = `w-full appearance-none rounded-md bg-white pr-8 text-gray-900 outline-solid outline-1 focus:outline-2 -outline-offset-1 outline-gray-300 focus:-outline-offset-2 focus:outline-sky-500 ${sizeClasses}`;
+  const baseClasses = `w-full appearance-none rounded-md bg-white dark:bg-[#313340] pr-8 text-gray-900 dark:text-neutral-dark-900 outline-solid outline-1 focus:outline-2 -outline-offset-1 outline-gray-300 dark:outline-neutral-dark-50 focus:-outline-offset-2 focus:outline-sky-500 ${sizeClasses}`;
 
   return (
     <div class="w-full">
@@ -42,7 +42,7 @@ export function Select({
           ))}
         </select>
         <svg
-          class="pointer-events-none absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 h-4 w-4"
+          class="pointer-events-none absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 dark:text-neutral-dark-500 h-4 w-4"
           viewBox="0 0 16 16"
           fill="currentColor"
           aria-hidden="true"
@@ -56,7 +56,7 @@ export function Select({
       </div>
 
       {description && (
-        <p class="mt-1 text-xs text-gray-500">
+        <p class="mt-1 text-xs text-gray-500 dark:text-neutral-dark-500">
           {description}
         </p>
       )}

@@ -116,7 +116,7 @@ export const TextInput = forwardRef(({
     rightPadding = 'pr-[40px]';
   }
 
-  const baseInputClasses = `block w-full rounded-md px-3 py-2 ${disabled ? 'bg-gray-50' : 'bg-white'} text-gray-900 outline-solid outline-1 focus:outline-2 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-sky-500 text-sm`;
+  const baseInputClasses = `block w-full rounded-md px-3 py-2 ${disabled ? 'bg-gray-50 dark:bg-neutral-dark-200' : 'bg-white dark:bg-[#313340]'} text-gray-900 dark:text-neutral-dark-900 outline-solid outline-1 focus:outline-2 -outline-offset-1 outline-gray-300 dark:outline-neutral-dark-50 placeholder:text-gray-400 dark:placeholder:text-neutral-dark-400 focus:-outline-offset-2 focus:outline-sky-500 text-sm`;
 
   return (
     <div class="w-full">
@@ -170,7 +170,7 @@ export const TextInput = forwardRef(({
               <button
                 type="button"
                 onClick={handleClear}
-                class="p-1 text-gray-400 hover:text-gray-600 rounded-sm focus:outline-hidden cursor-pointer transition-colors"
+                class="p-1 text-gray-400 hover:text-gray-600 dark:text-neutral-dark-400 dark:hover:text-neutral-dark-600 rounded-sm focus:outline-hidden cursor-pointer transition-colors"
                 aria-label="Clear input"
                 tabIndex={-1}
               >
@@ -195,7 +195,7 @@ export const TextInput = forwardRef(({
               <button
                 type="button"
                 onClick={handleCopy}
-                class="p-1 text-gray-400 hover:text-gray-600 rounded-sm focus:outline-hidden cursor-pointer transition-colors"
+                class="p-1 text-gray-400 hover:text-gray-600 dark:text-neutral-dark-400 dark:hover:text-neutral-dark-600 rounded-sm focus:outline-hidden cursor-pointer transition-colors"
                 aria-label="Copy to clipboard"
                 tabIndex={-1}
               >
@@ -207,7 +207,7 @@ export const TextInput = forwardRef(({
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
-                class="p-1 text-gray-400 hover:text-gray-600 rounded-sm focus:outline-hidden cursor-pointer transition-colors"
+                class="p-1 text-gray-400 hover:text-gray-600 dark:text-neutral-dark-400 dark:hover:text-neutral-dark-600 rounded-sm focus:outline-hidden cursor-pointer transition-colors"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                 tabIndex={-1}
               >
@@ -256,7 +256,7 @@ export const TextInput = forwardRef(({
       </div>
 
       {description && (
-        <p class="mt-1 text-xs text-gray-500">
+        <p class="mt-1 text-xs text-gray-500 dark:text-neutral-dark-500">
           {description}
         </p>
       )}

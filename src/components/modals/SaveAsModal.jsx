@@ -199,7 +199,7 @@ export function SaveAsModal({ isOpen, onClose, requestData, collection, onSucces
     <Modal isOpen={isOpen} onClose={handleClose} title="Save Request" size="md">
       <form onSubmit={handleSubmit}>
         <div>
-          <div class="text-sm text-gray-500">
+          <div class="text-sm text-gray-500 dark:text-neutral-dark-500">
             Save a new request to a collection.
           </div>
 

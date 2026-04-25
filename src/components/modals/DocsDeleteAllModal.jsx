@@ -47,7 +47,7 @@ export function DocsDeleteAllModal({ isOpen, onClose, request, onDelete }) {
     <Modal isOpen={isOpen && !!request} onClose={handleClose} title="Delete request docs" size="md">
       <form onSubmit={(e) => { e.preventDefault(); handleDelete(); }}>
         <div class="mt-2">
-          <p class="text-sm text-gray-500 text-center sm:text-left">Do you want to delete all documentation for this request?</p>
+          <p class="text-sm text-gray-500 dark:text-neutral-dark-500 text-center sm:text-left">Do you want to delete all documentation for this request?</p>
         </div>
 
         {error && (

@@ -1352,7 +1352,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       <div class="p-4">
         <div class="mb-2 overflow-x-auto scrollbar-hide">
           <div class="flex items-center justify-between flex-nowrap min-w-max">
-            <div class="flex items-center space-x-2 text-sm font-medium text-gray-700 whitespace-nowrap mr-2">
+            <div class="flex items-center space-x-2 text-sm font-medium text-gray-700 dark:text-neutral-dark-700 whitespace-nowrap mr-2">
               <span ref={recentMenuButtonRef} class="inline-flex">
                 <Button
                   onClick={loadAndShowRecentMenu}
@@ -1371,7 +1371,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
             </div>
             <div class="flex items-center space-x-2 whitespace-nowrap">
               {hasUnsavedChanges && (
-                <span class="flex items-center text-xs text-gray-400 font-normal">
+                <span class="flex items-center text-xs text-gray-400 dark:text-neutral-dark-400 font-normal">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info mr-1">
                     <circle cx="12" cy="12" r="10" />
                     <path d="M12 16v-4" />
@@ -1406,14 +1406,14 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
               value={requestData.method}
               onChange={(e) => handleMethodChange(e.target.value)}
               onKeyDown={handleEnterKeyPress}
-              class="w-full appearance-none rounded-md bg-white pl-3 pr-8 text-sm text-gray-900 outline -outline-offset-1 outline-gray-300 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
+              class="w-full appearance-none rounded-md bg-white dark:bg-[#313340] pl-3 pr-8 text-sm text-gray-900 dark:text-neutral-dark-900 outline -outline-offset-1 outline-gray-300 dark:outline-neutral-dark-50 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
               style="min-height: 38px; max-height: 38px; line-height: 22px; box-sizing: border-box;"
             >
               {HTTP_METHODS.map(method => (
                 <option key={method} value={method}>{method}</option>
               ))}
             </select>
-            <svg class="pointer-events-none absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 h-4 w-4"
+            <svg class="pointer-events-none absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 dark:text-neutral-dark-500 h-4 w-4"
               viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" data-slot="icon">
               <path fill-rule="evenodd"
                 d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
@@ -1429,7 +1429,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
               onChange={handleUrlChange}
               onKeyDown={handleEnterKeyPress}
               placeholder={placeholderUrl}
-              className="w-full text-sm font-inter text-gray-900"
+              className="w-full text-sm font-inter text-gray-900 dark:text-neutral-dark-900"
               style="min-height: 38px; line-height: 22px; width: 100%; box-sizing: border-box;"
               selectedEnvironment={currentEnvironment}
               showResolved={true}
@@ -1455,15 +1455,15 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       {/* Tabs and Tab Content */}
       <div>
         {/* Tabs */}
-        <div class={`px-4 overflow-x-auto scrollbar-hide ${activeTab !== 'overview' ? 'border-b border-gray-200' : ''}`}>
+        <div class={`px-4 overflow-x-auto scrollbar-hide ${activeTab !== 'overview' ? 'border-b border-gray-200 dark:border-neutral-dark-300' : ''}`}>
           <div class="flex justify-between items-start flex-nowrap min-w-max">
             <div class="flex space-x-1 flex-nowrap">
               {/* Overview Tab with Eye-Closed Icon */}
               <button type="button" data-tab="overview"
                 onClick={() => setActiveTab('overview')}
                 class={`px-4 py-2 text-xs rounded-t-md font-medium focus:outline-none ${activeTab === 'overview'
-                  ? 'text-sky-600 bg-sky-50 border-b-2 border-sky-600 cursor-pointer'
-                  : 'text-gray-600 hover:text-sky-600 hover:bg-gray-100 cursor-pointer'
+                  ? 'text-sky-600 dark:text-primary-dark-400 bg-sky-50 dark:bg-primary-dark-200 border-b-2 border-sky-600 dark:border-primary-dark-400 cursor-pointer'
+                  : 'text-gray-600 dark:text-neutral-dark-600 hover:text-sky-600 hover:bg-gray-100 dark:hover:bg-neutral-dark-200 cursor-pointer'
                   }`}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1478,10 +1478,10 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
                 <button key={key} type="button" data-tab={key}
                   onClick={() => setActiveTab(key)}
                   class={`px-4 py-2 text-xs rounded-t-md font-medium focus:outline-none ${key === 'body' && isBodyDisabled
-                    ? 'text-gray-400 cursor-not-allowed'
+                    ? 'text-gray-400 dark:text-neutral-dark-400 cursor-not-allowed'
                     : activeTab === key
-                      ? 'text-sky-600 bg-sky-50 border-b-2 border-sky-600 cursor-pointer'
-                      : 'text-gray-600 hover:text-sky-600 hover:bg-gray-100 cursor-pointer'
+                      ? 'text-sky-600 dark:text-primary-dark-400 bg-sky-50 dark:bg-primary-dark-200 border-b-2 border-sky-600 dark:border-primary-dark-400 cursor-pointer'
+                      : 'text-gray-600 dark:text-neutral-dark-600 hover:text-sky-600 hover:bg-gray-100 dark:hover:bg-neutral-dark-200 cursor-pointer'
                     }`}
                   disabled={key === 'body' && isBodyDisabled}
                 >
@@ -1644,7 +1644,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       </div>
 
       {/* Response Section */}
-      <div class="p-4 border-t border-gray-200 flex-grow flex flex-col">
+      <div class="p-4 border-t border-gray-200 dark:border-neutral-dark-300 flex-grow flex flex-col">
         <div id="response-content-container" class="flex flex-col h-full">
           <ResponseDisplay
             response={response}
@@ -1669,7 +1669,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         position="below"
       >
         {recentRequests.length === 0 ? (
-          <div class="px-4 py-2 text-sm text-gray-400">No recent requests...</div>
+          <div class="px-4 py-2 text-sm text-gray-400 dark:text-neutral-dark-400">No recent requests...</div>
         ) : (
           recentRequests.map(req => (
             <a
@@ -1680,7 +1680,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
                 setShowRecentMenu(false);
                 setLocation(`/${req.collection_id}/${req.id}`);
               }}
-              class="flex flex-col px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer no-underline"
+              class="flex flex-col px-4 py-2 text-sm text-gray-700 dark:text-neutral-dark-700 hover:bg-gray-100 dark:hover:bg-neutral-dark-200 cursor-pointer no-underline"
             >
               <span class="truncate">{req.name || 'Untitled request'}</span>
               <span class="flex items-center gap-1.5 mt-0.5 overflow-hidden">
@@ -1688,7 +1688,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
                   {req.method?.toUpperCase()}
                 </span>
                 {req.url && (
-                  <span class="text-xs text-gray-400 truncate">{req.url.replace(/^\{\{[^}]+\}\}/, '')}</span>
+                  <span class="text-xs text-gray-400 dark:text-neutral-dark-400 truncate">{req.url.replace(/^\{\{[^}]+\}\}/, '')}</span>
                 )}
               </span>
             </a>

@@ -464,7 +464,7 @@ export function EnvironmentUpdatePage() {
   if (isLoading) {
     return (
       <div class="h-full flex items-center justify-center">
-        <div class="flex items-center space-x-3 text-gray-500">
+        <div class="flex items-center space-x-3 text-gray-500 dark:text-neutral-dark-500">
           <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -479,22 +479,22 @@ export function EnvironmentUpdatePage() {
     return (
       <div class="h-full flex items-center justify-center">
         <div class="text-center">
-          <h2 class="text-lg font-medium text-gray-900">Environment not found</h2>
-          <p class="text-gray-600 mt-2">The environment you're looking for doesn't exist.</p>
+          <h2 class="text-lg font-medium text-gray-900 dark:text-neutral-dark-900">Environment not found</h2>
+          <p class="text-gray-600 dark:text-neutral-dark-600 mt-2">The environment you're looking for doesn't exist.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div class="h-full bg-gray-100 overflow-y-auto">
+    <div class="h-full bg-gray-100 dark:bg-[#282a36] overflow-y-auto">
       <div class="min-h-full pt-[83px] pb-6">
         <div class="max-w-6xl mx-auto px-4">
 
           {/* Sidebar Toggle Button for Mobile - only show when sidebar is hidden */}
           <button
             onClick={() => setIsSidebarOpen(true)}
-            class={`fixed top-1/2 -left-1 transform -translate-y-1/2 z-50 bg-sky-100 hover:bg-sky-200 text-sky-700 p-2 rounded-r-lg shadow-lg cursor-pointer transition-all duration-200 hover:translate-x-1 ${isSidebarOpen ? 'hidden' : 'block md:hidden'
+            class={`fixed top-1/2 -left-1 transform -translate-y-1/2 z-50 bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 text-sky-700 dark:text-primary-dark-400 p-2 rounded-r-lg shadow-lg cursor-pointer transition-all duration-200 hover:translate-x-1 ${isSidebarOpen ? 'hidden' : 'block md:hidden'
               }`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -506,23 +506,23 @@ export function EnvironmentUpdatePage() {
           <div class="flex gap-4">
             {/* Desktop Sidebar */}
             <div class="w-64 flex-shrink-0 hidden md:block">
-              <div class="bg-white rounded-lg border border-gray-300">
+              <div class="bg-white dark:bg-surface-dark-elevated rounded-lg border border-gray-300 dark:border-neutral-dark-50">
                 <div class="flex grow flex-col gap-y-5 overflow-y-auto px-6 py-4">
                   <nav class="flex flex-1 flex-col">
                     <ul role="list" class="flex flex-1 flex-col gap-y-7">
                       <li>
-                        <div class="text-xs mb-2 text-gray-500">Environment</div>
+                        <div class="text-xs mb-2 text-gray-500 dark:text-neutral-dark-500">Environment</div>
                         <ul role="list" class="-mx-2 space-y-1">
                           <li>
                             <a
                               href={`/environments/${params.uuid}`}
                               onClick={(e) => handleSectionNavigation('general', e)}
                               class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${activeSection === 'general'
-                                ? 'bg-sky-50 text-sky-500'
-                                : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
+                                ? 'bg-sky-50 dark:bg-primary-dark-200 text-sky-500 dark:text-primary-dark-400'
+                                : 'text-gray-700 dark:text-neutral-dark-700 hover:bg-gray-50 dark:hover:bg-neutral-dark-200 hover:text-sky-500'
                                 }`}
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" class={`size-6 shrink-0 ${activeSection === 'general' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
+                              <svg xmlns="http://www.w3.org/2000/svg" class={`size-6 shrink-0 ${activeSection === 'general' ? 'text-sky-500 dark:text-primary-dark-400' : 'text-gray-400 dark:text-neutral-dark-400 group-hover:text-sky-500'
                                 }`} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="22" y1="12" x2="2" y2="12" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /><line x1="6" y1="16" x2="6.01" y2="16" /><line x1="10" y1="16" x2="10.01" y2="16" />
                               </svg>
@@ -534,11 +534,11 @@ export function EnvironmentUpdatePage() {
                               href={`/environments/${params.uuid}/secrets`}
                               onClick={(e) => handleSectionNavigation('secrets', e)}
                               class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${activeSection === 'secrets'
-                                ? 'bg-sky-50 text-sky-500'
-                                : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
+                                ? 'bg-sky-50 dark:bg-primary-dark-200 text-sky-500 dark:text-primary-dark-400'
+                                : 'text-gray-700 dark:text-neutral-dark-700 hover:bg-gray-50 dark:hover:bg-neutral-dark-200 hover:text-sky-500'
                                 }`}
                             >
-                              <svg class={`size-6 shrink-0 ${activeSection === 'secrets' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
+                              <svg class={`size-6 shrink-0 ${activeSection === 'secrets' ? 'text-sky-500 dark:text-primary-dark-400' : 'text-gray-400 dark:text-neutral-dark-400 group-hover:text-sky-500'
                                 }`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><rect width="8" height="6" x="8" y="12" rx="1" /><path d="M10 12v-2a2 2 0 1 1 4 0v2" />
                               </svg>
@@ -550,11 +550,11 @@ export function EnvironmentUpdatePage() {
                               href={`/environments/${params.uuid}/auth`}
                               onClick={(e) => handleSectionNavigation('auth', e)}
                               class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${activeSection === 'auth'
-                                ? 'bg-sky-50 text-sky-500'
-                                : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
+                                ? 'bg-sky-50 dark:bg-primary-dark-200 text-sky-500 dark:text-primary-dark-400'
+                                : 'text-gray-700 dark:text-neutral-dark-700 hover:bg-gray-50 dark:hover:bg-neutral-dark-200 hover:text-sky-500'
                                 }`}
                             >
-                              <svg class={`size-6 shrink-0 ${activeSection === 'auth' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
+                              <svg class={`size-6 shrink-0 ${activeSection === 'auth' ? 'text-sky-500 dark:text-primary-dark-400' : 'text-gray-400 dark:text-neutral-dark-400 group-hover:text-sky-500'
                                 }`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4" /><path d="M14 13.12c0 2.38 0 6.38-1 8.88" /><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02" /><path d="M2 12a10 10 0 0 1 18-6" /><path d="M2 16h.01" /><path d="M21.8 16c.2-2 .131-5.354 0-6" /><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2" /><path d="M8.65 22c.21-.66.45-1.32.57-2" /><path d="M9 6.8a6 6 0 0 1 9 5.2v2" />
                               </svg>
@@ -574,17 +574,17 @@ export function EnvironmentUpdatePage() {
               <>
                 {/* Full screen overlay covering topbar */}
                 <div
-                  class="fixed inset-0 bg-gray-500/75 z-[60] md:hidden"
+                  class="fixed inset-0 bg-gray-500/75 dark:bg-neutral-dark-400/75 z-[60] md:hidden"
                   onClick={() => setIsSidebarOpen(false)}
                 />
 
                 {/* Mobile Sidebar - takes full screen minus 75px, covers topbar */}
-                <div class="fixed left-0 top-0 bottom-0 right-[75px] bg-white z-[70] md:hidden overflow-y-auto">
+                <div class="fixed left-0 top-0 bottom-0 right-[75px] bg-white dark:bg-[#282a36] z-[70] md:hidden overflow-y-auto">
                   <div class="p-6">
                     <nav class="flex flex-1 flex-col">
                       <ul role="list" class="flex flex-1 flex-col gap-y-7">
                         <li>
-                          <div class="text-xs mb-2 text-gray-500">Environment</div>
+                          <div class="text-xs mb-2 text-gray-500 dark:text-neutral-dark-500">Environment</div>
                           <ul role="list" class="-mx-2 space-y-1">
                             <li>
                               <a
@@ -595,10 +595,10 @@ export function EnvironmentUpdatePage() {
                                 }}
                                 class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${activeSection === 'general'
                                   ? 'bg-sky-50 text-sky-500'
-                                  : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
+                                  : 'text-gray-700 dark:text-neutral-dark-700 hover:bg-gray-50 dark:hover:bg-neutral-dark-200 hover:text-sky-500'
                                   }`}
                               >
-                                <svg xmlns="http://www.w3.org/2000/svg" class={`size-6 shrink-0 ${activeSection === 'general' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
+                                <svg xmlns="http://www.w3.org/2000/svg" class={`size-6 shrink-0 ${activeSection === 'general' ? 'text-sky-500 dark:text-primary-dark-400' : 'text-gray-400 dark:text-neutral-dark-400 group-hover:text-sky-500'
                                   }`} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                   <line x1="22" y1="12" x2="2" y2="12" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /><line x1="6" y1="16" x2="6.01" y2="16" /><line x1="10" y1="16" x2="10.01" y2="16" />
                                 </svg>
@@ -614,10 +614,10 @@ export function EnvironmentUpdatePage() {
                                 }}
                                 class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${activeSection === 'secrets'
                                   ? 'bg-sky-50 text-sky-500'
-                                  : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
+                                  : 'text-gray-700 dark:text-neutral-dark-700 hover:bg-gray-50 dark:hover:bg-neutral-dark-200 hover:text-sky-500'
                                   }`}
                               >
-                                <svg class={`size-6 shrink-0 ${activeSection === 'secrets' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
+                                <svg class={`size-6 shrink-0 ${activeSection === 'secrets' ? 'text-sky-500 dark:text-primary-dark-400' : 'text-gray-400 dark:text-neutral-dark-400 group-hover:text-sky-500'
                                   }`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                   <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><rect width="8" height="6" x="8" y="12" rx="1" /><path d="M10 12v-2a2 2 0 1 1 4 0v2" />
                                 </svg>
@@ -633,10 +633,10 @@ export function EnvironmentUpdatePage() {
                                 }}
                                 class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${activeSection === 'auth'
                                   ? 'bg-sky-50 text-sky-500'
-                                  : 'text-gray-700 hover:bg-gray-50 hover:text-sky-500'
+                                  : 'text-gray-700 dark:text-neutral-dark-700 hover:bg-gray-50 dark:hover:bg-neutral-dark-200 hover:text-sky-500'
                                   }`}
                               >
-                                <svg class={`size-6 shrink-0 ${activeSection === 'auth' ? 'text-sky-500' : 'text-gray-400 group-hover:text-sky-500'
+                                <svg class={`size-6 shrink-0 ${activeSection === 'auth' ? 'text-sky-500 dark:text-primary-dark-400' : 'text-gray-400 dark:text-neutral-dark-400 group-hover:text-sky-500'
                                   }`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                   <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4" /><path d="M14 13.12c0 2.38 0 6.38-1 8.88" /><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02" /><path d="M2 12a10 10 0 0 1 18-6" /><path d="M2 16h.01" /><path d="M21.8 16c.2-2 .131-5.354 0-6" /><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2" /><path d="M8.65 22c.21-.66.45-1.32.57-2" /><path d="M9 6.8a6 6 0 0 1 9 5.2v2" />
                                 </svg>
@@ -654,12 +654,12 @@ export function EnvironmentUpdatePage() {
 
             {/* Content Area */}
             <div class="flex-1 min-w-0 overflow-hidden">
-              <div class="bg-white rounded-lg border border-gray-300 p-6 w-full max-w-full overflow-hidden">
+              <div class="bg-white dark:bg-surface-dark-elevated rounded-lg border border-gray-300 dark:border-neutral-dark-50 p-6 w-full max-w-full overflow-hidden">
 
                 {activeSection === 'general' && (
                   <div>
-                    <h2 class="text-base font-semibold text-gray-900">General</h2>
-                    <p class="mt-1 text-sm text-gray-600 mb-6">Manage your environment details.</p>
+                    <h2 class="text-base font-semibold text-gray-900 dark:text-neutral-dark-900">General</h2>
+                    <p class="mt-1 text-sm text-gray-600 dark:text-neutral-dark-600 mb-6">Manage your environment details.</p>
 
                     {/* General Form */}
                     <form onSubmit={handleGeneralSave}>
@@ -728,7 +728,7 @@ export function EnvironmentUpdatePage() {
 
                 {activeSection === 'secrets' && (
                   <div>
-                    <h2 class="text-base font-semibold text-gray-900">Environment Secrets</h2>
+                    <h2 class="text-base font-semibold text-gray-900 dark:text-neutral-dark-900">Environment Secrets</h2>
                     <p class="mt-1 mb-6 text-sm text-gray-600">Encrypted key-value pairs stored securely for this environment.</p>
 
                     {/* Add new secret form */}
@@ -767,22 +767,22 @@ export function EnvironmentUpdatePage() {
                     </div>
 
                     {/* Existing secrets list */}
-                    <div class="overflow-hidden border border-gray-300 rounded-lg mb-6">
-                      <table class="min-w-full divide-y divide-gray-300">
-                        <thead class="bg-gray-50">
+                    <div class="overflow-hidden border border-gray-300 dark:border-neutral-dark-50 rounded-lg mb-6">
+                      <table class="min-w-full divide-y divide-gray-300 dark:divide-neutral-dark-50">
+                        <thead class="bg-gray-50 dark:bg-neutral-dark-200">
                           <tr>
-                            <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Key</th>
-                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Value</th>
+                            <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900 sm:pl-6">Key</th>
+                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900">Value</th>
                             <th class="relative py-3.5 pl-3 pr-4 sm:pr-6 text-right">
                               Actions
                             </th>
                           </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white">
+                        <tbody class="divide-y divide-gray-200 dark:divide-neutral-dark-300 bg-white dark:bg-surface-dark-elevated">
                           {pendingSecrets.length > 0 ? (
                             pendingSecrets.map((secret) => (
                               <tr key={secret._tempId || secret.key} class={secret._status === 'new' ? 'bg-blue-50' : secret._status === 'updated' ? 'bg-yellow-50' : ''}>
-                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-neutral-dark-900 sm:pl-6">
                                   {secret.key}
                                   {secret._status === 'new' && <span class="ml-2 text-xs text-blue-600">(new)</span>}
                                   {secret._status === 'updated' && <span class="ml-2 text-xs text-yellow-600">(modified)</span>}
@@ -794,7 +794,7 @@ export function EnvironmentUpdatePage() {
                                   <button
                                     type="button"
                                     onClick={() => handleEditSecret(secret)}
-                                    class="px-2 py-1 bg-sky-100 hover:bg-sky-200 text-sky-700 text-sm font-medium rounded-md cursor-pointer inline-block"
+                                    class="px-2 py-1 bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 text-sky-700 dark:text-primary-dark-400 text-sm font-medium rounded-md cursor-pointer inline-block"
                                   >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -806,7 +806,7 @@ export function EnvironmentUpdatePage() {
                                       setSecretToDelete(secret._tempId || secret.key);
                                       setDeleteSecretModal(true);
                                     }}
-                                    class="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium rounded-md cursor-pointer inline-block"
+                                    class="px-2 py-1 bg-red-100 dark:bg-error-dark-100 hover:bg-red-200 dark:hover:bg-error-dark-200 text-red-700 dark:text-error-dark-400 text-sm font-medium rounded-md cursor-pointer inline-block"
                                   >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -817,7 +817,7 @@ export function EnvironmentUpdatePage() {
                             ))
                           ) : (
                             <tr>
-                              <td colspan="3" class="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">
+                              <td colspan="3" class="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-500 dark:text-neutral-dark-500 sm:pl-6">
                                 No secrets added yet.
                               </td>
                             </tr>
@@ -848,8 +848,8 @@ export function EnvironmentUpdatePage() {
 
                 {activeSection === 'auth' && (
                   <div>
-                    <h2 class="text-base font-semibold text-gray-900">Authentication</h2>
-                    <p class="mt-1 text-sm text-gray-600 mb-6">Configure authentication for this environment.</p>
+                    <h2 class="text-base font-semibold text-gray-900 dark:text-neutral-dark-900">Authentication</h2>
+                    <p class="mt-1 text-sm text-gray-600 dark:text-neutral-dark-600 mb-6">Configure authentication for this environment.</p>
 
                     {/* Auth Configuration Form */}
                     <AuthSection
@@ -921,12 +921,12 @@ export function EnvironmentUpdatePage() {
         <div class="fixed inset-0 bg-gray-500/75 transition-opacity z-50">
           <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
-              <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+              <div class="relative transform overflow-hidden rounded-lg bg-white dark:bg-surface-dark-elevated px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
                 <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
                   <button
                     onClick={() => setDeleteSecretModal(false)}
                     type="button"
-                    class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 cursor-pointer"
+                    class="rounded-md bg-white dark:bg-surface-dark-elevated text-gray-400 dark:text-neutral-dark-400 hover:text-gray-500 dark:hover:text-neutral-dark-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 cursor-pointer"
                   >
                     <span class="sr-only">Close</span>
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -941,7 +941,7 @@ export function EnvironmentUpdatePage() {
                     </svg>
                   </div>
                   <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                    <h3 class="text-base font-semibold text-gray-900">Delete Secret</h3>
+                    <h3 class="text-base font-semibold text-gray-900 dark:text-neutral-dark-900">Delete Secret</h3>
                     <div class="mt-2">
                       <p class="text-sm text-gray-500">
                         Are you sure you want to delete this secret? This action cannot be undone.

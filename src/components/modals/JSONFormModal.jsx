@@ -554,10 +554,10 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
             type="checkbox"
             checked={fieldEnabled}
             onChange={(e) => handleToggle(e.target.checked)}
-            class="h-3 w-3 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+            class="h-3 w-3 text-sky-600 focus:ring-sky-500 border-gray-300 dark:border-neutral-dark-50 rounded"
           />
           <span
-            class="text-xs text-gray-600 cursor-pointer"
+            class="text-xs text-gray-600 dark:text-neutral-dark-600 cursor-pointer"
             onClick={() => handleToggle(!fieldEnabled)}
           >
             Enable
@@ -612,7 +612,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       return (
         <div class="mb-1">
           <div class="flex items-center gap-2 text-xs">
-            <span class="text-gray-600">{getCompositionDisplayName(composition.type)}:</span>
+            <span class="text-gray-600 dark:text-neutral-dark-600">{getCompositionDisplayName(composition.type)}:</span>
             <Select
               value={selectedCompositionIndex.toString()}
               onChange={(value) => handleCompositionChange(fieldPath, parseInt(value, 10))}
@@ -631,7 +631,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       return (
         <>
           {renderNestedCompositionSelector()}
-          <div class={`text-xs text-gray-500 italic p-2 bg-gray-50 rounded border border-gray-200 ${!isEnabled ? 'opacity-50' : ''}`}>
+          <div class={`text-xs text-gray-500 italic p-2 bg-gray-50 dark:bg-neutral-dark-200 rounded border border-gray-200 dark:border-neutral-dark-300 ${!isEnabled ? 'opacity-50' : ''}`}>
             Field is set to null
           </div>
           {shouldRenderDescription() && (
@@ -674,9 +674,9 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
               checked={fieldValue || false}
               onChange={(e) => handleFieldChange(fieldPath, e.target.checked)}
               disabled={isSubmitting || !isEnabled}
-              class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+              class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 dark:border-neutral-dark-50 rounded"
             />
-            <span class="ml-2 text-sm text-gray-700">
+            <span class="ml-2 text-sm text-gray-700 dark:text-neutral-dark-700">
               Enabled
             </span>
           </div>
@@ -747,7 +747,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
         return (
           <>
             {renderNestedCompositionSelector()}
-            <div class={`space-y-3 p-3 bg-gray-50 rounded border border-gray-200 ${!isEnabled ? 'opacity-50' : ''}`}>
+            <div class={`space-y-3 p-3 bg-gray-50 dark:bg-neutral-dark-200 rounded border border-gray-200 dark:border-neutral-dark-300 ${!isEnabled ? 'opacity-50' : ''}`}>
               {Object.entries(effectiveProperty.properties).map(([propName, propSchema]) => {
                 const nestedPath = `${fieldPath}.${propName}`;
                 const isRequired = required.includes(propName);
@@ -1048,7 +1048,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       <div class={!isEnabled ? 'opacity-50' : ''}>
         <div class="space-y-2">
           {currentArray.map((item, index) => (
-            <div key={index} class="flex items-start gap-2 p-3 bg-gray-50 rounded border border-gray-200">
+            <div key={index} class="flex items-start gap-2 p-3 bg-gray-50 dark:bg-neutral-dark-200 rounded border border-gray-200 dark:border-neutral-dark-300">
               <div class="flex-1">
                 {renderFieldInput(`${fieldPath}.${index}`, itemsSchema, isEnabled, isSubmitting)}
               </div>
@@ -1157,7 +1157,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       <div class={!isEnabled ? 'opacity-50' : ''}>
         <div class="space-y-2">
           {arrayValue.map((item, index) => (
-            <div key={index} class="flex items-start gap-2 p-3 bg-gray-50 rounded border border-gray-200">
+            <div key={index} class="flex items-start gap-2 p-3 bg-gray-50 dark:bg-neutral-dark-200 rounded border border-gray-200 dark:border-neutral-dark-300">
               <div class="flex-1">
                 {renderFieldInput(`${fieldName}.${index}`, itemsSchema, isEnabled, isSubmitting)}
               </div>
@@ -1200,7 +1200,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
     const required = property.required || [];
 
     return (
-      <div class={`space-y-3 p-3 bg-gray-50 rounded border border-gray-200 ${!isEnabled ? 'opacity-50' : ''}`}>
+      <div class={`space-y-3 p-3 bg-gray-50 dark:bg-neutral-dark-200 rounded border border-gray-200 dark:border-neutral-dark-300 ${!isEnabled ? 'opacity-50' : ''}`}>
         {Object.entries(objectProperties).map(([propName, propSchema]) => {
           const propPath = `${fieldName}.${propName}`;
           const isRequired = required.includes(propName);
@@ -1246,7 +1246,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       const effectiveDesc = effectiveProperty.description?.trim();
       if (parentDesc === effectiveDesc) {
         return (
-          <div class="mt-1 mb-2 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500 [&_.prose_p]:text-gray-500 [&_.prose_li]:text-gray-500 [&_.prose_*]:text-gray-500">
+          <div class="mt-1 mb-2 text-xs text-gray-500 [&_.prose]:text-xs ">
             <MarkdownPreview markdown={property.description} />
           </div>
         );
@@ -1254,7 +1254,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
 
       // Descriptions are different, show parent here
       return (
-        <div class="mt-1 mb-2 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500 [&_.prose_p]:text-gray-500 [&_.prose_li]:text-gray-500 [&_.prose_*]:text-gray-500">
+        <div class="mt-1 mb-2 text-xs text-gray-500 [&_.prose]:text-xs ">
           <MarkdownPreview markdown={property.description} />
         </div>
       );
@@ -1277,7 +1277,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
         }
 
         return (
-          <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500 [&_.prose_p]:text-gray-500 [&_.prose_li]:text-gray-500 [&_.prose_*]:text-gray-500">
+          <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs ">
             <MarkdownPreview markdown={effectiveProperty.description} />
           </div>
         );
@@ -1287,7 +1287,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       const description = property.description;
       if (!description) return null;
       return (
-        <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs [&_.prose]:text-gray-500 [&_.prose_p]:text-gray-500 [&_.prose_li]:text-gray-500 [&_.prose_*]:text-gray-500">
+        <div class="mt-1 text-xs text-gray-500 [&_.prose]:text-xs ">
           <MarkdownPreview markdown={description} />
         </div>
       );
@@ -1307,10 +1307,10 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
               type="checkbox"
               checked={isEnabled}
               onChange={(e) => handleFieldToggle(fieldName, e.target.checked)}
-              class="h-3 w-3 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+              class="h-3 w-3 text-sky-600 focus:ring-sky-500 border-gray-300 dark:border-neutral-dark-50 rounded"
             />
             <span
-              class="text-xs text-gray-600 cursor-pointer"
+              class="text-xs text-gray-600 dark:text-neutral-dark-600 cursor-pointer"
               onClick={() => handleFieldToggle(fieldName, !isEnabled)}
             >
               Enable
@@ -1332,7 +1332,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
       return (
         <div class="mb-2">
           <div class="flex items-center gap-2 text-xs">
-            <span class="text-gray-600">{getCompositionDisplayName(composition.type)}:</span>
+            <span class="text-gray-600 dark:text-neutral-dark-600">{getCompositionDisplayName(composition.type)}:</span>
             <Select
               value={selectedCompositionIndex.toString()}
               onChange={(value) => handleCompositionChange(fieldName, parseInt(value, 10))}
@@ -1352,7 +1352,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
           {renderFieldLabel(fieldName)}
           {renderParentDescription()}
           {renderCompositionSelector()}
-          <div class={`text-xs text-gray-500 italic p-2 bg-gray-50 rounded border border-gray-200 ${!isEnabled ? 'opacity-50' : ''}`}>
+          <div class={`text-xs text-gray-500 italic p-2 bg-gray-50 dark:bg-neutral-dark-200 rounded border border-gray-200 dark:border-neutral-dark-300 ${!isEnabled ? 'opacity-50' : ''}`}>
             Field is set to null
           </div>
           {renderEffectiveDescription()}
@@ -1393,9 +1393,9 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
               checked={fieldValue}
               onChange={(e) => handleFieldChange(fieldName, e.target.checked)}
               disabled={isSubmitting || !isEnabled}
-              class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+              class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 dark:border-neutral-dark-50 rounded"
             />
-            <span class="ml-2 text-sm text-gray-700">
+            <span class="ml-2 text-sm text-gray-700 dark:text-neutral-dark-700">
               Enabled
             </span>
           </div>
@@ -1681,7 +1681,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
   if (!schemaToUse || !schemaToUse.properties) {
     return (
       <Modal isOpen={isOpen} onClose={handleClose} title="Create request body payload" size="2xl">
-        <div class="text-sm text-gray-500 mb-4">
+        <div class="text-sm text-gray-500 dark:text-neutral-dark-500 mb-4">
           Create a request body payload by filling out the form. Clicking "Import" will add it to the request editor.
         </div>
         <div class="text-sm text-red-600 bg-red-100 p-3 rounded-md">
@@ -1741,7 +1741,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Create request body payload" size="2xl">
-      <div class="text-sm text-gray-500 mb-4">
+      <div class="text-sm text-gray-500 dark:text-neutral-dark-500 mb-4">
         Create a request body payload by filling out the form. Clicking "Import" will add it to the request editor.
       </div>
 
@@ -1755,7 +1755,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                 type="checkbox"
                 checked={mandatoryOnTop}
                 onChange={(e) => setMandatoryOnTop(e.target.checked)}
-                class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+                class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 dark:border-neutral-dark-50 rounded"
               />
               <label htmlFor="mandatoryOnTop" class="text-xs text-gray-700 cursor-pointer">
                 Add mandatory fields on top
@@ -1767,7 +1767,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                 type="checkbox"
                 checked={hideOptional}
                 onChange={(e) => setHideOptional(e.target.checked)}
-                class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+                class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 dark:border-neutral-dark-50 rounded"
               />
               <label htmlFor="hideOptional" class="text-xs text-gray-700 cursor-pointer">
                 Hide optional fields

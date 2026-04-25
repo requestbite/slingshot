@@ -423,7 +423,7 @@ export function PostmanImportModal({ isOpen, onClose, onSuccess }) {
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Import Postman Collection">
-      <div class="text-sm text-gray-500">Import a Postman Collection v2.1 file to create new collection.</div>
+      <div class="text-sm text-gray-500 dark:text-neutral-dark-500">Import a Postman Collection v2.1 file to create new collection.</div>
 
       <form onSubmit={handleSubmit}>
         <div class="mt-6">
@@ -443,13 +443,13 @@ export function PostmanImportModal({ isOpen, onClose, onSuccess }) {
           </Label>
 
           {isCheckingCapabilities ? (
-            <div class="mt-2 text-sm text-gray-500">
+            <div class="mt-2 text-sm text-gray-500 dark:text-neutral-dark-500">
               Checking proxy capabilities...
             </div>
           ) : enableLocalFiles ? (
             <div class="mt-2">
               {isLoadingDirectory ? (
-                <div class="text-sm text-gray-500">Loading directory...</div>
+                <div class="text-sm text-gray-500 dark:text-neutral-dark-500">Loading directory...</div>
               ) : (
                 <FileBrowser
                   items={directoryListing}

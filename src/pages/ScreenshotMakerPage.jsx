@@ -25,7 +25,7 @@ export function ScreenshotMakerPage() {
   const [gradientDirection, setGradientDirection] = useState('top-left');
 
   return (
-    <div class="h-full bg-gray-100 overflow-y-auto">
+    <div class="h-full bg-gray-100 dark:bg-[#282a36] overflow-y-auto">
       <div class="min-h-full pt-[83px] pb-6">
         <div class="max-w-6xl mx-auto px-4">
 
@@ -44,10 +44,10 @@ export function ScreenshotMakerPage() {
           <div class="flex gap-4">
             {/* Desktop Sidebar */}
             <div class="w-64 flex-shrink-0 hidden md:block">
-              <div class="bg-white rounded-lg border border-gray-300">
+              <div class="bg-white dark:bg-surface-dark-elevated rounded-lg border border-gray-300 dark:border-neutral-dark-50">
                 <div class="flex grow flex-col gap-y-5 overflow-y-auto px-6 py-4">
                   <nav class="flex flex-1 flex-col">
-                    <h3 class="text-xs text-gray-500 mb-4">Settings</h3>
+                    <h3 class="text-xs text-gray-500 dark:text-neutral-dark-500 mb-4">Settings</h3>
 
                     <div class="space-y-4">
                       {/* Canvas Width */}
@@ -136,7 +136,7 @@ export function ScreenshotMakerPage() {
                             onChange={(e) => setEnableMidColor(e.target.checked)}
                             class="rounded cursor-pointer"
                           />
-                          <span class="text-sm font-medium text-gray-700">Enable Mid-Color</span>
+                          <span class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700">Enable Mid-Color</span>
                         </label>
                       </div>
 
@@ -197,15 +197,15 @@ export function ScreenshotMakerPage() {
               <>
                 {/* Full screen overlay covering topbar */}
                 <div
-                  class="fixed inset-0 bg-gray-500/75 z-[60] md:hidden"
+                  class="fixed inset-0 bg-gray-500/75 dark:bg-neutral-dark-400/75 z-[60] md:hidden"
                   onClick={() => setIsSidebarOpen(false)}
                 />
 
                 {/* Mobile Sidebar - takes full screen minus 75px, covers topbar */}
-                <div class="fixed left-0 top-0 bottom-0 right-[75px] bg-white z-[70] md:hidden overflow-y-auto">
+                <div class="fixed left-0 top-0 bottom-0 right-[75px] bg-white dark:bg-[#282a36] z-[70] md:hidden overflow-y-auto">
                   <div class="p-6">
                     <nav class="flex flex-1 flex-col">
-                      <h3 class="text-sm font-semibold text-gray-900 mb-4">Settings</h3>
+                      <h3 class="text-sm font-semibold text-gray-900 dark:text-neutral-dark-900 mb-4">Settings</h3>
 
                       <div class="space-y-4">
                         {/* Canvas Width */}
@@ -294,7 +294,7 @@ export function ScreenshotMakerPage() {
                               onChange={(e) => setEnableMidColor(e.target.checked)}
                               class="rounded cursor-pointer"
                             />
-                            <span class="text-sm font-medium text-gray-700">Enable Mid-Color</span>
+                            <span class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700">Enable Mid-Color</span>
                           </label>
                         </div>
 
@@ -353,9 +353,9 @@ export function ScreenshotMakerPage() {
 
             {/* Content Area */}
             <div class="flex-1 min-w-0 overflow-hidden">
-              <div class="bg-white rounded-lg border border-gray-300 p-6 w-full max-w-full overflow-hidden">
-                <h2 class="text-base font-semibold text-gray-900">Screenshot Editor</h2>
-                <p class="mt-1 text-sm text-gray-600 mb-6">
+              <div class="bg-white dark:bg-surface-dark-elevated rounded-lg border border-gray-300 dark:border-neutral-dark-50 p-6 w-full max-w-full overflow-hidden">
+                <h2 class="text-base font-semibold text-gray-900 dark:text-neutral-dark-900">Screenshot Editor</h2>
+                <p class="mt-1 text-sm text-gray-600 dark:text-neutral-dark-600 mb-6">
                   Style your screenshots like we do! Nothing is sent to any server - your browser does the job!
                 </p>
                 <div>

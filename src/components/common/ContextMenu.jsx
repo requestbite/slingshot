@@ -156,7 +156,7 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
   return (
     <div
       ref={menuRef}
-      class="fixed z-80 bg-white py-1 shadow-lg ring-1 ring-black/5 rounded-md"
+      class="fixed z-80 bg-white dark:bg-surface-dark-elevated py-1 shadow-lg ring-1 ring-black/5 dark:ring-white/10 rounded-md"
       style={{
         top: `${menuPosition.top}px`,
         left: `${menuPosition.left}px`,
@@ -168,14 +168,14 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
       {children || (
         items.map((item, index) => {
           if (item.divider) {
-            return <div key={index} class="border-t border-gray-200 my-1"></div>;
+            return <div key={index} class="border-t border-gray-200 dark:border-neutral-dark-300 my-1"></div>;
           }
 
           if (item.sectionTitle) {
-            return <div key={index} class="text-xs px-4 mt-3 mb-1 text-left text-gray-500">{item.sectionTitle}</div>;
+            return <div key={index} class="text-xs px-4 mt-3 mb-1 text-left text-gray-500 dark:text-neutral-dark-500">{item.sectionTitle}</div>;
           }
 
-          const commonClasses = `flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer no-underline ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''} ${item.destructive ? 'text-red-600 hover:text-red-700' : ''}`;
+          const commonClasses = `flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-neutral-dark-700 hover:bg-gray-100 dark:hover:bg-neutral-dark-200 cursor-pointer no-underline ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''} ${item.destructive ? 'text-red-600 dark:text-error-dark-400 hover:text-red-700 dark:hover:text-error-dark-400' : ''}`;
 
           const labelContent = (
             <>
@@ -191,7 +191,7 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
                     <>
                       <br />
                       <span
-                        class="text-xs text-gray-500 block overflow-hidden text-ellipsis whitespace-nowrap"
+                        class="text-xs text-gray-500 dark:text-neutral-dark-500 block overflow-hidden text-ellipsis whitespace-nowrap"
                         style={{ maxWidth: '100%' }}
                       >
                         {item.subtext}

@@ -579,7 +579,7 @@ export function ReImportModal({ isOpen, collection, onClose, onSuccess }) {
         title="Re-Import Collection"
         size="md"
       >
-        <div class="text-sm text-gray-500 mb-6">
+        <div class="text-sm text-gray-500 dark:text-neutral-dark-500 mb-6">
           Re-import this collection from its source spec. Please note that this will overwrite any manual updates done to this collection.
         </div>
 

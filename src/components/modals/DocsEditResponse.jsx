@@ -204,7 +204,7 @@ export function DocsEditResponse({ isOpen, onClose, request, onSave }) {
     <Modal isOpen={isOpen && !!request} onClose={handleClose} title="Update response schema" size="xl">
       <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
         <div class="mt-2">
-          <p class="text-sm text-gray-500 mb-4 text-center sm:text-left">
+          <p class="text-sm text-gray-500 dark:text-neutral-dark-500 mb-4 text-center sm:text-left">
             Basic JSON based editor of the OpenAPI response schema and examples.
           </p>
 
@@ -215,7 +215,7 @@ export function DocsEditResponse({ isOpen, onClose, request, onSave }) {
 
               {/* Schema validity indicator */}
               <div class="flex items-center text-xs">
-                <span class="text-gray-600 mr-2">Schema validity:</span>
+                <span class="text-gray-600 dark:text-neutral-dark-600 mr-2">Schema validity:</span>
                 {validation.isValid ? (
                   <span class="text-green-600 font-medium">Valid</span>
                 ) : (

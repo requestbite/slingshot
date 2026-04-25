@@ -33,7 +33,7 @@ export function DeleteCollectionModal({ isOpen, onClose, collection, onDelete })
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Delete Collection" size="md">
-      <p class="text-sm text-gray-500">
+      <p class="text-sm text-gray-500 dark:text-neutral-dark-500">
         This will permanently delete the collection and all its contents. Do you wish to continue?
       </p>
       <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">

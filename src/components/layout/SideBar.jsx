@@ -207,7 +207,7 @@ export function SideBar({ onClose: _onClose }) {
   return (
     <>
       {/* Sidebar */}
-      <aside class="bg-white rounded-lg md:border border-gray-300 h-full flex flex-col">
+      <aside class="bg-white dark:bg-[#313340] rounded-lg md:border border-gray-300 dark:border-neutral-dark-50 h-full flex flex-col">
         <div class="flex flex-1 flex-col gap-y-5 overflow-y-auto scrollbar-hide p-4">
           <nav class="flex flex-1 flex-col space-y-4">
             {/* Import Button with Dropdown */}
@@ -215,7 +215,7 @@ export function SideBar({ onClose: _onClose }) {
               <button
                 ref={importButtonRef}
                 onClick={() => setShowImportContextMenu(true)}
-                class="w-full justify-between rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer"
+                class="w-full justify-between rounded-md bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 py-2 px-3 text-sm font-medium text-sky-700 dark:text-primary-dark-400 flex items-center cursor-pointer"
               >
                 <div class="flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
@@ -235,7 +235,7 @@ export function SideBar({ onClose: _onClose }) {
             {/* Collection Management */}
             <div>
               <div class="flex items-center justify-between mb-2">
-                <label for="collection-select" class="block text-xs font-medium text-gray-600">Collection</label>
+                <label for="collection-select" class="block text-xs font-medium text-gray-600 dark:text-neutral-dark-600">Collection</label>
                 <button
                   onClick={() => setShowAddCollectionModal(true)}
                   class="text-xs text-sky-600 hover:text-sky-800 focus:outline-none cursor-pointer"
@@ -246,7 +246,7 @@ export function SideBar({ onClose: _onClose }) {
               <div class="relative">
                 <select
                   id="collection-select"
-                  class="w-full appearance-none rounded-md bg-white py-2 pl-3 pr-8 text-sm text-gray-900 outline -outline-offset-1 outline-gray-300 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
+                  class="w-full appearance-none rounded-md bg-white dark:bg-[#313340] py-2 pl-3 pr-8 text-sm text-gray-900 dark:text-neutral-dark-900 outline -outline-offset-1 outline-gray-300 dark:outline-neutral-dark-50 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
                   value={selectedCollection?.id || ''}
                   onChange={(e) => {
                     const collectionId = e.target.value;
@@ -271,7 +271,7 @@ export function SideBar({ onClose: _onClose }) {
                     </option>
                   ))}
                 </select>
-                <svg class="pointer-events-none absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 h-4 w-4"
+                <svg class="pointer-events-none absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 dark:text-neutral-dark-500 h-4 w-4"
                   viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
                   <path fill-rule="evenodd"
                     d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
@@ -289,7 +289,7 @@ export function SideBar({ onClose: _onClose }) {
                           setLocation(`/collections/${selectedCollection.id}`);
                         }
                       }}
-                      class="justify-center rounded-md bg-sky-100 hover:bg-sky-200 h-[30px] w-[30px] text-sm font-medium text-sky-700 flex items-center p-0 cursor-pointer no-underline"
+                      class="justify-center rounded-md bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 h-[30px] w-[30px] text-sm font-medium text-sky-700 dark:text-primary-dark-400 flex items-center p-0 cursor-pointer no-underline"
                       title="Collection settings"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto">
@@ -299,7 +299,7 @@ export function SideBar({ onClose: _onClose }) {
                     </a>
                     <button
                       onClick={() => setShowAddFolderModal(true)}
-                      class="justify-center rounded-md bg-sky-100 hover:bg-sky-200 h-[30px] w-[30px] text-sm font-medium text-sky-700 flex items-center p-0 cursor-pointer"
+                      class="justify-center rounded-md bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 h-[30px] w-[30px] text-sm font-medium text-sky-700 dark:text-primary-dark-400 flex items-center p-0 cursor-pointer"
                       title="Add folder to collection"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto">
@@ -310,7 +310,7 @@ export function SideBar({ onClose: _onClose }) {
                     </button>
                     <button
                       onClick={() => setShowExportPostmanModal(true)}
-                      class="justify-center rounded-md bg-sky-100 hover:bg-sky-200 h-[30px] w-[30px] text-sm font-medium text-sky-700 flex items-center p-0 cursor-pointer"
+                      class="justify-center rounded-md bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 h-[30px] w-[30px] text-sm font-medium text-sky-700 dark:text-primary-dark-400 flex items-center p-0 cursor-pointer"
                       title="Export as Postman collection"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto">
@@ -326,7 +326,7 @@ export function SideBar({ onClose: _onClose }) {
             {selectedCollection && (
               <div>
                 <div class="flex items-center justify-between mb-2">
-                  <label for="environment-select" class="block text-xs font-medium text-gray-600">Environment</label>
+                  <label for="environment-select" class="block text-xs font-medium text-gray-600 dark:text-neutral-dark-600">Environment</label>
                   {hasDraftEnvOverride && (
                     <button
                       onClick={handleResetDraftEnv}
@@ -340,7 +340,7 @@ export function SideBar({ onClose: _onClose }) {
                 <div class="relative">
                   <select
                     id="environment-select"
-                    class="w-full appearance-none rounded-md bg-white py-2 pl-3 pr-8 text-sm text-gray-900 outline -outline-offset-1 outline-gray-300 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
+                    class="w-full appearance-none rounded-md bg-white dark:bg-[#313340] py-2 pl-3 pr-8 text-sm text-gray-900 dark:text-neutral-dark-900 outline -outline-offset-1 outline-gray-300 dark:outline-neutral-dark-50 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
                     value={currentEnvironment?.id || (currentEnvironment === null ? 'none' : '')}
                     onChange={(e) => {
                       const environmentId = e.target.value;
@@ -360,7 +360,7 @@ export function SideBar({ onClose: _onClose }) {
                       </option>
                     ))}
                   </select>
-                  <svg class="pointer-events-none absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 h-4 w-4"
+                  <svg class="pointer-events-none absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 dark:text-neutral-dark-500 h-4 w-4"
                     viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd"
                       d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
@@ -379,8 +379,8 @@ export function SideBar({ onClose: _onClose }) {
                       }
                     }}
                     class={`justify-center rounded-md h-[30px] w-[30px] text-sm font-medium flex items-center p-0 no-underline ${currentEnvironment || environments.length === 0
-                      ? 'bg-sky-100 hover:bg-sky-200 text-sky-700 cursor-pointer'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      ? 'bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 text-sky-700 dark:text-primary-dark-400 cursor-pointer'
+                      : 'bg-gray-100 dark:bg-neutral-dark-200 text-gray-400 dark:text-neutral-dark-400 cursor-not-allowed'
                       }`}
                     title="Environment settings"
                   >
@@ -393,12 +393,12 @@ export function SideBar({ onClose: _onClose }) {
                     onClick={handleMakeDefault}
                     disabled={isUpdatingDefault || isDefaultEnvironment}
                     class={`flex-1 justify-center rounded-md h-[30px] text-xs font-medium flex items-center cursor-pointer transition-colors duration-300 ${showDefaultSuccess
-                      ? 'bg-green-100 text-green-700'
+                      ? 'bg-green-100 dark:bg-success-dark-100 text-green-700 dark:text-success-dark-400'
                       : isDefaultEnvironment && !showDefaultSuccess
-                        ? 'bg-sky-100 text-sky-700 cursor-default'
+                        ? 'bg-sky-100 dark:bg-primary-dark-200 text-sky-700 dark:text-primary-dark-400 cursor-default'
                         : !isUpdatingDefault
-                          ? 'bg-sky-100 hover:bg-sky-200 text-sky-700'
-                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          ? 'bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 text-sky-700 dark:text-primary-dark-400'
+                          : 'bg-gray-100 dark:bg-neutral-dark-200 text-gray-400 dark:text-neutral-dark-400 cursor-not-allowed'
                       }`}
                     title={
                       isDefaultEnvironment
@@ -431,7 +431,7 @@ export function SideBar({ onClose: _onClose }) {
             <div class="mt-4" style={{ display: selectedCollection ? 'block' : 'none' }}>
               {/* Local Collection Banner */}
               {selectedCollection && (
-                <div class="mb-3 px-2 py-1 rounded-md text-xs bg-gray-100 text-gray-500 flex items-center">
+                <div class="mb-3 px-2 py-1 rounded-md text-xs bg-gray-100 dark:bg-neutral-dark-200 text-gray-500 dark:text-neutral-dark-500 flex items-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="12"
@@ -451,7 +451,7 @@ export function SideBar({ onClose: _onClose }) {
                 </div>
               )}
               <div class="flex justify-between items-center mb-2">
-                <label class="block text-xs font-medium text-gray-600">Requests</label>
+                <label class="block text-xs font-medium text-gray-600 dark:text-neutral-dark-600">Requests</label>
                 {selectedCollection && (
                   <div class="flex items-center gap-1">
                     <button
@@ -495,14 +495,14 @@ export function SideBar({ onClose: _onClose }) {
                   style={{ fontSize: '0.75rem', paddingLeft: '1.75rem', paddingRight: '2rem' }}
                 />
                 <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 dark:text-neutral-dark-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
                 {searchTerm && (
                   <button
                     onClick={() => setSearchTerm('')}
-                    class="absolute inset-y-0 right-0 pr-1 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
+                    class="absolute inset-y-0 right-0 pr-1 flex items-center text-gray-400 hover:text-gray-600 dark:text-neutral-dark-400 dark:hover:text-neutral-dark-600 cursor-pointer"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -514,7 +514,7 @@ export function SideBar({ onClose: _onClose }) {
               <div class="mt-4 overflow-y-auto overflow-x-visible relative">
                 {/* Collection link */}
                 {selectedCollection && (
-                  <div class="flex items-center px-1 group hover:bg-gray-100 rounded">
+                  <div class="flex items-center px-1 group hover:bg-gray-100 dark:hover:bg-neutral-dark-200 rounded">
                     <a
                       href={`/${selectedCollection.id}`}
                       onClick={(e) => {
@@ -524,7 +524,7 @@ export function SideBar({ onClose: _onClose }) {
                         setLastSlingshotUrl(url);
                         setLocation(url);
                       }}
-                      class="flex-1 flex items-center py-1 text-xs font-medium cursor-pointer no-underline text-gray-600"
+                      class="flex-1 flex items-center py-1 text-xs font-medium cursor-pointer no-underline text-gray-600 dark:text-neutral-dark-600"
                     >
                       <span class="truncate font-medium">{selectedCollection.name}</span>
                     </a>

@@ -264,7 +264,7 @@ export function CollectionUpdatePage() {
   if (isLoading) {
     return (
       <div class="h-full flex items-center justify-center">
-        <div class="flex items-center space-x-3 text-gray-500">
+        <div class="flex items-center space-x-3 text-gray-500 dark:text-neutral-dark-500">
           <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -279,25 +279,25 @@ export function CollectionUpdatePage() {
     return (
       <div class="h-full flex items-center justify-center">
         <div class="text-center">
-          <h2 class="text-lg font-medium text-gray-900">Collection not found</h2>
-          <p class="text-gray-600 mt-2">The collection you're looking for doesn't exist.</p>
+          <h2 class="text-lg font-medium text-gray-900 dark:text-neutral-dark-900">Collection not found</h2>
+          <p class="text-gray-600 dark:text-neutral-dark-600 mt-2">The collection you're looking for doesn't exist.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div class="h-full bg-gray-100 overflow-y-auto">
+    <div class="h-full bg-gray-100 dark:bg-[#282a36] overflow-y-auto">
       <div class="min-h-full pt-[83px] pb-6">
         <div class="max-w-4xl mx-auto px-4">
-          <div class="bg-white rounded-lg border border-gray-300 p-6">
+          <div class="bg-white dark:bg-surface-dark-elevated rounded-lg border border-gray-300 dark:border-neutral-dark-50 p-6">
 
             {/* Collection Form */}
             <form onSubmit={handleFormSubmit}>
               <div class="space-y-8">
-                <div class="border-b border-gray-900/10 pb-8">
-                  <h2 class="text-base font-semibold text-gray-900">Update Collection</h2>
-                  <p class="mt-1 text-sm text-gray-600">Manage your collection details.</p>
+                <div class="border-b border-gray-900/10 dark:border-neutral-dark-300 pb-8">
+                  <h2 class="text-base font-semibold text-gray-900 dark:text-neutral-dark-900">Update Collection</h2>
+                  <p class="mt-1 text-sm text-gray-600 dark:text-neutral-dark-600">Manage your collection details.</p>
 
                   <div class="mt-10 grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
                     <div class="sm:col-span-4">
@@ -343,14 +343,14 @@ export function CollectionUpdatePage() {
                             }}
                             class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
                           />
-                          <label for="follow-redirects-checkbox" class="ml-2 block text-sm text-gray-900">
+                          <label for="follow-redirects-checkbox" class="ml-2 block text-sm text-gray-900 dark:text-neutral-dark-900">
                             Automatically follow redirects
                           </label>
                         </div>
 
                         {/* Request timeout setting */}
                         <div class="flex items-center">
-                          <label for="request-timeout-input" class="block text-sm text-gray-900 mr-3">
+                          <label for="request-timeout-input" class="block text-sm text-gray-900 dark:text-neutral-dark-900 mr-3">
                             Request timeout (seconds):
                           </label>
                           <input
@@ -366,9 +366,9 @@ export function CollectionUpdatePage() {
                                 setHasChanges(true);
                               }
                             }}
-                            class="w-24 px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                            class="w-24 px-3 py-1 text-sm border border-gray-300 dark:border-neutral-dark-50 bg-white dark:bg-[#313340] text-gray-900 dark:text-neutral-dark-900 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
                           />
-                          <span class="ml-2 text-xs text-gray-500">(1-300 seconds)</span>
+                          <span class="ml-2 text-xs text-gray-500 dark:text-neutral-dark-500">(1-300 seconds)</span>
                         </div>
 
                         {/* Parse ANSI colors setting */}
@@ -383,7 +383,7 @@ export function CollectionUpdatePage() {
                             }}
                             class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
                           />
-                          <label for="parse-ansi-colors-checkbox" class="ml-2 block text-sm text-gray-900">
+                          <label for="parse-ansi-colors-checkbox" class="ml-2 block text-sm text-gray-900 dark:text-neutral-dark-900">
                             Parse ANSI color codes in text/plain responses
                           </label>
                         </div>
@@ -396,8 +396,8 @@ export function CollectionUpdatePage() {
 
             {/* Variables Section */}
             <div class="mt-8">
-              <h2 class="text-base font-semibold text-gray-900">Variables</h2>
-              <p class="mt-1 mb-4 text-sm text-gray-600">Variables can be used throughout your collection requests.</p>
+              <h2 class="text-base font-semibold text-gray-900 dark:text-neutral-dark-900">Variables</h2>
+              <p class="mt-1 mb-4 text-sm text-gray-600 dark:text-neutral-dark-600">Variables can be used throughout your collection requests.</p>
 
               {/* Add new variable form */}
               <div class="mb-6">
@@ -434,34 +434,34 @@ export function CollectionUpdatePage() {
               </div>
 
               {/* Existing variables list */}
-              <div class="overflow-hidden border border-gray-300 rounded-lg">
-                <table class="min-w-full divide-y divide-gray-300">
-                  <thead class="bg-gray-50">
+              <div class="overflow-hidden border border-gray-300 dark:border-neutral-dark-50 rounded-lg">
+                <table class="min-w-full divide-y divide-gray-300 dark:divide-neutral-dark-50">
+                  <thead class="bg-gray-50 dark:bg-neutral-dark-200">
                     <tr>
-                      <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Key</th>
-                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Value</th>
+                      <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900 sm:pl-6">Key</th>
+                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900">Value</th>
                       <th class="relative py-3.5 pl-3 pr-4 sm:pr-6 text-right">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-gray-200 bg-white">
+                  <tbody class="divide-y divide-gray-200 dark:divide-neutral-dark-300 bg-white dark:bg-surface-dark-elevated">
                     {pendingVariables.length > 0 ? (
                       pendingVariables.map((variable) => (
                         <tr key={variable.id} class={variable._status === 'new' ? 'bg-blue-50' : variable._status === 'updated' ? 'bg-yellow-50' : ''}>
-                          <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                          <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-neutral-dark-900 sm:pl-6">
                             {variable.key}
                             {variable._status === 'new' && <span class="ml-2 text-xs text-blue-600">(new)</span>}
                             {variable._status === 'updated' && <span class="ml-2 text-xs text-yellow-600">(modified)</span>}
                           </td>
-                          <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                          <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900 dark:text-neutral-dark-900">
                             {variable.value}
                           </td>
                           <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-2">
                             <button
                               type="button"
                               onClick={() => handleEditVariable(variable)}
-                              class="px-2 py-1 bg-sky-100 hover:bg-sky-200 text-sky-700 text-sm font-medium rounded-md cursor-pointer inline-block"
+                              class="px-2 py-1 bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 text-sky-700 dark:text-primary-dark-400 text-sm font-medium rounded-md cursor-pointer inline-block"
                             >
                               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -473,7 +473,7 @@ export function CollectionUpdatePage() {
                                 setVariableToDelete(variable.id);
                                 setDeleteVariableModal(true);
                               }}
-                              class="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium rounded-md cursor-pointer inline-block"
+                              class="px-2 py-1 bg-red-100 dark:bg-error-dark-100 hover:bg-red-200 dark:hover:bg-error-dark-200 text-red-700 dark:text-error-dark-400 text-sm font-medium rounded-md cursor-pointer inline-block"
                             >
                               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -530,7 +530,7 @@ export function CollectionUpdatePage() {
       {/* Edit Variable Modal */}
       <Modal isOpen={editVariableModal} onClose={() => setEditVariableModal(false)} title="Edit Variable" size="md">
         <form onSubmit={handleUpdateVariable}>
-          <p class="text-sm text-gray-500 mb-4 text-center sm:text-left">
+          <p class="text-sm text-gray-500 dark:text-neutral-dark-500 mb-4 text-center sm:text-left">
             Update your collection variable.
           </p>
           <div class="mt-6">
@@ -580,12 +580,12 @@ export function CollectionUpdatePage() {
         <div class="fixed inset-0 bg-gray-500/75 transition-opacity z-50">
           <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
-              <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+              <div class="relative transform overflow-hidden rounded-lg bg-white dark:bg-surface-dark-elevated px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
                 <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
                   <button
                     onClick={() => setDeleteVariableModal(false)}
                     type="button"
-                    class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 cursor-pointer"
+                    class="rounded-md bg-white dark:bg-surface-dark-elevated text-gray-400 dark:text-neutral-dark-400 hover:text-gray-500 dark:hover:text-neutral-dark-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 cursor-pointer"
                   >
                     <span class="sr-only">Close</span>
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -600,7 +600,7 @@ export function CollectionUpdatePage() {
                     </svg>
                   </div>
                   <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                    <h3 class="text-base font-semibold text-gray-900">Delete Variable</h3>
+                    <h3 class="text-base font-semibold text-gray-900 dark:text-neutral-dark-900">Delete Variable</h3>
                     <div class="mt-2">
                       <p class="text-sm text-gray-500">
                         Are you sure you want to delete this variable? This action cannot be undone.

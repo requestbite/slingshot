@@ -19,7 +19,7 @@ export function Label({
     <div class="w-full">
       <label
         for={htmlFor}
-        class={`block text-sm font-medium text-gray-700 mb-1.5 ${className}`}
+        class={`block text-sm font-medium text-gray-700 dark:text-neutral-dark-700 mb-1.5 ${className}`}
         {...props}
       >
         {children}
@@ -28,7 +28,7 @@ export function Label({
         )}
       </label>
       {description && (
-        <p class="-mt-1 mb-2 text-xs text-gray-500">
+        <p class="-mt-1 mb-2 text-xs text-gray-500 dark:text-neutral-dark-500">
           {description}
         </p>
       )}

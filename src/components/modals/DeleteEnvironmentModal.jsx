@@ -30,7 +30,7 @@ export function DeleteEnvironmentModal({ isOpen, onClose, environment, onDelete 
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Delete Environment" size="md">
-      <p class="text-sm text-gray-500">
+      <p class="text-sm text-gray-500 dark:text-neutral-dark-500">
         This will permanently delete the environment "{environment.name}" and all its encrypted secrets. This action cannot be undone. Do you wish to continue?
       </p>
       <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">

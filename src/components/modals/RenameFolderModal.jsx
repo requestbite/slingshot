@@ -171,7 +171,7 @@ export function RenameFolderModal({ isOpen, onClose, folder, onUpdate }) {
     <Modal isOpen={isOpen} onClose={handleClose} title="Update Folder" size="md">
       <form onSubmit={handleSubmit}>
         <div>
-          <div class="text-sm text-gray-500">Update name and parent folder.</div>
+          <div class="text-sm text-gray-500 dark:text-neutral-dark-500">Update name and parent folder.</div>
 
           {error && (
             <div class="mt-2 text-sm text-red-600 bg-red-100 p-2 rounded-md">

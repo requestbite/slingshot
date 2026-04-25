@@ -45,7 +45,7 @@ export function Toast({
     switch (type) {
       case 'success':
         return {
-          border: 'border-lime-600 border-2 bg-lime-50',
+          border: 'border-lime-600 dark:border-success-dark-400 border-2 bg-lime-50 dark:bg-surface-dark-elevated',
           icon: (
             <svg class="size-6 text-lime-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -54,7 +54,7 @@ export function Toast({
         };
       case 'error':
         return {
-          border: 'border-red-600 border-2 bg-red-50',
+          border: 'border-red-600 dark:border-error-dark-400 border-2 bg-red-50 dark:bg-surface-dark-elevated',
           icon: (
             <svg class="size-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
@@ -63,7 +63,7 @@ export function Toast({
         };
       case 'info':
         return {
-          border: 'border-blue-600 border-2 bg-blue-50',
+          border: 'border-blue-600 dark:border-info-dark-600 border-2 bg-blue-50 dark:bg-surface-dark-elevated',
           icon: (
             <svg class="size-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -84,19 +84,19 @@ export function Toast({
       style={{ zIndex: 99999 }}
     >
       <div class="flex w-full flex-col items-center sm:items-end">
-        <div class={`pointer-events-auto overflow-hidden rounded-lg ring-1 ring-black/5 ${styles.border} w-full sm:w-96`}>
+        <div class={`pointer-events-auto overflow-hidden rounded-lg ring-1 ring-black/5 dark:ring-white/10 ${styles.border} w-full sm:w-96`}>
           <div class="p-4">
             <div class="flex items-start">
               <div class="shrink-0">
                 {styles.icon}
               </div>
               <div class="ml-3 w-0 flex-1 pt-0.5">
-                <p class="text-sm font-medium text-gray-600">{message}</p>
+                <p class="text-sm font-medium text-gray-600 dark:text-neutral-dark-700">{message}</p>
               </div>
               <div class="ml-4 flex shrink-0">
                 <button
                   type="button"
-                  class="inline-flex rounded-md text-gray-400 hover:text-gray-500 focus:outline-hidden focus:ring-2 focus:ring-lime-600 focus:ring-offset-2 cursor-pointer"
+                  class="inline-flex rounded-md text-gray-400 hover:text-gray-500 dark:text-neutral-dark-400 dark:hover:text-neutral-dark-500 focus:outline-hidden focus:ring-2 focus:ring-lime-600 focus:ring-offset-2 cursor-pointer"
                   onClick={handleClose}
                 >
                   <span class="sr-only">Close</span>

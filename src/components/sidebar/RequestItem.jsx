@@ -132,7 +132,7 @@ export function RequestItem({ request, isSelected, level = 0, onRequestUpdate })
   return (
     <li class="request relative">
       <div
-        class={`flex items-center justify-between relative hover:bg-gray-100 py-1 px-1 rounded ${isSelected ? 'bg-sky-50' : ''
+        class={`flex items-center justify-between relative hover:bg-gray-100 dark:hover:bg-neutral-dark-200 py-1 px-1 rounded ${isSelected ? 'bg-sky-50 dark:bg-primary-dark-200' : ''
           }`}
         style={{ marginLeft: `${marginLeft * 10}px` }}
       >

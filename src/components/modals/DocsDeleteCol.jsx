@@ -44,7 +44,7 @@ export function DocsDeleteCol({ isOpen, onClose, collection, onDelete }) {
     <Modal isOpen={isOpen && !!collection} onClose={handleClose} title="Delete collection docs" size="md">
       <form onSubmit={(e) => { e.preventDefault(); handleDelete(); }}>
         <div class="mt-2">
-          <p class="text-sm text-gray-500 text-center sm:text-left">Do you want to delete the collection docs?</p>
+          <p class="text-sm text-gray-500 dark:text-neutral-dark-500 text-center sm:text-left">Do you want to delete the collection docs?</p>
         </div>
 
         {error && (

@@ -268,7 +268,7 @@ function getStatusBadgeClass(code) {
   if (n >= 300 && n < 400) return 'bg-blue-100 text-blue-800';
   if (n >= 400 && n < 500) return 'bg-amber-100 text-amber-800';
   if (n >= 500) return 'bg-red-100 text-red-800';
-  return 'bg-gray-100 text-gray-800';
+  return 'bg-gray-100 dark:bg-neutral-dark-200 text-gray-800 dark:text-neutral-dark-800';
 }
 
 function getStatusLabel(code) {
@@ -289,14 +289,14 @@ function getStatusLabel(code) {
 
 function SectionLabel({ children }) {
   return (
-    <span class="block text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-2">
+    <span class="block text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-neutral-dark-400 mb-2">
       {children}
     </span>
   );
 }
 
 function Divider() {
-  return <div class="border-t border-gray-100 my-5" />;
+  return <div class="border-t border-gray-100 dark:border-neutral-dark-300 my-5" />;
 }
 
 // Compact parameters schema viewer that avoids the full SchemaViewer wrapper
@@ -436,14 +436,14 @@ function EndpointSection({ method, path, operation, parameters, spec, defaultExp
       {/* Endpoint header – always visible */}
       <button
         onClick={() => setIsExpanded(v => !v)}
-        class="w-full flex items-center gap-3 px-6 py-3 bg-white hover:bg-gray-50 text-left group transition-colors sticky top-[109px] z-10 cursor-pointer border-b border-gray-200"
+        class="w-full flex items-center gap-3 px-6 py-3 bg-white dark:bg-surface-dark-elevated hover:bg-gray-50 dark:hover:bg-neutral-dark-200 text-left group transition-colors sticky top-[109px] z-10 cursor-pointer border-b border-gray-200 dark:border-neutral-dark-300"
       >
         <span class={`text-[10px] font-bold text-white py-0.5 px-1.5 rounded flex-shrink-0 uppercase tracking-wide ${getMethodColor(method)}`}>
           {method}
         </span>
-        <code class="text-sm text-gray-700 font-mono flex-1 truncate">{path}</code>
+        <code class="text-sm text-gray-700 dark:text-neutral-dark-700 font-mono flex-1 truncate">{path}</code>
         {operation.summary && (
-          <span class="text-sm text-gray-500 truncate max-w-xs hidden lg:block">{operation.summary}</span>
+          <span class="text-sm text-gray-500 dark:text-neutral-dark-500 truncate max-w-xs hidden lg:block">{operation.summary}</span>
         )}
         {operation.deprecated && (
           <span class="text-[10px] font-semibold uppercase tracking-wider text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded flex-shrink-0">
@@ -498,7 +498,7 @@ function EndpointSection({ method, path, operation, parameters, spec, defaultExp
                   )}
                 </div>
                 {requestBodyInfo.description && (
-                  <p class="text-xs text-gray-500 mb-3">{requestBodyInfo.description}</p>
+                  <p class="text-xs text-gray-500 dark:text-neutral-dark-500 mb-3">{requestBodyInfo.description}</p>
                 )}
                 {reqSchema && (
                   <SchemaTreeRoot schema={reqSchema} />
@@ -546,7 +546,7 @@ function EndpointSection({ method, path, operation, parameters, spec, defaultExp
                       {getStatusLabel(effectiveRespSchemaCode)}
                     </span>
                     {respSchemaDescription && (
-                      <span class="text-xs text-gray-500 truncate">{respSchemaDescription}</span>
+                      <span class="text-xs text-gray-500 dark:text-neutral-dark-500 truncate">{respSchemaDescription}</span>
                     )}
                   </div>
                 )}
@@ -554,21 +554,21 @@ function EndpointSection({ method, path, operation, parameters, spec, defaultExp
                 {selectedRespSchema ? (
                   <SchemaTreeRoot schema={selectedRespSchema} />
                 ) : effectiveRespSchemaCode && !respSchemaContentTypes.length ? (
-                  <p class="text-xs text-gray-400 italic">No response body.</p>
+                  <p class="text-xs text-gray-400 dark:text-neutral-dark-400 italic">No response body.</p>
                 ) : null}
               </div>
             )}
           </div>
 
           {/* ---- RIGHT PANEL (dark – examples) ---- */}
-          <div class="bg-[#282a36] px-6 py-5 space-y-5 border-t border-gray-100 min-w-0">
+          <div class="bg-[#282a36] px-6 py-5 space-y-5 border-t border-gray-100 dark:border-neutral-dark-300 min-w-0">
 
             {/* Request examples */}
             {reqExamples.length > 0 && (
               <div>
                 <div class="flex items-center justify-between mb-2">
                   <SectionLabel>
-                    <span class="text-gray-400">Request Example</span>
+                    <span class="text-gray-400 dark:text-neutral-dark-400">Request Example</span>
                   </SectionLabel>
                   {requestBodyContentTypes.length > 1 && (
                     <div class="w-44">
@@ -595,7 +595,7 @@ function EndpointSection({ method, path, operation, parameters, spec, defaultExp
                 {reqExamples.length > 0 && <div class="border-t border-gray-700 my-4" />}
                 <div class="flex items-center justify-between mb-2">
                   <SectionLabel>
-                    <span class="text-gray-400">Response Example</span>
+                    <span class="text-gray-400 dark:text-neutral-dark-400">Response Example</span>
                   </SectionLabel>
                   <div class="flex items-center gap-2">
                     {responseCodes.length > 1 && (
@@ -639,14 +639,14 @@ function EndpointSection({ method, path, operation, parameters, spec, defaultExp
                     contentType={effectiveRespExCT || 'application/json'}
                   />
                 ) : (
-                  <p class="text-xs text-gray-500 italic">No example for this status code.</p>
+                  <p class="text-xs text-gray-500 dark:text-neutral-dark-500 italic">No example for this status code.</p>
                 )}
               </div>
             )}
 
             {/* Placeholder if no examples at all */}
             {!hasRightContent && (
-              <p class="text-xs text-gray-500 italic">No examples provided.</p>
+              <p class="text-xs text-gray-500 dark:text-neutral-dark-500 italic">No examples provided.</p>
             )}
           </div>
         </div>
@@ -667,7 +667,7 @@ function TagSection({ tag, spec, startIndex }) {
       {/* Tag header */}
       <button
         onClick={() => setIsCollapsed(v => !v)}
-        class="w-full flex items-center gap-2 px-6 py-3 bg-gray-50 hover:bg-gray-100 text-left transition-colors sticky top-[65px] z-20 cursor-pointer border-b border-gray-200"
+        class="w-full flex items-center gap-2 px-6 py-3 bg-gray-50 dark:bg-neutral-dark-200 hover:bg-gray-100 dark:hover:bg-neutral-dark-100 text-left transition-colors sticky top-[65px] z-20 cursor-pointer border-b border-gray-200 dark:border-neutral-dark-300"
       >
         <svg
           class={`h-4 w-4 text-gray-400 flex-shrink-0 transition-transform ${isCollapsed ? '-rotate-90' : ''}`}
@@ -675,14 +675,14 @@ function TagSection({ tag, spec, startIndex }) {
         >
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
         </svg>
-        <h2 class="text-sm font-semibold text-gray-800 capitalize">{tag.name}</h2>
-        <span class="ml-auto text-xs text-gray-400">{tag.operations.length} endpoint{tag.operations.length !== 1 ? 's' : ''}</span>
+        <h2 class="text-sm font-semibold text-gray-800 dark:text-neutral-dark-800 capitalize">{tag.name}</h2>
+        <span class="ml-auto text-xs text-gray-400 dark:text-neutral-dark-400">{tag.operations.length} endpoint{tag.operations.length !== 1 ? 's' : ''}</span>
       </button>
 
       {!isCollapsed && (
         <div>
           {tag.description && (
-            <div class="px-6 py-3 bg-white border-b border-gray-100 text-sm text-gray-600 [&_.prose]:text-sm">
+            <div class="px-6 py-3 bg-white dark:bg-surface-dark-elevated border-b border-gray-100 dark:border-neutral-dark-300 text-sm text-gray-600 dark:text-neutral-dark-600">
               <MarkdownPreview markdown={tag.description} />
             </div>
           )}
@@ -801,7 +801,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
   ];
 
   return (
-    <header ref={containerRef} class="border-b border-gray-200 rounded-t-lg overflow-hidden">
+    <header ref={containerRef} class="border-b border-gray-200 dark:border-neutral-dark-300 rounded-t-lg overflow-hidden">
       {/* Top section: breadcrumbs + actions + title */}
       <div class="px-6 pt-6 pb-5">
         {(breadcrumbs || externalDocsUrl || onImportClick) && (
@@ -868,7 +868,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
         )}
 
         <div class="flex flex-wrap items-center gap-3">
-          <h1 class="text-2xl font-bold text-gray-900 whitespace-nowrap">{title}</h1>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-neutral-dark-900 whitespace-nowrap">{title}</h1>
           {info?.version && (
             <Badge variant="utility">v{info.version}</Badge>
           )}
@@ -878,15 +878,15 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
 
       {/* Two-column body: description left, servers + links right */}
       {(description || hasRightContent) && (
-        <div class="grid grid-cols-1 lg:grid-cols-2 border-t border-gray-100 min-h-0">
+        <div class="grid grid-cols-1 lg:grid-cols-2 border-t border-gray-100 dark:border-neutral-dark-300 min-h-0">
           {/* Left: description */}
-          <div class="px-6 py-5 border-b lg:border-b-0 lg:border-r border-gray-200 min-w-0">
+          <div class="px-6 py-5 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-neutral-dark-300 min-w-0">
             {description ? (
               <div class="text-sm [&_.prose]:text-sm [&_.prose_p]:text-gray-600">
                 <MarkdownPreview markdown={description} />
               </div>
             ) : (
-              <p class="text-xs text-gray-400 italic">No description.</p>
+              <p class="text-xs text-gray-400 dark:text-neutral-dark-400 italic">No description.</p>
             )}
           </div>
 
@@ -894,15 +894,15 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
           <div class="bg-[#282a36] px-6 py-5 space-y-4 min-w-0">
             {servers?.length > 0 && (
               <div>
-                <span class="block text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-2">
+                <span class="block text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-neutral-dark-400 mb-2">
                   Base URL{servers.length > 1 ? 's' : ''}
                 </span>
                 <div class="flex flex-col gap-2">
                   {servers.map((server, i) => (
                     <div key={i} class="flex flex-wrap items-center gap-1.5 text-xs bg-[#1e2029] border border-[#3d3f4e] rounded px-2 py-1.5">
-                      <code class="font-mono text-gray-200 break-all">{server.url}</code>
+                      <code class="font-mono text-gray-200 dark:text-neutral-dark-700 break-all">{server.url}</code>
                       {server.description && (
-                        <span class="text-gray-500">— {server.description}</span>
+                        <span class="text-gray-500 dark:text-neutral-dark-500">— {server.description}</span>
                       )}
                     </div>
                   ))}
@@ -912,8 +912,8 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
 
             {(info?.contact || info?.license || info?.termsOfService) && (
               <div>
-                <span class="block text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-2">Links</span>
-                <div class="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-gray-400">
+                <span class="block text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-neutral-dark-400 mb-2">Links</span>
+                <div class="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-gray-400 dark:text-neutral-dark-400">
                   {info.contact?.url && (
                     <a href={info.contact.url} target="_blank" rel="noopener noreferrer" class="hover:text-sky-400 underline">
                       {info.contact.name || 'Contact'}

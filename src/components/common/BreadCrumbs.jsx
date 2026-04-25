@@ -36,7 +36,7 @@ export function BreadCrumbs({ items, className = '' }) {
                   stroke-width="2"
                   stroke-linecap="round"
                   stroke-linejoin="round"
-                  class="text-gray-400"
+                  class="text-gray-400 dark:text-neutral-dark-400"
                   aria-hidden="true"
                 >
                   <path d="m9 18 6-6-6-6" />
@@ -48,7 +48,7 @@ export function BreadCrumbs({ items, className = '' }) {
                 isClickable ? (
                   <Link
                     href={item.href}
-                    class="text-gray-500 hover:text-gray-700 transition-colors"
+                    class="text-gray-500 dark:text-neutral-dark-500 hover:text-gray-700 dark:hover:text-neutral-dark-700 transition-colors"
                     aria-label="Home"
                   >
                     <svg
@@ -67,7 +67,7 @@ export function BreadCrumbs({ items, className = '' }) {
                     </svg>
                   </Link>
                 ) : (
-                  <span class="text-gray-500" aria-label="Home">
+                  <span class="text-gray-500 dark:text-neutral-dark-500" aria-label="Home">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="14"
@@ -89,12 +89,12 @@ export function BreadCrumbs({ items, className = '' }) {
                 isClickable ? (
                   <Link
                     href={item.href}
-                    class="text-gray-500 hover:text-gray-700 hover:underline transition-colors"
+                    class="text-gray-500 dark:text-neutral-dark-500 hover:text-gray-700 dark:hover:text-neutral-dark-700 hover:underline transition-colors"
                   >
                     {item.name}
                   </Link>
                 ) : (
-                  <span class={isLast ? 'text-gray-900 font-medium truncate' : 'text-gray-500 whitespace-nowrap'}>
+                  <span class={isLast ? 'text-gray-900 dark:text-neutral-dark-900 font-medium truncate' : 'text-gray-500 dark:text-neutral-dark-500 whitespace-nowrap'}>
                     {item.name}
                   </span>
                 )

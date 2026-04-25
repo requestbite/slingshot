@@ -111,7 +111,7 @@ function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFile
             const file = e.target.files[0];
             updateField(field.id, 'value', file);
           }}
-          class={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 ${field.enabled ? 'bg-white' : 'bg-gray-50 text-gray-500'
+          class={`w-full px-2 py-1 text-sm border border-gray-300 dark:border-neutral-dark-50 rounded focus:ring-sky-500 focus:border-sky-500 ${field.enabled ? 'bg-white dark:bg-[#313340] text-gray-900 dark:text-neutral-dark-900' : 'bg-gray-50 dark:bg-neutral-dark-200 text-gray-500 dark:text-neutral-dark-500'
             }`}
           disabled={!field.enabled}
         />
@@ -139,7 +139,7 @@ function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFile
         <button
           ref={addButtonRef}
           onClick={handleAddButtonClick}
-          class="px-3 py-1 bg-sky-100 hover:bg-sky-200 text-sky-700 text-sm font-medium rounded-md cursor-pointer flex items-center gap-1"
+          class="px-3 py-1 bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 text-sky-700 dark:text-primary-dark-400 text-sm font-medium rounded-md cursor-pointer flex items-center gap-1"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus">
             <path d="M5 12h14" />
@@ -166,7 +166,7 @@ function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFile
                 type="checkbox"
                 checked={field.enabled}
                 onChange={() => toggleFieldEnabled(field.id)}
-                class="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500"
+                class="w-4 h-4 text-sky-600 border-gray-300 dark:border-neutral-dark-50 rounded focus:ring-sky-500"
               />
             </div>
             {allowFiles && (
@@ -584,13 +584,13 @@ export function BodyTab({
               <select
                 value={contentType}
                 onChange={(e) => onContentTypeChange(e.target.value)}
-                class="w-full appearance-none rounded-md bg-white py-1 pl-3 pr-8 text-xs text-gray-900 outline -outline-offset-1 outline-gray-300 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
+                class="w-full appearance-none rounded-md bg-white dark:bg-[#313340] py-1 pl-3 pr-8 text-xs text-gray-900 dark:text-neutral-dark-900 outline -outline-offset-1 outline-gray-300 dark:outline-neutral-dark-50 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
               >
                 {CONTENT_TYPES.map(type => (
                   <option key={type.value} value={type.value}>{type.label}</option>
                 ))}
               </select>
-              <svg class="pointer-events-none absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 h-3 w-3"
+              <svg class="pointer-events-none absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 dark:text-neutral-dark-500 h-3 w-3"
                 viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" data-slot="icon">
                 <path fill-rule="evenodd"
                   d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
@@ -604,8 +604,8 @@ export function BodyTab({
                 onClick={prettifyJson}
                 disabled={!isValidJson || !bodyContent.trim()}
                 class={`px-2 py-1 text-xs font-medium rounded-md cursor-pointer ${isValidJson && bodyContent.trim()
-                  ? 'bg-sky-100 hover:bg-sky-200 text-sky-700'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  ? 'bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 text-sky-700 dark:text-primary-dark-400'
+                  : 'bg-gray-100 dark:bg-neutral-dark-200 text-gray-400 dark:text-neutral-dark-400 cursor-not-allowed'
                   }`}
               >
                 Prettify
@@ -616,7 +616,7 @@ export function BodyTab({
             {shouldShowSchemaEditor && (
               <button
                 onClick={onOpenSchemaEditor}
-                class="px-2 py-1 text-xs font-medium rounded-md cursor-pointer bg-sky-100 hover:bg-sky-200 text-sky-700"
+                class="px-2 py-1 text-xs font-medium rounded-md cursor-pointer bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 text-sky-700 dark:text-primary-dark-400"
               >
                 Open in editor
               </button>
@@ -676,7 +676,7 @@ export function BodyTab({
 
           {/* Variable hint indicator */}
           {availableVariables.size > 0 && (
-            <span class="flex items-center text-xs text-gray-400 font-normal whitespace-nowrap overflow-hidden mt-1">
+            <span class="flex items-center text-xs text-gray-400 dark:text-neutral-dark-400 font-normal whitespace-nowrap overflow-hidden mt-1">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info mr-1 flex-shrink-0">
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 16v-4" />

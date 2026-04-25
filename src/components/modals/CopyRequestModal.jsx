@@ -175,7 +175,7 @@ export function CopyRequestModal({ isOpen, onClose, requestData, onCopySuccess }
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Copy Request URL" size="md">
-      <div class="text-sm text-gray-500">
+      <div class="text-sm text-gray-500 dark:text-neutral-dark-500">
         Do you want to create a copy of the current request as a shareable URL which opens Slingshot with the copied data?
       </div>
 

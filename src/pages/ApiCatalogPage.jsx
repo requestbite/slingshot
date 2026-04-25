@@ -220,7 +220,7 @@ export function ApiCatalogPage() {
 
     return (
       <div class="flex flex-col gap-1">
-        <div class="font-medium text-gray-900">{apiTitle}</div>
+        <div class="font-medium text-gray-900 dark:text-neutral-dark-900">{apiTitle}</div>
         <div class="text-xs text-gray-600">
           {api.description || 'No description available.'}
         </div>
@@ -256,10 +256,10 @@ export function ApiCatalogPage() {
   // Helper function to render API details
   const renderApiDetails = (api) => (
     <div class="flex flex-col gap-2">
-      <div class="line-clamp-2 text-xs text-gray-600">{api.description || 'No description available.'}</div>
-      <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+      <div class="line-clamp-2 text-xs text-gray-600 dark:text-neutral-dark-600">{api.description || 'No description available.'}</div>
+      <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-neutral-dark-500">
         {api.version && (
-          <span>Version: <span class="text-gray-700">{api.version}</span></span>
+          <span>Version: <span class="text-gray-700 dark:text-neutral-dark-700">{api.version}</span></span>
         )}
         {(api.openApiYamlUrl !== undefined || api.openApiJsonUrl !== undefined) && (
           <>
@@ -274,12 +274,12 @@ export function ApiCatalogPage() {
                 {api.source}
               </a>
             ) : (
-              <span class="text-gray-700">{api.source}</span>
+              <span class="text-gray-700 dark:text-neutral-dark-700">{api.source}</span>
             )}
           </span>
         )}
       </div>
-      <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+      <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-neutral-dark-500">
         {api.categories && api.categories.length > 0 && (
           <span>
             Categories: {api.categories.map((cat, idx) => (
@@ -293,7 +293,7 @@ export function ApiCatalogPage() {
           </span>
         )}
         {api.serviceName?.name && (
-          <span>Service: <span class="text-gray-700">{api.serviceName.name}</span></span>
+          <span>Service: <span class="text-gray-700 dark:text-neutral-dark-700">{api.serviceName.name}</span></span>
         )}
       </div>
     </div>
@@ -327,7 +327,7 @@ export function ApiCatalogPage() {
   // If we're on a category page, show the category APIs
   if (match && params?.key) {
     return (
-      <div class="h-full bg-gray-100 overflow-y-auto">
+      <div class="h-full bg-gray-100 dark:bg-[#282a36] overflow-y-auto">
         <div class="min-h-full pt-[83px] pb-6">
           {/* Search Bar */}
           <div class="max-w-3xl mx-auto px-4 mb-[18px]">
@@ -343,7 +343,7 @@ export function ApiCatalogPage() {
                   stroke-width="2"
                   stroke-linecap="round"
                   stroke-linejoin="round"
-                  class="text-gray-400"
+                  class="text-gray-400 dark:text-neutral-dark-400"
                 >
                   <circle cx="11" cy="11" r="8" />
                   <path d="m21 21-4.3-4.3" />
@@ -368,7 +368,7 @@ export function ApiCatalogPage() {
 
           {/* Main Container */}
           <div class="max-w-4xl mx-auto px-4">
-            <div class="bg-white rounded-lg border border-gray-300">
+            <div class="bg-white dark:bg-surface-dark-elevated rounded-lg border border-gray-300 dark:border-neutral-dark-50">
               {/* Header Section */}
               <div class="sm:flex sm:items-start p-6">
                 <div class="sm:flex-auto">
@@ -379,10 +379,10 @@ export function ApiCatalogPage() {
                     ]}
                     className="mb-3"
                   />
-                  <h1 class="pt-2 text-base/7 font-semibold text-gray-900">
+                  <h1 class="pt-2 text-base/7 font-semibold text-gray-900 dark:text-neutral-dark-900">
                     {categoryInfo ? `${categoryInfo.name} APIs` : `${params.key.charAt(0).toUpperCase() + params.key.slice(1)} APIs`}
                   </h1>
-                  <p class="mt-1 text-sm/6 text-gray-600">
+                  <p class="mt-1 text-sm/6 text-gray-600 dark:text-neutral-dark-600">
                     {categoryInfo ? categoryInfo.description : `Browse APIs in the ${params.key} category.`}
                     {paginationDetails && ` This category contains a total of ${paginationDetails.entries} APIs.`}
                   </p>
@@ -408,7 +408,7 @@ export function ApiCatalogPage() {
               {/* Content Section */}
               <div class="px-6 pb-6">
                 {isLoadingApis ? (
-                  <div class="flex items-center justify-center py-8 text-gray-500">
+                  <div class="flex items-center justify-center py-8 text-gray-500 dark:text-neutral-dark-500">
                     <svg class="animate-spin w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -437,7 +437,7 @@ export function ApiCatalogPage() {
                             description={renderApiDetails(api)}
                             icon={
                               <div class="flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500 dark:text-neutral-dark-500">
                                   <circle cx="12" cy="12" r="10" />
                                   <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
                                   <path d="M2 12h20" />
@@ -450,7 +450,7 @@ export function ApiCatalogPage() {
                     </div>
 
                     {/* Pagination Controls */}
-                    <div class="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                    <div class="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-neutral-dark-300">
                       <Button
                         variant="secondary"
                         size="sm"
@@ -460,11 +460,11 @@ export function ApiCatalogPage() {
                         Previous
                       </Button>
                       {paginationDetails ? (
-                        <div class="text-sm text-gray-600 flex flex-col items-center gap-1">
+                        <div class="text-sm text-gray-600 dark:text-neutral-dark-600 flex flex-col items-center gap-1">
                           <span>
                             Page {paginationDetails.page} of {Math.ceil(paginationDetails.entries / paginationDetails.limit)}
                           </span>
-                          <span class="text-xs text-gray-500">
+                          <span class="text-xs text-gray-500 dark:text-neutral-dark-500">
                             {((paginationDetails.page - 1) * paginationDetails.limit) + 1}-{Math.min(paginationDetails.page * paginationDetails.limit, paginationDetails.entries)} of {paginationDetails.entries} APIs
                           </span>
                         </div>
@@ -484,7 +484,7 @@ export function ApiCatalogPage() {
                     </div>
                   </div>
                 ) : (
-                  <div class="text-center py-8 text-gray-500">
+                  <div class="text-center py-8 text-gray-500 dark:text-neutral-dark-500">
                     No APIs found in this category
                   </div>
                 )}
@@ -498,7 +498,7 @@ export function ApiCatalogPage() {
 
   // Default view - show categories
   return (
-    <div class="h-full bg-gray-100 overflow-y-auto">
+    <div class="h-full bg-gray-100 dark:bg-[#282a36] overflow-y-auto">
       <div class="min-h-full pt-[83px] pb-6">
         {/* Search Bar */}
         <div class="max-w-3xl mx-auto px-4 mb-[18px]">
@@ -514,7 +514,7 @@ export function ApiCatalogPage() {
                 stroke-width="2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                class="text-gray-400"
+                class="text-gray-400 dark:text-neutral-dark-400"
               >
                 <circle cx="11" cy="11" r="8" />
                 <path d="m21 21-4.3-4.3" />
@@ -539,19 +539,19 @@ export function ApiCatalogPage() {
 
         {/* Main Container */}
         <div class="max-w-4xl mx-auto px-4">
-          <div class="bg-white rounded-lg border border-gray-300">
+          <div class="bg-white dark:bg-surface-dark-elevated rounded-lg border border-gray-300 dark:border-neutral-dark-50">
             {/* Header Section */}
             <div class="sm:flex sm:items-start p-6">
               <div class="sm:flex-auto">
                 <div class="flex items-center gap-2">
-                  <h1 class="text-base/7 font-semibold text-gray-900">
+                  <h1 class="text-base/7 font-semibold text-gray-900 dark:text-neutral-dark-900">
                     REST API Catalog
                   </h1>
                   <span class="px-2 py-1 rounded-md text-xs font-medium bg-orange-100 text-orange-800">
                     Beta
                   </span>
                 </div>
-                <p class="mt-1 text-sm/6 text-gray-600">
+                <p class="mt-1 text-sm/6 text-gray-600 dark:text-neutral-dark-600">
                   Explore the vast number of REST APIs in the RequestBite API catalog.
                 </p>
               </div>
@@ -585,7 +585,7 @@ export function ApiCatalogPage() {
                   )}
                 </div>
               {isLoadingCategories ? (
-                <div class="flex items-center justify-center py-8 text-gray-500">
+                <div class="flex items-center justify-center py-8 text-gray-500 dark:text-neutral-dark-500">
                   <svg class="animate-spin w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -602,12 +602,12 @@ export function ApiCatalogPage() {
                       description={
                         <div>
                           <div class="line-clamp-3 mb-2">{category.description}</div>
-                          <div class="text-xs text-gray-500">APIs: {category.apis}</div>
+                          <div class="text-xs text-gray-500 dark:text-neutral-dark-500">APIs: {category.apis}</div>
                         </div>
                       }
                       icon={
                         <div class="flex items-center justify-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500 dark:text-neutral-dark-500">
                             <path d="m16 18 6-6-6-6" />
                             <path d="m8 6-6 6 6 6" />
                           </svg>
@@ -617,7 +617,7 @@ export function ApiCatalogPage() {
                   ))}
                 </div>
               ) : (
-                <div class="text-center py-8 text-gray-500">
+                <div class="text-center py-8 text-gray-500 dark:text-neutral-dark-500">
                   No categories found
                 </div>
               )}

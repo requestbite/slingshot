@@ -86,7 +86,7 @@ export function ExampleViewer({
     <div class={`space-y-2 ${className}`}>
       {displayTitle && (
         <div class="flex items-center justify-between">
-          <label class="block text-xs font-medium text-gray-400">{displayTitle}</label>
+          <label class="block text-xs font-medium text-gray-400 dark:text-neutral-dark-400">{displayTitle}</label>
         </div>
       )}
 
