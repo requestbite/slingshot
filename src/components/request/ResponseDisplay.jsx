@@ -137,7 +137,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
 
   if (!response) {
     return (
-      <div class="px-6">
+      <div class="px-6 h-full">
         <WelcomeMessage />
       </div>
     );
@@ -148,7 +148,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
   // BUT: Don't show welcome message if we're in streaming mode
   if (!response.status && !response.responseData && !response.cancelled && response.success !== false && !isStreaming && !streamedContent) {
     return (
-      <div class="px-6">
+      <div class="px-6 h-full">
         <WelcomeMessage />
       </div>
     );

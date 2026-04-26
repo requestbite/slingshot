@@ -1,11 +1,7 @@
 export function WelcomeMessage() {
   const baseUrl = import.meta.env.VITE_BASE_URL || 'https://s.requestbite.com';
   return (
-    <div class="text-center py-8 flex flex-col items-center justify-center">
-      <div class="mx-auto w-32 mb-4">
-        <img src="/images/rabbit-slinging-v1.webp" alt="Slingshot Rabbit" class="w-full h-auto" />
-      </div>
-
+    <div class="text-center py-8 flex flex-col items-center justify-center h-full">
       <p class="text-xl font-semibold text-gray-700 dark:text-neutral-dark-700 mb-1">Slingshot</p>
       <p class="text-sm">
         <a href="https://docs.requestbite.com/articles/another-kind-of-client/" target="_blank" class="text-gray-500 dark:text-neutral-dark-500 hover:text-gray-400 dark:hover:text-neutral-dark-400 hover:underline flex items-center">
