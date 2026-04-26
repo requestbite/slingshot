@@ -45,27 +45,30 @@ export function Toast({
     switch (type) {
       case 'success':
         return {
-          border: 'border-lime-600 dark:border-success-dark-400 border-2 bg-lime-50 dark:bg-surface-dark-elevated',
+          border: 'border-green-800 dark:border-success-dark-400 border-2 bg-green-100 dark:bg-success-dark-100',
+          textColor: 'text-green-800 dark:text-white',
           icon: (
-            <svg class="size-6 text-lime-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+            <svg class="size-6 text-green-800 dark:text-success-dark-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
             </svg>
           )
         };
       case 'error':
         return {
-          border: 'border-red-600 dark:border-error-dark-400 border-2 bg-red-50 dark:bg-surface-dark-elevated',
+          border: 'border-red-600 dark:border-error-dark-400 border-2 bg-red-50 dark:bg-error-dark-100',
+          textColor: 'text-gray-600 dark:text-white',
           icon: (
-            <svg class="size-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+            <svg class="size-6 text-red-600 dark:text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
             </svg>
           )
         };
       case 'info':
         return {
-          border: 'border-blue-600 dark:border-info-dark-600 border-2 bg-blue-50 dark:bg-surface-dark-elevated',
+          border: 'border-blue-600 dark:border-info-dark-600 border-2 bg-blue-50 dark:bg-info-dark-50',
+          textColor: 'text-gray-600 dark:text-white',
           icon: (
-            <svg class="size-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+            <svg class="size-6 text-blue-600 dark:text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
             </svg>
           )
@@ -91,12 +94,12 @@ export function Toast({
                 {styles.icon}
               </div>
               <div class="ml-3 w-0 flex-1 pt-0.5">
-                <p class="text-sm font-medium text-gray-600 dark:text-neutral-dark-700">{message}</p>
+                <p class={`text-sm font-medium ${styles.textColor}`}>{message}</p>
               </div>
               <div class="ml-4 flex shrink-0">
                 <button
                   type="button"
-                  class="inline-flex rounded-md text-gray-400 hover:text-gray-500 dark:text-neutral-dark-400 dark:hover:text-neutral-dark-500 focus:outline-hidden focus:ring-2 focus:ring-lime-600 focus:ring-offset-2 cursor-pointer"
+                  class={`inline-flex rounded-md ${styles.textColor} focus:outline-hidden focus:ring-2 focus:ring-lime-600 focus:ring-offset-2 cursor-pointer`}
                   onClick={handleClose}
                 >
                   <span class="sr-only">Close</span>
