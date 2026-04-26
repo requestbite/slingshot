@@ -13,15 +13,15 @@ function OperationItem({ method, path, operation, isActive, onClick, level = 0 }
   return (
     <li class="request relative">
       <div
-        class={`flex items-center py-1 px-1 rounded cursor-pointer hover:bg-gray-100 ${isActive ? 'bg-sky-50 dark:bg-primary-dark-200' : ''}`}
+        class={`flex items-center py-1 px-1 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-dark-200 ${isActive ? 'bg-sky-50 dark:bg-primary-dark-200' : ''}`}
         style={{ marginLeft: `${marginLeft}px` }}
         onClick={onClick}
         title={path}
       >
-        <span class={`text-[10px]/[12px] text-white py-0.5 px-1 rounded mr-2 flex-shrink-0 ${getMethodColor(method)}`}>
+        <span class={`text-[10px]/[12px] text-white dark:text-gray-800 py-0.5 px-1 rounded mr-2 flex-shrink-0 ${getMethodColor(method)}`}>
           {method}
         </span>
-        <span class="text-xs truncate">{label}</span>
+        <span class="text-xs truncate dark:text-neutral-dark-700">{label}</span>
       </div>
     </li>
   );

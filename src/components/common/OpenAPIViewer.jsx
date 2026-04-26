@@ -466,7 +466,7 @@ function EndpointSection({ method, path, operation, parameters, spec, defaultExp
 
             {/* Operation-level description */}
             {operation.description && (
-              <div class="text-sm [&_.prose]:text-sm [&_.prose_p]:text-gray-600 [&_.prose_li]:text-gray-600">
+              <div class="text-sm [&_.prose]:text-sm [&_.prose_p]:text-gray-600 dark:[&_.prose_p]:text-neutral-dark-600 [&_.prose_li]:text-gray-600 dark:[&_.prose_li]:text-neutral-dark-600">
                 <MarkdownPreview markdown={operation.description} />
               </div>
             )}
@@ -686,7 +686,7 @@ function TagSection({ tag, spec, startIndex }) {
               <MarkdownPreview markdown={tag.description} />
             </div>
           )}
-          <div class="bg-white">
+          <div class="bg-white dark:bg-surface-dark-elevated">
             {tag.operations.map(({ method, path, operation, parameters }, i) => (
               <EndpointSection
                 key={`${method}-${path}`}
@@ -813,7 +813,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
                   <button
                     ref={hamburgerRef}
                     onClick={() => setShowMenu(v => !v)}
-                    class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer"
+                    class="rounded-md bg-sky-100 dark:bg-sky-200 hover:bg-sky-200 dark:hover:bg-sky-300 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="currentColor" class="w-4 h-4">
                       <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
@@ -839,7 +839,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
                       href={externalDocsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center"
+                      class="rounded-md bg-sky-100 dark:bg-sky-200 hover:bg-sky-200 dark:hover:bg-sky-300 py-2 px-3 text-sm font-medium text-sky-700 flex items-center"
                     >
                       <BookMarked size={16} class="mr-2" />
                       Docs
@@ -848,7 +848,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
                   {onImportClick && (
                     <button
                       onClick={(e) => onImportClick(e.currentTarget)}
-                      class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer"
+                      class="rounded-md bg-sky-100 dark:bg-sky-200 hover:bg-sky-200 dark:hover:bg-sky-300 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
                         <path d="M12 15V3" />
@@ -882,7 +882,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
           {/* Left: description */}
           <div class="px-6 py-5 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-neutral-dark-300 min-w-0">
             {description ? (
-              <div class="text-sm [&_.prose]:text-sm [&_.prose_p]:text-gray-600">
+              <div class="text-sm [&_.prose]:text-sm [&_.prose_p]:text-gray-600 dark:[&_.prose_p]:text-neutral-dark-600">
                 <MarkdownPreview markdown={description} />
               </div>
             ) : (
@@ -954,7 +954,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
               <button
                 ref={fixedHamburgerRef}
                 onClick={() => setShowFixedMenu(v => !v)}
-                class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer shadow-lg"
+                class="rounded-md bg-sky-100 dark:bg-sky-200 hover:bg-sky-200 dark:hover:bg-sky-300 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer shadow-lg"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="currentColor" class="w-4 h-4">
                   <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
@@ -980,7 +980,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
                   href={externalDocsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center shadow-lg"
+                  class="rounded-md bg-sky-100 dark:bg-sky-200 hover:bg-sky-200 dark:hover:bg-sky-300 py-2 px-3 text-sm font-medium text-sky-700 flex items-center shadow-lg"
                 >
                   <BookMarked size={16} class="mr-2" />
                   Docs
@@ -989,7 +989,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
               {onImportClick && (
                 <button
                   onClick={(e) => onImportClick(e.currentTarget)}
-                  class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer shadow-lg"
+                  class="rounded-md bg-sky-100 dark:bg-sky-200 hover:bg-sky-200 dark:hover:bg-sky-300 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer shadow-lg"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
                     <path d="M12 15V3" />
@@ -1006,7 +1006,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
           )}
           <button
             onClick={scrollToTop}
-            class="rounded-md bg-sky-100 hover:bg-sky-200 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer shadow-lg"
+            class="rounded-md bg-sky-100 dark:bg-sky-200 hover:bg-sky-200 dark:hover:bg-sky-300 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer shadow-lg"
           >
             <ArrowUpToLine size={16} />
           </button>
