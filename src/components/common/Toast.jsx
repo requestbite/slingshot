@@ -96,7 +96,7 @@ export function Toast({
               <div class="ml-3 w-0 flex-1 pt-0.5">
                 <p class={`text-sm font-medium ${styles.textColor}`}>{message}</p>
               </div>
-              <div class="ml-4 flex shrink-0">
+              <div class="ml-4 flex shrink-0 self-center">
                 <button
                   type="button"
                   class={`inline-flex rounded-md ${styles.textColor} focus:outline-hidden focus:ring-2 focus:ring-lime-600 focus:ring-offset-2 cursor-pointer`}
