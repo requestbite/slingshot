@@ -1406,7 +1406,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
               value={requestData.method}
               onChange={(e) => handleMethodChange(e.target.value)}
               onKeyDown={handleEnterKeyPress}
-              class="w-full appearance-none rounded-md bg-white dark:bg-[#313340] pl-3 pr-8 text-sm text-gray-900 dark:text-neutral-dark-900 outline -outline-offset-1 outline-gray-300 dark:outline-neutral-dark-50 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
+              class="w-full appearance-none rounded-md bg-white dark:bg-[#282a36] pl-3 pr-8 text-sm text-gray-900 dark:text-neutral-dark-900 outline -outline-offset-1 outline-gray-300 dark:outline-neutral-dark-50 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
               style="min-height: 38px; max-height: 38px; line-height: 22px; box-sizing: border-box;"
             >
               {HTTP_METHODS.map(method => (

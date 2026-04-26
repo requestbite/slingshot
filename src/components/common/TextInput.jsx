@@ -116,7 +116,7 @@ export const TextInput = forwardRef(({
     rightPadding = 'pr-[40px]';
   }
 
-  const baseInputClasses = `block w-full rounded-md px-3 py-2 ${disabled ? 'bg-gray-50 dark:bg-neutral-dark-200' : 'bg-white dark:bg-[#313340]'} text-gray-900 dark:text-neutral-dark-900 outline-solid outline-1 focus:outline-2 -outline-offset-1 outline-gray-300 dark:outline-neutral-dark-50 placeholder:text-gray-400 dark:placeholder:text-neutral-dark-400 focus:-outline-offset-2 focus:outline-sky-500 text-sm`;
+  const baseInputClasses = `block w-full rounded-md px-3 py-2 ${disabled ? 'bg-gray-50 dark:bg-neutral-dark-200' : 'bg-white dark:bg-[#282a36]'} text-gray-900 dark:text-neutral-dark-900 outline-solid outline-1 focus:outline-2 -outline-offset-1 outline-gray-300 dark:outline-neutral-dark-50 placeholder:text-gray-400 dark:placeholder:text-neutral-dark-400 focus:-outline-offset-2 focus:outline-sky-500 text-sm`;
 
   return (
     <div class="w-full">

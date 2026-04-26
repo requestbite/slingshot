@@ -329,7 +329,7 @@ export function CollectionUpdatePage() {
 
                     {/* Settings Section */}
                     <div class="sm:col-span-6 border-t border-gray-900/10 pt-8 mt-4">
-                      <h3 class="text-base font-semibold text-gray-900 mb-4">Request Settings</h3>
+                      <h3 class="text-base font-semibold text-gray-900 dark:text-neutral-dark-900 mb-4">Request Settings</h3>
                       <div class="space-y-4">
                         {/* Automatically follow redirects setting */}
                         <div class="flex items-center">
@@ -516,8 +516,7 @@ export function CollectionUpdatePage() {
                 <Button
                   onClick={() => setDeleteCollectionModal(true)}
                   type="button"
-                  variant="none"
-                  className="cursor-pointer rounded-md bg-red-600 hover:bg-red-500 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+                  variant="danger"
                 >
                   Delete Collection
                 </Button>
