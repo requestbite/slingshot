@@ -715,8 +715,7 @@ export function EnvironmentUpdatePage() {
                           <Button
                             onClick={() => setDeleteEnvironmentModal(true)}
                             type="button"
-                            variant="none"
-                            className="rounded-md bg-red-600 hover:bg-red-500 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+                            variant="danger"
                           >
                             Delete
                           </Button>
@@ -729,7 +728,7 @@ export function EnvironmentUpdatePage() {
                 {activeSection === 'secrets' && (
                   <div>
                     <h2 class="text-base font-semibold text-gray-900 dark:text-neutral-dark-900">Environment Secrets</h2>
-                    <p class="mt-1 mb-6 text-sm text-gray-600">Encrypted key-value pairs stored securely for this environment.</p>
+                    <p class="mt-1 mb-6 text-sm text-gray-600 dark:text-neutral-dark-600">Encrypted key-value pairs stored securely for this environment.</p>
 
                     {/* Add new secret form */}
                     <div class="mb-6">
@@ -781,37 +780,39 @@ export function EnvironmentUpdatePage() {
                         <tbody class="divide-y divide-gray-200 dark:divide-neutral-dark-300 bg-white dark:bg-surface-dark-elevated">
                           {pendingSecrets.length > 0 ? (
                             pendingSecrets.map((secret) => (
-                              <tr key={secret._tempId || secret.key} class={secret._status === 'new' ? 'bg-blue-50' : secret._status === 'updated' ? 'bg-yellow-50' : ''}>
+                              <tr key={secret._tempId || secret.key} class={secret._status === 'new' ? 'bg-sky-100 dark:bg-primary-dark-200' : secret._status === 'updated' ? 'bg-yellow-50' : ''}>
                                 <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-neutral-dark-900 sm:pl-6">
                                   {secret.key}
-                                  {secret._status === 'new' && <span class="ml-2 text-xs text-blue-600">(new)</span>}
+                                  {secret._status === 'new' && <span class="ml-2 text-xs text-sky-700 dark:text-primary-dark-400">(new)</span>}
                                   {secret._status === 'updated' && <span class="ml-2 text-xs text-yellow-600">(modified)</span>}
                                 </td>
-                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900 dark:text-neutral-dark-900">
                                   <span class="font-mono">{'•'.repeat(Math.min(secret.value.length, 20))}</span>
                                 </td>
                                 <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-2">
-                                  <button
+                                  <Button
                                     type="button"
+                                    variant="icon"
+                                    size="icon"
                                     onClick={() => handleEditSecret(secret)}
-                                    class="px-2 py-1 bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 text-sky-700 dark:text-primary-dark-400 text-sm font-medium rounded-md cursor-pointer inline-block"
                                   >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>
-                                  </button>
-                                  <button
+                                  </Button>
+                                  <Button
                                     type="button"
+                                    variant="danger"
+                                    size="icon"
                                     onClick={() => {
                                       setSecretToDelete(secret._tempId || secret.key);
                                       setDeleteSecretModal(true);
                                     }}
-                                    class="px-2 py-1 bg-red-100 dark:bg-error-dark-100 hover:bg-red-200 dark:hover:bg-error-dark-200 text-red-700 dark:text-error-dark-400 text-sm font-medium rounded-md cursor-pointer inline-block"
                                   >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
-                                  </button>
+                                  </Button>
                                 </td>
                               </tr>
                             ))
