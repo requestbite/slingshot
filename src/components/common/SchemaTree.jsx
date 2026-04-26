@@ -38,12 +38,12 @@ export function SchemaTree({
 
   const getTypeBadgeColor = (type) => {
     const colors = {
-      string: 'bg-green-100 text-green-800',
-      number: 'bg-blue-100 text-blue-800',
-      integer: 'bg-blue-100 text-blue-800',
-      boolean: 'bg-purple-100 text-purple-800',
-      object: 'bg-orange-100 text-orange-800',
-      array: 'bg-pink-100 text-pink-800',
+      string: 'bg-green-100 dark:bg-green-200 text-green-800',
+      number: 'bg-blue-100 dark:bg-blue-200 text-blue-800',
+      integer: 'bg-blue-100 dark:bg-blue-200 text-blue-800',
+      boolean: 'bg-purple-100 dark:bg-purple-200 text-purple-800',
+      object: 'bg-orange-100 dark:bg-orange-200 text-orange-800',
+      array: 'bg-pink-100 dark:bg-pink-200 text-pink-800',
       any: 'bg-gray-100 dark:bg-neutral-dark-200 text-gray-800 dark:text-neutral-dark-800'
     };
     return colors[type] || colors.any;
@@ -112,16 +112,16 @@ export function SchemaTree({
       return (
         <div>
           {hasParentDesc && (
-            <div class="text-xs text-gray-600 dark:text-neutral-dark-600 leading-relaxed">
-              <MarkdownPreview markdown={parentDescription} />
+            <div class="text-xs text-gray-600 dark:text-neutral-dark-600 leading-relaxed pt-1">
+              <MarkdownPreview markdown={parentDescription} className="!text-xs" />
             </div>
           )}
           {hasParentDesc && hasEffectiveDesc && (
             <div class="h-2"></div>
           )}
           {hasEffectiveDesc && (
-            <div class="text-xs text-gray-600 dark:text-neutral-dark-600 leading-relaxed">
-              <MarkdownPreview markdown={effectiveDescription} />
+            <div class="text-xs text-gray-600 dark:text-neutral-dark-600 leading-relaxed pt-1">
+              <MarkdownPreview markdown={effectiveDescription} className="!text-xs" />
             </div>
           )}
         </div>
@@ -135,8 +135,8 @@ export function SchemaTree({
     }
 
     return (
-      <div class="text-xs text-gray-600 dark:text-neutral-dark-600 leading-relaxed">
-        <MarkdownPreview markdown={description} />
+      <div class="text-xs text-gray-600 dark:text-neutral-dark-600 leading-relaxed pt-1">
+        <MarkdownPreview markdown={description} className="!text-xs" />
       </div>
     );
   };
@@ -187,7 +187,7 @@ export function SchemaTree({
         <div class="flex-1 min-w-0">
           {name && (
             <div class="flex items-center gap-2">
-              <span class="text-xs font-medium font-mono text-blue-900">
+              <span class="text-xs font-medium font-mono text-blue-900 dark:text-[#66d9ef]">
                 {name}
                 {isRequired && <span class="text-red-500 ml-1">*</span>}
               </span>
