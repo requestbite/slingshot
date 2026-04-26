@@ -81,12 +81,17 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
   });
   const [authResponse, setAuthResponse] = useState(environment?.authResponse || null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, _setErrorState] = useState('');
   const [success, setSuccess] = useState('');
 
   // Toast state
   const [isToastVisible, showToast, hideToast] = useToast();
   const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
+  const setError = (msg) => {
+    if (msg) { setToastMessage(msg); setToastType('error'); showToast(); }
+    else { _setErrorState(''); }
+  };
 
   // Token headers state
   const [tokenHeaderForm, setTokenHeaderForm] = useState({
@@ -990,7 +995,9 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
 
   const handleBearerTokenSave = async () => {
     if (!authConfig.token) {
-      setError('Token is required');
+      setToastMessage('Token is required');
+      setToastType('error');
+      showToast();
       return;
     }
 
@@ -1015,7 +1022,9 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
 
   const handleApiKeySave = async () => {
     if (!authConfig.key || !authConfig.value) {
-      setError('Key and Value are required');
+      setToastMessage('Key and Value are required');
+      setToastType('error');
+      showToast();
       return;
     }
 
@@ -1689,8 +1698,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
             {authResponse && (
               <Button
                 onClick={clearTokens}
-                variant="none"
-                className="cursor-pointer rounded-md bg-red-500 hover:bg-red-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+                variant="danger"
               >
                 Clear Tokens
               </Button>
@@ -1934,8 +1942,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
             {authResponse && (
               <Button
                 onClick={clearTokens}
-                variant="none"
-                className="cursor-pointer rounded-md bg-red-500 hover:bg-red-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+                variant="danger"
               >
                 Clear Tokens
               </Button>
@@ -2035,8 +2042,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
             {authResponse && (
               <Button
                 onClick={clearTokens}
-                variant="none"
-                className="cursor-pointer rounded-md bg-red-500 hover:bg-red-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+                variant="danger"
               >
                 Clear Tokens
               </Button>
@@ -2079,8 +2085,8 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
       {/* Auth Response Display */}
       {authResponse && (
         <div class="">
-          <h3 class="text-base font-medium text-gray-900">Authentication Response</h3>
-          <p class="mt-1 text-sm text-gray-600 mb-4">Any active access token will be used as Authoriation header in Slingshot if this environment is used.</p>
+          <h3 class="text-base font-semibold text-gray-900 dark:text-neutral-dark-900">Authentication Response</h3>
+          <p class="mt-1 text-sm text-gray-600 dark:text-neutral-dark-600 mb-4">Any active access token will be used as Authorization header in Slingshot if this environment is used.</p>
           <div class="w-full max-w-full overflow-hidden">
             <CodeMirror
               value={JSON.stringify(authResponse, null, 2)}
@@ -2275,7 +2281,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
         message={toastMessage}
         isVisible={isToastVisible}
         onClose={hideToast}
-        type="success"
+        type={toastType}
       />
     </div>
   );
