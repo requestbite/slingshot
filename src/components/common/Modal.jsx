@@ -87,7 +87,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
         WebkitTransform: 'translate3d(0,0,0)',
         transform: 'translate3d(0,0,0)'
       }}>
-        <div class="fixed inset-0 bg-gray-500/75 dark:bg-neutral-dark-400/75 transition-opacity" aria-hidden="true" style={{
+        <div class="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/60 transition-opacity" aria-hidden="true" style={{
           position: 'fixed',
           top: 0,
           left: 0,
