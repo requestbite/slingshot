@@ -140,7 +140,7 @@ export function ExportEnvironmentsModal({ isOpen, onClose, onExportSuccess }) {
         <div class="text-sm text-gray-500 dark:text-neutral-dark-500">
           By clicking "Export" you will generate a JSON file containing all of your environments data, including secrets and credentials, in plain-text.
         </div>
-        <div class="mt-2 text-sm text-gray-500">
+        <div class="mt-2 text-sm text-gray-500 dark:text-neutral-dark-500">
           This can be used to backup your data or importing it into another Slingshot instance. Please handle the generated file with care as it might contain sensitive data.
         </div>
 
