@@ -644,7 +644,9 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                               autocompletion: false,
                               rectangularSelection: false,
                               searchKeymap: false,
-                              highlightSelectionMatches: false
+                              highlightSelectionMatches: false,
+                              highlightActiveLine: false,
+                              highlightActiveLineGutter: false
                             }}
                             style={{
                               border: '2px solid #282a36',
@@ -675,7 +677,9 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                       autocompletion: false,
                       rectangularSelection: false,
                       searchKeymap: true,
-                      highlightSelectionMatches: true
+                      highlightSelectionMatches: true,
+                      highlightActiveLine: false,
+                      highlightActiveLineGutter: false
                     };
                     return (
                       <div class="flex flex-col flex-grow">
@@ -686,10 +690,10 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                             value={jsonataExpr}
                             onInput={e => setJsonataExpr(e.target.value)}
                             placeholder="JSONata expression…"
-                            class="w-full mb-2 px-3 py-2 rounded-md text-xs font-mono text-gray-100 outline-none focus:ring-1 focus:ring-sky-500"
+                            class="w-full mb-2 px-3 py-2 rounded-md text-xs font-mono text-gray-100 outline-none"
                             style={{
                               backgroundColor: '#282a36',
-                              border: '2px solid #44475a',
+                              border: 'none',
                               fontFamily: '"JetBrains Mono", ui-monospace, monospace',
                             }}
                           />
