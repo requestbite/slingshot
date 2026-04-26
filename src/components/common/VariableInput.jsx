@@ -437,18 +437,18 @@ export function VariableInput({
           overflow: hidden;
           white-space: nowrap;
         }
-        
+
         .variable-input:focus {
           border-color: #0ea5e9;
           box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
         }
-        
+
         .variable-input[data-placeholder]:empty::before {
           content: attr(data-placeholder);
           color: #9ca3af;
           pointer-events: none;
         }
-        
+
         .variable-resolved {
           background-color: #dcfce7;
           color: #166534;
@@ -456,13 +456,38 @@ export function VariableInput({
           border-radius: 3px;
           font-weight: 500;
         }
-        
+
         .variable-unresolved {
           background-color: #fef2f2;
           color: #dc2626;
           padding: 1px 3px;
           border-radius: 3px;
           font-weight: 500;
+        }
+
+        .dark .variable-input {
+          border-color: #44475a;
+          background: #282a36;
+          color: #f8f8f2;
+        }
+
+        .dark .variable-input:focus {
+          border-color: #0ea5e9;
+          box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+
+        .dark .variable-input[data-placeholder]:empty::before {
+          color: #6272a4;
+        }
+
+        .dark .variable-resolved {
+          background-color: #1a3a28;
+          color: #50fa7b;
+        }
+
+        .dark .variable-unresolved {
+          background-color: #3a1a1a;
+          color: #ff5555;
         }
       `}</style>
     </div>
