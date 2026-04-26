@@ -44,7 +44,7 @@ export function DeleteCollectionModal({ isOpen, onClose, collection, onDelete })
           loading={isDeleting}
           variant="danger"
           size="md"
-          className="w-full sm:ml-3 sm:w-auto bg-red-600 hover:bg-red-500 text-white"
+          className="w-full sm:ml-3 sm:w-auto"
         >
           Delete Collection
         </Button>

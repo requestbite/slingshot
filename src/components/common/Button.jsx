@@ -127,7 +127,7 @@ export function Button({
     secondary: 'bg-white dark:bg-surface-dark-elevated text-gray-900 dark:text-neutral-dark-900 ring-1 ring-inset ring-gray-300 dark:ring-neutral-dark-50 hover:bg-gray-50 dark:hover:bg-neutral-dark-200 focus-visible:outline-gray-500 disabled:opacity-50 disabled:cursor-not-allowed',
     ghost: 'text-sky-500 hover:text-sky-700 hover:underline focus-visible:outline-sky-500 disabled:opacity-50 disabled:cursor-not-allowed',
     icon: 'bg-sky-100 dark:bg-primary-dark-200 text-sky-700 dark:text-primary-dark-400 hover:bg-sky-200 dark:hover:bg-primary-dark-300 focus-visible:outline-sky-500 disabled:opacity-50 disabled:cursor-not-allowed',
-    danger: 'bg-red-100 dark:bg-error-dark-100 text-red-700 dark:text-error-dark-400 hover:bg-red-200 dark:hover:bg-error-dark-200 focus-visible:outline-red-500 disabled:opacity-50 disabled:cursor-not-allowed',
+    danger: 'bg-red-100 dark:bg-red-200 text-red-700 hover:bg-red-200 dark:hover:bg-red-300 focus-visible:outline-red-500 disabled:opacity-50 disabled:cursor-not-allowed',
     utility: 'bg-gray-100 dark:bg-neutral-dark-200 text-gray-700 dark:text-neutral-dark-700 hover:bg-gray-200 dark:hover:bg-neutral-dark-100 border border-gray-300 dark:border-neutral-dark-50 focus-visible:outline-gray-500 disabled:bg-gray-50 dark:disabled:bg-neutral-dark-200 disabled:text-gray-400 dark:disabled:text-neutral-dark-400 disabled:cursor-not-allowed',
     success: 'bg-green-100 dark:bg-success-dark-100 text-green-700 dark:text-success-dark-400 hover:bg-green-200 dark:hover:bg-success-dark-200 focus-visible:outline-green-500 disabled:opacity-50 disabled:cursor-not-allowed'
   };
