@@ -12,6 +12,7 @@ import { TextInput } from '../common/TextInput';
 import { Select } from '../common/Select';
 import { Label } from '../common/Label';
 import { Button } from '../common/Button';
+import { Alert } from '../common/Alert';
 
 // Helper function to encrypt auth configuration
 const encryptAuthConfig = async (authConfig) => {
@@ -1272,15 +1273,9 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
 
       {/* OAuth 2.0 Code Flow Notice */}
       {authType === 'oauth2_code' && (
-        <div class="group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full bg-sky-50 text-sky-700 border border-sky-200">
-          <svg class="size-6 shrink-0 text-sky-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="m9 12 2 2 4-4"></path>
-          </svg>
-          <div class="text-sm">
-            Please note that some data, including your client secret, will pass through the proxy when exchanging the auth code for an access token.
-          </div>
-        </div>
+        <Alert type="note">
+          Please note that some data, including your client secret, will pass through the proxy when exchanging the auth code for an access token.
+        </Alert>
       )}
 
       {/* API Key Configuration */}
@@ -1561,7 +1556,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
           </div>
 
           {/* Token Request Headers */}
-          <div class="border-b border-gray-200 dark:border-neutral-dark-300 pb-2 mb-6">
+          <div class="border-b border-gray-200 dark:border-neutral-dark-50 pb-2 mb-6">
             <h3 class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700 mb-1">Token Request</h3>
             <p class="text-sm text-gray-600 dark:text-neutral-dark-600 mb-4">Custom headers to include when making token requests.</p>
 
@@ -1613,7 +1608,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
             {/* Token Headers Table */}
             {authConfig.tokenHeaders && authConfig.tokenHeaders.length > 0 && (
               <div class="overflow-hidden border border-gray-300 dark:border-neutral-dark-50 rounded-lg mb-4">
-                <table class="min-w-full divide-y divide-gray-300">
+                <table class="min-w-full divide-y divide-gray-300 dark:divide-neutral-dark-50">
                   <thead class="bg-gray-50 dark:bg-neutral-dark-200">
                     <tr>
                       <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900 sm:pl-6">Key</th>
@@ -1805,7 +1800,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
           </div>
 
           {/* Token Request Headers */}
-          <div class="border-b border-gray-200 dark:border-neutral-dark-300 pb-2 mb-6">
+          <div class="border-b border-gray-200 dark:border-neutral-dark-50 pb-2 mb-6">
             <h3 class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700 mb-1">Token Request</h3>
             <p class="text-sm text-gray-600 dark:text-neutral-dark-600 mb-4">Custom headers to include when making token requests.</p>
 
@@ -1857,7 +1852,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
             {/* Token Headers Table */}
             {authConfig.tokenHeaders && authConfig.tokenHeaders.length > 0 && (
               <div class="overflow-hidden border border-gray-300 dark:border-neutral-dark-50 rounded-lg mb-4">
-                <table class="min-w-full divide-y divide-gray-300">
+                <table class="min-w-full divide-y divide-gray-300 dark:divide-neutral-dark-50">
                   <thead class="bg-gray-50 dark:bg-neutral-dark-200">
                     <tr>
                       <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900 sm:pl-6">Key</th>

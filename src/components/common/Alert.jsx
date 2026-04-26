@@ -70,7 +70,7 @@ export function Alert({ type = 'note', children, className = '' }) {
 
   return (
     <div class={`flex gap-x-3 rounded-md p-3.5 text-sm/6 w-full ${alertConfig.bgColor} ${alertConfig.textColor} ${alertConfig.borderColor} ${className}`}>
-      <div class={alertConfig.iconColor}>
+      <div class={`self-center ${alertConfig.iconColor}`}>
         {alertConfig.icon}
       </div>
       <div class="flex-1">
