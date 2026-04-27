@@ -111,7 +111,7 @@ export function FileBrowser({ items = [], sort, onClick, onDoubleClick, allowedE
       class="bg-white dark:bg-[#313340] outline-solid outline-1 -outline-offset-1 outline-gray-300 dark:outline-neutral-dark-50 rounded-md overflow-y-auto scrollbar-hide"
       style={{ maxHeight }}
     >
-      <div class="divide-y divide-gray-100">
+      <div class="divide-y divide-gray-100 dark:divide-neutral-dark-100">
         {sortedItems.map((item, index) => {
           const allowed = isFileAllowed(item);
           const selected = isSelected(item);

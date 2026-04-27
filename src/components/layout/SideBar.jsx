@@ -7,6 +7,7 @@ import { Settings, FolderPlus, Download, RefreshCw, Undo2, ChevronsUpDown, Chevr
 const OpenAPIImportModal = lazy(() => import('../import/OpenAPIImportModal').then(m => ({ default: m.OpenAPIImportModal })));
 const PostmanImportModal = lazy(() => import('../import/PostmanImportModal').then(m => ({ default: m.PostmanImportModal })));
 const URLImportModal = lazy(() => import('../import/URLImportModal').then(m => ({ default: m.URLImportModal })));
+import { Select } from '../common/Select';
 import { AddFolderModal } from '../modals/AddFolderModal';
 import { AddCollectionModal } from '../modals/AddCollectionModal';
 import { ExportPostmanModal } from '../modals/ExportPostmanModal';
@@ -243,41 +244,24 @@ export function SideBar({ onClose: _onClose }) {
                   Add
                 </button>
               </div>
-              <div class="relative">
-                <select
-                  id="collection-select"
-                  class="w-full appearance-none rounded-md bg-white dark:bg-[#313340] py-2 pl-3 pr-8 text-sm text-gray-900 dark:text-neutral-dark-900 outline -outline-offset-1 outline-gray-300 dark:outline-neutral-dark-50 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
-                  value={selectedCollection?.id || ''}
-                  onChange={(e) => {
-                    const collectionId = e.target.value;
-                    if (collectionId) {
-                      const collection = collections.find(c => c.id === collectionId);
-                      if (collection) {
-                        selectCollection(collection);
-                        const url = `/${collectionId}`;
-                        setLastSlingshotUrl(url);
-                        setLocation(url);
-                      }
+              <Select
+                id="collection-select"
+                value={selectedCollection?.id || ''}
+                onChange={(collectionId) => {
+                  if (collectionId) {
+                    const collection = collections.find(c => c.id === collectionId);
+                    if (collection) {
+                      selectCollection(collection);
+                      const url = `/${collectionId}`;
+                      setLastSlingshotUrl(url);
+                      setLocation(url);
                     }
-                  }}
-                  disabled={isLoading}
-                >
-                  <option value="" disabled={collections.length > 0}>
-                    {isLoading ? 'Loading...' : 'Pick a collection...'}
-                  </option>
-                  {collections.map(collection => (
-                    <option key={collection.id} value={collection.id}>
-                      {collection.name} &middot; local
-                    </option>
-                  ))}
-                </select>
-                <svg class="pointer-events-none absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 dark:text-neutral-dark-500 h-4 w-4"
-                  viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                  <path fill-rule="evenodd"
-                    d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
-                    clip-rule="evenodd" />
-                </svg>
-              </div>
+                  }
+                }}
+                options={collections.map(c => ({ value: c.id, label: `${c.name} · local` }))}
+                disabled={isLoading}
+                placeholder="Pick a collection..."
+              />
               <div class="mt-2 flex space-x-2">
                 {selectedCollection && (
                   <>
@@ -337,36 +321,17 @@ export function SideBar({ onClose: _onClose }) {
                     </button>
                   )}
                 </div>
-                <div class="relative">
-                  <select
-                    id="environment-select"
-                    class="w-full appearance-none rounded-md bg-white dark:bg-[#313340] py-2 pl-3 pr-8 text-sm text-gray-900 dark:text-neutral-dark-900 outline -outline-offset-1 outline-gray-300 dark:outline-neutral-dark-50 focus:outline focus:-outline-offset-2 focus:outline-sky-500"
-                    value={currentEnvironment?.id || (currentEnvironment === null ? 'none' : '')}
-                    onChange={(e) => {
-                      const environmentId = e.target.value;
-                      handleEnvironmentChange(environmentId);
-                    }}
-                    disabled={isLoadingEnvironments}
-                  >
-                    <option value="" disabled={environments.length > 0}>
-                      {isLoadingEnvironments ? 'Loading...' : 'Pick an environment...'}
-                    </option>
-                    <option value="none">
-                      No environment
-                    </option>
-                    {environments.map(environment => (
-                      <option key={environment.id} value={environment.id}>
-                        {environment.name} &middot; local
-                      </option>
-                    ))}
-                  </select>
-                  <svg class="pointer-events-none absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 dark:text-neutral-dark-500 h-4 w-4"
-                    viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd"
-                      d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
-                      clip-rule="evenodd" />
-                  </svg>
-                </div>
+                <Select
+                  id="environment-select"
+                  value={currentEnvironment?.id || (currentEnvironment === null ? 'none' : '')}
+                  onChange={handleEnvironmentChange}
+                  options={[
+                    { value: 'none', label: 'No environment' },
+                    ...environments.map(e => ({ value: e.id, label: `${e.name} · local` }))
+                  ]}
+                  disabled={isLoadingEnvironments}
+                  placeholder="Pick an environment..."
+                />
                 <div class="mt-2 flex space-x-2">
                   <a
                     href={currentEnvironment ? `/environments/${currentEnvironment.id}` : '/environments'}
