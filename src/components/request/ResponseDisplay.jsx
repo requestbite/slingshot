@@ -416,14 +416,14 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                 <table class="border-collapse text-xs w-full table-fixed">
                   <thead>
                     <tr>
-                      <th class="py-1 border-b border-slate-200 text-left font-mono font-bold">Name</th>
-                      <th class="py-1 border-b border-slate-200 text-left font-mono font-bold">Value</th>
+                      <th class="py-1 border-b border-slate-200 dark:border-neutral-dark-100 text-left font-mono font-bold">Name</th>
+                      <th class="py-1 border-b border-slate-200 dark:border-neutral-dark-100 text-left font-mono font-bold">Value</th>
                     </tr>
                   </thead>
                   <tbody>
                     {processedHeaders.map((header, index) => (
                       <tr key={index}>
-                        <td class="border-b border-slate-100 py-1 pr-3 font-mono whitespace-nowrap overflow-hidden text-ellipsis truncate">
+                        <td class="border-b border-slate-100 dark:border-neutral-dark-100 py-1 pr-3 font-mono whitespace-nowrap overflow-hidden text-ellipsis truncate">
                           {header.isClickable ? (
                             <a
                               href={header.url}
@@ -442,7 +442,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                             header.name
                           )}
                         </td>
-                        <td class="border-b border-slate-100 py-1 font-mono text-indigo-600 whitespace-nowrap overflow-hidden text-ellipsis truncate">
+                        <td class="border-b border-slate-100 dark:border-neutral-dark-100 py-1 font-mono text-indigo-600 dark:text-indigo-300 whitespace-nowrap overflow-hidden text-ellipsis truncate">
                           {header.value}
                         </td>
                       </tr>
