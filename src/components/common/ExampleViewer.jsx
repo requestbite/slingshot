@@ -116,7 +116,9 @@ export function ExampleViewer({
           autocompletion: false,
           rectangularSelection: false,
           searchKeymap: false,
-          highlightSelectionMatches: false
+          highlightSelectionMatches: false,
+          highlightActiveLine: false,
+          highlightActiveLineGutter: false
         }}
         style={{
           border: '2px solid #282a36',
