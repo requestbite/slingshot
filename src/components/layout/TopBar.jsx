@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
-import { CloudSun } from 'lucide-preact';
+import { CloudSun, Sun, Moon } from 'lucide-preact';
 import LogoHorizontal from '../../assets/logo-horizontal-slingshot.svg';
 import { getLastSlingshotUrl, setLastSlingshotUrl, isValidSlingshotUrl } from '../../utils/slingshotNavigation';
 import { useAppContext } from '../../hooks/useAppContext';
@@ -247,7 +247,7 @@ export function TopBar() {
             title="Theme"
             aria-label="Change theme"
           >
-            <CloudSun size={18} />
+            {theme === 'light' ? <Sun size={18} /> : theme === 'dark' ? <Moon size={18} /> : <CloudSun size={18} />}
           </button>
 
           {/* Desktop Version Link */}
@@ -499,16 +499,19 @@ export function TopBar() {
           {
             label: 'System',
             onClick: () => setTheme('system'),
+            icon: <CloudSun size={16} />,
             trailing: theme === 'system' ? <CheckIcon /> : null,
           },
           {
             label: 'Light',
             onClick: () => setTheme('light'),
+            icon: <Sun size={16} />,
             trailing: theme === 'light' ? <CheckIcon /> : null,
           },
           {
             label: 'Dark',
             onClick: () => setTheme('dark'),
+            icon: <Moon size={16} />,
             trailing: theme === 'dark' ? <CheckIcon /> : null,
           },
         ]}
