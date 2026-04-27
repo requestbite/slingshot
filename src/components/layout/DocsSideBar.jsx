@@ -656,7 +656,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                 {/* Request Header */}
                 <div class="flex items-center gap-2 justify-between">
                   <div class="flex items-center gap-2 flex-grow overflow-hidden">
-                    <span class={`text-[10px]/[12px] text-white py-0.5 px-1 rounded flex-shrink-0 ${getMethodColor(selectedRequest.method)}`}>
+                    <span class={`text-[10px]/[12px] text-white dark:text-gray-800 py-0.5 px-1 rounded flex-shrink-0 ${getMethodColor(selectedRequest.method)}`}>
                       {selectedRequest.method}
                     </span>
                     <h2 class="text-sm font-medium text-gray-900 dark:text-neutral-dark-900 truncate" title={selectedRequest.name || selectedRequest.url || 'Untitled Request'}>
@@ -682,7 +682,7 @@ export function DocsSideBar({ onClose: _onClose }) {
 
                 {/* Table of Contents */}
                 {tocSections.length > 0 && (
-                  <div class={`${selectedRequest.summary && selectedRequest.summary.trim() ? 'pt-3 border-t border-gray-200' : ''}`}>
+                  <div class={`${selectedRequest.summary && selectedRequest.summary.trim() ? 'pt-3 border-t border-gray-200 dark:border-neutral-dark-300' : ''}`}>
                     <h3 class="text-xs font-medium text-gray-600 dark:text-neutral-dark-600 mb-2">Table of Contents</h3>
                     <div class="space-y-1">
                       {/* Show All option */}
