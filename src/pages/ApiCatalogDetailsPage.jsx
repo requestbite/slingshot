@@ -472,7 +472,7 @@ export function ApiCatalogDetailsPage() {
             {/* Mobile nav panel toggle — only on small screens */}
             <button
               onClick={() => setIsNavOpen(true)}
-              class={`fixed top-1/2 -left-1 transform -translate-y-1/2 z-[50] bg-sky-100 hover:bg-sky-200 text-sky-700 p-2 rounded-r-lg shadow-lg cursor-pointer transition-all duration-200 hover:translate-x-1 ${isNavOpen ? 'hidden' : 'block lg:hidden'}`}
+              class={`fixed top-1/2 -left-1 transform -translate-y-1/2 z-[50] bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 text-sky-700 dark:text-primary-dark-400 p-2 rounded-r-lg shadow-lg cursor-pointer transition-all duration-200 hover:translate-x-1 ${isNavOpen ? 'hidden' : 'block lg:hidden'}`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m6 17 5-5-5-5" />
