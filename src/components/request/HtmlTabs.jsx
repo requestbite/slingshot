@@ -15,7 +15,7 @@ export const HtmlTabs = ({ activeTab, onTabChange }) => {
               type="button"
               onClick={() => onTabChange(tab.id)}
               class={`px-4 py-2 text-xs rounded-t-md font-medium focus:outline-none cursor-pointer ${activeTab === tab.id
-                ? 'text-sky-600 bg-sky-50 border-b-2 border-sky-600'
+                ? 'text-sky-600 dark:text-primary-dark-400 bg-sky-50 dark:bg-primary-dark-200 border-b-2 border-sky-600 dark:border-primary-dark-400'
                 : 'text-gray-600 dark:text-neutral-dark-600 hover:text-sky-600 hover:bg-gray-100 dark:hover:bg-neutral-dark-200'
                 }`}
             >
