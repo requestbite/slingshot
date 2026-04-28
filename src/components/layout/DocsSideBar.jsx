@@ -1094,7 +1094,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                   {/* Slingshot Docs */}
                   {shouldShowSection('slingshot-docs') && (
                     <div id="slingshot-docs" class="space-y-2 border-t border-gray-200 dark:border-neutral-dark-300 pt-6">
-                      <label class="block text-xs font-medium text-gray-600 mb-2">Slingshot Docs</label>
+                      <label class="block text-xs font-medium text-gray-600 dark:text-neutral-dark-600 mb-2">Slingshot Docs</label>
                       <ul class="space-y-1.5 text-xs text-gray-700 dark:text-neutral-dark-700">
                         <li class="flex items-start">
                           <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
@@ -1298,7 +1298,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                 {shouldShowCollectionSection('col-description') && (
                   <div>
                     {selectedCollection.description && selectedCollection.description.trim() ? (
-                      <div class="text-left border-t border-gray-200 pt-4">
+                      <div class="text-left border-t border-gray-200 dark:border-neutral-dark-300 pt-4">
                         <MarkdownPreview markdown={selectedCollection.description} />
                       </div>
                     ) : ''}
@@ -1514,7 +1514,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                 {/* Slingshot Docs */}
                 {shouldShowCollectionSection('slingshot-docs') && (
                   <div class="space-y-2 border-t border-gray-200 dark:border-neutral-dark-300 pt-4">
-                    <label class="block text-xs font-medium text-gray-600 mb-2">Slingshot Docs</label>
+                    <label class="block text-xs font-medium text-gray-600 dark:text-neutral-dark-600 mb-2">Slingshot Docs</label>
                     <ul class="space-y-1.5 text-xs text-gray-700 dark:text-neutral-dark-700">
                       <li class="flex items-start">
                         <span class="mr-2 mt-1.5 flex-shrink-0 w-1 h-1 bg-gray-400 dark:bg-neutral-dark-400 rounded-full"></span>
