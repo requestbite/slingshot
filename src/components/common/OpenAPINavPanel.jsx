@@ -152,7 +152,7 @@ export function OpenAPINavPanel({ spec, activeId, onSelect }) {
             value={searchTerm}
             onInput={(e) => setSearchTerm(e.target.value)}
             placeholder="Filter endpoints..."
-            class="w-full pl-7 pr-2 py-1.5 text-xs rounded-md border border-gray-300 dark:border-neutral-dark-50 bg-white dark:bg-[#313340] text-gray-900 dark:text-neutral-dark-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+            class="w-full pl-7 pr-2 py-1.5 text-xs rounded-md border border-gray-300 dark:border-neutral-dark-50 bg-white dark:bg-[#282a36] text-gray-900 dark:text-neutral-dark-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
           />
           {searchTerm && (
             <button

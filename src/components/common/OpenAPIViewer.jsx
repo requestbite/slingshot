@@ -438,7 +438,7 @@ function EndpointSection({ method, path, operation, parameters, spec, defaultExp
         onClick={() => setIsExpanded(v => !v)}
         class="w-full flex items-center gap-3 px-6 py-3 bg-white dark:bg-surface-dark-elevated hover:bg-gray-50 dark:hover:bg-neutral-dark-200 text-left group transition-colors sticky top-[109px] z-10 cursor-pointer border-b border-gray-200 dark:border-neutral-dark-300"
       >
-        <span class={`text-[10px] font-bold text-white py-0.5 px-1.5 rounded flex-shrink-0 uppercase tracking-wide ${getMethodColor(method)}`}>
+        <span class={`text-[10px] font-bold text-white dark:text-gray-800 py-0.5 px-1.5 rounded flex-shrink-0 uppercase tracking-wide ${getMethodColor(method)}`}>
           {method}
         </span>
         <code class="text-sm text-gray-700 dark:text-neutral-dark-700 font-mono flex-1 truncate">{path}</code>
