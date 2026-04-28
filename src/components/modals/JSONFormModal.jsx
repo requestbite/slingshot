@@ -822,7 +822,9 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                 autocompletion: true,
                 rectangularSelection: false,
                 searchKeymap: false,
-                highlightSelectionMatches: false
+                highlightSelectionMatches: false,
+                highlightActiveLine: false,
+                highlightActiveLineGutter: false
               }}
               style={{
                 border: '2px solid #282a36',
@@ -913,7 +915,9 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                 autocompletion: true,
                 rectangularSelection: false,
                 searchKeymap: false,
-                highlightSelectionMatches: false
+                highlightSelectionMatches: false,
+                highlightActiveLine: false,
+                highlightActiveLineGutter: false
               }}
               style={{
                 border: '2px solid #282a36',
@@ -1521,7 +1525,9 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                 autocompletion: true,
                 rectangularSelection: false,
                 searchKeymap: false,
-                highlightSelectionMatches: false
+                highlightSelectionMatches: false,
+                highlightActiveLine: false,
+                highlightActiveLineGutter: false
               }}
               style={{
                 border: '2px solid #282a36',
@@ -1608,7 +1614,9 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                 autocompletion: true,
                 rectangularSelection: false,
                 searchKeymap: false,
-                highlightSelectionMatches: false
+                highlightSelectionMatches: false,
+                highlightActiveLine: false,
+                highlightActiveLineGutter: false
               }}
               style={{
                 border: '2px solid #282a36',
@@ -1807,7 +1815,9 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                   autocompletion: false,
                   rectangularSelection: false,
                   searchKeymap: false,
-                  highlightSelectionMatches: false
+                  highlightSelectionMatches: false,
+                  highlightActiveLine: false,
+                  highlightActiveLineGutter: false
                 }}
                 style={{
                   border: '2px solid #282a36',

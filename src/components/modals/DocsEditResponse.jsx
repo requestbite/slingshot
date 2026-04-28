@@ -215,7 +215,7 @@ export function DocsEditResponse({ isOpen, onClose, request, onSave }) {
 
               {/* Schema validity indicator */}
               <div class="flex items-center text-xs">
-                <span class="text-gray-600 dark:text-neutral-dark-600 mr-2">Schema validity:</span>
+                <span class="text-gray-600 dark:text-neutral-dark-600 mr-2">Schema:</span>
                 {validation.isValid ? (
                   <span class="text-green-600 font-medium">Valid</span>
                 ) : (

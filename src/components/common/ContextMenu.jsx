@@ -175,7 +175,7 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
             return <div key={index} class="text-xs px-4 mt-3 mb-1 text-left text-gray-500 dark:text-neutral-dark-500">{item.sectionTitle}</div>;
           }
 
-          const commonClasses = `flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-neutral-dark-700 hover:bg-gray-100 dark:hover:bg-neutral-dark-200 cursor-pointer no-underline ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''} ${item.destructive ? 'text-red-600 dark:text-error-dark-400 hover:text-red-700 dark:hover:text-error-dark-400' : ''}`;
+          const commonClasses = `flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-neutral-dark-700 hover:bg-gray-100 dark:hover:bg-neutral-dark-200 cursor-pointer no-underline ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''} ${item.destructive ? 'text-red-600 dark:!text-error-dark-400 hover:text-red-700 dark:hover:!text-error-dark-400' : ''}`;
 
           const labelContent = (
             <>

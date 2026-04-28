@@ -10,6 +10,7 @@ import { useAppContext } from '../hooks/useAppContext';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { apiClient } from '../api';
 import { setupEncryptionKey, hasSessionKey, storeEncryptedReference } from '../utils/encryption';
+import { SquarePen, Trash2 } from 'lucide-preact';
 import { Button } from '../components/common/Button';
 import { TextInput } from '../components/common/TextInput';
 
@@ -480,12 +481,15 @@ export function EnvironmentsPage() {
         width={190}
         items={[
           {
-            label: 'Edit environment',
+            label: 'Edit',
+            icon: <SquarePen size={16} />,
             onClick: () => handleEditEnvironment()
           },
           {
-            label: 'Delete environment ...',
-            onClick: handleDeleteEnvironment
+            label: 'Delete...',
+            icon: <Trash2 size={16} />,
+            onClick: handleDeleteEnvironment,
+            destructive: true
           }
         ]}
       />

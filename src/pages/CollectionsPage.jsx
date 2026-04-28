@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
+import { ExternalLink, SquarePen, Trash2 } from 'lucide-preact';
 import { AddCollectionModal } from '../components/modals/AddCollectionModal';
 import { DeleteCollectionModal } from '../components/modals/DeleteCollectionModal';
 import { ContextMenu } from '../components/common/ContextMenu';
@@ -264,16 +265,20 @@ export function CollectionsPage() {
         items={[
           {
             label: 'Open in API client',
+            icon: <ExternalLink size={16} />,
             onClick: handleOpenInAPIClient
           },
           { divider: true },
           {
-            label: 'Edit collection',
+            label: 'Edit',
+            icon: <SquarePen size={16} />,
             onClick: () => handleEditCollection()
           },
           {
-            label: 'Delete collection ...',
-            onClick: handleDeleteCollection
+            label: 'Delete...',
+            icon: <Trash2 size={16} />,
+            onClick: handleDeleteCollection,
+            destructive: true
           }
         ]}
       />
