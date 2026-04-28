@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
 import { CloudSun, Sun, Moon } from 'lucide-preact';
 import LogoHorizontal from '../../assets/logo-horizontal-slingshot.svg';
+import LogoHorizontalDark from '../../assets/logo-horizontal-slingshot-dark.svg';
 import { getLastSlingshotUrl, setLastSlingshotUrl, isValidSlingshotUrl } from '../../utils/slingshotNavigation';
 import { useAppContext } from '../../hooks/useAppContext';
 import { useTheme } from '../../hooks/useTheme';
@@ -15,7 +16,7 @@ export function TopBar() {
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const toolsButtonRef = useRef();
   const themeButtonRef = useRef();
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, isDark } = useTheme();
 
   const isActive = (path) => {
     if (path === '/' && location === '/') return true;
@@ -138,7 +139,7 @@ export function TopBar() {
           class="flex items-center hover:opacity-80 transition-opacity hover:cursor-pointer"
         >
           <img
-            src={LogoHorizontal}
+            src={isDark ? LogoHorizontalDark : LogoHorizontal}
             alt="RequestBite"
             class="h-8 w-auto"
           />
@@ -301,7 +302,7 @@ export function TopBar() {
                 class="ml-3 mr-1.5 p-1.5 hover:opacity-80 transition-opacity"
               >
                 <span class="sr-only">RequestBite</span>
-                <img class="h-8 w-auto" src={LogoHorizontal} alt="RequestBite" />
+                <img class="h-8 w-auto" src={isDark ? LogoHorizontalDark : LogoHorizontal} alt="RequestBite" />
               </button>
               <button
                 type="button"
