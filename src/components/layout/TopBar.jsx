@@ -239,11 +239,11 @@ export function TopBar() {
 
         {/* Right Section: Theme + Version + Proxy Banner + Mobile Menu */}
         <div class="flex items-center space-x-3">
-          {/* Theme Picker Button - desktop only */}
+          {/* Theme Picker Button */}
           <button
             ref={themeButtonRef}
             onClick={() => setShowThemeMenu(true)}
-            class="hidden lg:flex items-center justify-center w-9 h-9 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-900 dark:hover:text-white dark:hover:bg-neutral-dark-200 transition-colors cursor-pointer"
+            class="flex items-center justify-center w-9 h-9 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-900 dark:hover:text-white dark:hover:bg-neutral-dark-200 transition-colors cursor-pointer"
             title="Theme"
             aria-label="Change theme"
           >
@@ -264,11 +264,6 @@ export function TopBar() {
             <span class="hidden xl:inline">{banner.textXl}</span>
             <span class="xl:hidden">{proxyConfig.proxyType === 'custom' ? 'Custom proxy' : banner.text}</span>
           </button>
-
-          {/* Mobile Version Link */}
-          <a href="https://docs.requestbite.com/changelog/" target="_blank" class="lg:hidden text-gray-600 dark:text-neutral-dark-900 hover:text-gray-400 dark:hover:text-neutral-dark-700 flex items-center">
-            v. 9.9.9
-          </a>
 
           {/* Mobile Hamburger Menu */}
           <div class="block lg:hidden">
