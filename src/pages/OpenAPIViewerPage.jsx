@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { Label } from '../components/common/Label';
 import { Button } from '../components/common/Button';
 import { TextInput } from '../components/common/TextInput';
@@ -16,16 +16,13 @@ export function OpenAPIViewerPage() {
   const [toastVisible, showToast, hideToast] = useToast();
   const [toastMessage, setToastMessage] = useState('');
 
-  const handleOpen = async (e) => {
-    e.preventDefault();
-    if (!url.trim()) return;
-
+  const loadSpec = async (specUrl) => {
     setIsLoading(true);
     setParsedSpec(null);
 
     try {
       const { content } = await Promise.race([
-        fetchFromURL(url.trim()),
+        fetchFromURL(specUrl),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error('OpenAPI spec download timed out')), 10000)
         )
@@ -40,12 +37,30 @@ export function OpenAPIViewerPage() {
       }
 
       setParsedSpec(parsed);
+
+      const pageUrl = new URL(window.location);
+      pageUrl.searchParams.set('spec', specUrl);
+      window.history.replaceState({}, '', pageUrl.toString());
     } catch (err) {
       setToastMessage(err.message || 'Failed to load OpenAPI spec');
       showToast();
     } finally {
       setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
+    const specUrl = new URLSearchParams(window.location.search).get('spec');
+    if (specUrl) {
+      setUrl(specUrl);
+      loadSpec(specUrl);
+    }
+  }, []);
+
+  const handleOpen = async (e) => {
+    e.preventDefault();
+    if (!url.trim()) return;
+    await loadSpec(url.trim());
   };
 
   if (parsedSpec) {
