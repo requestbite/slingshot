@@ -357,13 +357,13 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                 </div>
                 <div class="flex items-center space-x-2 whitespace-nowrap">
                   <span class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700">Time:</span>
-                  <span class="px-2 py-1 text-sm bg-blue-50 text-blue-700 rounded-md whitespace-nowrap">
+                  <span class="px-2 py-1 text-sm bg-blue-50 text-blue-700 dark:bg-sky-500 dark:text-gray-800 rounded-md whitespace-nowrap">
                     {effectiveResponse.responseTime}
                   </span>
                 </div>
                 <div class="flex items-center space-x-2 whitespace-nowrap">
                   <span class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700">Size:</span>
-                  <span class="px-2 py-1 text-sm bg-amber-50 text-amber-700 rounded-md whitespace-nowrap">
+                  <span class="px-2 py-1 text-sm bg-amber-50 text-amber-700 dark:bg-orange-300 dark:text-gray-800 rounded-md whitespace-nowrap">
                     {effectiveResponse.responseSize}
                   </span>
                 </div>

@@ -1557,7 +1557,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
                     e.preventDefault();
                     setLocation(`/environments/${currentEnvironment.id}/auth`);
                   }}
-                  class="cursor-pointer px-2 rounded-t-md text-xs transition-colors flex items-center text-green-600 hover:text-green-800 hover:bg-green-50"
+                  class="cursor-pointer px-2 rounded-t-md text-xs transition-colors flex items-center text-green-600 hover:text-green-800 hover:bg-green-50 dark:hover:bg-success-dark-100 dark:hover:text-success-dark-400"
                   title="Click to view authentication settings"
                 >
                   Auth: {getAuthMethodDisplayName(currentEnvironment.auth)}
