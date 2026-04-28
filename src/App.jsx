@@ -18,6 +18,7 @@ const EnvironmentsPage = lazy(() => import('./pages/EnvironmentsPage').then(m =>
 const EnvironmentUpdatePage = lazy(() => import('./pages/EnvironmentUpdatePage').then(m => ({ default: m.EnvironmentUpdatePage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const ScreenshotMakerPage = lazy(() => import('./pages/ScreenshotMakerPage').then(m => ({ default: m.ScreenshotMakerPage })));
+const OpenAPIViewerPage = lazy(() => import('./pages/OpenAPIViewerPage').then(m => ({ default: m.OpenAPIViewerPage })));
 const AuthCallback = lazy(() => import('./components/auth/AuthCallback').then(m => ({ default: m.AuthCallback })));
 // Dynamic imports for modals that are only used conditionally
 const URLImportModal = lazy(() => import('./components/import/URLImportModal').then(m => ({ default: m.URLImportModal })));
@@ -308,6 +309,19 @@ export function App() {
   // Component to handle route-specific styling
   function AppContent() {
     const [location] = useLocation();
+
+    if (location.startsWith('/openapi')) {
+      return (
+        <div class="h-screen flex flex-col bg-gray-100">
+          <TopBar />
+          <div class="flex-1 flex items-center justify-center">
+            <Suspense fallback={<div class="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full"></div>}>
+              <OpenAPIViewerPage />
+            </Suspense>
+          </div>
+        </div>
+      );
+    }
 
     // Check if current route should use min-h-screen instead of h-screen
     // These are the routes that use AppLayout (not FullPageLayout)
