@@ -28,7 +28,7 @@ import {
   getStatusColor
 } from './ResponseDisplayUtils';
 import { Button } from '../common/Button';
-import { Music } from 'lucide-preact';
+import { Music, CloudAlert, Clock } from 'lucide-preact';
 
 export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStreaming, streamedContent, streamedChunks, streamingMetadata, selectedCollection }) {
   // Initialize headers visibility from localStorage, defaulting to false (closed)
@@ -119,7 +119,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
 
   if (isLoading) {
     return (
-      <div class="flex items-center justify-center p-6 mb-4">
+      <div class="flex items-center justify-center h-full p-6">
         <div class="text-center">
           <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-solid border-sky-500 border-r-transparent mb-4"></div>
           <div class="text-sm text-gray-700 dark:text-neutral-dark-700 mb-3">Request in progress...</div>
@@ -156,20 +156,13 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
 
   if (response.cancelled) {
     return (
-      <div id="response-section">
-        <div id="response-container">
-          <div id="response-details-wrapper">
-            <div id="cancelled-response-container">
-              <div class="text-center py-6">
-                {/* Cancelled Image */}
-                <div class="mx-auto mb-4 w-44">
-                  <img src="/images/rabbit-timer-v1.webp" alt="Request Cancelled" class="mx-auto w-64 mb-4" />
-                </div>
-                {/* Cancelled Title */}
-                <h4 class="text-xl font-medium text-gray-900 dark:text-neutral-dark-900 mb-2">Request Cancelled</h4>
-                {/* Cancelled Message */}
-                <div class="text-sm text-gray-600">Oh, was it that slow? Perhaps there are some connectivity issues.</div>
-              </div>
+      <div id="response-section" class="flex flex-col h-full">
+        <div id="response-container" class="flex flex-col h-full">
+          <div id="response-details-wrapper" class="flex flex-col h-full">
+            <div id="cancelled-response-container" class="flex flex-col items-center justify-center h-full text-center py-8">
+              <Clock size={48} class="mb-4 text-gray-400 dark:text-neutral-dark-400" />
+              <h4 class="text-xl font-medium text-gray-900 dark:text-neutral-dark-900 mb-2">Request Cancelled</h4>
+              <div class="text-sm text-gray-600 dark:text-neutral-dark-600">Oh, was it that slow? Perhaps there are some connectivity issues.</div>
             </div>
           </div>
         </div>
@@ -179,27 +172,19 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
 
   if (!response.success) {
     return (
-      <div id="response-section">
-        <div id="response-container">
-          <div id="response-details-wrapper">
-            <div id="error-response-container">
-              <div class="text-center py-6">
-                {/* Error Image */}
-                <div class="mx-auto mb-4 w-44">
-                  <img src="/images/rabbit-dizzy-v1.webp" alt="Request Error" class="mx-auto w-64 mb-4" />
-                </div>
-                {/* Error Title */}
-                <h4 class="text-xl font-medium text-gray-900 dark:text-neutral-dark-900 mb-2">
-                  {response.errorTitle || "Oh no, an error occurred"}
-                </h4>
-                {/* Error Message */}
-                <div class="text-sm text-gray-600 dark:text-neutral-dark-600 mb-2">
-                  {response.errorMessage || "Unable to complete the request"}
-                </div>
-                {/* Error Type */}
-                <div class="text-xs font-mono text-gray-500 dark:text-neutral-dark-500 bg-gray-100 dark:bg-neutral-dark-200 inline-block px-2 py-1 rounded">
-                  {response.errorType || "error_type"}
-                </div>
+      <div id="response-section" class="flex flex-col h-full">
+        <div id="response-container" class="flex flex-col h-full">
+          <div id="response-details-wrapper" class="flex flex-col h-full">
+            <div id="error-response-container" class="flex flex-col items-center justify-center h-full text-center py-8">
+              <CloudAlert size={48} class="mb-4 text-gray-400 dark:text-neutral-dark-400" />
+              <h4 class="text-xl font-medium text-gray-900 dark:text-neutral-dark-900 mb-2">
+                {response.errorTitle || "Oh no, an error occurred"}
+              </h4>
+              <div class="text-sm text-gray-600 dark:text-neutral-dark-600 mb-2">
+                {response.errorMessage || "Unable to complete the request"}
+              </div>
+              <div class="text-xs font-mono text-gray-500 dark:text-neutral-dark-500 bg-gray-100 dark:bg-neutral-dark-200 inline-block px-2 py-1 rounded">
+                {response.errorType || "error_type"}
               </div>
             </div>
           </div>
