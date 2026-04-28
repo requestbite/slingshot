@@ -2123,13 +2123,15 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
                 autocompletion: false,
                 rectangularSelection: false,
                 searchKeymap: false,
-                highlightSelectionMatches: false
+                highlightSelectionMatches: false,
+                highlightActiveLine: false,
+                highlightActiveLineGutter: false
               }}
               style={{
-                border: '1px solid #44475a',
+                border: '2px solid #282a36',
                 borderRadius: '0.375rem',
                 fontSize: '12px',
-                fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+                fontFamily: '"JetBrains Mono", ui-monospace, monospace'
               }}
             />
           </div>
