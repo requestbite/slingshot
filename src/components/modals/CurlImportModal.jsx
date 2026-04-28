@@ -92,7 +92,7 @@ export function CurlImportModal({ isOpen, onClose, onImport }) {
           ref={textareaRef}
           value={curlCommand}
           onChange={(e) => handleInputChange(e.target.value)}
-          class="w-full h-32 p-2 font-mono text-xs rounded-md text-white bg-slate-800"
+          class="w-full h-32 p-2 font-mono text-xs rounded-md text-white bg-slate-800 dark:bg-[#282a36]"
           placeholder={`curl -X POST https://example.com \\
   -H 'Content-type: application/json' \\
   -d '{

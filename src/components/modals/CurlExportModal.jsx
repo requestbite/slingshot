@@ -155,7 +155,7 @@ export function CurlExportModal({ isOpen, onClose, requestData }) {
         <div class="w-full">
           <pre
             ref={preRef}
-            class="w-full h-32 p-2 font-mono text-xs rounded-md text-white bg-slate-800 overflow-auto whitespace-pre-wrap cursor-text"
+            class="w-full h-32 p-2 font-mono text-xs rounded-md text-white bg-slate-800 dark:bg-[#282a36] overflow-auto whitespace-pre-wrap cursor-text"
             tabIndex="0"
           >
             {isLoading ? 'Resolving variables...' : curlCommand}
