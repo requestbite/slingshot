@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { Suspense, lazy } from 'preact/compat';
 import { useRoute, useLocation, Link } from 'wouter-preact';
 import { usePageTitle } from '../hooks/usePageTitle';
@@ -13,6 +13,70 @@ import { fetchFromURL } from '../utils/urlImporter';
 // Dynamic import for URL import modal
 const URLImportModal = lazy(() => import('../components/import/URLImportModal').then(m => ({ default: m.URLImportModal })));
 
+// Isolated so keystrokes don't re-render the parent (and the heavy OpenAPIViewer tree)
+function CatalogSearchBar({ onSelect }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const inputRef = useRef();
+
+  const handleSearch = useCallback(async (query) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_CATALOG_API}/v1/apis/search?q=${encodeURIComponent(query)}&resolveIds=true&fullDesc=false&stripMarkdown=true`
+      );
+      if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching API search results:', error);
+      return [];
+    }
+  }, []);
+
+  const handleSelect = useCallback((api) => {
+    setSearchQuery('');
+    if (inputRef.current) inputRef.current.blur();
+    onSelect(api);
+  }, [onSelect]);
+
+  const renderItem = (api) => {
+    const apiTitle = api.serviceName?.regionFlag ? `${api.name} ${api.serviceName.regionFlag}` : api.name;
+    return (
+      <div class="flex flex-col gap-1">
+        <div class="font-medium text-gray-900 dark:text-neutral-dark-900">{apiTitle}</div>
+        <div class="text-xs text-gray-600 dark:text-neutral-dark-600">
+          {api.description || 'No description available.'}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div class="max-w-3xl mx-auto px-4 mb-[18px]">
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+        </div>
+        <SearchAutocomplete
+          ref={inputRef}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onSelect={handleSelect}
+          onSearch={handleSearch}
+          renderItem={renderItem}
+          placeholder="Search APIs..."
+          clearable={true}
+          className="pl-10"
+          emptyMessage="No APIs found"
+          minChars={1}
+          debounceMs={500}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function ApiCatalogDetailsPage() {
   const [, params] = useRoute('/catalog/api/:param1/:param2?/:param3?');
   const [, setLocation] = useLocation();
@@ -22,14 +86,12 @@ export function ApiCatalogDetailsPage() {
   const [showImportContextMenu, setShowImportContextMenu] = useState(false);
   const [showURLImportModal, setShowURLImportModal] = useState(false);
   const [importUrl, setImportUrl] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
   const [parsedSpec, setParsedSpec] = useState(null);
   const [isLoadingSpec, setIsLoadingSpec] = useState(false);
   const [specError, setSpecError] = useState(null);
   const [activeEndpointId, setActiveEndpointId] = useState(null);
   const [importAnchorEl, setImportAnchorEl] = useState(null);
   const [isNavOpen, setIsNavOpen] = useState(false);
-  const searchInputRef = useRef();
 
   usePageTitle(apiData?.name || 'Untitled API');
 
@@ -174,99 +236,21 @@ export function ApiCatalogDetailsPage() {
     }
   };
 
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const handleApiSearch = async (query) => {
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_CATALOG_API}/v1/apis/search?q=${encodeURIComponent(query)}&resolveIds=true&fullDesc=false&stripMarkdown=true`
-      );
-
-      if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Error fetching API search results:', error);
-      return [];
-    }
-  };
-
-  const handleApiSelect = (api) => {
+  const handleApiSelect = useCallback((api) => {
     if (api && api.id) {
-      setSearchQuery('');
-      if (searchInputRef.current) {
-        searchInputRef.current.blur();
-      }
-      // Use new URL format if provider, serviceName, and version are available
       if (api.provider?.key && api.serviceName?.key && api.version) {
         setLocation(`/catalog/api/${api.provider.key}/${api.serviceName.key}/${api.version}`);
       } else {
-        // Fallback to UUID format
         setLocation(`/catalog/api/${api.id}`);
       }
     }
-  };
-
-  const renderApiItem = (api) => {
-    // Build title with region flag if available
-    const apiTitle = api.serviceName?.regionFlag
-      ? `${api.name} ${api.serviceName.regionFlag}`
-      : api.name;
-
-    return (
-      <div class="flex flex-col gap-1">
-        <div class="font-medium text-gray-900 dark:text-neutral-dark-900">{apiTitle}</div>
-        <div class="text-xs text-gray-600 dark:text-neutral-dark-600">
-          {api.description || 'No description available.'}
-        </div>
-      </div>
-    );
-  };
+  }, [setLocation]);
 
   return (
     <div class="h-full bg-gray-100 dark:bg-[#282a36] overflow-y-auto">
       <div class="min-h-full pt-[83px] pb-6">
         {/* Search Bar */}
-        <div class="max-w-3xl mx-auto px-4 mb-[18px]">
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="text-gray-400"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.3-4.3" />
-              </svg>
-            </div>
-            <SearchAutocomplete
-              ref={searchInputRef}
-              value={searchQuery}
-              onChange={handleSearchChange}
-              onSelect={handleApiSelect}
-              onSearch={handleApiSearch}
-              renderItem={renderApiItem}
-              placeholder="Search APIs..."
-              clearable={true}
-              className="pl-10"
-              emptyMessage="No APIs found"
-              minChars={1}
-              debounceMs={500}
-            />
-          </div>
-        </div>
+        <CatalogSearchBar onSelect={handleApiSelect} />
 
         {/* Main Container — hidden once OpenAPI spec is successfully loaded */}
         {!parsedSpec && <div class="max-w-4xl mx-auto px-4">
