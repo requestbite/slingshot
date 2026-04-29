@@ -92,7 +92,7 @@ export function AppEncryptionKeyModal({ isOpen, onClose, onSuccess, environmentC
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Encryption key" size="md">
       <form onSubmit={handleSubmit}>
-        <div class="text-sm text-gray-500">
+        <div class="text-sm text-gray-500 dark:text-neutral-dark-500">
           You have {environmentCount} environment{environmentCount !== 1 ? 's' : ''} with a total of {secretCount} secret{secretCount !== 1 ? 's' : ''}. To decrypt these secrets, and create new, you must provide your environment password below.
         </div>
 

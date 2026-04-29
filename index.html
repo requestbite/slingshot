@@ -43,8 +43,17 @@
 
     <!-- Android metatags -->
     <meta name="theme-color" content="#fff">
+    <script>
+      (function() {
+        var theme = localStorage.getItem('sl_theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (theme === 'dark' || (theme !== 'light' && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
 	</head>
-	<body class="text-sm">
+	<body class="text-sm dark:bg-[#282a36]">
 		<div id="app"></div>
 		<script type="module" src="/src/index.jsx"></script>
     <script>

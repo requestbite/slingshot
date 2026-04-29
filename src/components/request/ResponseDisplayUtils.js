@@ -448,7 +448,7 @@ export const processResponseContent = (response, collection) => {
 
 // Get status color based on status code
 export const getStatusColor = (status) => {
-  if (status >= 200 && status < 300) return 'bg-green-100 text-green-800';
-  if (status >= 300 && status < 400) return 'bg-yellow-100 text-yellow-800';
-  return 'bg-red-100 text-red-800';
+  if (status >= 200 && status < 300) return 'bg-green-100 text-green-800 dark:bg-green-400 dark:text-gray-800';
+  if (status >= 300 && status < 400) return 'bg-yellow-100 text-yellow-800 dark:bg-orange-300 dark:text-gray-800';
+  return 'bg-red-100 text-red-800 dark:bg-rose-400 dark:text-gray-800';
 };

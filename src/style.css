@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+@config "../tailwind.config.js";
+
+@variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
@@ -7,6 +10,10 @@
 
 body {
   font-family: 'Twemoji Country Flags', 'Inter', system-ui, sans-serif;
+}
+
+.dark body {
+  color: #f8f8f2; /* Dracula foreground - base text color for dark mode */
 }
 
 /* Custom class for docs sidebar visibility at exact 1450px breakpoint */
@@ -183,4 +190,31 @@ body {
   background: #e5e7eb; /* gray-200 - same as track for uniform appearance */
   border-radius: 9999px;
   height: 8px;
+}
+
+/* Dark mode overrides for custom slider */
+.dark .slider,
+.dark .slider::-webkit-slider-track,
+.dark .slider::-moz-range-track,
+.dark .slider::-moz-range-progress {
+  background: #44475a;
+}
+
+.dark .slider::-webkit-slider-thumb,
+.dark .slider::-moz-range-thumb {
+  background: #353745;
+  border-color: #44475a;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+}
+
+.dark .slider::-webkit-slider-thumb:hover,
+.dark .slider::-moz-range-thumb:hover {
+  background: #3a3c4d;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+}
+
+.dark .slider::-webkit-slider-thumb:active,
+.dark .slider::-moz-range-thumb:active {
+  background: #44475a;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
 }

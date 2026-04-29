@@ -33,10 +33,10 @@ export function ClearEnvironmentsModal({ isOpen, onClose, onClear }) {
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Clear environments?" size="lg">
       <div class="mt-2">
-        <p class="text-sm text-gray-500">
+        <p class="text-sm text-gray-500 dark:text-neutral-dark-500">
           If you don't remember your password, it's not possible to decrypt your environments. To continue, you can clear all your environments, meaning you have to start over creating any necessary credentials that you want to use in Slingshot.
         </p>
-        <p class="text-sm text-gray-500 mt-2">
+        <p class="text-sm text-gray-500 dark:text-neutral-dark-500 mt-2">
           Please note that this action is not possible to undo.
         </p>
       </div>

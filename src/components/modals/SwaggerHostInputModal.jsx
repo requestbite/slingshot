@@ -67,7 +67,7 @@ export function SwaggerHostInputModal({ isOpen, basePath = '', defaultHostUrl = 
       title="API server URL"
       size="md"
     >
-      <div class="text-sm text-gray-500 mb-6">
+      <div class="text-sm text-gray-500 dark:text-neutral-dark-500 mb-6">
         The API spec does not include details about the API host. This is required in order to use this API. Please provide a valid URL to the API host.
       </div>
 
@@ -89,11 +89,11 @@ export function SwaggerHostInputModal({ isOpen, basePath = '', defaultHostUrl = 
 
         {/* Resolved URL Display */}
         {resolvedUrl && isValid && (
-          <div class="pt-4 border-t border-gray-200">
+          <div class="pt-4 border-t border-gray-200 dark:border-neutral-dark-300">
             <Label>
               Resolved URL
             </Label>
-            <div class="text-xs text-gray-500 mb-2">
+            <div class="text-xs text-gray-500 dark:text-neutral-dark-500 mb-2">
               This URL will used for the baseUrl collection variable.
             </div>
             <div class="text-sm font-mono bg-gray-50 p-3 rounded-md border border-gray-200 break-all">

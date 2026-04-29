@@ -108,10 +108,10 @@ export function FileBrowser({ items = [], sort, onClick, onDoubleClick, allowedE
 
   return (
     <div
-      class="bg-white outline-solid outline-1 -outline-offset-1 outline-gray-300 rounded-md overflow-y-auto scrollbar-hide"
+      class="bg-white dark:bg-[#313340] outline-solid outline-1 -outline-offset-1 outline-gray-300 dark:outline-neutral-dark-50 rounded-md overflow-y-auto scrollbar-hide"
       style={{ maxHeight }}
     >
-      <div class="divide-y divide-gray-100">
+      <div class="divide-y divide-gray-100 dark:divide-neutral-dark-100">
         {sortedItems.map((item, index) => {
           const allowed = isFileAllowed(item);
           const selected = isSelected(item);
@@ -121,13 +121,13 @@ export function FileBrowser({ items = [], sort, onClick, onDoubleClick, allowedE
           // Build dynamic classes with rounded corners for first/last items
           const itemClasses = [
             'flex items-center px-3 py-1 text-sm select-none',
-            selected ? 'bg-sky-500 text-white' : 'text-gray-700 hover:bg-gray-50',
+            selected ? 'bg-sky-500 text-white' : 'text-gray-700 dark:text-neutral-dark-700 hover:bg-gray-50 dark:hover:bg-neutral-dark-200',
             allowed ? 'cursor-pointer' : 'cursor-arrow opacity-50',
             selected && isFirst ? 'rounded-t-md' : '',
             selected && isLast ? 'rounded-b-md' : ''
           ].join(' ');
 
-          const iconClasses = selected ? 'text-white' : 'text-gray-500';
+          const iconClasses = selected ? 'text-white' : 'text-gray-500 dark:text-neutral-dark-500';
 
           return (
             <div
@@ -145,7 +145,7 @@ export function FileBrowser({ items = [], sort, onClick, onDoubleClick, allowedE
               <span class="flex-1 truncate flex items-center">
                 {item.name}
                 {item.sizeHuman && (
-                  <span class={`ml-2 text-xs ${selected ? 'text-sky-100' : 'text-gray-400'}`}>
+                  <span class={`ml-2 text-xs ${selected ? 'text-sky-100' : 'text-gray-400 dark:text-neutral-dark-400'}`}>
                     ({item.sizeHuman})
                   </span>
                 )}
@@ -159,7 +159,7 @@ export function FileBrowser({ items = [], sort, onClick, onDoubleClick, allowedE
           );
         })}
         {sortedItems.length === 0 && (
-          <div class="px-3 py-2 text-sm text-gray-400 text-center">
+          <div class="px-3 py-2 text-sm text-gray-400 dark:text-neutral-dark-400 text-center">
             No items
           </div>
         )}

@@ -87,7 +87,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
         WebkitTransform: 'translate3d(0,0,0)',
         transform: 'translate3d(0,0,0)'
       }}>
-        <div class="fixed inset-0 bg-gray-500/75 transition-opacity" aria-hidden="true" style={{
+        <div class="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/60 transition-opacity" aria-hidden="true" style={{
           position: 'fixed',
           top: 0,
           left: 0,
@@ -106,7 +106,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
         }}>
           <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:px-4 sm:py-0">
             <div
-              class={`relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 w-full ${sizeClasses[size]} sm:p-6`}
+              class={`relative transform overflow-hidden rounded-lg bg-white dark:bg-surface-dark-elevated px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 w-full ${sizeClasses[size]} sm:p-6`}
               onClick={(e) => e.stopPropagation()}
             >
               <div>
@@ -115,7 +115,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
                     onClick={onClose}
                     type="button"
                     variant="none"
-                    className="cursor-pointer text-gray-400 hover:text-gray-600 p-1 transition-colors focus-visible:outline-solid focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-gray-300 rounded-sm"
+                    className="cursor-pointer text-gray-400 hover:text-gray-600 dark:text-neutral-dark-400 dark:hover:text-neutral-dark-600 p-1 transition-colors focus-visible:outline-solid focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-gray-300 rounded-sm"
                   >
                     <span class="sr-only">Close</span>
                     <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
@@ -125,7 +125,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
                 </div>
 
                 <div class="mt-0">
-                  <h3 class="text-base font-semibold text-gray-900 text-center sm:text-left">{title}</h3>
+                  <h3 class="text-base font-semibold text-gray-900 dark:text-neutral-dark-900 text-center sm:text-left">{title}</h3>
 
                   {/* Content */}
                   <div class="mt-2">

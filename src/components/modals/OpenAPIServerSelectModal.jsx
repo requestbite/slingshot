@@ -136,7 +136,7 @@ export function OpenAPIServerSelectModal({ isOpen, servers = [], onClose, onConf
       title="API Server URLs"
       size="md"
     >
-      <div class="text-sm text-gray-500 mb-6">
+      <div class="text-sm text-gray-500 dark:text-neutral-dark-500 mb-6">
         Please select the base URL for the API that you want to use.
       </div>
 
@@ -170,7 +170,7 @@ export function OpenAPIServerSelectModal({ isOpen, servers = [], onClose, onConf
                     {varName}
                   </Label>
                   {varDef.description && (
-                    <div class="text-xs text-gray-500 mb-1.5">
+                    <div class="text-xs text-gray-500 dark:text-neutral-dark-500 mb-1.5">
                       {varDef.description}
                     </div>
                   )}
@@ -189,7 +189,7 @@ export function OpenAPIServerSelectModal({ isOpen, servers = [], onClose, onConf
 
         {/* Resolved URL Input */}
         {editableUrl && (
-          <div class="pt-4 border-t border-gray-200">
+          <div class="pt-4 border-t border-gray-200 dark:border-neutral-dark-300">
             <Label htmlFor="resolved-url">
               Resolved URL
             </Label>

@@ -132,7 +132,7 @@ export function RequestItem({ request, isSelected, level = 0, onRequestUpdate })
   return (
     <li class="request relative">
       <div
-        class={`flex items-center justify-between relative hover:bg-gray-100 py-1 px-1 rounded ${isSelected ? 'bg-sky-50' : ''
+        class={`flex items-center justify-between relative hover:bg-gray-100 dark:hover:bg-neutral-dark-200 py-1 px-1 rounded ${isSelected ? 'bg-sky-50 dark:bg-primary-dark-200' : ''
           }`}
         style={{ marginLeft: `${marginLeft * 10}px` }}
       >
@@ -144,10 +144,10 @@ export function RequestItem({ request, isSelected, level = 0, onRequestUpdate })
             handleRequestClick();
           }}
         >
-          <span class={`text-[10px]/[12px] text-white py-0.5 px-1 rounded mr-2 flex-shrink-0 ${methodColor}`}>
+          <span class={`text-[10px]/[12px] text-white dark:text-gray-800 py-0.5 px-1 rounded mr-2 flex-shrink-0 ${methodColor}`}>
             {request.method}
           </span>
-          <span class="text-xs truncate">{request.name || request.url || 'Untitled Request'}</span>
+          <span class="text-xs truncate dark:text-neutral-dark-700">{request.name || request.url || 'Untitled Request'}</span>
         </a>
 
         {/* Context Menu Trigger */}

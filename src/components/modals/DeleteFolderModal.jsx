@@ -42,7 +42,7 @@ export function DeleteFolderModal({ isOpen, onClose, folder, onDelete }) {
     <Modal isOpen={isOpen} onClose={handleClose} title={`Delete folder: ${folder.name || 'Unknown'}`} size="md">
       <form onSubmit={(e) => { e.preventDefault(); handleDelete(); }}>
         <div>
-          <p class="text-sm text-gray-500">This will delete the folder, including any requests and subfolders. Do you wish to continue?</p>
+          <p class="text-sm text-gray-500 dark:text-neutral-dark-500">This will delete the folder, including any requests and subfolders. Do you wish to continue?</p>
           {error && (
             <div class="mt-2 text-sm text-red-600">
               {error}

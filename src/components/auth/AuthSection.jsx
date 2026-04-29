@@ -12,6 +12,7 @@ import { TextInput } from '../common/TextInput';
 import { Select } from '../common/Select';
 import { Label } from '../common/Label';
 import { Button } from '../common/Button';
+import { Alert } from '../common/Alert';
 
 // Helper function to encrypt auth configuration
 const encryptAuthConfig = async (authConfig) => {
@@ -81,12 +82,17 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
   });
   const [authResponse, setAuthResponse] = useState(environment?.authResponse || null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, _setErrorState] = useState('');
   const [success, setSuccess] = useState('');
 
   // Toast state
   const [isToastVisible, showToast, hideToast] = useToast();
   const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
+  const setError = (msg) => {
+    if (msg) { setToastMessage(msg); setToastType('error'); showToast(); }
+    else { _setErrorState(''); }
+  };
 
   // Token headers state
   const [tokenHeaderForm, setTokenHeaderForm] = useState({
@@ -990,7 +996,9 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
 
   const handleBearerTokenSave = async () => {
     if (!authConfig.token) {
-      setError('Token is required');
+      setToastMessage('Token is required');
+      setToastType('error');
+      showToast();
       return;
     }
 
@@ -1015,7 +1023,9 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
 
   const handleApiKeySave = async () => {
     if (!authConfig.key || !authConfig.value) {
-      setError('Key and Value are required');
+      setToastMessage('Key and Value are required');
+      setToastType('error');
+      showToast();
       return;
     }
 
@@ -1263,15 +1273,9 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
 
       {/* OAuth 2.0 Code Flow Notice */}
       {authType === 'oauth2_code' && (
-        <div class="group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full bg-sky-50 text-sky-700 border border-sky-200">
-          <svg class="size-6 shrink-0 text-sky-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="m9 12 2 2 4-4"></path>
-          </svg>
-          <div class="text-sm">
-            Please note that some data, including your client secret, will pass through the proxy when exchanging the auth code for an access token.
-          </div>
-        </div>
+        <Alert type="note">
+          Please note that some data, including your client secret, will pass through the proxy when exchanging the auth code for an access token.
+        </Alert>
       )}
 
       {/* API Key Configuration */}
@@ -1317,7 +1321,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
               ]}
               className="mt-1"
             />
-            <p class="mt-1 text-xs text-gray-500">
+            <p class="mt-1 text-xs text-gray-500 dark:text-neutral-dark-500">
               Where to add the API key in the request
             </p>
           </div>
@@ -1533,7 +1537,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
               ]}
               className="mt-1"
             />
-            <p class="mt-1 text-xs text-gray-500">
+            <p class="mt-1 text-xs text-gray-500 dark:text-neutral-dark-500">
               The method used to generate the code challenge for PKCE
             </p>
           </div>
@@ -1552,9 +1556,9 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
           </div>
 
           {/* Token Request Headers */}
-          <div class="border-b border-gray-200 pb-2 mb-6">
-            <h3 class="text-sm font-medium text-gray-700 mb-1">Token Request</h3>
-            <p class="text-sm text-gray-600 mb-4">Custom headers to include when making token requests.</p>
+          <div class="border-b border-gray-200 dark:border-neutral-dark-50 pb-2 mb-6">
+            <h3 class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700 mb-1">Token Request</h3>
+            <p class="text-sm text-gray-600 dark:text-neutral-dark-600 mb-4">Custom headers to include when making token requests.</p>
 
             {/* Add new token header form */}
             <form onSubmit={handleAddTokenHeader} class="mb-4">
@@ -1603,26 +1607,26 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
 
             {/* Token Headers Table */}
             {authConfig.tokenHeaders && authConfig.tokenHeaders.length > 0 && (
-              <div class="overflow-hidden border border-gray-300 rounded-lg mb-4">
-                <table class="min-w-full divide-y divide-gray-300">
-                  <thead class="bg-gray-50">
+              <div class="overflow-hidden border border-gray-300 dark:border-neutral-dark-50 rounded-lg mb-4">
+                <table class="min-w-full divide-y divide-gray-300 dark:divide-neutral-dark-50">
+                  <thead class="bg-gray-50 dark:bg-neutral-dark-200">
                     <tr>
-                      <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Key</th>
-                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Value</th>
-                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Send in</th>
+                      <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900 sm:pl-6">Key</th>
+                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900">Value</th>
+                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900">Send in</th>
                       <th class="relative py-3.5 pl-3 pr-4 sm:pr-6 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-gray-200 bg-white">
+                  <tbody class="divide-y divide-gray-200 dark:divide-neutral-dark-300 bg-white dark:bg-surface-dark-elevated">
                     {authConfig.tokenHeaders.map((header) => (
                       <tr key={header._tempId || header.key}>
-                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-neutral-dark-900 sm:pl-6">
                           {header.key}
                         </td>
-                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900 dark:text-neutral-dark-900">
                           {header.value}
                         </td>
-                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900 dark:text-neutral-dark-900">
                           {header.sendIn === 'header' ? 'Header' : 'Query Param'}
                         </td>
                         <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-2">
@@ -1689,8 +1693,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
             {authResponse && (
               <Button
                 onClick={clearTokens}
-                variant="none"
-                className="cursor-pointer rounded-md bg-red-500 hover:bg-red-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+                variant="danger"
               >
                 Clear Tokens
               </Button>
@@ -1797,9 +1800,9 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
           </div>
 
           {/* Token Request Headers */}
-          <div class="border-b border-gray-200 pb-2 mb-6">
-            <h3 class="text-sm font-medium text-gray-700 mb-1">Token Request</h3>
-            <p class="text-sm text-gray-600 mb-4">Custom headers to include when making token requests.</p>
+          <div class="border-b border-gray-200 dark:border-neutral-dark-50 pb-2 mb-6">
+            <h3 class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700 mb-1">Token Request</h3>
+            <p class="text-sm text-gray-600 dark:text-neutral-dark-600 mb-4">Custom headers to include when making token requests.</p>
 
             {/* Add new token header form */}
             <form onSubmit={handleAddTokenHeader} class="mb-4">
@@ -1848,26 +1851,26 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
 
             {/* Token Headers Table */}
             {authConfig.tokenHeaders && authConfig.tokenHeaders.length > 0 && (
-              <div class="overflow-hidden border border-gray-300 rounded-lg mb-4">
-                <table class="min-w-full divide-y divide-gray-300">
-                  <thead class="bg-gray-50">
+              <div class="overflow-hidden border border-gray-300 dark:border-neutral-dark-50 rounded-lg mb-4">
+                <table class="min-w-full divide-y divide-gray-300 dark:divide-neutral-dark-50">
+                  <thead class="bg-gray-50 dark:bg-neutral-dark-200">
                     <tr>
-                      <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Key</th>
-                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Value</th>
-                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Send in</th>
+                      <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900 sm:pl-6">Key</th>
+                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900">Value</th>
+                      <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900">Send in</th>
                       <th class="relative py-3.5 pl-3 pr-4 sm:pr-6 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-gray-200 bg-white">
+                  <tbody class="divide-y divide-gray-200 dark:divide-neutral-dark-300 bg-white dark:bg-surface-dark-elevated">
                     {authConfig.tokenHeaders.map((header) => (
                       <tr key={header._tempId || header.key}>
-                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-neutral-dark-900 sm:pl-6">
                           {header.key}
                         </td>
-                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900 dark:text-neutral-dark-900">
                           {header.value}
                         </td>
-                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900 dark:text-neutral-dark-900">
                           {header.sendIn === 'header' ? 'Header' : 'Query Param'}
                         </td>
                         <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-2">
@@ -1934,8 +1937,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
             {authResponse && (
               <Button
                 onClick={clearTokens}
-                variant="none"
-                className="cursor-pointer rounded-md bg-red-500 hover:bg-red-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+                variant="danger"
               >
                 Clear Tokens
               </Button>
@@ -2035,8 +2037,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
             {authResponse && (
               <Button
                 onClick={clearTokens}
-                variant="none"
-                className="cursor-pointer rounded-md bg-red-500 hover:bg-red-400 px-3 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+                variant="danger"
               >
                 Clear Tokens
               </Button>
@@ -2079,8 +2080,8 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
       {/* Auth Response Display */}
       {authResponse && (
         <div class="">
-          <h3 class="text-base font-medium text-gray-900">Authentication Response</h3>
-          <p class="mt-1 text-sm text-gray-600 mb-4">Any active access token will be used as Authoriation header in Slingshot if this environment is used.</p>
+          <h3 class="text-base font-semibold text-gray-900 dark:text-neutral-dark-900">Authentication Response</h3>
+          <p class="mt-1 text-sm text-gray-600 dark:text-neutral-dark-600 mb-4">Any active access token will be used as Authorization header in Slingshot if this environment is used.</p>
           <div class="w-full max-w-full overflow-hidden">
             <CodeMirror
               value={JSON.stringify(authResponse, null, 2)}
@@ -2122,13 +2123,15 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
                 autocompletion: false,
                 rectangularSelection: false,
                 searchKeymap: false,
-                highlightSelectionMatches: false
+                highlightSelectionMatches: false,
+                highlightActiveLine: false,
+                highlightActiveLineGutter: false
               }}
               style={{
-                border: '1px solid #44475a',
+                border: '2px solid #282a36',
                 borderRadius: '0.375rem',
                 fontSize: '12px',
-                fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+                fontFamily: '"JetBrains Mono", ui-monospace, monospace'
               }}
             />
           </div>
@@ -2275,7 +2278,7 @@ export function AuthSection({ environment, onUpdate, onSave, onCancel }) {
         message={toastMessage}
         isVisible={isToastVisible}
         onClose={hideToast}
-        type="success"
+        type={toastType}
       />
     </div>
   );

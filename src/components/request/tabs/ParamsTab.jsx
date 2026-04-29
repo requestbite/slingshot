@@ -28,7 +28,7 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
       {/* Path Parameters Section */}
       <div class="mb-6">
         <div class="flex justify-between items-center mb-2">
-          <div class="text-xs text-gray-500 italic">
+          <div class="text-xs text-gray-500 dark:text-neutral-dark-500 italic">
             Path parameters are parsed from URL.
           </div>
         </div>
@@ -44,7 +44,7 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
                     type="checkbox"
                     checked={param.enabled}
                     onChange={() => togglePathParamEnabled(param.id)}
-                    class="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500"
+                    class="w-4 h-4 text-sky-600 border-gray-300 dark:border-neutral-dark-50 rounded focus:ring-sky-500"
                   />
                 </div>
                 <div class="col-span-5">
@@ -76,7 +76,7 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
       {/* Query Parameters Section */}
       <div>
         <div class="flex justify-between items-center mb-2">
-          <div class="text-xs text-gray-500 italic">
+          <div class="text-xs text-gray-500 dark:text-neutral-dark-500 italic">
             Query parameters are parsed from URL.
           </div>
         </div>
@@ -92,7 +92,7 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
                     type="checkbox"
                     checked={param.enabled}
                     onChange={() => toggleQueryParamEnabled(param.id)}
-                    class="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500"
+                    class="w-4 h-4 text-sky-600 border-gray-300 dark:border-neutral-dark-50 rounded focus:ring-sky-500"
                   />
                 </div>
                 <div class="col-span-5">

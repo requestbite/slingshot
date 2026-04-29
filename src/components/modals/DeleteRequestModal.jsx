@@ -42,7 +42,7 @@ export function DeleteRequestModal({ isOpen, onClose, request, onDelete }) {
     <Modal isOpen={isOpen} onClose={handleClose} title={`Delete request: ${request.name || request.url}`} size="md">
       <form onSubmit={(e) => { e.preventDefault(); handleDelete(); }}>
         <div>
-          <p class="text-sm text-gray-500">Are you sure you want to delete this request? This action cannot be undone.</p>
+          <p class="text-sm text-gray-500 dark:text-neutral-dark-500">Are you sure you want to delete this request? This action cannot be undone.</p>
           {error && (
             <div class="mt-2 text-sm text-red-600">
               {error}

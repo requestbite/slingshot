@@ -38,13 +38,13 @@ export function SchemaTree({
 
   const getTypeBadgeColor = (type) => {
     const colors = {
-      string: 'bg-green-100 text-green-800',
-      number: 'bg-blue-100 text-blue-800',
-      integer: 'bg-blue-100 text-blue-800',
-      boolean: 'bg-purple-100 text-purple-800',
-      object: 'bg-orange-100 text-orange-800',
-      array: 'bg-pink-100 text-pink-800',
-      any: 'bg-gray-100 text-gray-800'
+      string: 'bg-green-100 dark:bg-green-200 text-green-800',
+      number: 'bg-blue-100 dark:bg-blue-200 text-blue-800',
+      integer: 'bg-blue-100 dark:bg-blue-200 text-blue-800',
+      boolean: 'bg-purple-100 dark:bg-purple-200 text-purple-800',
+      object: 'bg-orange-100 dark:bg-orange-200 text-orange-800',
+      array: 'bg-pink-100 dark:bg-pink-200 text-pink-800',
+      any: 'bg-gray-100 dark:bg-neutral-dark-200 text-gray-800 dark:text-neutral-dark-800'
     };
     return colors[type] || colors.any;
   };
@@ -60,7 +60,7 @@ export function SchemaTree({
     return (
       <div class="ml-4 my-2">
         <div class="flex items-center gap-2 text-xs">
-          <span class="text-gray-600">{getCompositionDisplayName(composition.type)}:</span>
+          <span class="text-gray-600 dark:text-neutral-dark-600">{getCompositionDisplayName(composition.type)}:</span>
           <Select
             value={selectedCompositionIndex.toString()}
             onChange={(value) => setSelectedCompositionIndex(parseInt(value, 10))}
@@ -79,7 +79,7 @@ export function SchemaTree({
     return (
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        class="flex items-center justify-center w-4 h-4 mr-2 text-gray-500 hover:text-gray-700 cursor-pointer"
+        class="flex items-center justify-center w-4 h-4 mr-2 text-gray-500 dark:text-neutral-dark-500 hover:text-gray-700 dark:hover:text-neutral-dark-700 cursor-pointer"
       >
         <svg
           class={`w-3 h-3 transform transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
@@ -112,16 +112,16 @@ export function SchemaTree({
       return (
         <div>
           {hasParentDesc && (
-            <div class="text-xs text-gray-600 leading-relaxed [&_.prose]:text-xs [&_.prose]:text-gray-600 [&_.prose_p]:text-gray-600 [&_.prose_li]:text-gray-600 [&_.prose_*]:text-gray-600">
-              <MarkdownPreview markdown={parentDescription} />
+            <div class="text-xs text-gray-600 dark:text-neutral-dark-600 leading-relaxed pt-1">
+              <MarkdownPreview markdown={parentDescription} className="!text-xs" />
             </div>
           )}
           {hasParentDesc && hasEffectiveDesc && (
             <div class="h-2"></div>
           )}
           {hasEffectiveDesc && (
-            <div class="text-xs text-gray-600 leading-relaxed [&_.prose]:text-xs [&_.prose]:text-gray-600 [&_.prose_p]:text-gray-600 [&_.prose_li]:text-gray-600 [&_.prose_*]:text-gray-600">
-              <MarkdownPreview markdown={effectiveDescription} />
+            <div class="text-xs text-gray-600 dark:text-neutral-dark-600 leading-relaxed pt-1">
+              <MarkdownPreview markdown={effectiveDescription} className="!text-xs" />
             </div>
           )}
         </div>
@@ -135,8 +135,8 @@ export function SchemaTree({
     }
 
     return (
-      <div class="text-xs text-gray-600 leading-relaxed [&_.prose]:text-xs [&_.prose]:text-gray-600 [&_.prose_p]:text-gray-600 [&_.prose_li]:text-gray-600 [&_.prose_*]:text-gray-600">
-        <MarkdownPreview markdown={description} />
+      <div class="text-xs text-gray-600 dark:text-neutral-dark-600 leading-relaxed pt-1">
+        <MarkdownPreview markdown={description} className="!text-xs" />
       </div>
     );
   };
@@ -148,7 +148,7 @@ export function SchemaTree({
       const required = effectiveSchema.required || [];
 
       return (
-        <div class="ml-2 border-l border-gray-200 pl-4 space-y-2">
+        <div class="ml-2 border-l border-gray-200 dark:border-neutral-dark-300 pl-4 space-y-2">
           {Object.entries(effectiveSchema.properties).map(([propName, propSchema]) => (
             <SchemaTree
               key={propName}
@@ -164,7 +164,7 @@ export function SchemaTree({
 
     if (effectiveSchema.type === 'array' && effectiveSchema.items) {
       return (
-        <div class="ml-2 border-l border-gray-200 pl-4">
+        <div class="ml-2 border-l border-gray-200 dark:border-neutral-dark-300 pl-4">
           <SchemaTree
             schema={effectiveSchema.items}
             name="[item]"
@@ -187,7 +187,7 @@ export function SchemaTree({
         <div class="flex-1 min-w-0">
           {name && (
             <div class="flex items-center gap-2">
-              <span class="text-xs font-medium font-mono text-blue-900">
+              <span class="text-xs font-medium font-mono text-blue-900 dark:text-[#66d9ef]">
                 {name}
                 {isRequired && <span class="text-red-500 ml-1">*</span>}
               </span>
@@ -210,7 +210,7 @@ export function SchemaTree({
 export function SchemaTreeRoot({ schema, title, className = '' }) {
   if (!schema) {
     return (
-      <div class={`text-sm text-gray-500 italic ${className}`}>
+      <div class={`text-sm text-gray-500 dark:text-neutral-dark-500 italic ${className}`}>
         No schema available
       </div>
     );
@@ -219,7 +219,7 @@ export function SchemaTreeRoot({ schema, title, className = '' }) {
   return (
     <div class={`space-y-2 ${className}`}>
       {title && (
-        <h4 class="text-xs font-medium text-gray-600 tracking-wide">
+        <h4 class="text-xs font-medium text-gray-600 dark:text-neutral-dark-600 tracking-wide">
           {title}
         </h4>
       )}

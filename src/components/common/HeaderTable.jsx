@@ -71,13 +71,13 @@ export function HeaderTable({ headers = [], nameTitle = 'Name', valueTitle = 'Va
       `}</style>
       <div class={`${scopeClass} w-full text-[11px] font-mono ${className}`}>
         {showTitles && (
-          <div class="flex flex-row border-b border-slate-200 py-1">
+          <div class="flex flex-row border-b border-slate-200 dark:border-neutral-dark-300 py-1">
             <div class="ht-col-name text-xs font-bold truncate pr-3">{nameTitle}</div>
             <div class="ht-col-value text-xs font-bold truncate hidden sm:block">{valueTitle}</div>
           </div>
         )}
         {headers.map((header, index) => (
-          <div key={index} class="flex flex-col sm:flex-row border-b border-slate-100 py-1">
+          <div key={index} class="flex flex-col sm:flex-row border-b border-slate-100 dark:border-neutral-dark-300 py-1">
             <div class="ht-col-name truncate pr-3">
               {renderCell(header.name, false)}
             </div>

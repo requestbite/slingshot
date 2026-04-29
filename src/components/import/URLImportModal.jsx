@@ -262,7 +262,7 @@ export function URLImportModal({ isOpen, importUrl, collectionName = '', onClose
         title="Import"
         size="md"
       >
-        <div class="text-sm text-gray-500 mb-6">
+        <div class="text-sm text-gray-500 dark:text-neutral-dark-500 mb-6">
           Import an OpenAPI spec or Postman collection via a URL.
         </div>
 

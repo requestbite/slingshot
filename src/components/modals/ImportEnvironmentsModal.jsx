@@ -4,6 +4,8 @@ import { encryptSecret } from '../../utils/encryption';
 import db from '../../db/schema';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
+import { Label } from '../common/Label';
+import { TextInput } from '../common/TextInput';
 
 export function ImportEnvironmentsModal({ isOpen, onClose, onSuccess }) {
   const [file, setFile] = useState(null);
@@ -250,23 +252,22 @@ export function ImportEnvironmentsModal({ isOpen, onClose, onSuccess }) {
     <Modal isOpen={isOpen} onClose={handleClose} title="Import environments" size="md">
       <form onSubmit={handleSubmit}>
         <div>
-          <div class="text-sm text-gray-500">
+          <div class="text-sm text-gray-500 dark:text-neutral-dark-500">
             Import a previously exported environment JSON file. Any existing environment with the same ID as in the imported file will be overwritten. Any other environments will be added.
           </div>
 
           <div class="mt-6">
-            <label for="environment-file" class="block text-left text-sm font-medium text-gray-700 mb-1">Environment file</label>
-            <input
+            <Label htmlFor="environment-file">Environment file</Label>
+            <TextInput
               ref={fileInputRef}
-              type="file"
               id="environment-file"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+              type="file"
               accept=".json"
               required
               onChange={handleFileChange}
               disabled={isLoading}
+              description="Maximum file size: 10 MB"
             />
-            <div class="text-xs text-gray-500 mt-1">Maximum file size: 10 MB</div>
             {errors.file && (
               <div class="mt-2 text-sm text-red-600 bg-red-100 p-2 rounded-md">
                 {errors.file}

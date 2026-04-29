@@ -173,7 +173,7 @@ export function AddFolderModal({ isOpen, onClose, parentFolder = null, onSuccess
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Add Folder" size="md">
-      <div class="text-sm text-gray-500">Create a new folder in this collection.</div>
+      <div class="text-sm text-gray-500 dark:text-neutral-dark-500">Create a new folder in this collection.</div>
 
       {error && (
         <div class="mt-2 text-sm text-red-600 bg-red-100 p-2 rounded-md">

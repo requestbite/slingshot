@@ -23,16 +23,16 @@ export function SettingsTab({
               id="follow-redirects-checkbox" 
               checked={followRedirects}
               onChange={(e) => onFollowRedirectsChange(e.target.checked)}
-              class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+              class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 dark:border-neutral-dark-50 rounded"
             />
-            <label for="follow-redirects-checkbox" class="ml-2 block text-sm text-gray-900">
+            <label for="follow-redirects-checkbox" class="ml-2 block text-sm text-gray-900 dark:text-neutral-dark-900">
               Automatically follow redirects
             </label>
           </div>
           
           {/* Request timeout setting */}
           <div class="flex items-center">
-            <label for="request-timeout-input" class="block text-sm text-gray-900 mr-3">
+            <label for="request-timeout-input" class="block text-sm text-gray-900 dark:text-neutral-dark-900 mr-3">
               Request timeout (seconds):
             </label>
             <input 
@@ -43,9 +43,9 @@ export function SettingsTab({
               max="300"
               onChange={(e) => handleTimeoutChange(e.target.value)}
               onKeyDown={onEnterKeyPress}
-              class="w-24 px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+              class="w-24 px-3 py-1 text-sm border border-gray-300 dark:border-neutral-dark-50 bg-white dark:bg-[#313340] text-gray-900 dark:text-neutral-dark-900 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
-            <span class="ml-2 text-xs text-gray-500">(1-300 seconds)</span>
+            <span class="ml-2 text-xs text-gray-500 dark:text-neutral-dark-500">(1-300 seconds)</span>
           </div>
         </div>
       </div>

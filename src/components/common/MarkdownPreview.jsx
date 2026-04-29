@@ -24,7 +24,7 @@ const DOMPURIFY_CONFIG = {
   RETURN_DOM_FRAGMENT: false
 };
 
-export function MarkdownPreview({ markdown = '' }) {
+export function MarkdownPreview({ markdown = '', className = '' }) {
   // Memoize the HTML conversion and sanitization for performance
   const cleanHtml = useMemo(() => {
     // Step 1: Convert markdown to HTML with HTML support enabled
@@ -48,7 +48,15 @@ export function MarkdownPreview({ markdown = '' }) {
 
   return (
     <div
-      class="prose prose-sm max-w-none h-full overflow-y-auto break-words prose-headings:text-gray-900 prose-p:text-gray-700 prose-li:text-gray-700 mb-2"
+      class={`prose prose-sm max-w-none h-full overflow-y-auto break-words mb-2
+        prose-headings:text-gray-900 prose-p:text-gray-700 prose-li:text-gray-700
+        prose-strong:text-gray-900 prose-code:text-gray-800 prose-blockquote:text-gray-600
+        prose-a:text-sky-700 prose-th:text-gray-900 prose-td:text-gray-700
+        dark:prose-headings:text-neutral-dark-900 dark:prose-p:text-neutral-dark-700
+        dark:prose-li:text-neutral-dark-700 dark:prose-strong:text-neutral-dark-900
+        dark:prose-code:text-neutral-dark-700 dark:prose-blockquote:text-neutral-dark-600
+        dark:prose-a:text-sky-400 dark:prose-th:text-neutral-dark-900
+        dark:prose-td:text-neutral-dark-700 dark:prose-hr:border-neutral-dark-300 ${className}`}
       dangerouslySetInnerHTML={{ __html: cleanHtml }}
     />
   );

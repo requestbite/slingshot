@@ -153,7 +153,7 @@ export function RenameRequestModal({ isOpen, onClose, request, onUpdate }) {
     <Modal isOpen={isOpen} onClose={handleClose} title="Update Request" size="md">
       <form onSubmit={handleSubmit}>
         <div>
-          <div class="text-sm text-gray-500">Update name and folder for this request.</div>
+          <div class="text-sm text-gray-500 dark:text-neutral-dark-500">Update name and folder for this request.</div>
 
           {error && (
             <div class="mt-2 text-sm text-red-600 bg-red-100 p-2 rounded-md">

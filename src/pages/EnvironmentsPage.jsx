@@ -10,6 +10,7 @@ import { useAppContext } from '../hooks/useAppContext';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { apiClient } from '../api';
 import { setupEncryptionKey, hasSessionKey, storeEncryptedReference } from '../utils/encryption';
+import { SquarePen, Trash2 } from 'lucide-preact';
 import { Button } from '../components/common/Button';
 import { TextInput } from '../components/common/TextInput';
 
@@ -254,25 +255,25 @@ export function EnvironmentsPage() {
   // Show encryption key setup form if no session key exists
   if (!isLoading && !hasEncryptionKey) {
     return (
-      <div class="h-full bg-gray-100 overflow-y-auto">
+      <div class="h-full bg-gray-100 dark:bg-[#282a36] overflow-y-auto">
         <div class="min-h-full pt-[83px] pb-6 flex items-center justify-center">
           <div class="w-full max-w-lg px-4">
-            <div class="bg-white rounded-lg border border-gray-300 p-6">
+            <div class="bg-white dark:bg-surface-dark-elevated rounded-lg border border-gray-300 dark:border-neutral-dark-50 p-6">
               <form onSubmit={handleEncryptionKeySubmit}>
                 <div class="text-left">
-                  <h3 class="text-base font-semibold text-gray-900">Set encryption key</h3>
-                  <div class="mt-2 text-sm text-gray-500">
+                  <h3 class="text-base font-semibold text-gray-900 dark:text-neutral-dark-900">Set encryption key</h3>
+                  <div class="mt-2 text-sm text-gray-500 dark:text-neutral-dark-500">
                     Environments are used to store encrypted secrets such as passwords. To support this, you need to provide a password that can be used to decrypt your environment secrets. When you have active environments, you will be asked to provide this secret whenever you load the Slingshot app.
                   </div>
 
                   {error && (
-                    <div class="mt-4 text-sm text-red-600 bg-red-100 p-2 rounded-md">
+                    <div class="mt-4 text-sm text-red-600 dark:text-error-dark-400 bg-red-100 dark:bg-error-dark-100 p-2 rounded-md">
                       {error}
                     </div>
                   )}
 
                   <div class="mt-6">
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-neutral-dark-700 mb-1">Password</label>
                     <TextInput
                       ref={passwordInputRef}
                       id="password"
@@ -283,11 +284,11 @@ export function EnvironmentsPage() {
                       disabled={isSubmitting}
                       required
                     />
-                    <p class="mt-1 text-xs text-gray-500">Must be at least 4 characters long.</p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-neutral-dark-500">Must be at least 4 characters long.</p>
                   </div>
 
                   <div class="mt-4">
-                    <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">Repeat password</label>
+                    <label for="confirmPassword" class="block text-sm font-medium text-gray-700 dark:text-neutral-dark-700 mb-1">Repeat password</label>
                     <TextInput
                       id="confirmPassword"
                       type="password"
@@ -328,18 +329,18 @@ export function EnvironmentsPage() {
   }
 
   return (
-    <div class="h-full bg-gray-100 overflow-y-auto">
+    <div class="h-full bg-gray-100 dark:bg-[#282a36] overflow-y-auto">
       <div class="min-h-full pt-[83px] pb-6">
         {/* Main Container */}
         <div class="max-w-4xl mx-auto px-4">
-          <div class="bg-white rounded-lg border border-gray-300">
+          <div class="bg-white dark:bg-surface-dark-elevated rounded-lg border border-gray-300 dark:border-neutral-dark-50">
             {/* Header Section */}
             <div class="sm:flex sm:items-start p-6">
               <div class="sm:flex-auto">
-                <h1 class="text-base/7 font-semibold text-gray-900">
+                <h1 class="text-base/7 font-semibold text-gray-900 dark:text-neutral-dark-900">
                   Environments
                 </h1>
-                <p class="mt-1 text-sm/6 text-gray-600">
+                <p class="mt-1 text-sm/6 text-gray-600 dark:text-neutral-dark-600">
                   Manage your environments and their encrypted secrets.
                 </p>
               </div>
@@ -378,7 +379,7 @@ export function EnvironmentsPage() {
             <div class="py-6 sm:px-6">
               {isLoading ? (
                 <div class="flex items-center justify-center p-8">
-                  <div class="flex items-center space-x-3 text-gray-500">
+                  <div class="flex items-center space-x-3 text-gray-500 dark:text-neutral-dark-500">
                     <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -389,27 +390,27 @@ export function EnvironmentsPage() {
               ) : environmentsWithCounts.length === 0 ? (
                 <p class="px-6 sm:p-0">No environments found.</p>
               ) : (
-                <table class="w-full table-fixed divide-y divide-gray-300">
+                <table class="w-full table-fixed divide-y divide-gray-300 dark:divide-neutral-dark-50">
                   <thead>
                     <tr>
-                      <th scope="col" class="w-auto py-3.5 pl-6 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
+                      <th scope="col" class="w-auto py-3.5 pl-6 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900 sm:pl-0">
                         <div class="truncate">Name</div>
                       </th>
-                      <th scope="col" class="hidden sm:table-cell w-26 py-3.5 pl-6 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
+                      <th scope="col" class="hidden sm:table-cell w-26 py-3.5 pl-6 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900 sm:pl-0">
                         <div class="truncate">Collections</div>
                       </th>
-                      <th scope="col" class="hidden sm:table-cell w-26 py-3.5 pl-6 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
+                      <th scope="col" class="hidden sm:table-cell w-26 py-3.5 pl-6 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900 sm:pl-0">
                         <div class="truncate">Secrets</div>
                       </th>
-                      <th scope="col" class="hidden sm:table-cell w-26 py-3.5 pl-6 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
+                      <th scope="col" class="hidden sm:table-cell w-26 py-3.5 pl-6 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-neutral-dark-900 sm:pl-0">
                         <div class="truncate">Auth</div>
                       </th>
-                      <th scope="col" class="table-cell w-20 pl-3 pr-6 py-3.5 sm:pr-0 text-right text-sm font-semibold text-gray-900">
+                      <th scope="col" class="table-cell w-20 pl-3 pr-6 py-3.5 sm:pr-0 text-right text-sm font-semibold text-gray-900 dark:text-neutral-dark-900">
                         <div>Actions</div>
                       </th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-gray-200">
+                  <tbody class="divide-y divide-gray-200 dark:divide-neutral-dark-300">
                     {environmentsWithCounts.map((environment) => (
                       <tr key={environment.id}>
                         <td class="py-3 pl-6 pr-3 text-sm sm:pl-0">
@@ -480,12 +481,15 @@ export function EnvironmentsPage() {
         width={190}
         items={[
           {
-            label: 'Edit environment',
+            label: 'Edit',
+            icon: <SquarePen size={16} />,
             onClick: () => handleEditEnvironment()
           },
           {
-            label: 'Delete environment ...',
-            onClick: handleDeleteEnvironment
+            label: 'Delete...',
+            icon: <Trash2 size={16} />,
+            onClick: handleDeleteEnvironment,
+            destructive: true
           }
         ]}
       />

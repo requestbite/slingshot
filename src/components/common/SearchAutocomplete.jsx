@@ -259,14 +259,14 @@ export const SearchAutocomplete = forwardRef((
       {/* Dropdown */}
       {(showDropdown || shouldShowEmptyMessage || isLoading) && (
         <div
-          class="absolute w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 z-50 max-h-[300px] overflow-y-auto"
+          class="absolute w-full bg-white dark:bg-surface-dark-elevated border border-gray-300 dark:border-neutral-dark-50 rounded-md shadow-lg mt-1 z-50 max-h-[300px] overflow-y-auto"
           style={{
             top: '100%',
             left: '0',
           }}
         >
           {isLoading ? (
-            <div class="px-3 py-2 text-sm text-gray-500 text-center">
+            <div class="px-3 py-2 text-sm text-gray-500 dark:text-neutral-dark-500 text-center">
               Searching...
             </div>
           ) : shouldShowEmptyMessage ? (
@@ -283,8 +283,8 @@ export const SearchAutocomplete = forwardRef((
                     onClick={() => handleItemSelect(item, index)}
                     class={`px-3 py-2 text-sm cursor-pointer transition-colors ${
                       isSelected
-                        ? 'bg-sky-100 text-sky-900'
-                        : 'text-gray-900 hover:bg-gray-100'
+                        ? 'bg-sky-100 dark:bg-primary-dark-200 text-sky-900 dark:text-primary-dark-400'
+                        : 'text-gray-900 dark:text-neutral-dark-900 hover:bg-gray-100 dark:hover:bg-neutral-dark-200'
                     }`}
                     role="option"
                     aria-selected={isSelected}

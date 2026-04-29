@@ -28,7 +28,7 @@ import {
   getStatusColor
 } from './ResponseDisplayUtils';
 import { Button } from '../common/Button';
-import { Music } from 'lucide-preact';
+import { Music, CloudAlert, Clock } from 'lucide-preact';
 
 export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStreaming, streamedContent, streamedChunks, streamingMetadata, selectedCollection }) {
   // Initialize headers visibility from localStorage, defaulting to false (closed)
@@ -119,10 +119,10 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
 
   if (isLoading) {
     return (
-      <div class="flex items-center justify-center p-6 mb-4">
+      <div class="flex items-center justify-center h-full p-6">
         <div class="text-center">
           <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-solid border-sky-500 border-r-transparent mb-4"></div>
-          <div class="text-sm text-gray-700 mb-3">Request in progress...</div>
+          <div class="text-sm text-gray-700 dark:text-neutral-dark-700 mb-3">Request in progress...</div>
           <Button
             onClick={onCancel}
             variant="danger"
@@ -137,7 +137,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
 
   if (!response) {
     return (
-      <div class="px-6">
+      <div class="px-6 h-full">
         <WelcomeMessage />
       </div>
     );
@@ -148,7 +148,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
   // BUT: Don't show welcome message if we're in streaming mode
   if (!response.status && !response.responseData && !response.cancelled && response.success !== false && !isStreaming && !streamedContent) {
     return (
-      <div class="px-6">
+      <div class="px-6 h-full">
         <WelcomeMessage />
       </div>
     );
@@ -156,20 +156,13 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
 
   if (response.cancelled) {
     return (
-      <div id="response-section">
-        <div id="response-container">
-          <div id="response-details-wrapper">
-            <div id="cancelled-response-container">
-              <div class="text-center py-6">
-                {/* Cancelled Image */}
-                <div class="mx-auto mb-4 w-44">
-                  <img src="/images/rabbit-timer-v1.webp" alt="Request Cancelled" class="mx-auto w-64 mb-4" />
-                </div>
-                {/* Cancelled Title */}
-                <h4 class="text-xl font-medium text-gray-900 mb-2">Request Cancelled</h4>
-                {/* Cancelled Message */}
-                <div class="text-sm text-gray-600">Oh, was it that slow? Perhaps there are some connectivity issues.</div>
-              </div>
+      <div id="response-section" class="flex flex-col h-full">
+        <div id="response-container" class="flex flex-col h-full">
+          <div id="response-details-wrapper" class="flex flex-col h-full">
+            <div id="cancelled-response-container" class="flex flex-col items-center justify-center h-full text-center py-8">
+              <Clock size={48} class="mb-4 text-gray-400 dark:text-neutral-dark-400" />
+              <h4 class="text-xl font-medium text-gray-900 dark:text-neutral-dark-900 mb-2">Request Cancelled</h4>
+              <div class="text-sm text-gray-600 dark:text-neutral-dark-600">Oh, was it that slow? Perhaps there are some connectivity issues.</div>
             </div>
           </div>
         </div>
@@ -179,27 +172,19 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
 
   if (!response.success) {
     return (
-      <div id="response-section">
-        <div id="response-container">
-          <div id="response-details-wrapper">
-            <div id="error-response-container">
-              <div class="text-center py-6">
-                {/* Error Image */}
-                <div class="mx-auto mb-4 w-44">
-                  <img src="/images/rabbit-dizzy-v1.webp" alt="Request Error" class="mx-auto w-64 mb-4" />
-                </div>
-                {/* Error Title */}
-                <h4 class="text-xl font-medium text-gray-900 mb-2">
-                  {response.errorTitle || "Oh no, an error occurred"}
-                </h4>
-                {/* Error Message */}
-                <div class="text-sm text-gray-600 mb-2">
-                  {response.errorMessage || "Unable to complete the request"}
-                </div>
-                {/* Error Type */}
-                <div class="text-xs font-mono text-gray-500 bg-gray-100 inline-block px-2 py-1 rounded">
-                  {response.errorType || "error_type"}
-                </div>
+      <div id="response-section" class="flex flex-col h-full">
+        <div id="response-container" class="flex flex-col h-full">
+          <div id="response-details-wrapper" class="flex flex-col h-full">
+            <div id="error-response-container" class="flex flex-col items-center justify-center h-full text-center py-8">
+              <CloudAlert size={48} class="mb-4 text-gray-400 dark:text-neutral-dark-400" />
+              <h4 class="text-xl font-medium text-gray-900 dark:text-neutral-dark-900 mb-2">
+                {response.errorTitle || "Oh no, an error occurred"}
+              </h4>
+              <div class="text-sm text-gray-600 dark:text-neutral-dark-600 mb-2">
+                {response.errorMessage || "Unable to complete the request"}
+              </div>
+              <div class="text-xs font-mono text-gray-500 dark:text-neutral-dark-500 bg-gray-100 dark:bg-neutral-dark-200 inline-block px-2 py-1 rounded">
+                {response.errorType || "error_type"}
               </div>
             </div>
           </div>
@@ -334,7 +319,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
             <div class="flex items-center justify-between flex-nowrap min-w-max">
               <div class="flex items-center space-x-4 flex-nowrap">
                 <div class="flex items-center space-x-2 whitespace-nowrap">
-                  <span class="text-sm font-medium text-gray-700">Status:</span>
+                  <span class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700">Status:</span>
                   <span class={`px-2 py-1 text-sm rounded-md ${getStatusColor(effectiveResponse.status)}`}>
                     {processedStatus?.isClickable ? (
                       <a
@@ -356,21 +341,21 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                   </span>
                 </div>
                 <div class="flex items-center space-x-2 whitespace-nowrap">
-                  <span class="text-sm font-medium text-gray-700">Time:</span>
-                  <span class="px-2 py-1 text-sm bg-blue-50 text-blue-700 rounded-md whitespace-nowrap">
+                  <span class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700">Time:</span>
+                  <span class="px-2 py-1 text-sm bg-blue-50 text-blue-700 dark:bg-sky-500 dark:text-gray-800 rounded-md whitespace-nowrap">
                     {effectiveResponse.responseTime}
                   </span>
                 </div>
                 <div class="flex items-center space-x-2 whitespace-nowrap">
-                  <span class="text-sm font-medium text-gray-700">Size:</span>
-                  <span class="px-2 py-1 text-sm bg-amber-50 text-amber-700 rounded-md whitespace-nowrap">
+                  <span class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700">Size:</span>
+                  <span class="px-2 py-1 text-sm bg-amber-50 text-amber-700 dark:bg-orange-300 dark:text-gray-800 rounded-md whitespace-nowrap">
                     {effectiveResponse.responseSize}
                   </span>
                 </div>
                 {(isStreaming || streamingMetadata) && (
                   <div class="flex items-center space-x-2 whitespace-nowrap">
-                    <span class="text-sm font-medium text-gray-700">Stream:</span>
-                    <span class={`px-2 py-1 text-sm rounded-md whitespace-nowrap flex items-center ${isStreaming ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-700'}`}>
+                    <span class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700">Stream:</span>
+                    <span class={`px-2 py-1 text-sm rounded-md whitespace-nowrap flex items-center ${isStreaming ? 'bg-green-50 dark:bg-success-dark-50 text-green-700 dark:text-success-dark-400' : 'bg-gray-50 dark:bg-neutral-dark-200 text-gray-700 dark:text-neutral-dark-700'}`}>
                       {isStreaming && (
                         <svg class="animate-spin -ml-1 mr-2 h-3 w-3 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -385,7 +370,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                   <Button
                     onClick={() => setShowHeaders(!showHeaders)}
                     variant="none"
-                    className="flex items-center text-sm font-medium text-gray-700 cursor-pointer whitespace-nowrap mr-4"
+                    className="flex items-center text-sm font-medium text-gray-700 dark:text-neutral-dark-700 cursor-pointer whitespace-nowrap mr-4"
                   >
                     <svg
                       class={`h-4 w-4 mr-1 transition-transform duration-200 ${showHeaders ? 'rotate-90' : ''}`}
@@ -396,10 +381,10 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                       <path stroke-linecap="round" stroke-linejoin="round" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
                     </svg>
                     Headers&nbsp;
-                    <span class="text-gray-500 font-normal ml-1">({processedHeaders.length})</span>
+                    <span class="text-gray-500 dark:text-neutral-dark-500 font-normal ml-1">({processedHeaders.length})</span>
                   </Button>
                   {effectiveResponse.saved && effectiveResponse.receivedAt && (
-                    <span class="text-xs text-gray-400 font-normal whitespace-nowrap mr-4">
+                    <span class="text-xs text-gray-400 dark:text-neutral-dark-400 font-normal whitespace-nowrap mr-4">
                       Cached response from {new Date(effectiveResponse.receivedAt).toLocaleString()}
                     </span>
                   )}
@@ -416,14 +401,14 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                 <table class="border-collapse text-xs w-full table-fixed">
                   <thead>
                     <tr>
-                      <th class="py-1 border-b border-slate-200 text-left font-mono font-bold">Name</th>
-                      <th class="py-1 border-b border-slate-200 text-left font-mono font-bold">Value</th>
+                      <th class="py-1 border-b border-slate-200 dark:border-neutral-dark-100 text-left font-mono font-bold">Name</th>
+                      <th class="py-1 border-b border-slate-200 dark:border-neutral-dark-100 text-left font-mono font-bold">Value</th>
                     </tr>
                   </thead>
                   <tbody>
                     {processedHeaders.map((header, index) => (
                       <tr key={index}>
-                        <td class="border-b border-slate-100 py-1 pr-3 font-mono whitespace-nowrap overflow-hidden text-ellipsis truncate">
+                        <td class="border-b border-slate-100 dark:border-neutral-dark-100 py-1 pr-3 font-mono whitespace-nowrap overflow-hidden text-ellipsis truncate">
                           {header.isClickable ? (
                             <a
                               href={header.url}
@@ -442,7 +427,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                             header.name
                           )}
                         </td>
-                        <td class="border-b border-slate-100 py-1 font-mono text-indigo-600 whitespace-nowrap overflow-hidden text-ellipsis truncate">
+                        <td class="border-b border-slate-100 dark:border-neutral-dark-100 py-1 font-mono text-indigo-600 dark:text-indigo-300 whitespace-nowrap overflow-hidden text-ellipsis truncate">
                           {header.value}
                         </td>
                       </tr>
@@ -458,7 +443,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
             <div class="response-container flex-grow flex flex-col">
               {/* No response body message */}
               {!response.responseData && !response.binaryData && !streamedContent && !response.finalStreamedContent && !isStreaming && (
-                <div class="rounded-md bg-gray-50 p-4 mb-4 text-sm text-gray-600 font-medium">
+                <div class="rounded-md bg-gray-50 dark:bg-neutral-dark-200 p-4 mb-4 text-sm text-gray-600 dark:text-neutral-dark-600 font-medium">
                   No response body received.
                 </div>
               )}
@@ -593,7 +578,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                   // Show binary content message
                   return (
                     <div
-                      class="rounded-md p-4 text-center text-gray-600"
+                      class="rounded-md p-4 text-center text-gray-600 dark:text-neutral-dark-600"
                       style={{
                         border: '1px solid #44475a',
                         backgroundColor: '#282a36',
@@ -605,7 +590,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                     >
                       <div class="text-white">
                         <div class="text-lg mb-2">Binary Content</div>
-                        <div class="text-sm text-gray-300">
+                        <div class="text-sm text-gray-300 dark:text-neutral-dark-400">
                           {response.responseSize || 'Unknown size'} • {contentType || 'Unknown type'}
                         </div>
                       </div>
@@ -644,7 +629,9 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                               autocompletion: false,
                               rectangularSelection: false,
                               searchKeymap: false,
-                              highlightSelectionMatches: false
+                              highlightSelectionMatches: false,
+                              highlightActiveLine: false,
+                              highlightActiveLineGutter: false
                             }}
                             style={{
                               border: '2px solid #282a36',
@@ -675,7 +662,9 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                       autocompletion: false,
                       rectangularSelection: false,
                       searchKeymap: true,
-                      highlightSelectionMatches: true
+                      highlightSelectionMatches: true,
+                      highlightActiveLine: false,
+                      highlightActiveLineGutter: false
                     };
                     return (
                       <div class="flex flex-col flex-grow">
@@ -686,10 +675,10 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                             value={jsonataExpr}
                             onInput={e => setJsonataExpr(e.target.value)}
                             placeholder="JSONata expression…"
-                            class="w-full mb-2 px-3 py-2 rounded-md text-xs font-mono text-gray-100 outline-none focus:ring-1 focus:ring-sky-500"
+                            class="w-full mb-2 px-3 py-2 rounded-md text-xs font-mono text-gray-100 outline-none"
                             style={{
                               backgroundColor: '#282a36',
-                              border: '2px solid #44475a',
+                              border: 'none',
                               fontFamily: '"JetBrains Mono", ui-monospace, monospace',
                             }}
                           />

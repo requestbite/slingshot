@@ -48,7 +48,7 @@ export function Checkbox({
         disabled={disabled}
         onChange={handleChange}
         class={`
-          h-4 w-4 rounded border-gray-300
+          h-4 w-4 rounded border-gray-300 dark:border-neutral-dark-50
           text-sky-500
           focus:ring-2 focus:ring-sky-500 focus:ring-offset-0
           disabled:cursor-not-allowed disabled:opacity-50
@@ -61,7 +61,7 @@ export function Checkbox({
         <label
           for={checkboxId}
           class={`
-            ml-2 text-sm text-gray-600
+            ml-2 text-sm text-gray-600 dark:text-neutral-dark-600
             ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
           `}
         >

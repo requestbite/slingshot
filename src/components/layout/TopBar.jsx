@@ -1,8 +1,11 @@
 import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
+import { CloudSun, Sun, Moon } from 'lucide-preact';
 import LogoHorizontal from '../../assets/logo-horizontal-slingshot.svg';
+import LogoHorizontalDark from '../../assets/logo-horizontal-slingshot-dark.svg';
 import { getLastSlingshotUrl, setLastSlingshotUrl, isValidSlingshotUrl } from '../../utils/slingshotNavigation';
 import { useAppContext } from '../../hooks/useAppContext';
+import { useTheme } from '../../hooks/useTheme';
 import { ContextMenu } from '../common/ContextMenu';
 
 export function TopBar() {
@@ -10,7 +13,10 @@ export function TopBar() {
   const [proxyConfig, setProxyConfig] = useState({ proxyType: 'hosted', customProxyUrl: '' });
   const { isMobileMenuOpen, setIsMobileMenuOpen } = useAppContext();
   const [showToolsMenu, setShowToolsMenu] = useState(false);
+  const [showThemeMenu, setShowThemeMenu] = useState(false);
   const toolsButtonRef = useRef();
+  const themeButtonRef = useRef();
+  const { theme, setTheme, isDark } = useTheme();
 
   const isActive = (path) => {
     if (path === '/' && location === '/') return true;
@@ -20,12 +26,10 @@ export function TopBar() {
 
   const isSlingshotActive = () => {
     if (location === '/') return true;
-    // Check if URL starts with UUID pattern (8-4-4-4-12 characters)
     const uuidPattern = /^\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
     return uuidPattern.test(location);
   };
 
-  // Load proxy settings from localStorage
   const loadProxySettings = () => {
     const savedSettings = localStorage.getItem('slingshot-settings');
     if (savedSettings) {
@@ -41,66 +45,55 @@ export function TopBar() {
     }
   };
 
-  // Load proxy settings on component mount
   useEffect(() => {
     loadProxySettings();
   }, []);
 
-  // Listen for localStorage changes to update proxy settings when user changes them in settings
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === 'slingshot-settings') {
         loadProxySettings();
       }
     };
-
-    // Listen for storage events (cross-tab changes)
     window.addEventListener('storage', handleStorageChange);
-
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
-  // Also reload settings when navigating away from settings page
-  // This handles same-tab changes that don't trigger storage events
   useEffect(() => {
-    // Only reload if we're coming FROM settings page (not going TO it)
     if (location !== '/settings') {
       loadProxySettings();
     }
   }, [location]);
 
-  // Track route changes and store valid Slingshot URLs
   useEffect(() => {
     if (isValidSlingshotUrl(location)) {
       setLastSlingshotUrl(location);
     }
   }, [location]);
 
-  // Function to get banner text and styling
   const getProxyBanner = (isMobile = false) => {
     if (proxyConfig.proxyType === 'custom' && proxyConfig.customProxyUrl) {
       const text = isMobile ? 'Custom proxy' : `Custom proxy: ${proxyConfig.customProxyUrl}`;
       return {
         text,
         textXl: `Custom proxy: ${proxyConfig.customProxyUrl}`,
-        bgColor: 'bg-green-100',
-        textColor: 'text-green-800',
-        hoverColor: 'hover:bg-green-200'
+        bgColor: 'bg-green-100 dark:bg-success-dark-100',
+        textColor: 'text-green-800 dark:text-success-dark-400',
+        hoverColor: 'hover:bg-green-200 dark:hover:bg-success-dark-200'
       };
     } else {
       return {
         text: 'Slingshot proxy',
         textXl: 'Slingshot proxy',
-        bgColor: 'bg-sky-100',
-        textColor: 'text-sky-800',
-        hoverColor: 'hover:bg-sky-200'
+        bgColor: 'bg-sky-100 dark:bg-primary-dark-200',
+        textColor: 'text-sky-800 dark:text-primary-dark-400',
+        hoverColor: 'hover:bg-sky-200 dark:hover:bg-primary-dark-300'
       };
     }
   };
 
-  // Waypoints SVG icon component
   const WaypointsIcon = () => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -124,11 +117,17 @@ export function TopBar() {
     </svg>
   );
 
-  // Memoize banner calculation to prevent unnecessary re-renders
+  const CheckIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+
   const banner = useMemo(() => getProxyBanner(), [proxyConfig]);
 
   return (
-    <header class="h-[65px] bg-white/75 backdrop-blur-lg border-b border-gray-300 fixed top-0 left-0 w-full z-30 text-sm">
+    <header class="h-[65px] bg-white/75 dark:bg-[#313340]/75 backdrop-blur-lg border-b border-gray-300 dark:border-neutral-dark-50 fixed top-0 left-0 w-full z-30 text-sm">
       <div class="flex items-center justify-between h-full px-4">
         {/* Logo */}
         <a
@@ -140,7 +139,7 @@ export function TopBar() {
           class="flex items-center hover:opacity-80 transition-opacity hover:cursor-pointer"
         >
           <img
-            src={LogoHorizontal}
+            src={isDark ? LogoHorizontalDark : LogoHorizontal}
             alt="RequestBite"
             class="h-8 w-auto"
           />
@@ -148,7 +147,7 @@ export function TopBar() {
 
         {/* Desktop Navigation */}
         <nav class="hidden sm:flex items-center space-x-1">
-          <a href="https://requestbite.com" class="hidden lg:flex text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors flex items-center">
+          <a href="https://requestbite.com" class="hidden lg:flex text-gray-600 dark:text-neutral-dark-900 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-dark-200 transition-colors flex items-center">
             RequestBite
           </a>
           <a
@@ -158,8 +157,8 @@ export function TopBar() {
               setLocation(getLastSlingshotUrl());
             }}
             class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isSlingshotActive()
-              ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              ? 'text-sky-700 bg-sky-100 hover:bg-sky-200 dark:text-primary-dark-400 dark:bg-primary-dark-200 dark:hover:bg-primary-dark-300'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-900 dark:hover:text-white dark:hover:bg-neutral-dark-200'
               }`}
           >
             Slingshot
@@ -171,8 +170,8 @@ export function TopBar() {
               setLocation('/catalog');
             }}
             class={`hidden md:flex px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/catalog')
-              ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              ? 'text-sky-700 bg-sky-100 hover:bg-sky-200 dark:text-primary-dark-400 dark:bg-primary-dark-200 dark:hover:bg-primary-dark-300'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-900 dark:hover:text-white dark:hover:bg-neutral-dark-200'
               }`}
           >
             Catalog
@@ -184,8 +183,8 @@ export function TopBar() {
               setLocation('/environments');
             }}
             class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/environments')
-              ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              ? 'text-sky-700 bg-sky-100 hover:bg-sky-200 dark:text-primary-dark-400 dark:bg-primary-dark-200 dark:hover:bg-primary-dark-300'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-900 dark:hover:text-white dark:hover:bg-neutral-dark-200'
               }`}
           >
             Environments
@@ -197,8 +196,8 @@ export function TopBar() {
               setLocation('/collections');
             }}
             class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/collections')
-              ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              ? 'text-sky-700 bg-sky-100 hover:bg-sky-200 dark:text-primary-dark-400 dark:bg-primary-dark-200 dark:hover:bg-primary-dark-300'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-900 dark:hover:text-white dark:hover:bg-neutral-dark-200'
               }`}
           >
             Collections
@@ -210,8 +209,8 @@ export function TopBar() {
               setLocation('/settings');
             }}
             class={`px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/settings')
-              ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              ? 'text-sky-700 bg-sky-100 hover:bg-sky-200 dark:text-primary-dark-400 dark:bg-primary-dark-200 dark:hover:bg-primary-dark-300'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-900 dark:hover:text-white dark:hover:bg-neutral-dark-200'
               }`}
           >
             Settings
@@ -219,7 +218,7 @@ export function TopBar() {
           <button
             ref={toolsButtonRef}
             onClick={() => setShowToolsMenu(true)}
-            class="hidden lg:flex text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors items-center cursor-pointer"
+            class="hidden lg:flex text-gray-600 dark:text-neutral-dark-900 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-dark-200 transition-colors items-center cursor-pointer"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -239,10 +238,21 @@ export function TopBar() {
           </button>
         </nav>
 
-        {/* Right Section: Version + Proxy Banner + Mobile Menu */}
+        {/* Right Section: Theme + Version + Proxy Banner + Mobile Menu */}
         <div class="flex items-center space-x-3">
+          {/* Theme Picker Button */}
+          <button
+            ref={themeButtonRef}
+            onClick={() => setShowThemeMenu(true)}
+            class="flex items-center justify-center w-9 h-9 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-900 dark:hover:text-white dark:hover:bg-neutral-dark-200 transition-colors cursor-pointer"
+            title="Theme"
+            aria-label="Change theme"
+          >
+            {theme === 'light' ? <Sun size={18} /> : theme === 'dark' ? <Moon size={18} /> : <CloudSun size={18} />}
+          </button>
+
           {/* Desktop Version Link */}
-          <a href="https://docs.requestbite.com/changelog/" target="_blank" class="hidden lg:flex text-gray-600 hover:text-gray-400 flex items-center">
+          <a href="https://docs.requestbite.com/changelog/" target="_blank" class="hidden lg:flex text-gray-600 dark:text-neutral-dark-900 hover:text-gray-400 dark:hover:text-neutral-dark-700 flex items-center">
             v. 9.9.9
           </a>
 
@@ -256,17 +266,12 @@ export function TopBar() {
             <span class="xl:hidden">{proxyConfig.proxyType === 'custom' ? 'Custom proxy' : banner.text}</span>
           </button>
 
-          {/* Mobile Version Link */}
-          <a href="https://docs.requestbite.com/changelog/" target="_blank" class="lg:hidden text-gray-600 hover:text-gray-400 flex items-center">
-            v. 9.9.9
-          </a>
-
           {/* Mobile Hamburger Menu */}
           <div class="block lg:hidden">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               type="button"
-              class="cursor-pointer text-gray-600 hover:text-gray-900"
+              class="cursor-pointer text-gray-600 dark:text-neutral-dark-900 hover:text-gray-900 dark:hover:text-white"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="currentColor" class="w-6 h-6">
                 <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
@@ -285,24 +290,24 @@ export function TopBar() {
         <>
           {/* Overlay */}
           <div
-            class="fixed inset-0 h-screen w-screen bg-gray-500/75 z-[60] animate-fade-in"
+            class="fixed inset-0 h-screen w-screen bg-gray-500/75 dark:bg-gray-900/60 z-[60] animate-fade-in"
             onClick={() => setIsMobileMenuOpen(false)}
           />
 
           {/* Sidebar */}
-          <div class="fixed top-0 right-0 inset-y-0 h-screen w-[calc(100%-75px)] bg-white shadow-lg z-[80] text-left overflow-y-auto animate-slide-in-right">
-            <div class="flex items-center justify-between border-b border-gray-300">
+          <div class="fixed top-0 right-0 inset-y-0 h-screen w-[calc(100%-75px)] bg-white dark:bg-[#282a36] shadow-lg z-[80] text-left overflow-y-auto animate-slide-in-right">
+            <div class="flex items-center justify-between border-b border-gray-300 dark:border-neutral-dark-50">
               <button
                 onClick={() => setLocation(getLastSlingshotUrl())}
                 class="ml-3 mr-1.5 p-1.5 hover:opacity-80 transition-opacity"
               >
                 <span class="sr-only">RequestBite</span>
-                <img class="h-8 w-auto" src={LogoHorizontal} alt="RequestBite" />
+                <img class="h-8 w-auto" src={isDark ? LogoHorizontalDark : LogoHorizontal} alt="RequestBite" />
               </button>
               <button
                 type="button"
                 onClick={() => setIsMobileMenuOpen(false)}
-                class="m-2.5 rounded-md p-2.5 text-gray-700 cursor-pointer hover:bg-gray-100"
+                class="m-2.5 rounded-md p-2.5 text-gray-700 dark:text-neutral-dark-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-dark-200"
               >
                 <span class="sr-only">Close menu</span>
                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -311,15 +316,15 @@ export function TopBar() {
               </button>
             </div>
 
-            <div class="mt-6 flow-root text-sm bg-white">
-              <div class="-my-6 divide-y divide-gray-500/10">
+            <div class="mt-6 flow-root text-sm bg-white dark:bg-[#282a36]">
+              <div class="-my-6 divide-y divide-gray-500/10 dark:divide-neutral-dark-400/20">
                 <div class="space-y-2 py-6">
                   <a
                     href="https://requestbite.com"
-                    class="block px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
+                    class="block px-4 py-2 text-gray-900 dark:text-neutral-dark-900 hover:bg-gray-100 dark:hover:bg-neutral-dark-200 cursor-pointer no-underline"
                   >
                     <div>RequestBite</div>
-                    <span class="text-xs text-gray-500 mt-1">RequestBite website</span>
+                    <span class="text-xs text-gray-500 dark:text-neutral-dark-500 mt-1">RequestBite website</span>
                   </a>
                   <a
                     href={getLastSlingshotUrl()}
@@ -328,10 +333,10 @@ export function TopBar() {
                       setLocation(getLastSlingshotUrl());
                       setIsMobileMenuOpen(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
+                    class="block w-full text-left px-4 py-2 text-gray-900 dark:text-neutral-dark-900 hover:bg-gray-100 dark:hover:bg-neutral-dark-200 cursor-pointer no-underline"
                   >
                     <div>Slingshot</div>
-                    <span class="text-xs text-gray-500 mt-1">Send HTTP requests</span>
+                    <span class="text-xs text-gray-500 dark:text-neutral-dark-500 mt-1">Send HTTP requests</span>
                   </a>
                   <a
                     href="/catalog"
@@ -340,10 +345,10 @@ export function TopBar() {
                       setLocation('/catalog');
                       setIsMobileMenuOpen(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
+                    class="block w-full text-left px-4 py-2 text-gray-900 dark:text-neutral-dark-900 hover:bg-gray-100 dark:hover:bg-neutral-dark-200 cursor-pointer no-underline"
                   >
                     <div>Catalog</div>
-                    <span class="text-xs text-gray-500 mt-1">RequestBite's API catalog</span>
+                    <span class="text-xs text-gray-500 dark:text-neutral-dark-500 mt-1">RequestBite's API catalog</span>
                   </a>
                   <a
                     href="/environments"
@@ -352,10 +357,10 @@ export function TopBar() {
                       setLocation('/environments');
                       setIsMobileMenuOpen(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
+                    class="block w-full text-left px-4 py-2 text-gray-900 dark:text-neutral-dark-900 hover:bg-gray-100 dark:hover:bg-neutral-dark-200 cursor-pointer no-underline"
                   >
                     <div>Environments</div>
-                    <span class="text-xs text-gray-500 mt-1">Manage encrypted environments</span>
+                    <span class="text-xs text-gray-500 dark:text-neutral-dark-500 mt-1">Manage encrypted environments</span>
                   </a>
                   <a
                     href="/collections"
@@ -364,10 +369,10 @@ export function TopBar() {
                       setLocation('/collections');
                       setIsMobileMenuOpen(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
+                    class="block w-full text-left px-4 py-2 text-gray-900 dark:text-neutral-dark-900 hover:bg-gray-100 dark:hover:bg-neutral-dark-200 cursor-pointer no-underline"
                   >
                     <div>Collections</div>
-                    <span class="text-xs text-gray-500 mt-1">Manage request collections</span>
+                    <span class="text-xs text-gray-500 dark:text-neutral-dark-500 mt-1">Manage request collections</span>
                   </a>
                   <a
                     href="/settings"
@@ -376,15 +381,15 @@ export function TopBar() {
                       setLocation('/settings');
                       setIsMobileMenuOpen(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
+                    class="block w-full text-left px-4 py-2 text-gray-900 dark:text-neutral-dark-900 hover:bg-gray-100 dark:hover:bg-neutral-dark-200 cursor-pointer no-underline"
                   >
                     <div>Settings</div>
-                    <span class="text-xs text-gray-500 mt-1">Configure app settings</span>
+                    <span class="text-xs text-gray-500 dark:text-neutral-dark-500 mt-1">Configure app settings</span>
                   </a>
                   <a
                     href="https://docs.requestbite.com"
                     target="_blank"
-                    class="block px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer"
+                    class="block px-4 py-2 text-gray-900 dark:text-neutral-dark-900 hover:bg-gray-100 dark:hover:bg-neutral-dark-200 cursor-pointer"
                   >
                     <div class="flex items-center">
                       Docs
@@ -405,7 +410,7 @@ export function TopBar() {
                         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                       </svg>
                     </div>
-                    <span class="text-xs text-gray-500 mt-1">Documentation</span>
+                    <span class="text-xs text-gray-500 dark:text-neutral-dark-500 mt-1">Documentation</span>
                   </a>
                   <a
                     href="/toos/screenshot-editor"
@@ -414,12 +419,12 @@ export function TopBar() {
                       setLocation('/tools/screenshot-editor');
                       setIsMobileMenuOpen(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 cursor-pointer no-underline"
+                    class="block w-full text-left px-4 py-2 text-gray-900 dark:text-neutral-dark-900 hover:bg-gray-100 dark:hover:bg-neutral-dark-200 cursor-pointer no-underline"
                   >
                     <div class="flex items-center">
                       Screenshot Editor
                     </div>
-                    <span class="text-xs text-gray-500 mt-1">Edit your sceenshots like us</span>
+                    <span class="text-xs text-gray-500 dark:text-neutral-dark-500 mt-1">Edit your sceenshots like us</span>
                   </a>
 
                   {/* Mobile Proxy Banner */}
@@ -476,6 +481,35 @@ export function TopBar() {
               </svg>
             )
           }
+        ]}
+      />
+
+      {/* Theme Menu */}
+      <ContextMenu
+        isOpen={showThemeMenu}
+        onClose={() => setShowThemeMenu(false)}
+        trigger={themeButtonRef.current}
+        width={160}
+        position="below-right"
+        items={[
+          {
+            label: 'System',
+            onClick: () => setTheme('system'),
+            icon: <CloudSun size={16} />,
+            trailing: theme === 'system' ? <CheckIcon /> : null,
+          },
+          {
+            label: 'Light',
+            onClick: () => setTheme('light'),
+            icon: <Sun size={16} />,
+            trailing: theme === 'light' ? <CheckIcon /> : null,
+          },
+          {
+            label: 'Dark',
+            onClick: () => setTheme('dark'),
+            icon: <Moon size={16} />,
+            trailing: theme === 'dark' ? <CheckIcon /> : null,
+          },
         ]}
       />
     </header>

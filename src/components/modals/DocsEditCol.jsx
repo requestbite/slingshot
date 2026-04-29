@@ -68,7 +68,7 @@ export function DocsEditCol({
     <Modal isOpen={isOpen} onClose={handleClose} title={title} size="xl">
       <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
         <div class="mt-2">
-          <p class="text-sm text-gray-500 mb-4 text-center sm:text-left">
+          <p class="text-sm text-gray-500 dark:text-neutral-dark-500 mb-4 text-center sm:text-left">
             {subtitle}
           </p>
 
@@ -91,17 +91,19 @@ export function DocsEditCol({
             <div class="grid grid-cols-2 gap-4">
               {/* Textarea */}
               <div>
-                <textarea
+                <TextInput
                   id="collection-description"
+                  type="textarea"
                   value={markdown}
                   onInput={handleMarkdownChange}
                   disabled={isSaving}
-                  class="w-full h-64 resize-none rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
                   placeholder="Enter markdown description..."
+                  className="h-64 resize-none"
+                  rows={16}
                 />
               </div>
               {/* Preview */}
-              <div class="h-64 overflow-y-auto rounded-md border border-gray-300 px-3 py-2 bg-gray-50">
+              <div class="h-64 overflow-hidden rounded-md border border-gray-300 dark:border-neutral-dark-50 px-3 py-2 bg-gray-50 dark:bg-[#282a36]">
                 <MarkdownPreview markdown={markdown} />
               </div>
             </div>

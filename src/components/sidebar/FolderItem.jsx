@@ -116,14 +116,14 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
   return (
     <li class="folder">
       <div
-        class="flex items-center justify-between text-gray-700 py-1 hover:bg-gray-100 rounded px-1 relative"
+        class="flex items-center justify-between text-gray-700 dark:text-neutral-dark-700 py-1 hover:bg-gray-100 dark:hover:bg-neutral-dark-200 rounded px-1 relative"
         style={{ marginLeft: `${marginLeft * 10}px` }}
       >
         <div class="flex items-center overflow-hidden cursor-pointer" onClick={toggleExpanded}>
           {/* Expand/Collapse Arrow */}
           {hasChildren && (
             <svg
-              class={`w-3 h-3 mr-1 text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+              class={`w-3 h-3 mr-1 text-gray-400 dark:text-neutral-dark-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -131,7 +131,7 @@ export function FolderItem({ folder, requests = [], subfolders = [], selectedReq
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
           )}
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1 text-gray-500 flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1 text-gray-500 dark:text-neutral-dark-500 flex-shrink-0">
             <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
           </svg>
           <span class="text-xs truncate">{folder.name}</span>

@@ -227,17 +227,17 @@ export function SettingsPage() {
     (formData.proxyType === 'custom' && proxyTestResult === 'valid');
 
   return (
-    <div class="h-full bg-gray-100 overflow-y-auto">
+    <div class="h-full bg-gray-100 dark:bg-[#282a36] overflow-y-auto">
       <div class="min-h-full pt-[83px] pb-6">
         <div class="max-w-4xl mx-auto px-4">
-          <div class="bg-white rounded-lg border border-gray-300 p-6">
+          <div class="bg-white dark:bg-surface-dark-elevated rounded-lg border border-gray-300 dark:border-neutral-dark-50 p-6">
 
             {/* Settings Form */}
             <form onSubmit={handleFormSubmit}>
               <div class="space-y-8">
-                <div class="border-b border-gray-900/10 pb-8">
-                  <h2 class="text-base font-semibold text-gray-900">Settings</h2>
-                  <p class="mt-1 text-sm text-gray-600">Configure global settings for the Slingshot app.</p>
+                <div class="border-b border-gray-900/10 dark:border-neutral-dark-300 pb-8">
+                  <h2 class="text-base font-semibold text-gray-900 dark:text-neutral-dark-900">Settings</h2>
+                  <p class="mt-1 text-sm text-gray-600 dark:text-neutral-dark-600">Configure global settings for the Slingshot app.</p>
 
                   <div class="mt-10 grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
                     

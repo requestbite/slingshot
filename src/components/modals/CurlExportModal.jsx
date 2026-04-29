@@ -155,7 +155,7 @@ export function CurlExportModal({ isOpen, onClose, requestData }) {
         <div class="w-full">
           <pre
             ref={preRef}
-            class="w-full h-32 p-2 font-mono text-xs rounded-md text-white bg-slate-800 overflow-auto whitespace-pre-wrap cursor-text"
+            class="w-full h-32 p-2 font-mono text-xs rounded-md text-white bg-slate-800 dark:bg-[#282a36] overflow-auto whitespace-pre-wrap cursor-text"
             tabIndex="0"
           >
             {isLoading ? 'Resolving variables...' : curlCommand}
@@ -179,7 +179,7 @@ export function CurlExportModal({ isOpen, onClose, requestData }) {
           <button
             onClick={handleClose}
             type="button"
-            class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto cursor-pointer"
+            class="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-surface-dark-elevated px-3 py-2 text-sm font-semibold text-gray-900 dark:text-neutral-dark-900 ring-1 ring-inset ring-gray-300 dark:ring-neutral-dark-50 hover:bg-gray-50 dark:hover:bg-neutral-dark-200 sm:mt-0 sm:w-auto cursor-pointer"
           >
             Close
           </button>

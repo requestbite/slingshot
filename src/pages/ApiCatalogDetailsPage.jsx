@@ -220,8 +220,8 @@ export function ApiCatalogDetailsPage() {
 
     return (
       <div class="flex flex-col gap-1">
-        <div class="font-medium text-gray-900">{apiTitle}</div>
-        <div class="text-xs text-gray-600">
+        <div class="font-medium text-gray-900 dark:text-neutral-dark-900">{apiTitle}</div>
+        <div class="text-xs text-gray-600 dark:text-neutral-dark-600">
           {api.description || 'No description available.'}
         </div>
       </div>
@@ -229,7 +229,7 @@ export function ApiCatalogDetailsPage() {
   };
 
   return (
-    <div class="h-full bg-gray-100 overflow-y-auto">
+    <div class="h-full bg-gray-100 dark:bg-[#282a36] overflow-y-auto">
       <div class="min-h-full pt-[83px] pb-6">
         {/* Search Bar */}
         <div class="max-w-3xl mx-auto px-4 mb-[18px]">
@@ -270,7 +270,7 @@ export function ApiCatalogDetailsPage() {
 
         {/* Main Container — hidden once OpenAPI spec is successfully loaded */}
         {!parsedSpec && <div class="max-w-4xl mx-auto px-4">
-          <div class="bg-white rounded-lg border border-gray-300">
+          <div class="bg-white dark:bg-surface-dark-elevated rounded-lg border border-gray-300 dark:border-neutral-dark-50">
             {/* Header Section */}
             <div class="p-6">
               {/* Breadcrumbs and Import Button Row */}
@@ -308,7 +308,7 @@ export function ApiCatalogDetailsPage() {
 
               {/* API Title and Description - Full Width */}
               {isLoading ? (
-                <div class="flex items-center space-x-3 text-gray-500">
+                <div class="flex items-center space-x-3 text-gray-500 dark:text-neutral-dark-500">
                   <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -317,7 +317,7 @@ export function ApiCatalogDetailsPage() {
                 </div>
               ) : error ? (
                 <div>
-                  <h1 class="text-base/7 font-semibold text-gray-900">
+                  <h1 class="text-base/7 font-semibold text-gray-900 dark:text-neutral-dark-900">
                     Error Loading API
                   </h1>
                   <p class="mt-1 text-sm/6 text-red-600">
@@ -328,7 +328,7 @@ export function ApiCatalogDetailsPage() {
                 <div class="flex">
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center flex-wrap gap-x-3 gap-y-1">
-                      <h1 class="text-base/7 font-semibold text-gray-900 pt-2">
+                      <h1 class="text-base/7 font-semibold text-gray-900 dark:text-neutral-dark-900 pt-2">
                         {apiData.name || 'Untitled API'}
                       </h1>
                       {isLoadingSpec && (
@@ -341,7 +341,7 @@ export function ApiCatalogDetailsPage() {
                         </span>
                       )}
                     </div>
-                    <div class="mt-1 text-sm/6 text-gray-600">
+                    <div class="mt-1 text-sm/6 text-gray-600 dark:text-neutral-dark-600">
                       <MarkdownPreview markdown={apiData.description || 'No description available.'} />
                     </div>
                   </div>
@@ -353,12 +353,12 @@ export function ApiCatalogDetailsPage() {
             {!isLoading && !error && apiData && (
               <div class="pb-6 sm:px-6">
                 <div class="px-6 sm:p-0">
-                  <dl class="divide-y divide-gray-200">
+                  <dl class="divide-y divide-gray-200 dark:divide-neutral-dark-300">
                     {/* Version */}
                     {apiData.version && (
                       <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Version</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                        <dt class="text-sm font-medium text-gray-500 dark:text-neutral-dark-500">Version</dt>
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-neutral-dark-900 sm:col-span-2 sm:mt-0">
                           {apiData.version}
                         </dd>
                       </div>
@@ -367,8 +367,8 @@ export function ApiCatalogDetailsPage() {
                     {/* Categories */}
                     {apiData.categories && apiData.categories.length > 0 && (
                       <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Categories</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                        <dt class="text-sm font-medium text-gray-500 dark:text-neutral-dark-500">Categories</dt>
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-neutral-dark-900 sm:col-span-2 sm:mt-0">
                           <div class="flex flex-wrap gap-2">
                             {apiData.categories.map((category, idx) => (
                               <span key={typeof category === 'object' ? category.id : category}>
@@ -391,8 +391,8 @@ export function ApiCatalogDetailsPage() {
                     {/* Region */}
                     {apiData.serviceName?.regionKey && (
                       <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Region</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                        <dt class="text-sm font-medium text-gray-500 dark:text-neutral-dark-500">Region</dt>
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-neutral-dark-900 sm:col-span-2 sm:mt-0">
                           {apiData.serviceName.regionFlag} {apiData.serviceName.regionName}
                         </dd>
                       </div>
@@ -401,8 +401,8 @@ export function ApiCatalogDetailsPage() {
                     {/* Documentation */}
                     {apiData.externalDocsUrl && (
                       <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Documentation</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                        <dt class="text-sm font-medium text-gray-500 dark:text-neutral-dark-500">Documentation</dt>
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-neutral-dark-900 sm:col-span-2 sm:mt-0">
                           <a
                             href={apiData.externalDocsUrl}
                             target="_blank"
@@ -418,8 +418,8 @@ export function ApiCatalogDetailsPage() {
                     {/* Added Date */}
                     {apiData.addedTs && (
                       <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Added</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                        <dt class="text-sm font-medium text-gray-500 dark:text-neutral-dark-500">Added</dt>
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-neutral-dark-900 sm:col-span-2 sm:mt-0">
                           {new Date(apiData.addedTs).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
@@ -432,8 +432,8 @@ export function ApiCatalogDetailsPage() {
                     {/* Updated Date */}
                     {apiData.updatedTs && (
                       <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Last Updated</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                        <dt class="text-sm font-medium text-gray-500 dark:text-neutral-dark-500">Last Updated</dt>
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-neutral-dark-900 sm:col-span-2 sm:mt-0">
                           {new Date(apiData.updatedTs).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
@@ -448,7 +448,7 @@ export function ApiCatalogDetailsPage() {
                 {/* Source Attribution */}
                 {apiData.source === 'apis.guru' && (
                   <div class="px-6 sm:p-0 mt-4 pt-4">
-                    <p class="text-gray-500">
+                    <p class="text-gray-500 dark:text-neutral-dark-500">
                       API specs supplied by{' '}
                       <a
                         href="https://apis.guru"
@@ -472,7 +472,7 @@ export function ApiCatalogDetailsPage() {
             {/* Mobile nav panel toggle — only on small screens */}
             <button
               onClick={() => setIsNavOpen(true)}
-              class={`fixed top-1/2 -left-1 transform -translate-y-1/2 z-[50] bg-sky-100 hover:bg-sky-200 text-sky-700 p-2 rounded-r-lg shadow-lg cursor-pointer transition-all duration-200 hover:translate-x-1 ${isNavOpen ? 'hidden' : 'block lg:hidden'}`}
+              class={`fixed top-1/2 -left-1 transform -translate-y-1/2 z-[50] bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 text-sky-700 dark:text-primary-dark-400 p-2 rounded-r-lg shadow-lg cursor-pointer transition-all duration-200 hover:translate-x-1 ${isNavOpen ? 'hidden' : 'block lg:hidden'}`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m6 17 5-5-5-5" />
@@ -487,7 +487,7 @@ export function ApiCatalogDetailsPage() {
                   class="fixed inset-0 bg-gray-500/75 z-[60] lg:hidden animate-fade-in"
                   onClick={() => setIsNavOpen(false)}
                 />
-                <div class="fixed left-0 top-0 bottom-0 right-[75px] bg-white z-[70] lg:hidden overflow-y-auto animate-slide-in-left">
+                <div class="fixed left-0 top-0 bottom-0 right-[75px] bg-white dark:bg-surface-dark-elevated z-[70] lg:hidden overflow-y-auto animate-slide-in-left">
                   <OpenAPINavPanel
                     spec={parsedSpec}
                     activeId={activeEndpointId}
@@ -502,7 +502,7 @@ export function ApiCatalogDetailsPage() {
 
             <div class="flex items-start gap-4">
               {/* Left nav — sticky, clears the fixed 65px topbar */}
-              <div class="hidden lg:flex flex-col w-64 flex-shrink-0 bg-white rounded-lg border border-gray-300 overflow-hidden">
+              <div class="hidden lg:flex flex-col w-64 flex-shrink-0 bg-white dark:bg-surface-dark-elevated rounded-lg border border-gray-300 dark:border-neutral-dark-50 overflow-hidden">
                 <OpenAPINavPanel
                   spec={parsedSpec}
                   activeId={activeEndpointId}
@@ -511,7 +511,7 @@ export function ApiCatalogDetailsPage() {
               </div>
 
               {/* Right viewer */}
-              <div class="flex-1 min-w-0 bg-white rounded-lg border border-gray-300">
+              <div class="flex-1 min-w-0 bg-white dark:bg-surface-dark-elevated rounded-lg border border-gray-300 dark:border-neutral-dark-50">
                 <OpenAPIViewer
                   spec={parsedSpec}
                   overrideTitle={apiData.name}
