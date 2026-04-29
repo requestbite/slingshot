@@ -18,7 +18,6 @@ export function OpenAPIViewerPage() {
 
   const loadSpec = async (specUrl) => {
     setIsLoading(true);
-    setParsedSpec(null);
 
     try {
       const { content } = await Promise.race([
@@ -71,9 +70,9 @@ export function OpenAPIViewerPage() {
     return (
       <div
         class="bg-gray-100 dark:bg-[#282a36] overflow-y-auto"
-        style={{ position: 'fixed', top: '65px', left: 0, right: 0, bottom: 0 }}
+        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
       >
-        <div class="min-h-full pt-4 pb-6">
+        <div class="min-h-full pt-[83px] pb-6">
           {/* URL bar */}
           <div class="max-w-3xl mx-auto px-4 mb-4">
             <form onSubmit={handleOpen} class="flex items-center gap-2">
@@ -90,12 +89,13 @@ export function OpenAPIViewerPage() {
                 disabled={isLoading || !url.trim()}
                 className="flex-shrink-0"
               >
-                {isLoading ? (
-                  <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                {isLoading && (
+                  <svg class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                ) : 'Open'}
+                )}
+                Open
               </Button>
             </form>
           </div>
