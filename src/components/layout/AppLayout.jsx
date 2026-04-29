@@ -42,7 +42,7 @@ export function AppLayout({ children, showDocsSidebar = false }) {
       )}
 
       <main class="flex-grow flex flex-col min-h-0">
-        <div class="flex mt-[65px] p-4 bg-gray-100 dark:bg-[#282a36] flex-grow min-h-0 md:flex-none md:h-[calc(100vh-65px)] md:overflow-hidden">
+        <div class="flex mt-[65px] p-4 bg-gray-100 dark:bg-[#282a36] flex-none h-[calc(100vh-65px)] overflow-hidden">
           {/* Sidebar - left column */}
           <div class="mt-[2px] w-[300px] flex-shrink-0 mr-4 hidden md:block md:overflow-hidden">
             <SideBar />
@@ -81,7 +81,7 @@ export function AppLayout({ children, showDocsSidebar = false }) {
           )}
 
           {/* Main content area - fills available space */}
-          <div class={`mt-[2px] rounded-lg bg-white dark:bg-surface-dark-elevated border border-gray-300 dark:border-neutral-dark-50 w-full min-w-0 flex flex-col overflow-x-auto md:overflow-y-auto scrollbar-hide`}>
+          <div class={`mt-[2px] rounded-lg bg-white dark:bg-surface-dark-elevated border border-gray-300 dark:border-neutral-dark-50 w-full min-w-0 flex flex-col overflow-x-auto overflow-y-auto scrollbar-hide`}>
             {children}
           </div>
 
