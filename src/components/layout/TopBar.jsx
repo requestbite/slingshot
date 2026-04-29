@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
-import { CloudSun, Sun, Moon } from 'lucide-preact';
+import { CloudSun, Sun, Moon, BookImage, BookMarked } from 'lucide-preact';
 import LogoHorizontal from '../../assets/logo-horizontal-slingshot.svg';
 import LogoHorizontalDark from '../../assets/logo-horizontal-slingshot-dark.svg';
 import { getLastSlingshotUrl, setLastSlingshotUrl, isValidSlingshotUrl } from '../../utils/slingshotNavigation';
@@ -14,8 +14,10 @@ export function TopBar() {
   const { isMobileMenuOpen, setIsMobileMenuOpen } = useAppContext();
   const [showToolsMenu, setShowToolsMenu] = useState(false);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
+  const [showApisMenu, setShowApisMenu] = useState(false);
   const toolsButtonRef = useRef();
   const themeButtonRef = useRef();
+  const apisButtonRef = useRef();
   const { theme, setTheme, isDark } = useTheme();
 
   const isActive = (path) => {
@@ -163,19 +165,16 @@ export function TopBar() {
           >
             Slingshot
           </a>
-          <a
-            href="/catalog"
-            onClick={(e) => {
-              e.preventDefault();
-              setLocation('/catalog');
-            }}
-            class={`hidden md:flex px-3 py-2 rounded-md transition-colors hover:cursor-pointer no-underline ${isActive('/catalog')
+          <button
+            ref={apisButtonRef}
+            onClick={() => setShowApisMenu(true)}
+            class={`hidden md:flex px-3 py-2 rounded-md transition-colors hover:cursor-pointer ${isActive('/catalog') || isActive('/openapi')
               ? 'text-sky-700 bg-sky-100 hover:bg-sky-200 dark:text-primary-dark-400 dark:bg-primary-dark-200 dark:hover:bg-primary-dark-300'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-900 dark:hover:text-white dark:hover:bg-neutral-dark-200'
               }`}
           >
-            Catalog
-          </a>
+            APIs
+          </button>
           <a
             href="/environments"
             onClick={(e) => {
@@ -338,6 +337,10 @@ export function TopBar() {
                     <div>Slingshot</div>
                     <span class="text-xs text-gray-500 dark:text-neutral-dark-500 mt-1">Send HTTP requests</span>
                   </a>
+                  <div class="px-4 py-2 text-gray-900 dark:text-neutral-dark-900">
+                    <div>APIs</div>
+                    <span class="text-xs text-gray-500 dark:text-neutral-dark-500 mt-1">API tools</span>
+                  </div>
                   <a
                     href="/catalog"
                     onClick={(e) => {
@@ -345,10 +348,22 @@ export function TopBar() {
                       setLocation('/catalog');
                       setIsMobileMenuOpen(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-gray-900 dark:text-neutral-dark-900 hover:bg-gray-100 dark:hover:bg-neutral-dark-200 cursor-pointer no-underline"
+                    class="block w-full text-left pl-8 pr-4 py-2 text-gray-900 dark:text-neutral-dark-900 hover:bg-gray-100 dark:hover:bg-neutral-dark-200 cursor-pointer no-underline"
                   >
-                    <div>Catalog</div>
+                    <div>API Catalog</div>
                     <span class="text-xs text-gray-500 dark:text-neutral-dark-500 mt-1">RequestBite's API catalog</span>
+                  </a>
+                  <a
+                    href="/openapi"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setLocation('/openapi');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    class="block w-full text-left pl-8 pr-4 py-2 text-gray-900 dark:text-neutral-dark-900 hover:bg-gray-100 dark:hover:bg-neutral-dark-200 cursor-pointer no-underline"
+                  >
+                    <div>OpenAPI Viewer</div>
+                    <span class="text-xs text-gray-500 dark:text-neutral-dark-500 mt-1">View OpenAPI spec in browser</span>
                   </a>
                   <a
                     href="/environments"
@@ -444,6 +459,33 @@ export function TopBar() {
           </div>
         </>
       )}
+
+      {/* APIs Menu */}
+      <ContextMenu
+        isOpen={showApisMenu}
+        onClose={() => setShowApisMenu(false)}
+        trigger={apisButtonRef.current}
+        width={180}
+        position="below"
+        items={[
+          {
+            label: 'API Catalog',
+            href: '/catalog',
+            onClick: () => {
+              setLocation('/catalog');
+            },
+            icon: <BookImage size={16} />
+          },
+          {
+            label: 'OpenAPI Viewer',
+            href: '/openapi',
+            onClick: () => {
+              setLocation('/openapi');
+            },
+            icon: <BookMarked size={16} />
+          }
+        ]}
+      />
 
       {/* Tools Menu */}
       <ContextMenu
