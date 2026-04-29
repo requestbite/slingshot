@@ -313,7 +313,7 @@ export function App() {
 
     if (location.startsWith('/openapi')) {
       return (
-        <div class="h-screen flex flex-col bg-gray-100">
+        <div class="h-screen flex flex-col bg-gray-100 dark:bg-[#282a36]">
           <TopBar />
           <div class="flex-1 flex items-center justify-center">
             <Suspense fallback={<div class="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full"></div>}>
