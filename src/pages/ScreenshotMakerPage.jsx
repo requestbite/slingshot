@@ -32,7 +32,7 @@ export function ScreenshotMakerPage() {
           {/* Sidebar Toggle Button for Mobile - only show when sidebar is hidden */}
           <button
             onClick={() => setIsSidebarOpen(true)}
-            class={`fixed top-1/2 -left-1 transform -translate-y-1/2 z-50 bg-sky-100 hover:bg-sky-200 text-sky-700 p-2 rounded-r-lg shadow-lg cursor-pointer transition-all duration-200 hover:translate-x-1 ${isSidebarOpen ? 'hidden' : 'block md:hidden'
+            class={`fixed top-1/2 -left-1 transform -translate-y-1/2 z-50 bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 text-sky-700 dark:text-primary-dark-400 p-2 rounded-r-lg shadow-lg cursor-pointer transition-all duration-200 hover:translate-x-1 ${isSidebarOpen ? 'hidden' : 'block md:hidden'
               }`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -197,12 +197,12 @@ export function ScreenshotMakerPage() {
               <>
                 {/* Full screen overlay covering topbar */}
                 <div
-                  class="fixed inset-0 bg-gray-500/75 dark:bg-neutral-dark-400/75 z-[60] md:hidden"
+                  class="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/60 z-[60] md:hidden animate-fade-in"
                   onClick={() => setIsSidebarOpen(false)}
                 />
 
                 {/* Mobile Sidebar - takes full screen minus 75px, covers topbar */}
-                <div class="fixed left-0 top-0 bottom-0 right-[75px] bg-white dark:bg-[#282a36] z-[70] md:hidden overflow-y-auto">
+                <div class="fixed left-0 top-0 bottom-0 right-[75px] bg-white dark:bg-[#282a36] z-[70] md:hidden overflow-y-auto animate-slide-in-left">
                   <div class="p-6">
                     <nav class="flex flex-1 flex-col">
                       <h3 class="text-sm font-semibold text-gray-900 dark:text-neutral-dark-900 mb-4">Settings</h3>

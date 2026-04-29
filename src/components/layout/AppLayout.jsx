@@ -53,7 +53,7 @@ export function AppLayout({ children, showDocsSidebar = false }) {
             <>
               {/* Full screen overlay covering topbar */}
               <div
-                class="fixed inset-0 bg-gray-500/75 dark:bg-neutral-dark-400/75 z-[60] md:hidden animate-fade-in"
+                class="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/60 z-[60] md:hidden animate-fade-in"
                 onClick={() => setIsSidebarOpen(false)}
               />
 
@@ -69,7 +69,7 @@ export function AppLayout({ children, showDocsSidebar = false }) {
             <>
               {/* Full screen overlay covering topbar */}
               <div
-                class="fixed inset-0 bg-gray-500/75 dark:bg-neutral-dark-400/75 z-[60] docs-toggle-responsive animate-fade-in"
+                class="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/60 z-[60] docs-toggle-responsive animate-fade-in"
                 onClick={() => setIsDocsSidebarOpen(false)}
               />
 

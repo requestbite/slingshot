@@ -574,12 +574,12 @@ export function EnvironmentUpdatePage() {
               <>
                 {/* Full screen overlay covering topbar */}
                 <div
-                  class="fixed inset-0 bg-gray-500/75 dark:bg-neutral-dark-400/75 z-[60] md:hidden"
+                  class="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/60 z-[60] md:hidden animate-fade-in"
                   onClick={() => setIsSidebarOpen(false)}
                 />
 
                 {/* Mobile Sidebar - takes full screen minus 75px, covers topbar */}
-                <div class="fixed left-0 top-0 bottom-0 right-[75px] bg-white dark:bg-[#282a36] z-[70] md:hidden overflow-y-auto">
+                <div class="fixed left-0 top-0 bottom-0 right-[75px] bg-white dark:bg-[#282a36] z-[70] md:hidden overflow-y-auto animate-slide-in-left">
                   <div class="p-6">
                     <nav class="flex flex-1 flex-col">
                       <ul role="list" class="flex flex-1 flex-col gap-y-7">
@@ -594,7 +594,7 @@ export function EnvironmentUpdatePage() {
                                   setIsSidebarOpen(false);
                                 }}
                                 class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${activeSection === 'general'
-                                  ? 'bg-sky-50 text-sky-500'
+                                  ? 'bg-sky-50 dark:bg-primary-dark-200 text-sky-500 dark:text-primary-dark-400'
                                   : 'text-gray-700 dark:text-neutral-dark-700 hover:bg-gray-50 dark:hover:bg-neutral-dark-200 hover:text-sky-500'
                                   }`}
                               >
@@ -613,7 +613,7 @@ export function EnvironmentUpdatePage() {
                                   setIsSidebarOpen(false);
                                 }}
                                 class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${activeSection === 'secrets'
-                                  ? 'bg-sky-50 text-sky-500'
+                                  ? 'bg-sky-50 dark:bg-primary-dark-200 text-sky-500 dark:text-primary-dark-400'
                                   : 'text-gray-700 dark:text-neutral-dark-700 hover:bg-gray-50 dark:hover:bg-neutral-dark-200 hover:text-sky-500'
                                   }`}
                               >
@@ -632,7 +632,7 @@ export function EnvironmentUpdatePage() {
                                   setIsSidebarOpen(false);
                                 }}
                                 class={`group flex gap-x-3 rounded-md p-1.5 text-sm/6 w-full text-left cursor-pointer ${activeSection === 'auth'
-                                  ? 'bg-sky-50 text-sky-500'
+                                  ? 'bg-sky-50 dark:bg-primary-dark-200 text-sky-500 dark:text-primary-dark-400'
                                   : 'text-gray-700 dark:text-neutral-dark-700 hover:bg-gray-50 dark:hover:bg-neutral-dark-200 hover:text-sky-500'
                                   }`}
                               >

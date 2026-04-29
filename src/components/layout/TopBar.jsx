@@ -290,7 +290,7 @@ export function TopBar() {
         <>
           {/* Overlay */}
           <div
-            class="fixed inset-0 h-screen w-screen bg-gray-500/75 dark:bg-neutral-dark-400/75 z-[60] animate-fade-in"
+            class="fixed inset-0 h-screen w-screen bg-gray-500/75 dark:bg-gray-900/60 z-[60] animate-fade-in"
             onClick={() => setIsMobileMenuOpen(false)}
           />
 

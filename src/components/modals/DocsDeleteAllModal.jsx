@@ -62,8 +62,7 @@ export function DocsDeleteAllModal({ isOpen, onClose, request, onDelete }) {
             disabled={isDeleting}
             loading={isDeleting}
             variant="danger"
-            size="md"
-            className="w-full sm:ml-3 sm:w-auto bg-red-600 hover:bg-red-500 text-white"
+            className="sm:ml-3"
           >
             Delete
           </Button>
@@ -72,8 +71,6 @@ export function DocsDeleteAllModal({ isOpen, onClose, request, onDelete }) {
             onClick={handleClose}
             disabled={isDeleting}
             variant="secondary"
-            size="md"
-            className="mt-3 w-full sm:mt-0 sm:w-auto"
           >
             Cancel
           </Button>
