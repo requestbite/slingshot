@@ -17,7 +17,7 @@ function SpecUrlBar({ initialUrl = '', isLoading, onLoad }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} class="flex items-center gap-2">
+    <form onSubmit={handleSubmit} class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
       <TextInput
         type="url"
         placeholder="https://example.com/openapi.json"
@@ -25,7 +25,7 @@ function SpecUrlBar({ initialUrl = '', isLoading, onLoad }) {
         onChange={(e) => setUrl(e.target.value)}
         disabled={isLoading}
       />
-      <Button type="submit" variant="primary" disabled={isLoading || !url.trim()} className="flex-shrink-0">
+      <Button type="submit" variant="primary" disabled={isLoading || !url.trim()} className="sm:flex-shrink-0 w-full sm:w-auto">
         {isLoading && (
           <svg class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
@@ -160,7 +160,8 @@ export function OpenAPIViewerPage() {
 
   return (
     <>
-      <div class="relative overflow-hidden rounded-lg bg-white dark:bg-surface-dark-elevated border border-gray-300 dark:border-neutral-dark-50 px-4 pb-4 pt-5 text-left w-full max-w-lg sm:p-6">
+      <div class="w-full max-w-lg px-4 sm:px-0">
+      <div class="relative overflow-hidden rounded-lg bg-white dark:bg-surface-dark-elevated border border-gray-300 dark:border-neutral-dark-50 px-4 pb-4 pt-5 text-left sm:p-6">
         <h3 class="text-base font-semibold text-gray-900 dark:text-neutral-dark-900">OpenAPI Spec Viewer</h3>
         <p class="mt-2 text-sm text-gray-500 dark:text-neutral-dark-500">
           Provide a link to a publicly available OpenAPI spec in YAML or JSON format to render the documentation here.
@@ -170,6 +171,7 @@ export function OpenAPIViewerPage() {
           <Label htmlFor="openapi-url">Link to OpenAPI spec</Label>
           <SpecUrlBar initialUrl={initialUrl} isLoading={isLoading} onLoad={loadSpec} />
         </div>
+      </div>
       </div>
 
       <Toast
