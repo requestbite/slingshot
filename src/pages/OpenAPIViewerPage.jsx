@@ -36,6 +36,10 @@ export function OpenAPIViewerPage() {
         parsed = loadYAML(content);
       }
 
+      if (!parsed || (!parsed.openapi && !parsed.swagger)) {
+        throw new Error('Link doesn\'t point to a valid OpenAPI spec.');
+      }
+
       setParsedSpec(parsed);
 
       const pageUrl = new URL(window.location);
@@ -70,6 +74,32 @@ export function OpenAPIViewerPage() {
         style={{ position: 'fixed', top: '65px', left: 0, right: 0, bottom: 0 }}
       >
         <div class="min-h-full pt-4 pb-6">
+          {/* URL bar */}
+          <div class="max-w-3xl mx-auto px-4 mb-4">
+            <form onSubmit={handleOpen} class="flex items-center gap-2">
+              <TextInput
+                type="url"
+                placeholder="https://example.com/openapi.json"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                disabled={isLoading}
+              />
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={isLoading || !url.trim()}
+                className="flex-shrink-0"
+              >
+                {isLoading ? (
+                  <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                ) : 'Open'}
+              </Button>
+            </form>
+          </div>
+
           {/* Mobile nav toggle */}
           <button
             onClick={() => setIsNavOpen(true)}
@@ -117,6 +147,14 @@ export function OpenAPIViewerPage() {
             </div>
           </div>
         </div>
+
+        <Toast
+          message={toastMessage}
+          isVisible={toastVisible}
+          onClose={hideToast}
+          type="error"
+          duration={5000}
+        />
       </div>
     );
   }
