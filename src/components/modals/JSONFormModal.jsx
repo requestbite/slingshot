@@ -806,7 +806,8 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                   },
                   ".cm-scroller": {
                     overflow: "auto",
-                    maxHeight: "120px"
+                    maxHeight: "120px",
+                    fontFamily: '"JetBrains Mono", ui-monospace, monospace'
                   }
                 })
               ]}
@@ -830,7 +831,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                 border: '2px solid #282a36',
                 borderRadius: '0.375rem',
                 fontSize: '12px',
-                fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+                fontFamily: '"JetBrains Mono", ui-monospace, monospace'
               }}
             />
           </div>
@@ -899,7 +900,8 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                   },
                   ".cm-scroller": {
                     overflow: "auto",
-                    maxHeight: "120px"
+                    maxHeight: "120px",
+                    fontFamily: '"JetBrains Mono", ui-monospace, monospace'
                   }
                 })
               ]}
@@ -923,7 +925,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                 border: '2px solid #282a36',
                 borderRadius: '0.375rem',
                 fontSize: '12px',
-                fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+                fontFamily: '"JetBrains Mono", ui-monospace, monospace'
               }}
             />
           </div>
@@ -1509,7 +1511,8 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                   },
                   ".cm-scroller": {
                     overflow: "auto",
-                    maxHeight: "120px"
+                    maxHeight: "120px",
+                    fontFamily: '"JetBrains Mono", ui-monospace, monospace'
                   }
                 })
               ]}
@@ -1533,7 +1536,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                 border: '2px solid #282a36',
                 borderRadius: '0.375rem',
                 fontSize: '12px',
-                fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+                fontFamily: '"JetBrains Mono", ui-monospace, monospace'
               }}
             />
           </div>
@@ -1598,7 +1601,8 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                   },
                   ".cm-scroller": {
                     overflow: "auto",
-                    maxHeight: "120px"
+                    maxHeight: "120px",
+                    fontFamily: '"JetBrains Mono", ui-monospace, monospace'
                   }
                 })
               ]}
@@ -1622,7 +1626,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                 border: '2px solid #282a36',
                 borderRadius: '0.375rem',
                 fontSize: '12px',
-                fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+                fontFamily: '"JetBrains Mono", ui-monospace, monospace'
               }}
             />
           </div>
@@ -1678,7 +1682,8 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
         },
         ".cm-scroller": {
           overflow: "auto",
-          height: "100%"
+          height: "100%",
+          fontFamily: '"JetBrains Mono", ui-monospace, monospace'
         }
       })
     ];
@@ -1755,7 +1760,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
 
       {/* Form display controls */}
       {shouldShowControls && (
-        <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+        <div class="mb-4 p-3 bg-blue-50 dark:bg-neutral-dark-200 border border-blue-200 dark:border-neutral-dark-300 rounded-md">
           <div class="flex gap-4">
             <div class="flex items-center gap-2">
               <input
@@ -1765,7 +1770,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                 onChange={(e) => setMandatoryOnTop(e.target.checked)}
                 class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 dark:border-neutral-dark-50 rounded"
               />
-              <label htmlFor="mandatoryOnTop" class="text-xs text-gray-700 cursor-pointer">
+              <label htmlFor="mandatoryOnTop" class="text-xs text-gray-700 dark:text-neutral-dark-700 cursor-pointer">
                 Add mandatory fields on top
               </label>
             </div>
@@ -1777,7 +1782,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                 onChange={(e) => setHideOptional(e.target.checked)}
                 class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 dark:border-neutral-dark-50 rounded"
               />
-              <label htmlFor="hideOptional" class="text-xs text-gray-700 cursor-pointer">
+              <label htmlFor="hideOptional" class="text-xs text-gray-700 dark:text-neutral-dark-700 cursor-pointer">
                 Hide optional fields
               </label>
             </div>
@@ -1823,7 +1828,7 @@ export function JSONFormModal({ isOpen, onClose, onImport, jsonSchema }) {
                   border: '2px solid #282a36',
                   borderRadius: '0.375rem',
                   fontSize: '12px',
-                  fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
+                  fontFamily: '"JetBrains Mono", ui-monospace, monospace',
                   height: '100%'
                 }}
               />

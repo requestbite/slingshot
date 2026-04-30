@@ -110,7 +110,7 @@ export function DocsEditIntroModal({ isOpen, onClose, request, onSave }) {
                 />
               </div>
               {/* Preview */}
-              <div class="h-48 overflow-y-auto rounded-md border border-gray-300 dark:border-neutral-dark-50 px-3 py-2 bg-gray-50">
+              <div class="h-48 overflow-hidden rounded-md border border-gray-300 dark:border-neutral-dark-50 px-3 py-2 bg-gray-50 dark:bg-[#282a36]">
                 <MarkdownPreview markdown={description} />
               </div>
             </div>

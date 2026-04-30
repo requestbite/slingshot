@@ -195,7 +195,8 @@ export function DocsEditAuth({ isOpen, onClose, collection, onSave }) {
           minHeight: "168px !important"
         },
         ".cm-scroller": {
-          overflow: "auto"
+          overflow: "auto",
+          fontFamily: '"JetBrains Mono", ui-monospace, monospace'
         }
       })
     ];
@@ -249,13 +250,16 @@ export function DocsEditAuth({ isOpen, onClose, collection, onSave }) {
                 autocompletion: true,
                 rectangularSelection: false,
                 searchKeymap: false,
-                highlightSelectionMatches: false
+                highlightSelectionMatches: false,
+                highlightActiveLine: false,
+                highlightActiveLineGutter: false
               }}
               style={{
                 border: '2px solid #282a36',
                 borderRadius: '0.375rem',
+                overflow: 'hidden',
                 fontSize: '12px',
-                fontFamily: 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+                fontFamily: '"JetBrains Mono", ui-monospace, monospace'
               }}
             />
 
