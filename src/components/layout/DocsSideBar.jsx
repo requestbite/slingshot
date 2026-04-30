@@ -1383,7 +1383,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                           details.push(
                             <div key={`auth-url-${flowType}`} class="space-y-1">
                               <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Authorization URL</label>
-                              <div class="text-xs text-gray-700 break-all">{flowData.authorizationUrl}</div>
+                              <div class="text-xs text-gray-700 dark:text-neutral-dark-700 break-all">{flowData.authorizationUrl}</div>
                             </div>
                           );
                         }
@@ -1392,7 +1392,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                           details.push(
                             <div key={`token-url-${flowType}`} class="space-y-1">
                               <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Token URL</label>
-                              <div class="text-xs text-gray-700 break-all">{flowData.tokenUrl}</div>
+                              <div class="text-xs text-gray-700 dark:text-neutral-dark-700 break-all">{flowData.tokenUrl}</div>
                             </div>
                           );
                         }
@@ -1401,7 +1401,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                           details.push(
                             <div key={`refresh-url-${flowType}`} class="space-y-1">
                               <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">Refresh URL</label>
-                              <div class="text-xs text-gray-700 break-all">{flowData.refreshUrl}</div>
+                              <div class="text-xs text-gray-700 dark:text-neutral-dark-700 break-all">{flowData.refreshUrl}</div>
                             </div>
                           );
                         }
@@ -1435,7 +1435,7 @@ export function DocsSideBar({ onClose: _onClose }) {
                       details.push(
                         <div key="url" class="space-y-1">
                           <label class="block text-[10px] font-medium text-gray-500 dark:text-neutral-dark-500">OpenID Connect URL</label>
-                          <div class="text-xs text-gray-700 break-all">{scheme.openIdConnectUrl}</div>
+                          <div class="text-xs text-gray-700 dark:text-neutral-dark-700 break-all">{scheme.openIdConnectUrl}</div>
                         </div>
                       );
                     }
