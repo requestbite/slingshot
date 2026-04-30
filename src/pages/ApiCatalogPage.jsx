@@ -221,7 +221,7 @@ export function ApiCatalogPage() {
     return (
       <div class="flex flex-col gap-1">
         <div class="font-medium text-gray-900 dark:text-neutral-dark-900">{apiTitle}</div>
-        <div class="text-xs text-gray-600">
+        <div class="text-xs text-gray-600 dark:text-neutral-dark-600">
           {api.description || 'No description available.'}
         </div>
       </div>
