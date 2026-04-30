@@ -14,7 +14,7 @@ export function SchemaTree({
   isRequired = false,
   className = ''
 }) {
-  const [isExpanded, setIsExpanded] = useState(level < 2); // Auto-expand first 2 levels
+  const [isExpanded, setIsExpanded] = useState(true);
   const [selectedCompositionIndex, setSelectedCompositionIndex] = useState(0);
 
   if (!schema) {
@@ -112,7 +112,7 @@ export function SchemaTree({
       return (
         <div>
           {hasParentDesc && (
-            <div class="text-xs text-gray-600 dark:text-neutral-dark-600 leading-relaxed pt-1">
+            <div class="text-xs text-gray-600 dark:text-neutral-dark-600 leading-relaxed pt-1 [&_hr]:hidden">
               <MarkdownPreview markdown={parentDescription} className="!text-xs" />
             </div>
           )}
@@ -120,7 +120,7 @@ export function SchemaTree({
             <div class="h-2"></div>
           )}
           {hasEffectiveDesc && (
-            <div class="text-xs text-gray-600 dark:text-neutral-dark-600 leading-relaxed pt-1">
+            <div class="text-xs text-gray-600 dark:text-neutral-dark-600 leading-relaxed pt-1 [&_hr]:hidden">
               <MarkdownPreview markdown={effectiveDescription} className="!text-xs" />
             </div>
           )}
@@ -135,7 +135,7 @@ export function SchemaTree({
     }
 
     return (
-      <div class="text-xs text-gray-600 dark:text-neutral-dark-600 leading-relaxed pt-1">
+      <div class="text-xs text-gray-600 dark:text-neutral-dark-600 leading-relaxed pt-1 [&_hr]:hidden">
         <MarkdownPreview markdown={description} className="!text-xs" />
       </div>
     );
@@ -148,7 +148,7 @@ export function SchemaTree({
       const required = effectiveSchema.required || [];
 
       return (
-        <div class="ml-2 border-l border-gray-200 dark:border-neutral-dark-300 pl-4 space-y-2">
+        <div class="ml-2 pl-4 space-y-2">
           {Object.entries(effectiveSchema.properties).map(([propName, propSchema]) => (
             <SchemaTree
               key={propName}
@@ -164,7 +164,7 @@ export function SchemaTree({
 
     if (effectiveSchema.type === 'array' && effectiveSchema.items) {
       return (
-        <div class="ml-2 border-l border-gray-200 dark:border-neutral-dark-300 pl-4">
+        <div class="ml-2 pl-4">
           <SchemaTree
             schema={effectiveSchema.items}
             name="[item]"
