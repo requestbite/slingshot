@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
-import { CloudSun, Sun, Moon, BookImage, BookMarked } from 'lucide-preact';
+import { CloudSun, Sun, Moon, BookImage, BookMarked, ChevronDown } from 'lucide-preact';
 import LogoHorizontal from '../../assets/logo-horizontal-slingshot.svg';
 import LogoHorizontalDark from '../../assets/logo-horizontal-slingshot-dark.svg';
 import { getLastSlingshotUrl, setLastSlingshotUrl, isValidSlingshotUrl } from '../../utils/slingshotNavigation';
@@ -168,12 +168,13 @@ export function TopBar() {
           <button
             ref={apisButtonRef}
             onClick={() => setShowApisMenu(true)}
-            class={`hidden md:flex px-3 py-2 rounded-md transition-colors hover:cursor-pointer ${isActive('/catalog') || isActive('/openapi')
+            class={`hidden md:flex items-center px-3 py-2 rounded-md transition-colors hover:cursor-pointer ${isActive('/catalog') || isActive('/openapi')
               ? 'text-sky-700 bg-sky-100 hover:bg-sky-200 dark:text-primary-dark-400 dark:bg-primary-dark-200 dark:hover:bg-primary-dark-300'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-dark-900 dark:hover:text-white dark:hover:bg-neutral-dark-200'
               }`}
           >
             APIs
+            <ChevronDown size={14} class={`ml-1 transition-transform duration-200 ${showApisMenu ? '-rotate-180' : ''}`} />
           </button>
           <a
             href="/environments"
