@@ -32,6 +32,7 @@ import {
 import { parseResponseSchemas } from '../../utils/schemaParser';
 import { Button } from '../common/Button';
 import { Alert } from '../common/Alert';
+import { HoverCard, HoverCardTrigger, HoverCardContent } from '../common/HoverCard';
 import { Music, CloudAlert, Clock } from 'lucide-preact';
 
 export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStreaming, streamedContent, streamedChunks, streamingMetadata, selectedCollection, request }) {
@@ -469,13 +470,27 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                       </Button>
                     )}
                     {schemaValidation.valid ? (
-                      <span class="px-2 py-1 text-sm bg-green-100 text-green-800 dark:bg-green-400 dark:text-gray-800 rounded-md whitespace-nowrap">
-                        Valid
-                      </span>
+                      <HoverCard openDelay={400}>
+                        <HoverCardTrigger>
+                          <span class="px-2 py-1 text-sm bg-green-100 text-green-800 dark:bg-green-400 dark:text-gray-800 rounded-md whitespace-nowrap cursor-pointer">
+                            Valid
+                          </span>
+                        </HoverCardTrigger>
+                        <HoverCardContent side="bottom" align="center">
+                          <p class="text-sm">The structure of the returned data conforms to the defined response schema.</p>
+                        </HoverCardContent>
+                      </HoverCard>
                     ) : (
-                      <span class="px-2 py-1 text-sm bg-red-100 text-red-800 dark:bg-rose-400 dark:text-gray-800 rounded-md whitespace-nowrap">
-                        Not valid{!schemaValidation.schemaError && ` (${schemaValidation.errors.length})`}
-                      </span>
+                      <HoverCard openDelay={400}>
+                        <HoverCardTrigger>
+                          <span class="px-2 py-1 text-sm bg-red-100 text-red-800 dark:bg-rose-400 dark:text-gray-800 rounded-md whitespace-nowrap cursor-pointer">
+                            Not valid{!schemaValidation.schemaError && ` (${schemaValidation.errors.length})`}
+                          </span>
+                        </HoverCardTrigger>
+                        <HoverCardContent side="bottom" align="center">
+                          <p class="text-sm">The structure of the returned data is not valid based on the defined response schema.</p>
+                        </HoverCardContent>
+                      </HoverCard>
                     )}
                   </div>
                 )}
