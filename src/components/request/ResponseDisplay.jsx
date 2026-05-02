@@ -30,6 +30,7 @@ import {
 } from './ResponseDisplayUtils';
 import { parseResponseSchemas } from '../../utils/schemaParser';
 import { Button } from '../common/Button';
+import { Alert } from '../common/Alert';
 import { Music, CloudAlert, Clock } from 'lucide-preact';
 
 export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStreaming, streamedContent, streamedChunks, streamingMetadata, selectedCollection, request }) {
@@ -189,7 +190,8 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
         }
       } catch (err) {
         console.error('Schema validation failed:', err);
-        setSchemaValidation(null);
+        setShowSchemaErrors(false);
+        setSchemaValidation({ valid: false, schemaError: true, errorMessage: err.message });
       }
     };
 
@@ -446,27 +448,33 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                 </div>
                 {schemaValidation && (
                   <div class="flex items-center space-x-2 whitespace-nowrap">
-                    <span class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700">Schema:</span>
                     {schemaValidation.valid ? (
-                      <span class="px-2 py-1 text-sm bg-green-50 text-green-700 dark:bg-success-dark-50 dark:text-success-dark-400 rounded-md whitespace-nowrap">
-                        Valid
-                      </span>
+                      <span class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700">Schema:</span>
                     ) : (
                       <Button
                         onClick={() => setShowSchemaErrors(!showSchemaErrors)}
                         variant="none"
-                        className={`flex items-center px-2 py-1 text-sm rounded-md cursor-pointer whitespace-nowrap bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400`}
+                        className="flex items-center text-sm font-medium text-gray-700 dark:text-neutral-dark-700 cursor-pointer whitespace-nowrap"
                       >
                         <svg
-                          class={`h-3 w-3 mr-1 transition-transform duration-200 ${showSchemaErrors ? 'rotate-90' : ''}`}
+                          class={`h-4 w-4 mr-1 transition-transform duration-200 ${showSchemaErrors ? 'rotate-90' : ''}`}
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 20 20"
                           fill="currentColor"
                         >
                           <path stroke-linecap="round" stroke-linejoin="round" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
                         </svg>
-                        Not valid ({schemaValidation.errors.length})
+                        Schema:
                       </Button>
+                    )}
+                    {schemaValidation.valid ? (
+                      <span class="px-2 py-1 text-sm bg-green-100 text-green-800 dark:bg-green-400 dark:text-gray-800 rounded-md whitespace-nowrap">
+                        Valid
+                      </span>
+                    ) : (
+                      <span class="px-2 py-1 text-sm bg-red-100 text-red-800 dark:bg-rose-400 dark:text-gray-800 rounded-md whitespace-nowrap">
+                        Not valid{!schemaValidation.schemaError && ` (${schemaValidation.errors.length})`}
+                      </span>
                     )}
                   </div>
                 )}
@@ -558,30 +566,37 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
 
           {/* Schema Validation Errors Collapsible */}
           {schemaValidation && !schemaValidation.valid && showSchemaErrors && (
-            <div id="schema-errors-section" class="mb-2">
-              <div class="max-w-full overflow-auto">
-                <table class="border-collapse text-xs w-full table-fixed">
-                  <thead>
-                    <tr>
-                      <th class="py-1 border-b border-slate-200 dark:border-neutral-dark-100 text-left font-mono font-bold w-2/5">Path</th>
-                      <th class="py-1 border-b border-slate-200 dark:border-neutral-dark-100 text-left font-mono font-bold">Error</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {schemaValidation.errors.map((err, i) => (
-                      <tr key={i}>
-                        <td class="border-b border-slate-100 dark:border-neutral-dark-100 py-1 pr-3 font-mono text-red-600 dark:text-red-400 whitespace-nowrap overflow-hidden text-ellipsis truncate">
-                          {err.path || '(root)'}
-                        </td>
-                        <td class="border-b border-slate-100 dark:border-neutral-dark-100 py-1 font-mono text-red-600 dark:text-red-400 whitespace-nowrap overflow-hidden text-ellipsis truncate">
-                          {err.message}
-                        </td>
+            schemaValidation.schemaError ? (
+              <Alert type="caution" className="mb-2">
+                <div class="font-semibold mb-1">Schema is invalid</div>
+                <div class="font-mono text-xs break-words">{schemaValidation.errorMessage}</div>
+              </Alert>
+            ) : (
+              <div id="schema-errors-section" class="mb-2">
+                <div class="max-w-full overflow-auto">
+                  <table class="border-collapse text-xs w-full table-fixed">
+                    <thead>
+                      <tr>
+                        <th class="py-1 border-b border-slate-200 dark:border-neutral-dark-100 text-left font-mono font-bold w-2/5">Path</th>
+                        <th class="py-1 border-b border-slate-200 dark:border-neutral-dark-100 text-left font-mono font-bold">Error</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {schemaValidation.errors.map((err, i) => (
+                        <tr key={i}>
+                          <td class="border-b border-slate-100 dark:border-neutral-dark-100 py-1 pr-3 font-mono text-red-600 dark:text-red-400 whitespace-nowrap overflow-hidden text-ellipsis truncate">
+                            {err.path || '(root)'}
+                          </td>
+                          <td class="border-b border-slate-100 dark:border-neutral-dark-100 py-1 font-mono text-red-600 dark:text-red-400 whitespace-nowrap overflow-hidden text-ellipsis truncate">
+                            {err.message}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+            )
           )}
 
           {/* Response Body */}
