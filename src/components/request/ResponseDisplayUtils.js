@@ -453,6 +453,26 @@ export const getStatusColor = (status) => {
   return 'bg-red-100 text-red-800 dark:bg-rose-400 dark:text-gray-800';
 };
 
+// OpenAPI-specific keywords that are not valid JSON Schema — strip them before AJV compilation.
+const OPENAPI_ONLY_KEYWORDS = new Set(['example', 'examples', 'externalDocs', 'discriminator', 'xml']);
+
+// Recursively removes OpenAPI extension keywords so AJV doesn't reject the schema.
+export const sanitizeSchemaForAjv = (schema) => {
+  if (!schema || typeof schema !== 'object' || Array.isArray(schema)) return schema;
+  const out = {};
+  for (const [key, value] of Object.entries(schema)) {
+    if (OPENAPI_ONLY_KEYWORDS.has(key)) continue;
+    if (Array.isArray(value)) {
+      out[key] = value.map(item => sanitizeSchemaForAjv(item));
+    } else if (value && typeof value === 'object') {
+      out[key] = sanitizeSchemaForAjv(value);
+    } else {
+      out[key] = value;
+    }
+  }
+  return out;
+};
+
 // Find the JSON Schema for a given status code and content type from parsed response schemas.
 // Tries exact status code match, then wildcard (e.g. "2XX"), then content type match with fallbacks.
 export const findMatchingResponseSchema = (parsedSchemas, statusCode, contentType) => {

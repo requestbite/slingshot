@@ -26,7 +26,8 @@ import {
   processResponseContent,
   getOriginalResponseContent,
   getStatusColor,
-  findMatchingResponseSchema
+  findMatchingResponseSchema,
+  sanitizeSchemaForAjv
 } from './ResponseDisplayUtils';
 import { parseResponseSchemas } from '../../utils/schemaParser';
 import { Button } from '../common/Button';
@@ -172,7 +173,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
           ajvRef.current = new Ajv({ allErrors: true, strict: false });
         }
 
-        const validate = ajvRef.current.compile(schema);
+        const validate = ajvRef.current.compile(sanitizeSchemaForAjv(schema));
         const data = JSON.parse(response.responseData);
         const valid = validate(data);
 
@@ -449,7 +450,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                 {schemaValidation && (
                   <div class="flex items-center space-x-2 whitespace-nowrap">
                     {schemaValidation.valid ? (
-                      <span class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700">Schema:</span>
+                      <span class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700">Data Structure:</span>
                     ) : (
                       <Button
                         onClick={() => setShowSchemaErrors(!showSchemaErrors)}
@@ -464,7 +465,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                         >
                           <path stroke-linecap="round" stroke-linejoin="round" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
                         </svg>
-                        Schema:
+                        Data Structure:
                       </Button>
                     )}
                     {schemaValidation.valid ? (
@@ -527,7 +528,7 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                 <table class="border-collapse text-xs w-full table-fixed">
                   <thead>
                     <tr>
-                      <th class="py-1 border-b border-slate-200 dark:border-neutral-dark-100 text-left font-mono font-bold">Name</th>
+                      <th class="py-1 border-b border-slate-200 dark:border-neutral-dark-100 text-left font-mono font-bold w-2/5">Name</th>
                       <th class="py-1 border-b border-slate-200 dark:border-neutral-dark-100 text-left font-mono font-bold">Value</th>
                     </tr>
                   </thead>
