@@ -452,3 +452,56 @@ export const getStatusColor = (status) => {
   if (status >= 300 && status < 400) return 'bg-yellow-100 text-yellow-800 dark:bg-orange-300 dark:text-gray-800';
   return 'bg-red-100 text-red-800 dark:bg-rose-400 dark:text-gray-800';
 };
+
+// Find the JSON Schema for a given status code and content type from parsed response schemas.
+// Tries exact status code match, then wildcard (e.g. "2XX"), then content type match with fallbacks.
+export const findMatchingResponseSchema = (parsedSchemas, statusCode, contentType) => {
+  if (!parsedSchemas || !statusCode) return null;
+
+  const statusStr = String(statusCode);
+
+  // Exact status code match first
+  let statusEntry = parsedSchemas[statusStr];
+
+  // Wildcard match: "2XX" / "2xx" for any 2xx status
+  if (!statusEntry) {
+    const firstDigit = statusStr[0];
+    for (const key of [`${firstDigit}XX`, `${firstDigit}xx`]) {
+      if (parsedSchemas[key]) {
+        statusEntry = parsedSchemas[key];
+        break;
+      }
+    }
+  }
+
+  if (!statusEntry || !statusEntry.content) return null;
+
+  // Normalise content type: strip parameters like "; charset=utf-8"
+  const normCT = contentType ? contentType.split(';')[0].trim().toLowerCase() : 'application/json';
+
+  // Exact match
+  let contentEntry = statusEntry.content[normCT];
+
+  // Case-insensitive match
+  if (!contentEntry) {
+    for (const [ct, entry] of Object.entries(statusEntry.content)) {
+      if (ct.toLowerCase() === normCT) {
+        contentEntry = entry;
+        break;
+      }
+    }
+  }
+
+  // JSON family fallback
+  if (!contentEntry && normCT.includes('json')) {
+    contentEntry = statusEntry.content['application/json'];
+  }
+
+  // Single-entry fallback
+  if (!contentEntry) {
+    const entries = Object.values(statusEntry.content);
+    if (entries.length === 1) contentEntry = entries[0];
+  }
+
+  return contentEntry?.schema || null;
+};

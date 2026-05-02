@@ -25,12 +25,14 @@ import {
   isSSEContentType,
   processResponseContent,
   getOriginalResponseContent,
-  getStatusColor
+  getStatusColor,
+  findMatchingResponseSchema
 } from './ResponseDisplayUtils';
+import { parseResponseSchemas } from '../../utils/schemaParser';
 import { Button } from '../common/Button';
 import { Music, CloudAlert, Clock } from 'lucide-preact';
 
-export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStreaming, streamedContent, streamedChunks, streamingMetadata, selectedCollection }) {
+export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStreaming, streamedContent, streamedChunks, streamingMetadata, selectedCollection, request }) {
   // Initialize headers visibility from localStorage, defaulting to false (closed)
   const [showHeaders, setShowHeaders] = useState(() => {
     try {
@@ -55,6 +57,11 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
   const [jsonataExpr, setJsonataExpr] = useState('');
   const [jsonataResult, setJsonataResult] = useState('');
   const [jsonataError, setJsonataError] = useState('');
+
+  // Schema validation state
+  const [schemaValidation, setSchemaValidation] = useState(null);
+  const [showSchemaErrors, setShowSchemaErrors] = useState(false);
+  const ajvRef = useRef(null);
 
   // Save headers visibility preference to localStorage whenever it changes
   useEffect(() => {
@@ -103,6 +110,91 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
       }
     }, 350);
   }, [jsonataExpr, isJsonataMode]);
+
+  // Reset schema validation when a new request is in-flight
+  useEffect(() => {
+    if (isLoading) {
+      setSchemaValidation(null);
+      setShowSchemaErrors(false);
+    }
+  }, [isLoading]);
+
+  // Validate response body against the matching response schema
+  useEffect(() => {
+    if (!response) {
+      setSchemaValidation(null);
+      return;
+    }
+    if (response.success === false || response.cancelled) {
+      setSchemaValidation(null);
+      return;
+    }
+    if (!response.status || isStreaming || response.isStreaming) {
+      setSchemaValidation(null);
+      return;
+    }
+    if (!response.responseData || !isJsonContent(response.responseData)) {
+      setSchemaValidation(null);
+      return;
+    }
+    if (!request?.response_schemas) {
+      setSchemaValidation(null);
+      return;
+    }
+
+    const runValidation = async () => {
+      try {
+        const parsedSchemas = parseResponseSchemas(
+          typeof request.response_schemas === 'string'
+            ? request.response_schemas
+            : JSON.stringify(request.response_schemas)
+        );
+        if (!parsedSchemas || Object.keys(parsedSchemas).length === 0) {
+          setSchemaValidation(null);
+          return;
+        }
+
+        const contentTypeHeader = response.headers?.find(h =>
+          h.name?.toLowerCase() === 'content-type'
+        );
+        const contentType = contentTypeHeader?.value || 'application/json';
+
+        const schema = findMatchingResponseSchema(parsedSchemas, response.status, contentType);
+        if (!schema) {
+          setSchemaValidation(null);
+          return;
+        }
+
+        if (!ajvRef.current) {
+          const mod = await import('ajv');
+          const Ajv = mod.default ?? mod;
+          ajvRef.current = new Ajv({ allErrors: true, strict: false });
+        }
+
+        const validate = ajvRef.current.compile(schema);
+        const data = JSON.parse(response.responseData);
+        const valid = validate(data);
+
+        setShowSchemaErrors(false);
+        if (valid) {
+          setSchemaValidation({ valid: true });
+        } else {
+          setSchemaValidation({
+            valid: false,
+            errors: (validate.errors || []).map(err => ({
+              path: err.instancePath || '',
+              message: err.message || ''
+            }))
+          });
+        }
+      } catch (err) {
+        console.error('Schema validation failed:', err);
+        setSchemaValidation(null);
+      }
+    };
+
+    runValidation();
+  }, [response, request]);
 
   const handleJsonataToggle = async () => {
     if (!jsonataLib.current) {
@@ -352,6 +444,32 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                     {effectiveResponse.responseSize}
                   </span>
                 </div>
+                {schemaValidation && (
+                  <div class="flex items-center space-x-2 whitespace-nowrap">
+                    <span class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700">Schema:</span>
+                    {schemaValidation.valid ? (
+                      <span class="px-2 py-1 text-sm bg-green-50 text-green-700 dark:bg-success-dark-50 dark:text-success-dark-400 rounded-md whitespace-nowrap">
+                        Valid
+                      </span>
+                    ) : (
+                      <Button
+                        onClick={() => setShowSchemaErrors(!showSchemaErrors)}
+                        variant="none"
+                        className={`flex items-center px-2 py-1 text-sm rounded-md cursor-pointer whitespace-nowrap bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400`}
+                      >
+                        <svg
+                          class={`h-3 w-3 mr-1 transition-transform duration-200 ${showSchemaErrors ? 'rotate-90' : ''}`}
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                        </svg>
+                        Not valid ({schemaValidation.errors.length})
+                      </Button>
+                    )}
+                  </div>
+                )}
                 {(isStreaming || streamingMetadata) && (
                   <div class="flex items-center space-x-2 whitespace-nowrap">
                     <span class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700">Stream:</span>
@@ -429,6 +547,34 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                         </td>
                         <td class="border-b border-slate-100 dark:border-neutral-dark-100 py-1 font-mono text-indigo-600 dark:text-indigo-300 whitespace-nowrap overflow-hidden text-ellipsis truncate">
                           {header.value}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Schema Validation Errors Collapsible */}
+          {schemaValidation && !schemaValidation.valid && showSchemaErrors && (
+            <div id="schema-errors-section" class="mb-2">
+              <div class="max-w-full overflow-auto">
+                <table class="border-collapse text-xs w-full table-fixed">
+                  <thead>
+                    <tr>
+                      <th class="py-1 border-b border-slate-200 dark:border-neutral-dark-100 text-left font-mono font-bold w-2/5">Path</th>
+                      <th class="py-1 border-b border-slate-200 dark:border-neutral-dark-100 text-left font-mono font-bold">Error</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {schemaValidation.errors.map((err, i) => (
+                      <tr key={i}>
+                        <td class="border-b border-slate-100 dark:border-neutral-dark-100 py-1 pr-3 font-mono text-red-600 dark:text-red-400 whitespace-nowrap overflow-hidden text-ellipsis truncate">
+                          {err.path || '(root)'}
+                        </td>
+                        <td class="border-b border-slate-100 dark:border-neutral-dark-100 py-1 font-mono text-red-600 dark:text-red-400 whitespace-nowrap overflow-hidden text-ellipsis truncate">
+                          {err.message}
                         </td>
                       </tr>
                     ))}
