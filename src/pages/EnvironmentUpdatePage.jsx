@@ -780,7 +780,7 @@ export function EnvironmentUpdatePage() {
                         <tbody class="divide-y divide-gray-200 dark:divide-neutral-dark-300 bg-white dark:bg-surface-dark-elevated">
                           {pendingSecrets.length > 0 ? (
                             pendingSecrets.map((secret) => (
-                              <tr key={secret._tempId || secret.key} class={secret._status === 'new' ? 'bg-sky-100 dark:bg-primary-dark-200' : secret._status === 'updated' ? 'bg-yellow-50' : ''}>
+                              <tr key={secret._tempId || secret.key} class={secret._status === 'new' ? 'bg-sky-100 dark:bg-primary-dark-200' : secret._status === 'updated' ? 'bg-sky-100 dark:bg-primary-dark-200' : ''}>
                                 <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-neutral-dark-900 sm:pl-6">
                                   {secret.key}
                                   {secret._status === 'new' && <span class="ml-2 text-xs text-sky-700 dark:text-primary-dark-400">(new)</span>}

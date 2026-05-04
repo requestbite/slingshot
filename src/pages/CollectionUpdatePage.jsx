@@ -448,7 +448,7 @@ export function CollectionUpdatePage() {
                   <tbody class="divide-y divide-gray-200 dark:divide-neutral-dark-300 bg-white dark:bg-surface-dark-elevated">
                     {pendingVariables.length > 0 ? (
                       pendingVariables.map((variable) => (
-                        <tr key={variable.id} class={variable._status === 'new' ? 'bg-sky-100 dark:bg-primary-dark-200' : variable._status === 'updated' ? 'bg-yellow-50' : ''}>
+                        <tr key={variable.id} class={variable._status === 'new' ? 'bg-sky-100 dark:bg-primary-dark-200' : variable._status === 'updated' ? 'bg-sky-100 dark:bg-primary-dark-200' : ''}>
                           <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-neutral-dark-900 sm:pl-6">
                             {variable.key}
                             {variable._status === 'new' && <span class="ml-2 text-xs text-sky-700 dark:text-primary-dark-400">(new)</span>}
@@ -520,7 +520,7 @@ export function CollectionUpdatePage() {
                   type="button"
                   variant="danger"
                 >
-                  Delete Collection
+                  Delete
                 </Button>
               </div>
             </div>
