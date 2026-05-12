@@ -709,11 +709,12 @@ function TagSection({ tag, spec, startIndex }) {
 // ApiInfoHeader
 // ---------------------------------------------------------------------------
 
-function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, breadcrumbs, onImportClick, onImportYamlClick, onImportJsonClick, externalDocsUrl }) {
+function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, breadcrumbs, onImportClick, onImportYamlClick, onImportJsonClick, externalDocsUrl, securitySchemes }) {
   const title = overrideTitle || info?.title || 'API Documentation';
   const description = overrideDescription !== undefined ? overrideDescription : info?.description;
 
   const hasRightContent = (servers?.length > 0) || !!(info?.contact || info?.license || info?.termsOfService);
+  const hasSecuritySchemes = !!(securitySchemes && Object.keys(securitySchemes).length > 0);
 
   const containerRef = useRef(null);
   const hamburgerRef = useRef(null);
@@ -724,6 +725,53 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
   const [showFixedMenu, setShowFixedMenu] = useState(false);
   const [isButtonsVisible, setIsButtonsVisible] = useState(true);
   const [fixedRight, setFixedRight] = useState(24);
+  const [selectedAuthScheme, setSelectedAuthScheme] = useState('');
+
+  useEffect(() => {
+    if (!securitySchemes) return;
+    const schemeNames = Object.keys(securitySchemes);
+    if (schemeNames.length > 0 && !selectedAuthScheme) {
+      setSelectedAuthScheme(schemeNames[0]);
+    } else if (selectedAuthScheme && !schemeNames.includes(selectedAuthScheme)) {
+      setSelectedAuthScheme(schemeNames[0] || '');
+    }
+  }, [securitySchemes, selectedAuthScheme]);
+
+  const renderAuthDetails = (scheme) => {
+    if (!scheme) return null;
+    const details = [];
+
+    if (scheme.type === 'apiKey') {
+      details.push(<div key="type" class="space-y-1"><SectionLabel>Type</SectionLabel><div class="text-xs text-gray-700 dark:text-neutral-dark-700">API Key</div></div>);
+      details.push(<div key="in" class="space-y-1"><SectionLabel>Location</SectionLabel><div class="text-xs text-gray-700 dark:text-neutral-dark-700">{scheme.in}</div></div>);
+      details.push(<div key="name" class="space-y-1"><SectionLabel>Parameter Name</SectionLabel><div class="text-xs text-gray-700 dark:text-neutral-dark-700">{scheme.name}</div></div>);
+    } else if (scheme.type === 'http') {
+      details.push(<div key="type" class="space-y-1"><SectionLabel>Type</SectionLabel><div class="text-xs text-gray-700 dark:text-neutral-dark-700">HTTP</div></div>);
+      details.push(<div key="scheme" class="space-y-1"><SectionLabel>Scheme</SectionLabel><div class="text-xs text-gray-700 dark:text-neutral-dark-700">{scheme.scheme}</div></div>);
+      if (scheme.bearerFormat) {
+        details.push(<div key="bearerFormat" class="space-y-1"><SectionLabel>Bearer Format</SectionLabel><div class="text-xs text-gray-700 dark:text-neutral-dark-700">{scheme.bearerFormat}</div></div>);
+      }
+    } else if (scheme.type === 'oauth2' && scheme.flows) {
+      details.push(<div key="type" class="space-y-1"><SectionLabel>Type</SectionLabel><div class="text-xs text-gray-700 dark:text-neutral-dark-700">OAuth 2.0</div></div>);
+      Object.entries(scheme.flows).forEach(([flowType, flowData]) => {
+        details.push(<div key={`flow-${flowType}`} class="space-y-1"><SectionLabel>Flow Type</SectionLabel><div class="text-xs text-gray-700 dark:text-neutral-dark-700">{flowType}</div></div>);
+        if (flowData.authorizationUrl) details.push(<div key={`auth-url-${flowType}`} class="space-y-1"><SectionLabel>Authorization URL</SectionLabel><div class="text-xs text-gray-700 dark:text-neutral-dark-700 break-all">{flowData.authorizationUrl}</div></div>);
+        if (flowData.tokenUrl) details.push(<div key={`token-url-${flowType}`} class="space-y-1"><SectionLabel>Token URL</SectionLabel><div class="text-xs text-gray-700 dark:text-neutral-dark-700 break-all">{flowData.tokenUrl}</div></div>);
+        if (flowData.refreshUrl) details.push(<div key={`refresh-url-${flowType}`} class="space-y-1"><SectionLabel>Refresh URL</SectionLabel><div class="text-xs text-gray-700 dark:text-neutral-dark-700 break-all">{flowData.refreshUrl}</div></div>);
+      });
+    } else if (scheme.type === 'openIdConnect') {
+      details.push(<div key="type" class="space-y-1"><SectionLabel>Type</SectionLabel><div class="text-xs text-gray-700 dark:text-neutral-dark-700">OpenID Connect</div></div>);
+      details.push(<div key="url" class="space-y-1"><SectionLabel>OpenID Connect URL</SectionLabel><div class="text-xs text-gray-700 dark:text-neutral-dark-700 break-all">{scheme.openIdConnectUrl}</div></div>);
+    } else if (scheme.type === 'mutualTLS') {
+      details.push(<div key="type" class="space-y-1"><SectionLabel>Type</SectionLabel><div class="text-xs text-gray-700 dark:text-neutral-dark-700">Mutual TLS</div></div>);
+    }
+
+    if (scheme.description) {
+      details.push(<div key="description" class="space-y-1"><SectionLabel>Description</SectionLabel><div class="text-xs text-gray-700 dark:text-neutral-dark-700">{scheme.description}</div></div>);
+    }
+
+    return details;
+  };
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -877,17 +925,40 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
       </div>
 
       {/* Two-column body: description left, servers + links right */}
-      {(description || hasRightContent) && (
+      {(description || hasRightContent || hasSecuritySchemes) && (
         <div class="grid grid-cols-1 lg:grid-cols-2 border-t border-gray-100 dark:border-neutral-dark-300 min-h-0">
-          {/* Left: description */}
-          <div class="px-6 py-5 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-neutral-dark-300 min-w-0">
+          {/* Left: description + authorization */}
+          <div class="px-6 py-5 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-neutral-dark-300 min-w-0 space-y-5">
             {description ? (
               <div class="text-sm [&_.prose]:text-sm [&_.prose_p]:text-gray-600 dark:[&_.prose_p]:text-neutral-dark-600">
                 <MarkdownPreview markdown={description} />
               </div>
-            ) : (
+            ) : !hasSecuritySchemes ? (
               <p class="text-xs text-gray-400 dark:text-neutral-dark-400 italic">No description.</p>
-            )}
+            ) : null}
+
+            {hasSecuritySchemes && (() => {
+              const schemeNames = Object.keys(securitySchemes);
+              const selectedScheme = securitySchemes[selectedAuthScheme];
+              return (
+                <div class={description ? 'border-t border-gray-100 dark:border-neutral-dark-300 pt-5' : ''}>
+                  <SectionLabel>Authorization</SectionLabel>
+                  {schemeNames.length > 1 && (
+                    <div class="mb-3 w-48">
+                      <Select
+                        value={selectedAuthScheme}
+                        onChange={setSelectedAuthScheme}
+                        options={schemeNames.map(name => ({ value: name, label: name }))}
+                        size="small"
+                      />
+                    </div>
+                  )}
+                  <div class="space-y-3">
+                    {renderAuthDetails(selectedScheme)}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Right: servers + links (dark panel) */}
@@ -1047,6 +1118,7 @@ export function OpenAPIViewer({ spec, className = '', overrideTitle, overrideDes
       <ApiInfoHeader
         info={spec.info}
         servers={spec.servers}
+        securitySchemes={spec.components?.securitySchemes}
         overrideTitle={overrideTitle}
         overrideDescription={overrideDescription}
         breadcrumbs={breadcrumbs}
