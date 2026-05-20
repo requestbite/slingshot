@@ -1,5 +1,6 @@
 import { VariableInput } from '../../common/VariableInput';
 import { TextInput } from '../../common/TextInput';
+import { Checkbox } from '../../common/Checkbox';
 import { generateUUID } from '../../../utils/uuid.js';
 
 export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPathParamsChange, onEnterKeyPress, selectedEnvironment }) {
@@ -25,6 +26,13 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
 
   const toggleQueryParamEnabled = (id) => {
     onQueryParamsChange(queryParams.map(p => p.id === id ? { ...p, enabled: !p.enabled } : p));
+  };
+
+  const allEnabled = queryParams.length > 0 && queryParams.every(p => p.enabled);
+
+  const toggleSelectAll = () => {
+    const newEnabled = !allEnabled;
+    onQueryParamsChange(queryParams.map(p => ({ ...p, enabled: newEnabled })));
   };
 
   return (
@@ -72,24 +80,29 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
 
       {/* Query Parameters Section */}
       <div>
-        <div class="mb-2">
+        <div class="flex items-center gap-3 flex-nowrap mb-2">
           <button
             onClick={addQueryParam}
-            class="px-3 py-1 bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 text-sky-700 dark:text-primary-dark-400 text-xs font-medium rounded-md cursor-pointer"
+            class="flex-shrink-0 px-3 py-1 bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 text-sky-700 dark:text-primary-dark-400 text-xs font-medium rounded-md cursor-pointer"
           >
             Add query param
           </button>
+          {queryParams.length > 0 && (
+            <Checkbox
+              checked={allEnabled}
+              onChange={toggleSelectAll}
+              label="Select all"
+            />
+          )}
         </div>
 
         <div class="space-y-2">
           {queryParams.map((param) => (
             <div key={param.id} class="grid grid-cols-12 gap-2 items-center group">
               <div class="col-span-1 flex justify-center">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={param.enabled}
                   onChange={() => toggleQueryParamEnabled(param.id)}
-                  class="w-4 h-4 text-sky-600 border-gray-300 dark:border-neutral-dark-50 rounded focus:ring-sky-500"
                 />
               </div>
               <div class="col-span-5">
