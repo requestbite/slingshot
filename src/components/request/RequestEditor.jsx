@@ -156,6 +156,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   const originalDataRef = useRef(null);
   const currentRequestDataRef = useRef(requestData);
   const isInitialLoadRef = useRef(false);
+  const isParamEditRef = useRef(false);
   const previousRequestIdRef = useRef(null);
 
   // Recent requests menu state
@@ -360,6 +361,11 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   // Parse URL to extract query and path parameters
   // Use debounced parsing to avoid interfering with typing
   useEffect(() => {
+    // Skip re-parsing when the URL was just set by a param tab edit
+    if (isParamEditRef.current) {
+      isParamEditRef.current = false;
+      return;
+    }
     if (requestData.url) {
       const timeoutId = setTimeout(() => {
         parseUrlParameters(requestData.url);
@@ -458,6 +464,19 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       currentRequestDataRef.current = newData;
       return newData;
     });
+  };
+
+  const rebuildUrlFromParams = (queryParams) => {
+    const base = currentRequestDataRef.current.url.split('?')[0];
+    const enabled = queryParams.filter(p => p.enabled && p.key);
+    if (!enabled.length) return base;
+    return base + '?' + enabled.map(p => `${p.key}=${p.value}`).join('&');
+  };
+
+  const handleQueryParamsChange = (newParams) => {
+    isParamEditRef.current = true;
+    const newUrl = rebuildUrlFromParams(newParams);
+    updateRequestData({ queryParams: newParams, url: newUrl });
   };
 
   // Helper function to check if request has saved response data
@@ -689,25 +708,22 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
         }
       });
 
-      // Build complete URL with query parameters
+      // Build complete URL with query parameters (unencoded for display)
       try {
-        const url = new URL(resolvedUrl.startsWith('http') ? resolvedUrl : `http://${resolvedUrl}`);
+        const urlObj = new URL(resolvedUrl.startsWith('http') ? resolvedUrl : `http://${resolvedUrl}`);
+        const base = urlObj.origin + urlObj.pathname;
 
-        // Clear all existing query parameters first
-        url.search = '';
-
-        // Add only enabled query parameters
         const enabledQueryParams = requestData.queryParams.filter(p => p.enabled && p.key);
-        enabledQueryParams.forEach(param => {
-          const resolvedValue = replaceVariables(param.value, variables);
-          if (resolvedValue !== undefined && resolvedValue !== null) {
-            url.searchParams.set(param.key, resolvedValue);
-          } else {
-            url.searchParams.set(param.key, '');
-          }
-        });
+        if (!enabledQueryParams.length) return base;
 
-        return url.toString();
+        const queryString = enabledQueryParams
+          .map(param => {
+            const resolvedValue = replaceVariables(param.value, variables);
+            return `${param.key}=${resolvedValue ?? ''}`;
+          })
+          .join('&');
+
+        return `${base}?${queryString}`;
       } catch (error) {
         // If URL parsing fails, return the partially resolved URL
         return resolvedUrl;
@@ -1595,7 +1611,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
               <ParamsTab
                 queryParams={requestData.queryParams}
                 pathParams={requestData.pathParams}
-                onQueryParamsChange={(params) => updateRequestData({ queryParams: params })}
+                onQueryParamsChange={handleQueryParamsChange}
                 onPathParamsChange={(params) => updateRequestData({ pathParams: params })}
                 onEnterKeyPress={handleEnterKeyPress}
                 selectedEnvironment={currentEnvironment}

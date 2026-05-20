@@ -308,7 +308,10 @@ export function VariableInput({
     if (!inputRef.current || showAutocomplete) return;
 
     const element = inputRef.current;
-    const currentCursor = getCursorPosition(element);
+    // Capture focus state before any DOM mutation so we never steal the cursor
+    // from a different focused input when an external value change triggers this effect.
+    const isActive = document.activeElement === element;
+    const currentCursor = isActive ? getCursorPosition(element) : 0;
     const currentText = element.textContent || '';
 
     // Clear any pending update
@@ -324,12 +327,14 @@ export function VariableInput({
       if (element.innerHTML !== highlighted.__html) {
         element.innerHTML = highlighted.__html;
 
-        // Use requestAnimationFrame for smoother cursor restoration
-        requestAnimationFrame(() => {
-          // For external changes (like restore), preserve cursor position if text length allows
-          const newCursorPosition = Math.min(currentCursor, value.length);
-          setCursorPosition(element, newCursorPosition);
-        });
+        // Only restore cursor when this input is the active element
+        if (isActive) {
+          requestAnimationFrame(() => {
+            if (document.activeElement === element) {
+              setCursorPosition(element, Math.min(currentCursor, value.length));
+            }
+          });
+        }
       }
     } else {
       // Content matches, but highlighting might need update (e.g., variables changed)
@@ -337,10 +342,14 @@ export function VariableInput({
       if (element.innerHTML !== highlighted.__html) {
         element.innerHTML = highlighted.__html;
 
-        // Use requestAnimationFrame for smoother cursor restoration
-        requestAnimationFrame(() => {
-          setCursorPosition(element, currentCursor);
-        });
+        // Only restore cursor when this input is the active element
+        if (isActive) {
+          requestAnimationFrame(() => {
+            if (document.activeElement === element) {
+              setCursorPosition(element, currentCursor);
+            }
+          });
+        }
       }
     }
 
