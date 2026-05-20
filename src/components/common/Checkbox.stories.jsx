@@ -10,6 +10,7 @@ export default {
     checked: { control: 'boolean' },
     disabled: { control: 'boolean' },
     label: { control: 'text' },
+    description: { control: 'text' },
     onChange: { action: 'onChange' },
   },
   args: {
@@ -55,6 +56,25 @@ export const DisabledChecked = {
     checked: true,
     disabled: true,
     label: 'Already completed',
+  },
+};
+
+// Checkbox with description
+export const WithDescription = {
+  args: {
+    checked: false,
+    label: 'Enable notifications',
+    description: 'Receive alerts when new requests are received.',
+  },
+};
+
+// Checkbox with description, disabled
+export const WithDescriptionDisabled = {
+  args: {
+    checked: true,
+    disabled: true,
+    label: 'Analytics tracking',
+    description: 'This setting is managed by your organization and cannot be changed.',
   },
 };
 

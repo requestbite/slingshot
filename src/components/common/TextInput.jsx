@@ -256,7 +256,7 @@ export const TextInput = forwardRef(({
       </div>
 
       {description && (
-        <p class="mt-1 text-xs text-gray-500 dark:text-neutral-dark-500">
+        <p class="mt-1.5 text-xs text-gray-500 dark:text-neutral-dark-500">
           {description}
         </p>
       )}

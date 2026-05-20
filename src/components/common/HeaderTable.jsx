@@ -12,7 +12,7 @@
  * @param {string} [props.nameColumnWidth='50%'] - Width for the name column (applies on sm+ screens)
  * @param {string} [props.valueColumnWidth='50%'] - Width for the value column (applies on sm+ screens)
  */
-export function HeaderTable({ headers = [], nameTitle = 'Name', valueTitle = 'Value', showTitles = true, className = '', nameColumnWidth = '50%', valueColumnWidth = '50%' }) {
+export function HeaderTable({ headers = [], nameTitle = 'Name', valueTitle = 'Value', showTitles = true, className = '', nameColumnWidth = '50%', valueColumnWidth = '50%', renderLink: renderLinkProp }) {
   if (!headers || headers.length === 0) {
     return null;
   }
@@ -20,39 +20,44 @@ export function HeaderTable({ headers = [], nameTitle = 'Name', valueTitle = 'Va
   // Stable scope class derived from column widths so responsive styles survive re-renders
   const scopeClass = `ht-${nameColumnWidth.replace(/[^a-z0-9]/gi, '_')}-${valueColumnWidth.replace(/[^a-z0-9]/gi, '_')}`;
 
-  const renderLink = (item) => (
-    <a
-      href={item.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      class="text-sky-500 hover:text-sky-700 inline-flex items-center"
-    >
-      {item.text}
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="10"
-        height="10"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class="inline relative -top-0.5 ml-1"
-        stroke="currentColor"
+  const renderLink = (item) => {
+    if (renderLinkProp) {
+      return renderLinkProp(item);
+    }
+    return (
+      <a
+        href={item.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-sky-600 hover:text-sky-800 hover:underline dark:hover:text-sky-400 inline-flex items-center"
       >
-        <path d="M15 3h6v6"></path>
-        <path d="M10 14 21 3"></path>
-        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-      </svg>
-    </a>
-  );
+        {item.text}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="10"
+          height="10"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="inline relative -top-0.5 ml-1"
+          stroke="currentColor"
+        >
+          <path d="M15 3h6v6"></path>
+          <path d="M10 14 21 3"></path>
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+        </svg>
+      </a>
+    );
+  };
 
   const renderCell = (item, isValue = false) => {
     if (typeof item === 'object' && item !== null && item.url) {
       return renderLink(item);
     }
     const text = typeof item === 'object' && item !== null ? item.text : item;
-    return isValue ? <span class="text-indigo-600">{text}</span> : text;
+    return isValue ? <span class="text-indigo-600 dark:text-indigo-300">{text}</span> : text;
   };
 
   return (

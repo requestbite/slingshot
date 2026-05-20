@@ -21,6 +21,7 @@ export default {
       control: 'number',
     },
     disabled: { control: 'boolean' },
+    description: { control: 'text' },
     onInput: { action: 'onInput' },
     onChange: { action: 'onChange' },
   },
@@ -37,6 +38,32 @@ export const Default = {
     min: 0,
     max: 100,
     step: 1,
+  },
+};
+
+// Slider with description text
+export const WithDescription = {
+  render: () => {
+    const DescriptionSlider = () => {
+      const [value, setValue] = useState(50);
+
+      return (
+        <div class="w-64">
+          <Label htmlFor="withDesc">Opacity: {value}%</Label>
+          <Slider
+            id="withDesc"
+            min={0}
+            max={100}
+            step={1}
+            value={value}
+            description="Controls the background opacity of the element."
+            onInput={(e) => setValue(Number(e.target.value))}
+          />
+        </div>
+      );
+    };
+
+    return <DescriptionSlider />;
   },
 };
 

@@ -13,6 +13,7 @@
  * @param {Function} [props.onInput] - Callback when value changes (receives event)
  * @param {Function} [props.onChange] - Callback when value changes (receives event)
  * @param {boolean} [props.disabled=false] - Whether the slider is disabled
+ * @param {string} [props.description] - Helper text displayed below the slider
  * @param {string} [props.className] - Additional CSS classes
  */
 export function Slider({
@@ -24,22 +25,30 @@ export function Slider({
   onInput,
   onChange,
   disabled = false,
+  description,
   className = '',
   ...props
 }) {
   return (
-    <input
-      id={id}
-      type="range"
-      min={min}
-      max={max}
-      step={step}
-      value={value}
-      onInput={onInput}
-      onChange={onChange}
-      disabled={disabled}
-      class={`slider ${className}`}
-      {...props}
-    />
+    <div>
+      <input
+        id={id}
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onInput={onInput}
+        onChange={onChange}
+        disabled={disabled}
+        class={`slider ${className}`}
+        {...props}
+      />
+      {description && (
+        <p class="mt-1.5 text-xs text-gray-500 dark:text-neutral-dark-500">
+          {description}
+        </p>
+      )}
+    </div>
   );
 }

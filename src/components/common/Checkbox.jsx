@@ -8,6 +8,7 @@
  * @param {boolean} [props.disabled=false] - Whether the checkbox is disabled
  * @param {Function} [props.onChange] - Change handler
  * @param {string} [props.label] - Label text for the checkbox
+ * @param {string} [props.description] - Additional descriptive text shown below the label
  * @param {string} [props.name] - Name attribute for the input
  * @param {string} [props.value] - Value attribute for the input
  * @param {string} [props.className] - Additional CSS classes for the container
@@ -19,6 +20,7 @@ export function Checkbox({
   disabled = false,
   onChange,
   label,
+  description,
   name,
   value,
   className = '',
@@ -38,7 +40,7 @@ export function Checkbox({
   };
 
   return (
-    <div class={`flex items-center ${className}`}>
+    <div class={`flex items-start ${className}`}>
       <input
         type="checkbox"
         id={checkboxId}
@@ -57,16 +59,30 @@ export function Checkbox({
         `}
         {...rest}
       />
-      {label && (
-        <label
-          for={checkboxId}
-          class={`
-            ml-2 text-sm text-gray-600 dark:text-neutral-dark-600
-            ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
-          `}
-        >
-          {label}
-        </label>
+      {(label || description) && (
+        <div class="ml-2 flex flex-col -mt-0.5">
+          {label && (
+            <label
+              for={checkboxId}
+              class={`
+                text-sm text-gray-600 dark:text-neutral-dark-600
+                ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
+              `}
+            >
+              {label}
+            </label>
+          )}
+          {description && (
+            <span
+              class={`
+                text-xs text-gray-500 dark:text-neutral-dark-500 mt-1
+                ${disabled ? 'cursor-not-allowed opacity-50' : ''}
+              `}
+            >
+              {description}
+            </span>
+          )}
+        </div>
       )}
     </div>
   );
