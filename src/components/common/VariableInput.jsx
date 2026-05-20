@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { useAppContext } from '../../hooks/useAppContext';
 import { apiClient } from '../../api';
+import { Portal } from './Portal';
 
 /**
  * Enhanced input component with variable highlighting and autocomplete
@@ -31,6 +32,9 @@ export function VariableInput({
   const inputRef = useRef();
   const autocompleteRef = useRef();
   const updateTimeoutRef = useRef();
+  const hoverTimerRef = useRef(null);
+  const hoverCardRef = useRef(null);
+  const [hoverState, setHoverState] = useState(null);
 
   // Load variables when collection or selected environment changes
   useEffect(() => {
@@ -43,21 +47,21 @@ export function VariableInput({
     try {
       // Collection variables (inline)
       if (selectedCollection?.variables) {
-        selectedCollection.variables.forEach(v => vars.set(v.key, v.value));
+        selectedCollection.variables.forEach(v => vars.set(v.key, { value: v.value, type: 'variable' }));
       }
 
       // Database collection variables
       if (selectedCollection?.id) {
         const collectionVars = await apiClient.getSecretsByCollection(selectedCollection.id);
-        collectionVars.forEach(v => vars.set(v.key, v.value));
+        collectionVars.forEach(v => vars.set(v.key, { value: v.value, type: 'variable' }));
       }
 
-      // Environment variables - use selectedEnvironment prop if provided, 
+      // Environment variables - use selectedEnvironment prop if provided,
       // otherwise fall back to collection's default environment only if user hasn't manually selected
       const environmentId = selectedEnvironment?.id || (!hasManuallySelectedEnvironment ? selectedCollection?.environment_id : null);
       if (environmentId) {
         const envVars = await apiClient.getDecryptedEnvironmentSecrets(environmentId);
-        envVars.forEach(v => vars.set(v.key, v.value));
+        envVars.forEach(v => vars.set(v.key, { value: v.value, type: 'secret' }));
       }
     } catch (error) {
       console.error('Failed to load variables:', error);
@@ -72,10 +76,9 @@ export function VariableInput({
 
     const variableRegex = /\{\{([^}]*)\}\}/g;
     return text.replace(variableRegex, (match, variableName) => {
-      if (variables.has(variableName)) {
-        return variables.get(variableName);
-      }
-      return match; // Keep unresolved variables as-is
+      const entry = variables.get(variableName);
+      if (entry) return entry.value ?? entry;
+      return match;
     });
   }, [variables]);
 
@@ -288,6 +291,29 @@ export function VariableInput({
     }
   };
 
+  const handleMouseOver = (e) => {
+    const target = e.target;
+    if (!target.classList?.contains('variable-resolved')) return;
+    clearTimeout(hoverTimerRef.current);
+    hoverTimerRef.current = setTimeout(() => {
+      const rawText = target.textContent.replace(/\u00a0/g, " ");
+      const nameMatch = rawText.match(/^\{\{(.+)\}\}$/);
+      if (!nameMatch) return;
+      const entry = variables.get(nameMatch[1]);
+      if (!entry) return;
+      const rect = target.getBoundingClientRect();
+      setHoverState({ variableName: nameMatch[1], type: entry.type, value: entry.value, position: { top: rect.bottom + 6, left: rect.left } });
+    }, 400);
+  };
+
+  const handleMouseOut = (e) => {
+    if (!e.target.classList?.contains('variable-resolved')) return;
+    clearTimeout(hoverTimerRef.current);
+    if (!hoverCardRef.current?.contains(e.relatedTarget)) {
+      setHoverState(null);
+    }
+  };
+
   // Handle clicking outside to close autocomplete
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -375,6 +401,8 @@ export function VariableInput({
         contentEditable={!disabled}
         onInput={handleInput}
         onKeyDown={handleKeyDown}
+        onMouseOver={handleMouseOver}
+        onMouseOut={handleMouseOut}
         data-placeholder={placeholder}
         className={`variable-input ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         suppressContentEditableWarning={true}
@@ -403,18 +431,44 @@ export function VariableInput({
                 }`}
               onClick={() => insertVariable(variableName)}
             >
-              <div class="flex items-center">
+              <div class="flex items-center gap-1.5">
                 <span class="font-medium">{variableName}</span>
+                <span class="text-xs text-gray-500 dark:text-neutral-dark-500">
+                  &middot; {variables.get(variableName)?.type === 'secret' ? 'secret' : 'variable'}
+                </span>
               </div>
               {variables.has(variableName) && (
                 <div class="text-xs text-gray-500 dark:text-neutral-dark-500 truncate mt-1">
-                  {String(variables.get(variableName)).slice(0, 50)}
-                  {String(variables.get(variableName)).length > 50 ? '...' : ''}
+                  {String(variables.get(variableName)?.value ?? '').slice(0, 50)}
+                  {String(variables.get(variableName)?.value ?? '').length > 50 ? '...' : ''}
                 </div>
               )}
             </div>
           ))}
         </div>
+      )}
+
+      {hoverState && (
+        <Portal>
+          <div
+            ref={hoverCardRef}
+            class="fixed z-50 rounded-md border border-gray-200 dark:border-neutral-dark-300 bg-white dark:bg-surface-dark-elevated shadow-md text-gray-900 dark:text-neutral-dark-900"
+            style={{ top: `${hoverState.position.top}px`, left: `${hoverState.position.left}px`, maxWidth: '240px', minWidth: '160px' }}
+            onMouseLeave={() => { clearTimeout(hoverTimerRef.current); setHoverState(null); }}
+          >
+            <div class="px-4 pt-3 pb-2">
+              <p class="text-xs font-semibold text-gray-500 dark:text-neutral-dark-500 uppercase tracking-wide">
+                {hoverState.type === 'secret' ? 'Secret' : 'Variable'}
+              </p>
+            </div>
+            <hr class="border-gray-200 dark:border-neutral-dark-300" />
+            <div class="px-4 py-3">
+              <p class="text-xs break-all font-mono">
+                {hoverState.value}
+              </p>
+            </div>
+          </div>
+        </Portal>
       )}
 
       {(() => {
