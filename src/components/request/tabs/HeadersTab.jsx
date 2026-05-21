@@ -36,12 +36,9 @@ export function HeadersTab({ headers, onHeadersChange, onEnterKeyPress, selected
       <div class="flex justify-between items-center mb-2">
         <button
           onClick={addHeader}
-          class="px-3 py-1 bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 text-sky-700 dark:text-primary-dark-400 text-sm font-medium rounded-md cursor-pointer"
+          class="text-xs px-3 py-1 bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 text-sky-700 dark:text-primary-dark-400 text-sm font-medium rounded-md cursor-pointer"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus">
-            <path d="M5 12h14" />
-            <path d="M12 5v14" />
-          </svg>
+          Add header
         </button>
       </div>
 

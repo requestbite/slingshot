@@ -13,6 +13,7 @@ import { StateField, StateEffect } from '@codemirror/state';
 import { tags } from '@lezer/highlight';
 import { ContextMenu } from '../../common/ContextMenu';
 import { VariableInput } from '../../common/VariableInput';
+import { Checkbox } from '../../common/Checkbox';
 import { useAppContext } from '../../../hooks/useAppContext';
 import { apiClient } from '../../../api';
 import { parseRequestBodySchema, getRequestBodySchemaForContentType } from '../../../utils/schemaParser';
@@ -139,13 +140,9 @@ function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFile
         <button
           ref={addButtonRef}
           onClick={handleAddButtonClick}
-          class="px-3 py-1 bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 text-sky-700 dark:text-primary-dark-400 text-sm font-medium rounded-md cursor-pointer flex items-center gap-1"
+          class="text-xs px-3 py-1 bg-sky-100 dark:bg-primary-dark-200 hover:bg-sky-200 dark:hover:bg-primary-dark-300 text-sky-700 dark:text-primary-dark-400 font-medium rounded-md cursor-pointer flex items-center gap-1"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus">
-            <path d="M5 12h14" />
-            <path d="M12 5v14" />
-          </svg>
-          Add
+          Add field
         </button>
       </div>
 
@@ -158,28 +155,26 @@ function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFile
         />
       )}
 
-      <div class="space-y-2">
+      <div class="space-y-1">
         {data.map((field) => (
-          <div key={field.id} class="grid grid-cols-12 gap-2 items-center">
+          <div key={field.id} class="grid grid-cols-12 gap-2 items-center group">
             <div class="col-span-1 flex justify-center">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={field.enabled}
                 onChange={() => toggleFieldEnabled(field.id)}
-                class="w-4 h-4 text-sky-600 border-gray-300 dark:border-neutral-dark-50 rounded focus:ring-sky-500"
               />
             </div>
             {allowFiles && (
               <div class="col-span-1 flex justify-center">
                 <span class={`text-xs px-2 py-1 rounded ${field.type === 'file'
-                  ? 'bg-purple-100 text-purple-700'
-                  : 'bg-blue-100 text-blue-700'
+                  ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                  : 'bg-blue-100 dark:bg-primary-dark-200 text-blue-700 dark:text-primary-dark-400'
                   }`}>
                   {field.type === 'file' ? 'File' : 'Text'}
                 </span>
               </div>
             )}
-            <div class={allowFiles ? "col-span-4" : "col-span-5"}>
+            <div class={allowFiles ? "col-span-4 compact-vi" : "col-span-5 compact-vi"}>
               <VariableInput
                 key={`${field.type}-key-${field.id}-${selectedEnvironment?.id || 'none'}`}
                 value={field.key}
@@ -192,7 +187,7 @@ function FormDataSection({ data, onDataChange, onEnterKeyPress, title, allowFile
                 selectedEnvironment={selectedEnvironment}
               />
             </div>
-            <div class="col-span-5">
+            <div class="col-span-5 compact-vi">
               {renderValueField(field)}
             </div>
             <div class="col-span-1 flex justify-center">
