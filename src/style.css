@@ -4,6 +4,27 @@
 
 @variant dark (&:where(.dark, .dark *));
 
+/*
+ * Supplement JetBrains Mono (loaded from Google Fonts, which strips extended glyphs)
+ * with system monospace fonts for Unicode ranges that contain box-drawing characters,
+ * block elements, and other symbols common in API responses and ASCII art.
+ * Using local() avoids any extra network request.
+ */
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('Cascadia Mono'), local('Cascadia Code'),
+       local('Menlo'), local('Consolas'),
+       local('DejaVu Sans Mono'), local('Liberation Mono'),
+       local('Courier New');
+  unicode-range:
+    U+2190-U+21FF,  /* Arrows */
+    U+2500-U+257F,  /* Box Drawing */
+    U+2580-U+259F,  /* Block Elements */
+    U+25A0-U+25FF,  /* Geometric Shapes */
+    U+2600-U+26FF,  /* Miscellaneous Symbols */
+    U+E000-U+F8FF;  /* Private Use Area (Nerd Font icons) */
+}
+
 @theme {
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
