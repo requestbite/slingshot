@@ -45,7 +45,7 @@ export function HeadersTab({ headers, onHeadersChange, onEnterKeyPress, selected
         </button>
       </div>
 
-      <div class="space-y-2">
+      <div class="space-y-1">
         {headers.map((header) => (
           <div key={header.id} class="grid grid-cols-12 gap-2 items-center group">
             <div class="col-span-1 flex justify-center">
@@ -56,7 +56,7 @@ export function HeadersTab({ headers, onHeadersChange, onEnterKeyPress, selected
                 class="w-4 h-4 text-sky-600 border-gray-300 dark:border-neutral-dark-50 rounded focus:ring-sky-500"
               />
             </div>
-            <div class="col-span-5">
+            <div class="col-span-5 compact-vi">
               <VariableInput
                 key={`header-key-${header.id}-${selectedEnvironment?.id || 'none'}`}
                 value={header.key}
@@ -69,7 +69,7 @@ export function HeadersTab({ headers, onHeadersChange, onEnterKeyPress, selected
                 selectedEnvironment={selectedEnvironment}
               />
             </div>
-            <div class="col-span-5">
+            <div class="col-span-5 compact-vi">
               <VariableInput
                 key={`header-value-${header.id}-${selectedEnvironment?.id || 'none'}`}
                 value={header.value}

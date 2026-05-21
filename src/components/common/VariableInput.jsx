@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
+import { forwardRef, useImperativeHandle } from 'preact/compat';
 import { useAppContext } from '../../hooks/useAppContext';
 import { apiClient } from '../../api';
 import { Portal } from './Portal';
@@ -8,7 +9,7 @@ import { Portal } from './Portal';
  * Highlights {{variable}} patterns with green (resolved) or red (unresolved) backgrounds
  * Shows autocomplete dropdown when user types {{
  */
-export function VariableInput({
+export const VariableInput = forwardRef(function VariableInput({
   value = '',
   onChange,
   onKeyDown,
@@ -20,7 +21,7 @@ export function VariableInput({
   showResolved = false, // Show resolved variable values below the input
   fullyResolvedUrl = null, // Fully resolved URL with variables, path params, and query params
   ...props
-}) {
+}, ref) {
   const { selectedCollection, hasManuallySelectedEnvironment } = useAppContext();
   const [variables, setVariables] = useState(new Map());
   const [showAutocomplete, setShowAutocomplete] = useState(false);
@@ -30,6 +31,21 @@ export function VariableInput({
   const [autocompleteStart, setAutocompleteStart] = useState(-1);
 
   const inputRef = useRef();
+
+  useImperativeHandle(ref, () => ({
+    focusAtEnd: () => {
+      const el = inputRef.current;
+      if (!el) return;
+      el.focus();
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false); // collapse to end
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  }));
+
   const autocompleteRef = useRef();
   const updateTimeoutRef = useRef();
   const hoverTimerRef = useRef(null);
@@ -555,4 +571,4 @@ export function VariableInput({
       `}</style>
     </div>
   );
-}
+});

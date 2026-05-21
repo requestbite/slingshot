@@ -35,6 +35,26 @@ const getTabNames = (hasActiveCollection) => ({
   ...(hasActiveCollection ? {} : { settings: 'Settings' })
 });
 
+// Decode percent-encoded query params in a URL so the URL bar shows human-readable values,
+// matching the unencoded format produced by rebuildUrlFromParams when editing via the Params tab.
+const decodeUrlQueryParams = (url) => {
+  if (!url) return url;
+  const qIdx = url.indexOf('?');
+  if (qIdx === -1) return url;
+  const base = url.slice(0, qIdx);
+  const rest = url.slice(qIdx + 1);
+  const hashIdx = rest.indexOf('#');
+  const qs = hashIdx === -1 ? rest : rest.slice(0, hashIdx);
+  const fragment = hashIdx === -1 ? '' : rest.slice(hashIdx);
+  try {
+    const pairs = [];
+    new URLSearchParams(qs).forEach((value, key) => pairs.push(`${key}=${value}`));
+    return base + (pairs.length ? '?' + pairs.join('&') : '') + fragment;
+  } catch {
+    return url;
+  }
+};
+
 // Helper function to decrypt auth response
 const decryptAuthResponse = async (encryptedResponse) => {
   if (!encryptedResponse || !encryptedResponse.encrypted_value) return encryptedResponse;
@@ -102,7 +122,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
 
     return {
       method: request.has_draft_edits && request.draft_method ? request.draft_method : (request.method || 'GET'),
-      url: request.has_draft_edits && request.draft_url ? request.draft_url : (request.url || ''),
+      url: decodeUrlQueryParams(request.has_draft_edits && request.draft_url ? request.draft_url : (request.url || '')),
       headers: request.has_draft_edits && request.draft_headers ? request.draft_headers : (request.headers || []),
       queryParams: request.has_draft_edits && request.draft_params ? request.draft_params : (request.params || []),
       pathParams: request.has_draft_edits && request.draft_path_params ? request.draft_path_params : (request.path_params || []),
@@ -158,6 +178,9 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
   const isInitialLoadRef = useRef(false);
   const isParamEditRef = useRef(false);
   const previousRequestIdRef = useRef(null);
+
+  // URL input ref — used to focus and position cursor on request load
+  const urlInputRef = useRef(null);
 
   // Recent requests menu state
   const [showRecentMenu, setShowRecentMenu] = useState(false);
@@ -290,6 +313,14 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
       }));
     }
   }, [sharedRequestData, request]);
+
+  // Focus the URL bar with cursor at the end whenever a (different) request is loaded
+  useEffect(() => {
+    if (!request?.id) return;
+    // Delay to let the VariableInput highlight effect settle its DOM update first
+    const id = setTimeout(() => urlInputRef.current?.focusAtEnd(), 50);
+    return () => clearTimeout(id);
+  }, [request?.id]);
 
   // Update the ref whenever requestData changes
   useEffect(() => {
@@ -1440,6 +1471,7 @@ export function RequestEditor({ request, onRequestChange, sharedRequestData }) {
           {/* URL input */}
           <div class="flex-1 sm:mr-2" style="min-width: 0;">
             <VariableInput
+              ref={urlInputRef}
               key={`url-${currentEnvironment?.id || 'none'}`}
               value={requestData.url}
               onChange={handleUrlChange}

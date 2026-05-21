@@ -41,7 +41,7 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
       {pathParams.length > 0 && (
         <div class="mb-4">
           <p class="text-sm font-medium text-gray-700 dark:text-neutral-dark-700 mb-2">Path parameters</p>
-          <div class="space-y-2">
+          <div class="space-y-1">
             {pathParams.map((param) => (
               <div key={param.id} class="grid grid-cols-12 gap-2 items-center">
                 <div class="col-span-1 flex justify-center">
@@ -52,14 +52,14 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
                     class="w-4 h-4 text-sky-600 border-gray-300 dark:border-neutral-dark-50 rounded focus:ring-sky-500"
                   />
                 </div>
-                <div class="col-span-5">
+                <div class="col-span-5 compact-vi">
                   <TextInput
                     value={param.key}
                     disabled
                     title="Path parameter key is defined in the URL"
                   />
                 </div>
-                <div class="col-span-6">
+                <div class="col-span-6 compact-vi">
                   <VariableInput
                     key={`pathparam-${param.id}-${selectedEnvironment?.id || 'none'}`}
                     value={param.value}
@@ -96,7 +96,7 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
           )}
         </div>
 
-        <div class="space-y-2">
+        <div class="space-y-1">
           {queryParams.map((param) => (
             <div key={param.id} class="grid grid-cols-12 gap-2 items-center group">
               <div class="col-span-1 flex justify-center">
@@ -105,7 +105,7 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
                   onChange={() => toggleQueryParamEnabled(param.id)}
                 />
               </div>
-              <div class="col-span-5">
+              <div class="col-span-5 compact-vi">
                 <VariableInput
                   key={`queryparam-key-${param.id}-${selectedEnvironment?.id || 'none'}`}
                   value={param.key}
@@ -117,7 +117,7 @@ export function ParamsTab({ queryParams, pathParams, onQueryParamsChange, onPath
                   selectedEnvironment={selectedEnvironment}
                 />
               </div>
-              <div class="col-span-5">
+              <div class="col-span-5 compact-vi">
                 <VariableInput
                   key={`queryparam-value-${param.id}-${selectedEnvironment?.id || 'none'}`}
                   value={param.value}

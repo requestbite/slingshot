@@ -218,3 +218,13 @@ body {
   background: #44475a;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
 }
+
+.compact-vi .variable-input,
+.compact-vi input {
+  font-size: 12px;
+  padding: 6px 9px;
+  min-height: 32px;
+  max-height: 32px;
+  height: 32px;
+  line-height: 18px;
+}
