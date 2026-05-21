@@ -43,9 +43,9 @@ const COMMON_HEADERS = [
 function getFilteredHeaders(value) {
   // Suppress suggestions while user is typing a variable reference
   if (value && /\{\{[^}]*$/.test(value)) return [];
-  if (!value) return COMMON_HEADERS.slice(0, 10);
+  if (!value) return COMMON_HEADERS;
   const lower = value.toLowerCase();
-  return COMMON_HEADERS.filter(h => h.toLowerCase().includes(lower)).slice(0, 10);
+  return COMMON_HEADERS.filter(h => h.toLowerCase().includes(lower));
 }
 
 export function HeadersTab({ headers, onHeadersChange, onEnterKeyPress, selectedEnvironment }) {
