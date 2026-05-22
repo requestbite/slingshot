@@ -10,6 +10,7 @@ import { EditorView, keymap } from '@codemirror/view';
 import { bracketMatching } from '@codemirror/language';
 import { search, searchKeymap, openSearchPanel } from '@codemirror/search';
 import { ansiColors } from '../codemirror/ansiExtension.js';
+import { urlLinks } from '../codemirror/urlExtension.js';
 import { HtmlTabs } from './HtmlTabs';
 import { HtmlPreview } from './HtmlPreview';
 import { ImageDisplay } from './ImageDisplay';
@@ -379,7 +380,8 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
         }
       }),
       // Make editor read-only
-      EditorView.editable.of(false)
+      EditorView.editable.of(false),
+      ...urlLinks
     ];
 
     // Determine content type from response headers or try to parse content
@@ -919,7 +921,8 @@ export function ResponseDisplay({ response, isLoading, onCancel, onClear, isStre
                                     ".cm-scroller": { overflow: "auto", fontFamily: '"JetBrains Mono", ui-monospace, monospace' }
                                   }),
                                   EditorView.editable.of(false),
-                                  json()
+                                  json(),
+                                  ...urlLinks
                                 ]}
                                 theme={dracula}
                                 editable={false}
