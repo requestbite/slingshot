@@ -1,4 +1,4 @@
-export function Alert({ type = 'note', children, className = '' }) {
+export function Alert({ type = 'note', children, className = '', onClose }) {
   const config = {
     note: {
       bgColor: 'bg-sky-100 dark:bg-primary-dark-200',
@@ -76,6 +76,19 @@ export function Alert({ type = 'note', children, className = '' }) {
       <div class="flex-1">
         {children}
       </div>
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          class={`self-center shrink-0 p-0.5 rounded hover:opacity-70 cursor-pointer transition-opacity ${alertConfig.iconColor}`}
+          aria-label="Dismiss"
+        >
+          <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }

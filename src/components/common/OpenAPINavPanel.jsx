@@ -112,7 +112,23 @@ export function OpenAPINavPanel({ spec, activeId, onSelect }) {
 
   const tagGroups = useMemo(() => {
     if (!spec?.paths) return [];
-    return getOperationsByTag(spec);
+    const groups = getOperationsByTag(spec);
+
+    const sorted = groups.map(tag => ({
+      ...tag,
+      operations: [...tag.operations].sort((a, b) =>
+        (a.operation.summary || a.path).localeCompare(b.operation.summary || b.path)
+      ),
+    }));
+
+    // Keep the "default" catch-all group first, sort the rest alphabetically
+    sorted.sort((a, b) => {
+      if (a.name === 'default') return -1;
+      if (b.name === 'default') return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    return sorted;
   }, [spec]);
 
   // When a tag group is filtered away entirely, check if there's anything to show

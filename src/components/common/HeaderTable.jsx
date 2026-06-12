@@ -82,7 +82,7 @@ export function HeaderTable({ headers = [], nameTitle = 'Name', valueTitle = 'Va
           </div>
         )}
         {headers.map((header, index) => (
-          <div key={index} class="flex flex-col sm:flex-row border-b border-slate-100 dark:border-neutral-dark-300 py-1">
+          <div key={index} class="flex flex-col sm:flex-row border-b last:border-b-0 border-slate-100 dark:border-neutral-dark-300 py-1">
             <div class="ht-col-name truncate pr-3">
               {renderCell(header.name, false)}
             </div>
