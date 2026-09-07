@@ -39,6 +39,7 @@ export const SearchAutocomplete = forwardRef((
     value = '',
     onChange,
     onSelect,
+    onSubmit,
     items = [],
     onSearch,
     renderItem,
@@ -186,6 +187,14 @@ export const SearchAutocomplete = forwardRef((
   };
 
   const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && onSubmit && (selectedIndex < 0 || !showDropdown || filteredItems.length === 0)) {
+      e.preventDefault();
+      onSubmit(value);
+      setShowDropdown(false);
+      setSelectedIndex(-1);
+      return;
+    }
+
     if (!showDropdown || filteredItems.length === 0) {
       return;
     }
@@ -207,6 +216,10 @@ export const SearchAutocomplete = forwardRef((
         e.preventDefault();
         if (selectedIndex >= 0 && filteredItems[selectedIndex]) {
           handleItemSelect(filteredItems[selectedIndex], selectedIndex);
+        } else if (onSubmit) {
+          onSubmit(value);
+          setShowDropdown(false);
+          setSelectedIndex(-1);
         }
         break;
 
