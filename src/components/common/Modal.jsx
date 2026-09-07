@@ -19,7 +19,11 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
     '2xl': 'max-w-6xl'
   };
 
-  const panelRef = useRef(null);
+  // The panel is tracked as state, not a plain ref: Portal renders null on its
+  // first pass and only mounts its container in an effect, so the panel lands
+  // in the DOM a render later than this component. A callback ref re-runs the
+  // measurement at the moment the node actually attaches.
+  const [panelEl, setPanelEl] = useState(null);
   const dragRef = useRef(null);
   // Desktop mode: the panel is capped by its max-width instead of stretching
   // across the whole row. Only then is there anywhere to drag it to.
@@ -103,14 +107,13 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
     if (!isOpen) return;
 
     const measure = () => {
-      const panel = panelRef.current;
-      const row = panel?.parentElement;
+      const row = panelEl?.parentElement;
       if (!row) return;
       const style = window.getComputedStyle(row);
       const available = row.clientWidth
         - parseFloat(style.paddingLeft || 0)
         - parseFloat(style.paddingRight || 0);
-      setIsDraggable(panel.offsetWidth < available - 1);
+      setIsDraggable(panelEl.offsetWidth < available - 1);
     };
 
     measure();
@@ -126,16 +129,16 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
     window.addEventListener('resize', handleResize);
 
     let observer;
-    if (typeof ResizeObserver !== 'undefined' && panelRef.current) {
+    if (typeof ResizeObserver !== 'undefined' && panelEl) {
       observer = new ResizeObserver(measure);
-      observer.observe(panelRef.current);
+      observer.observe(panelEl);
     }
 
     return () => {
       window.removeEventListener('resize', handleResize);
       observer?.disconnect();
     };
-  }, [isOpen, size]);
+  }, [isOpen, size, panelEl]);
 
   useEffect(() => {
     if (!isDraggable) {
@@ -147,12 +150,11 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
 
   const handlePointerDown = useCallback((e) => {
     if (!isDraggable || (e.button !== undefined && e.button !== 0)) return;
-    const panel = panelRef.current;
-    if (!panel) return;
+    if (!panelEl) return;
 
     // Bounds are taken once, at grab time: the pointer may not travel further
     // than what keeps the panel fully inside the viewport.
-    const rect = panel.getBoundingClientRect();
+    const rect = panelEl.getBoundingClientRect();
     dragRef.current = {
       pointerId: e.pointerId,
       startX: e.clientX,
@@ -168,7 +170,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
     e.preventDefault();
     e.currentTarget.setPointerCapture?.(e.pointerId);
     setIsDragging(true);
-  }, [isDraggable, offset.x, offset.y]);
+  }, [isDraggable, offset.x, offset.y, panelEl]);
 
   const handlePointerMove = useCallback((e) => {
     const drag = dragRef.current;
@@ -194,8 +196,11 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
   const panelStyle = isDraggable
     ? {
         transform: `translate(${offset.x}px, ${offset.y}px)`,
-        // transition-all would smear every pointermove into an animation.
-        transition: isDragging ? 'none' : undefined
+        // transition-all would smear movement into an animation. It has to stay
+        // off while displaced too, not just while dragging: the last
+        // pointermove and the pointerup batch into one render, so re-enabling
+        // it on release would animate that final step.
+        transition: isDragging || offset.x !== 0 || offset.y !== 0 ? 'none' : undefined
       }
     : undefined;
 
@@ -232,7 +237,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
         }}>
           <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:px-4 sm:py-0">
             <div
-              ref={panelRef}
+              ref={setPanelEl}
               class={`relative transform overflow-hidden rounded-lg bg-white dark:bg-surface-dark-elevated px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 w-full ${sizeClasses[size]} sm:p-6 ${isDragging ? 'select-none' : ''}`}
               style={panelStyle}
               onClick={(e) => e.stopPropagation()}
