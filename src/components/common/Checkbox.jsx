@@ -1,10 +1,15 @@
+import { Check, Minus } from 'lucide-preact';
+
 /**
  * Checkbox Component
  *
- * A checkbox input component that matches the primary button color scheme (sky-500).
+ * A custom-styled checkbox that borrows the border/background treatment from
+ * TextInput and fills with the primary Button color (sky-500) plus a lucide
+ * "check" icon when checked (or a "minus" icon when indeterminate).
  *
  * @param {Object} props
  * @param {boolean} [props.checked=false] - Whether the checkbox is checked
+ * @param {boolean} [props.indeterminate=false] - Show the mixed/partial state (e.g. "select all")
  * @param {boolean} [props.disabled=false] - Whether the checkbox is disabled
  * @param {Function} [props.onChange] - Change handler
  * @param {string} [props.label] - Label text for the checkbox
@@ -17,6 +22,7 @@
  */
 export function Checkbox({
   checked = false,
+  indeterminate = false,
   disabled = false,
   onChange,
   label,
@@ -41,24 +47,40 @@ export function Checkbox({
 
   return (
     <div class={`flex items-start ${className}`}>
-      <input
-        type="checkbox"
-        id={checkboxId}
-        name={name}
-        value={value}
-        checked={checked}
-        disabled={disabled}
-        onChange={handleChange}
-        class={`
-          h-4 w-4 rounded border-gray-300 dark:border-neutral-dark-50
-          text-sky-500
-          focus:ring-2 focus:ring-sky-500 focus:ring-offset-0
-          disabled:cursor-not-allowed disabled:opacity-50
-          cursor-pointer
-          transition-colors
-        `}
-        {...rest}
-      />
+      <div class="relative h-4 w-4 shrink-0">
+        <input
+          type="checkbox"
+          id={checkboxId}
+          name={name}
+          value={value}
+          checked={checked}
+          disabled={disabled}
+          ref={(el) => { if (el) el.indeterminate = indeterminate; }}
+          onChange={handleChange}
+          class={`
+            peer absolute inset-0 m-0 h-full w-full appearance-none
+            ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}
+          `}
+          {...rest}
+        />
+        <div
+          class={`
+            pointer-events-none flex h-4 w-4 items-center justify-center rounded-md
+            outline-solid outline-1 -outline-offset-1 transition-colors
+            ${checked || indeterminate
+              ? 'bg-sky-500 outline-sky-500'
+              : 'bg-white dark:bg-[#282a36] outline-gray-300 dark:outline-neutral-dark-50'}
+            peer-focus-visible:outline-2 peer-focus-visible:-outline-offset-2 peer-focus-visible:outline-sky-500
+            ${disabled ? 'opacity-50' : ''}
+          `}
+        >
+          {checked
+            ? <Check class="h-3 w-3 text-white" strokeWidth={3} />
+            : indeterminate
+              ? <Minus class="h-3 w-3 text-white" strokeWidth={3} />
+              : null}
+        </div>
+      </div>
       {(label || description) && (
         <div class="ml-2 flex flex-col -mt-0.5">
           {label && (
