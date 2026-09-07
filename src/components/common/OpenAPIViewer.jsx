@@ -344,7 +344,7 @@ function InlineParametersSchema({ parametersSchema }) {
 // EndpointSection
 // ---------------------------------------------------------------------------
 
-function EndpointSection({ method, path, operation, parameters, spec, defaultExpanded = false }) {
+function EndpointSection({ method, path, operation, parameters, spec, defaultExpanded = false, stickyOffset = 65 }) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   // Parsed data
@@ -436,7 +436,8 @@ function EndpointSection({ method, path, operation, parameters, spec, defaultExp
       {/* Endpoint header – always visible */}
       <button
         onClick={() => setIsExpanded(v => !v)}
-        class="w-full flex items-center gap-3 px-6 py-3 bg-white dark:bg-surface-dark-elevated hover:bg-gray-50 dark:hover:bg-neutral-dark-200 text-left group transition-colors sticky top-[109px] z-10 cursor-pointer border-b border-gray-200 dark:border-neutral-dark-300"
+        class="w-full flex items-center gap-3 px-6 py-3 bg-white dark:bg-surface-dark-elevated hover:bg-gray-50 dark:hover:bg-neutral-dark-200 text-left group transition-colors sticky z-10 cursor-pointer border-b border-gray-200 dark:border-neutral-dark-300"
+        style={{ top: `${stickyOffset + 44}px` }}
       >
         <span class={`text-[10px] font-bold text-white dark:text-gray-800 py-0.5 px-1.5 rounded flex-shrink-0 uppercase tracking-wide ${getMethodColor(method)}`}>
           {method}
@@ -659,7 +660,7 @@ function EndpointSection({ method, path, operation, parameters, spec, defaultExp
 // TagSection
 // ---------------------------------------------------------------------------
 
-function TagSection({ tag, spec, startIndex }) {
+function TagSection({ tag, spec, startIndex, stickyOffset = 65 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
@@ -667,7 +668,8 @@ function TagSection({ tag, spec, startIndex }) {
       {/* Tag header */}
       <button
         onClick={() => setIsCollapsed(v => !v)}
-        class="w-full flex items-center gap-2 px-6 py-3 bg-gray-50 dark:bg-neutral-dark-200 hover:bg-gray-100 dark:hover:bg-neutral-dark-100 text-left transition-colors sticky top-[65px] z-20 cursor-pointer border-b border-gray-200 dark:border-neutral-dark-300"
+        class="w-full flex items-center gap-2 px-6 py-3 bg-gray-50 dark:bg-neutral-dark-200 hover:bg-gray-100 dark:hover:bg-neutral-dark-100 text-left transition-colors sticky z-20 cursor-pointer border-b border-gray-200 dark:border-neutral-dark-300"
+        style={{ top: `${stickyOffset}px` }}
       >
         <svg
           class={`h-4 w-4 text-gray-400 flex-shrink-0 transition-transform ${isCollapsed ? '-rotate-90' : ''}`}
@@ -696,6 +698,7 @@ function TagSection({ tag, spec, startIndex }) {
                 parameters={parameters}
                 spec={spec}
                 defaultExpanded={startIndex + i < 50}
+                stickyOffset={stickyOffset}
               />
             ))}
           </div>
@@ -855,7 +858,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
         {(breadcrumbs || externalDocsUrl || onImportClick) && (
           <div class="flex items-start justify-between mb-4">
             <div class="min-w-0 overflow-hidden">{breadcrumbs}</div>
-            <div ref={buttonsRef} class="flex items-center gap-2">
+            <div class="flex items-center gap-2">
               {isNarrow ? (
                 <>
                   <button
@@ -915,7 +918,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
           </div>
         )}
 
-        <div class="flex flex-wrap items-center gap-3">
+        <div ref={buttonsRef} class="flex flex-wrap items-center gap-3">
           <h1 class="text-2xl font-bold text-gray-900 dark:text-neutral-dark-900 whitespace-nowrap">{title}</h1>
           {info?.version && (
             <Badge variant="utility">v{info.version}</Badge>
@@ -1020,7 +1023,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
           class="fixed z-50 flex items-stretch gap-2"
           style={{ bottom: '20px', right: `${fixedRight}px` }}
         >
-          {isNarrow ? (
+          {(externalDocsUrl || onImportClick) && (isNarrow ? (
             <>
               <button
                 ref={fixedHamburgerRef}
@@ -1074,7 +1077,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
                 </button>
               )}
             </>
-          )}
+          ))}
           <button
             onClick={scrollToTop}
             class="rounded-md bg-sky-100 dark:bg-sky-200 hover:bg-sky-200 dark:hover:bg-sky-300 py-2 px-3 text-sm font-medium text-sky-700 flex items-center cursor-pointer shadow-lg"
@@ -1091,7 +1094,7 @@ function ApiInfoHeader({ info, servers, overrideTitle, overrideDescription, brea
 // Main OpenAPIViewer
 // ---------------------------------------------------------------------------
 
-export function OpenAPIViewer({ spec, className = '', overrideTitle, overrideDescription, breadcrumbs, onImportClick, onImportYamlClick, onImportJsonClick, externalDocsUrl }) {
+export function OpenAPIViewer({ spec, className = '', overrideTitle, overrideDescription, breadcrumbs, onImportClick, onImportYamlClick, onImportJsonClick, externalDocsUrl, stickyOffset = 65 }) {
   const tagGroups = useMemo(() => {
     if (!spec || !spec.paths) return [];
     return getOperationsByTag(spec);
@@ -1131,7 +1134,7 @@ export function OpenAPIViewer({ spec, className = '', overrideTitle, overrideDes
       <div>
         {tagGroups.reduce((acc, tag) => {
           acc.elements.push(
-            <TagSection key={tag.name} tag={tag} spec={spec} startIndex={acc.count} />
+            <TagSection key={tag.name} tag={tag} spec={spec} startIndex={acc.count} stickyOffset={stickyOffset} />
           );
           acc.count += tag.operations.length;
           return acc;
