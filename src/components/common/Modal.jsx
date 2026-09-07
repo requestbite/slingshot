@@ -1,6 +1,14 @@
-import { useEffect } from 'preact/hooks';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { Portal } from './Portal';
 import { Button } from './Button';
+
+const NO_OFFSET = { x: 0, y: 0 };
+
+// Keeps a value inside [lo, hi] even when the two are inverted, which happens
+// when the panel is larger than the viewport on that axis.
+function clamp(value, lo, hi) {
+  return Math.min(Math.max(value, Math.min(lo, hi)), Math.max(lo, hi));
+}
 
 export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
   const sizeClasses = {
@@ -10,6 +18,14 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
     xl: 'max-w-4xl',
     '2xl': 'max-w-6xl'
   };
+
+  const panelRef = useRef(null);
+  const dragRef = useRef(null);
+  // Desktop mode: the panel is capped by its max-width instead of stretching
+  // across the whole row. Only then is there anywhere to drag it to.
+  const [isDraggable, setIsDraggable] = useState(false);
+  const [offset, setOffset] = useState(NO_OFFSET);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -71,7 +87,117 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
     }
   }, [isOpen, onClose]);
 
+  // Every open starts from the centered position.
+  useEffect(() => {
+    if (!isOpen) {
+      dragRef.current = null;
+      setIsDragging(false);
+      setOffset(NO_OFFSET);
+    }
+  }, [isOpen]);
+
+  // Compare the panel against the space it is laid out in: when it is narrower
+  // it has been capped by max-width (desktop), when it fills the row it is the
+  // full-width mobile layout and stays exactly as it was.
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+
+    const measure = () => {
+      const panel = panelRef.current;
+      const row = panel?.parentElement;
+      if (!row) return;
+      const style = window.getComputedStyle(row);
+      const available = row.clientWidth
+        - parseFloat(style.paddingLeft || 0)
+        - parseFloat(style.paddingRight || 0);
+      setIsDraggable(panel.offsetWidth < available - 1);
+    };
+
+    measure();
+
+    // A resize invalidates the offset we clamped against, so drop back to the
+    // centered position rather than leaving the panel half off-screen.
+    const handleResize = () => {
+      dragRef.current = null;
+      setIsDragging(false);
+      setOffset(NO_OFFSET);
+      measure();
+    };
+    window.addEventListener('resize', handleResize);
+
+    let observer;
+    if (typeof ResizeObserver !== 'undefined' && panelRef.current) {
+      observer = new ResizeObserver(measure);
+      observer.observe(panelRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      observer?.disconnect();
+    };
+  }, [isOpen, size]);
+
+  useEffect(() => {
+    if (!isDraggable) {
+      dragRef.current = null;
+      setIsDragging(false);
+      setOffset(NO_OFFSET);
+    }
+  }, [isDraggable]);
+
+  const handlePointerDown = useCallback((e) => {
+    if (!isDraggable || (e.button !== undefined && e.button !== 0)) return;
+    const panel = panelRef.current;
+    if (!panel) return;
+
+    // Bounds are taken once, at grab time: the pointer may not travel further
+    // than what keeps the panel fully inside the viewport.
+    const rect = panel.getBoundingClientRect();
+    dragRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      originX: offset.x,
+      originY: offset.y,
+      minDx: -rect.left,
+      maxDx: window.innerWidth - rect.right,
+      minDy: -rect.top,
+      maxDy: window.innerHeight - rect.bottom
+    };
+
+    e.preventDefault();
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    setIsDragging(true);
+  }, [isDraggable, offset.x, offset.y]);
+
+  const handlePointerMove = useCallback((e) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    setOffset({
+      x: drag.originX + clamp(e.clientX - drag.startX, drag.minDx, drag.maxDx),
+      y: drag.originY + clamp(e.clientY - drag.startY, drag.minDy, drag.maxDy)
+    });
+  }, []);
+
+  const handlePointerUp = useCallback((e) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    dragRef.current = null;
+    setIsDragging(false);
+    if (e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+  }, []);
+
   if (!isOpen) return null;
+
+  const panelStyle = isDraggable
+    ? {
+        transform: `translate(${offset.x}px, ${offset.y}px)`,
+        // transition-all would smear every pointermove into an animation.
+        transition: isDragging ? 'none' : undefined
+      }
+    : undefined;
 
   return (
     <Portal>
@@ -106,7 +232,9 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
         }}>
           <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:px-4 sm:py-0">
             <div
-              class={`relative transform overflow-hidden rounded-lg bg-white dark:bg-surface-dark-elevated px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 w-full ${sizeClasses[size]} sm:p-6`}
+              ref={panelRef}
+              class={`relative transform overflow-hidden rounded-lg bg-white dark:bg-surface-dark-elevated px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 w-full ${sizeClasses[size]} sm:p-6 ${isDragging ? 'select-none' : ''}`}
+              style={panelStyle}
               onClick={(e) => e.stopPropagation()}
             >
               <div>
@@ -125,7 +253,20 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
                 </div>
 
                 <div class="mt-0">
-                  <h3 class="text-base font-semibold text-gray-900 dark:text-neutral-dark-900 text-center sm:text-left">{title}</h3>
+                  {/* The title band doubles as the drag handle on desktop; the
+                      negative margins stretch it across the panel's own top
+                      padding so the whole strip is grabbable. The close button
+                      is positioned above it and keeps taking its own clicks. */}
+                  <div
+                    class={`-mx-4 -mt-5 px-4 pt-5 sm:-mx-6 sm:-mt-6 sm:px-6 sm:pt-6 ${isDraggable ? 'cursor-move' : ''}`}
+                    style={isDraggable ? { touchAction: 'none' } : undefined}
+                    onPointerDown={handlePointerDown}
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={handlePointerUp}
+                    onPointerCancel={handlePointerUp}
+                  >
+                    <h3 class="text-base font-semibold text-gray-900 dark:text-neutral-dark-900 text-center sm:text-left">{title}</h3>
+                  </div>
 
                   {/* Content */}
                   <div class="mt-2">
