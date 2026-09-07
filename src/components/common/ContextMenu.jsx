@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 
-export function ContextMenu({ isOpen, onClose, trigger, children, items = [], width, position = "right" }) {
+export function ContextMenu({ isOpen, onClose, trigger, coords, children, items = [], width, position = "right" }) {
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const menuRef = useRef();
 
   useEffect(() => {
-    if (isOpen && trigger) {
+    if (isOpen && (trigger || coords)) {
       calculatePosition();
       document.addEventListener('click', handleClickOutside);
       document.addEventListener('keydown', handleKeyDown);
@@ -15,7 +15,7 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
       document.removeEventListener('click', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, trigger]);
+  }, [isOpen, trigger, coords]);
 
   // Recalculate position after menu is rendered with actual height
   useEffect(() => {
@@ -28,75 +28,63 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
   }, [isOpen, items, children]);
 
   const calculatePosition = () => {
-    if (!trigger || !menuRef.current) return;
+    if (!menuRef.current) return;
+    if (!trigger && !coords) return;
 
-    const triggerRect = trigger.getBoundingClientRect();
-    const menuHeight = menuRef.current.offsetHeight || 120; // Use actual height if available, otherwise approximate
-    const menuWidth = width || 160; // Use provided width or default to 160px
+    const menuHeight = menuRef.current.offsetHeight || 120;
+    const menuWidth = width || 160;
     const viewport = {
       width: window.innerWidth,
       height: window.innerHeight
     };
 
-    // Check if we're on mobile (screen width < 768px)
-    const isMobile = window.innerWidth < 768;
-
-    // Calculate position
     let left, top;
 
-    if (position === "below" || position === "below-right") {
-      // Position below the trigger
+    if (coords) {
+      left = coords.x;
+      top = coords.y;
+    } else if (position === "below" || position === "below-right") {
+      const triggerRect = trigger.getBoundingClientRect();
       top = triggerRect.bottom + 4;
 
       if (position === "below-right") {
-        // Align menu's right edge with trigger's right edge
         left = triggerRect.right - menuWidth;
       } else {
-        // Align menu's left edge with trigger's left edge
         left = triggerRect.left;
       }
 
-      // Ensure menu doesn't go off-screen to the right
       if (left + menuWidth > viewport.width - 8) {
         left = viewport.width - menuWidth - 8;
       }
 
-      // Ensure menu doesn't go off-screen to the left
       if (left < 8) left = 8;
 
-      // If it would go below viewport, position above instead
       if (top + menuHeight > viewport.height - 8) {
         top = triggerRect.top - menuHeight - 4;
       }
     } else {
-      // Default "right" position behavior
+      const triggerRect = trigger.getBoundingClientRect();
+      const isMobile = window.innerWidth < 768;
+
       if (isMobile) {
-        // Mobile: position to the left of the button
         left = triggerRect.left - menuWidth - 4;
-        // Ensure menu doesn't go off-screen to the left
         if (left < 8) left = 8;
       } else {
-        // Desktop: position to the right of the button
         left = triggerRect.right + 4;
-        // Ensure menu doesn't go off-screen to the right
         if (left + menuWidth > viewport.width - 8) {
           left = triggerRect.left - menuWidth - 4;
         }
       }
 
-      // Check if menu should open upward
       const spaceBelow = viewport.height - triggerRect.bottom;
       const spaceAbove = triggerRect.top;
       const shouldOpenUpward = spaceBelow < menuHeight && spaceAbove > menuHeight;
 
       if (shouldOpenUpward) {
-        // Position menu above the trigger button
         top = triggerRect.top - menuHeight - 4;
       } else {
-        // Position menu below the trigger button
         top = triggerRect.bottom + 4;
 
-        // If it would go below viewport, try to position it above
         if (top + menuHeight > viewport.height - 8) {
           top = triggerRect.top - menuHeight - 4;
         }
@@ -129,7 +117,7 @@ export function ContextMenu({ isOpen, onClose, trigger, children, items = [], wi
 
   const handleClickOutside = (e) => {
     if (menuRef.current && !menuRef.current.contains(e.target) &&
-      trigger && !trigger.contains(e.target)) {
+      (!trigger || !trigger.contains(e.target))) {
       onClose();
     }
   };
