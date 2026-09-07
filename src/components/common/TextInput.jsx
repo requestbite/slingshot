@@ -1,4 +1,4 @@
-import { useState, forwardRef } from 'preact/compat';
+import { useState, useRef, forwardRef } from 'preact/compat';
 import { Copy } from 'lucide-preact';
 import { Toast, useToast } from './Toast';
 
@@ -7,7 +7,7 @@ import { Toast, useToast } from './Toast';
  *
  * A reusable text input component with support for:
  * - Text, password, URL input types, textarea, and file input
- * - Optional clear button (X icon)
+ * - Optional clear button (X icon), reachable by Tab with `clearButtonFocusable`
  * - Password visibility toggle (eye icon)
  * - Proper icon grouping when both are present
  * - Optional description text below the input
@@ -24,6 +24,7 @@ export const TextInput = forwardRef(({
   placeholder = '',
   disabled = false,
   clearable = false,
+  clearButtonFocusable = false,
   showCopyButton = false,
   description = '',
   className = '',
@@ -39,6 +40,16 @@ export const TextInput = forwardRef(({
   const [toastVisible, showToast, hideToast] = useToast();
   const isTextarea = type === 'textarea';
   const isFile = type === 'file';
+
+  // Clearing removes the clear button itself, so a keyboard user pressing it
+  // would be left with focus on <body>. Keeping our own handle on the input
+  // lets us hand focus back; the forwarded ref is still populated as before.
+  const inputRef = useRef(null);
+  const setInputRef = (node) => {
+    inputRef.current = node;
+    if (typeof ref === 'function') ref(node);
+    else if (ref) ref.current = node;
+  };
 
   // Update input type when type prop changes
   if (type !== inputType && type !== 'password') {
@@ -72,6 +83,10 @@ export const TextInput = forwardRef(({
     }
     if (onInput) {
       onInput(syntheticEvent);
+    }
+
+    if (clearButtonFocusable) {
+      inputRef.current?.focus();
     }
   };
 
@@ -150,7 +165,7 @@ export const TextInput = forwardRef(({
           />
         ) : (
           <input
-            ref={ref}
+            ref={setInputRef}
             id={id}
             type={inputType}
             value={value}
@@ -170,9 +185,12 @@ export const TextInput = forwardRef(({
               <button
                 type="button"
                 onClick={handleClear}
-                class="p-1 text-gray-400 hover:text-gray-600 dark:text-neutral-dark-400 dark:hover:text-neutral-dark-600 rounded-sm focus:outline-hidden cursor-pointer transition-colors"
+                class={`p-1 text-gray-400 hover:text-gray-600 dark:text-neutral-dark-400 dark:hover:text-neutral-dark-600 rounded-sm cursor-pointer transition-colors ${clearButtonFocusable
+                  ? 'focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500'
+                  : 'focus:outline-hidden'
+                  }`}
                 aria-label="Clear input"
-                tabIndex={-1}
+                tabIndex={clearButtonFocusable ? 0 : -1}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
