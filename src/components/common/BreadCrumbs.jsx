@@ -24,11 +24,12 @@ const HomeIcon = () => (
  * The first item is always represented by a home icon.
  *
  * @param {Object} props
- * @param {Array<{name: string, href?: string, onClick?: function}>} props.items - Array of breadcrumb items.
+ * @param {Array<{name: string, href?: string, onClick?: function, onContextMenu?: function}>} props.items - Array of breadcrumb items.
  *   Items with href use Link navigation; items with onClick use button callbacks.
  *   Items with both render as a link (so hovering shows the target and it can be
  *   opened in a new tab), but a plain click runs onClick instead of navigating.
- *   Items with neither are rendered as plain text.
+ *   Items with neither are rendered as plain text. onContextMenu, when given,
+ *   handles right-clicks on the item whichever way it renders.
  * @param {string} [props.className] - Additional CSS classes
  */
 export function BreadCrumbs({ items, className = '' }) {
@@ -83,18 +84,19 @@ export function BreadCrumbs({ items, className = '' }) {
                       e.preventDefault();
                       item.onClick(e);
                     } : undefined}
+                    onContextMenu={item.onContextMenu}
                     class={linkClass}
                     aria-label={isFirst ? 'Home' : undefined}
                   >
                     {content}
                   </Link>
                 ) : (
-                  <button type="button" onClick={item.onClick} class={`cursor-pointer ${linkClass}`} aria-label={isFirst ? 'Home' : undefined}>
+                  <button type="button" onClick={item.onClick} onContextMenu={item.onContextMenu} class={`cursor-pointer ${linkClass}`} aria-label={isFirst ? 'Home' : undefined}>
                     {content}
                   </button>
                 )
               ) : (
-                <span class={inactiveClass} aria-label={isFirst ? 'Home' : undefined}>
+                <span class={`${inactiveClass}${item.onContextMenu ? ' cursor-pointer' : ''}`} onContextMenu={item.onContextMenu} aria-label={isFirst ? 'Home' : undefined}>
                   {content}
                 </span>
               )}
