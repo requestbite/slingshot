@@ -26,6 +26,8 @@ const HomeIcon = () => (
  * @param {Object} props
  * @param {Array<{name: string, href?: string, onClick?: function}>} props.items - Array of breadcrumb items.
  *   Items with href use Link navigation; items with onClick use button callbacks.
+ *   Items with both render as a link (so hovering shows the target and it can be
+ *   opened in a new tab), but a plain click runs onClick instead of navigating.
  *   Items with neither are rendered as plain text.
  * @param {string} [props.className] - Additional CSS classes
  */
@@ -73,7 +75,17 @@ export function BreadCrumbs({ items, className = '' }) {
 
               {isClickable ? (
                 hasHref ? (
-                  <Link href={item.href} class={linkClass} aria-label={isFirst ? 'Home' : undefined}>
+                  <Link
+                    href={item.href}
+                    onClick={hasOnClick ? (e) => {
+                      // Leave modified and non-primary clicks (new tab/window) to the browser.
+                      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                      e.preventDefault();
+                      item.onClick(e);
+                    } : undefined}
+                    class={linkClass}
+                    aria-label={isFirst ? 'Home' : undefined}
+                  >
                     {content}
                   </Link>
                 ) : (
