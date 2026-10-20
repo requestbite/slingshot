@@ -10,7 +10,11 @@ function clamp(value, lo, hi) {
   return Math.min(Math.max(value, Math.min(lo, hi)), Math.max(lo, hi));
 }
 
-export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
+// `overflowVisible` lets content spill past the panel's edges instead of being
+// clipped, e.g. an autocomplete dropdown that should hang below the panel
+// rather than make it grow. Opt-in, since the clipping is what keeps anything
+// flush with the edges inside the rounded corners.
+export function Modal({ isOpen, onClose, title, children, size = 'md', overflowVisible = false }) {
   const sizeClasses = {
     sm: 'max-w-md',
     md: 'max-w-lg',
@@ -238,7 +242,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
           <div class="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:px-4 sm:py-0">
             <div
               ref={setPanelEl}
-              class={`relative transform overflow-hidden rounded-lg bg-white dark:bg-surface-dark-elevated px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 w-full ${sizeClasses[size]} sm:p-6 ${isDragging ? 'select-none' : ''}`}
+              class={`relative transform ${overflowVisible ? 'overflow-visible' : 'overflow-hidden'} rounded-lg bg-white dark:bg-surface-dark-elevated px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 w-full ${sizeClasses[size]} sm:p-6 ${isDragging ? 'select-none' : ''}`}
               style={panelStyle}
               onClick={(e) => e.stopPropagation()}
             >
