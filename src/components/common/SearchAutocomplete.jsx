@@ -11,6 +11,8 @@ import { TextInput } from './TextInput';
  * - Custom item rendering via renderItem prop
  * - Styling consistent with TextInput component
  * - Proper z-index stacking and positioning
+ * - Optional `autoSelectFirst`: the top result starts highlighted, so it's
+ *   clear that Enter picks it (Arrow Up stops there rather than clearing it)
  *
  * @example
  * // Synchronous usage with items prop
@@ -53,6 +55,7 @@ export const SearchAutocomplete = forwardRef((
     maxResults = 10,
     debounceMs = 300,
     emptyMessage = 'No results found',
+    autoSelectFirst = false,
     ...props
   },
   ref
@@ -93,13 +96,14 @@ export const SearchAutocomplete = forwardRef((
 
         setFilteredItems(filtered);
         setShowDropdown(true);
+        setSelectedIndex(autoSelectFirst && filtered.length > 0 ? 0 : -1);
       } else {
         setFilteredItems([]);
         setShowDropdown(false);
+        setSelectedIndex(-1);
       }
-      setSelectedIndex(-1);
     }
-  }, [value, items, onSearch, minChars, maxResults]);
+  }, [value, items, onSearch, minChars, maxResults, autoSelectFirst]);
 
   // Handle asynchronous search (when onSearch callback is provided)
   useEffect(() => {
@@ -117,7 +121,7 @@ export const SearchAutocomplete = forwardRef((
           const limited = results.slice(0, maxResults);
           setFilteredItems(limited);
           setShowDropdown(true);
-          setSelectedIndex(-1);
+          setSelectedIndex(autoSelectFirst && limited.length > 0 ? 0 : -1);
         } catch (error) {
           console.error('Search error:', error);
           setFilteredItems([]);
@@ -137,7 +141,7 @@ export const SearchAutocomplete = forwardRef((
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [value, onSearch, minChars, maxResults, debounceMs]);
+  }, [value, onSearch, minChars, maxResults, debounceMs, autoSelectFirst]);
 
   // Click-outside detection
   useEffect(() => {
@@ -209,7 +213,7 @@ export const SearchAutocomplete = forwardRef((
 
       case 'ArrowUp':
         e.preventDefault();
-        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : autoSelectFirst ? 0 : -1));
         break;
 
       case 'Enter':
